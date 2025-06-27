@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
 
 class User extends Authenticatable
 {
@@ -53,21 +54,25 @@ public function getHasActiveSubscriptionAttribute()
 {
     return $this->subscriptions()
         ->where('status', 'paid')
-        ->where('expired_at', '>', now())
+        ->where('expired_at', '>=', Carbon::now())
         ->exists();
 }
 
 public function subscriptions()
 {
-    return $this->hasMany(Subscription::class);
+    return $this->hasMany(\App\Models\Subscription::class);
 }
-
 public function isPremium()
 {
     return $this->subscription()
         ->where('status', 'paid')
         ->where('expired_at', '>', now())
         ->exists();
+}
+
+public function pomodoroSessions()
+{
+    return $this->hasMany(\App\Models\PomodoroSession::class);
 }
 
 }
