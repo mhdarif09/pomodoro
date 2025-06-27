@@ -59,6 +59,14 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 ## Security Vulnerabilities
 
+MIDTRANS_SERVER_KEY=SB-Mid-server-aSVKk_B-Mj72FVL7Ixw5aBD0
+MIDTRANS_CLIENT_KEY=SB-Mid-client-lEGSbctyPxMWTjrO
+MIDTRANS_IS_PRODUCTION=false
+
+VITE_MIDTRANS_CLIENT_KEY=SB-Mid-client-lEGSbctyPxMWTjrO
+VIE_MIDTRANS_SERVER_KEY=SB-Mid-server-aSVKk_B-Mj72FVL7Ixw5aBD0
+
+
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
 ## License
