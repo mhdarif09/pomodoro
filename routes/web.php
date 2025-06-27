@@ -8,7 +8,7 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Api\GeminiController;
+use App\Http\Controllers\Auth\GoogleLoginController;
 use Inertia\Inertia;
 
 /*
@@ -36,6 +36,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+    Route::get('/login/google/redirect', [GoogleLoginController::class, 'redirectToGoogle'])->name('login.google.redirect');
+Route::get('/login/google/callback', [GoogleLoginController::class, 'handleGoogleCallback'])->name('login.google.callback');
 // Route::middleware(['auth'])->group(function () {
 //     Route::middleware(['auth'])->group(function () {
 //     Route::get('/dashboard', function () {
