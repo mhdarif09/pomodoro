@@ -9,17 +9,21 @@ import { useEffect } from 'react';
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-        script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_CLIENT_KEY);
-        script.async = true;
-        document.body.appendChild(script);
+useEffect(() => {
+    const script = document.createElement('script');
+    // 1. Ganti URL ke mode Produksi
+    script.src = 'https://app.midtrans.com/snap/snap.js';
+    
+    // 2. Gunakan variabel environment untuk Production Key
+    script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_PRODUCTION_CLIENT_KEY);
+    
+    script.async = true;
+    document.body.appendChild(script);
 
-        return () => {
-            document.body.removeChild(script); // clean up
-        };
-    }, []);
+    return () => {
+        document.body.removeChild(script);
+    };
+}, []);
     
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
