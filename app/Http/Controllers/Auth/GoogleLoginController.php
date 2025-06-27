@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash; // <-- Tambahkan ini
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleLoginController extends Controller
@@ -29,20 +30,28 @@ class GoogleLoginController extends Controller
             return redirect('/login')->withErrors(['email' => 'Failed to login with Google. Please try again.']);
         }
 
-        // Find a user by their Google ID, or create a new user if one doesn't exist.
+        // ======================= PERUBAHAN UTAMA DI SINI =======================
+        // Cari pengguna berdasarkan email. Jika tidak ada, buat pengguna baru.
+        // Jika ada, perbarui datanya (misalnya nama atau google_id).
         $user = User::updateOrCreate(
-            ['google_id' => $googleUser->getId()],
+            [
+                'email' => $googleUser->getEmail() // Kunci utama untuk mencari pengguna
+            ],
             [
                 'name' => $googleUser->getName(),
-                'email' => $googleUser->getEmail(),
-                'password' => bcrypt(str()->random(24)), // Create a secure random password
+                'google_id' => $googleUser->getId(),
+                // 'password' akan diisi jika user baru dibuat (karena ada di UserObserver/mutator/etc,
+                // atau jika password-nya null, Eloquent tidak akan mencoba update)
+                // Jika ingin memastikan, kita bisa set password secara acak lagi jika null.
+                'password' => Hash::make(str()->random(24)) // Ini memastikan pengguna sosial bisa mereset password jika mau
             ]
         );
+        // ======================================================================
 
         // Log the user in
-        Auth::login($user, true); // The 'true' argument remembers the user
+        Auth::login($user, true); // Argumen 'true' akan mengingat pengguna
 
-        // Redirect based on role, just like in your original controller
+        // Redirect berdasarkan role
         $role = $user->role;
         return redirect()->intended(
             $role === 'admin' ? '/admin' : RouteServiceProvider::HOME
