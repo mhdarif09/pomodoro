@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Subscription;
-use App\Models\Plan;
 use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
@@ -25,36 +24,48 @@ class WebhookController extends Controller
         }
 
         // Jika pembayaran sukses
-if ($transactionStatus === 'settlement') {
-    $subscription->update([
-        'status' => 'paid',
-        'midtrans_transaction_id' => $transactionId,
-        'paid_at' => now(),
-        'payment_type' => $payload['payment_type'] ?? null,
-    ]);
+        if ($transactionStatus === 'settlement') {
+            // Hitung expired_at sesuai durasi plan
+            $expiredAt = match ($subscription->duration) {
+                'monthly' => now()->addMonth(),
+                'yearly' => now()->addYear(),
+                default => now()->addMonth(),
+            };
 
-    $subscription->user->update(['premium_until' => $subscription->expired_at]);
+            $subscription->update([
+                'status' => 'paid',
+                'midtrans_transaction_id' => $transactionId,
+                'payment_type' => $payload['payment_type'] ?? null,
+                'paid_at' => now(),
+                'expired_at' => $expiredAt,
+            ]);
 
-    // Auto renew logic:
-    if ($subscription->auto_renew && in_array($subscription->payment_type, ['credit_card', 'debit'])) {
-        $newExpiredAt = match ($subscription->duration) {
-            'monthly' => now()->addMonth(),
-            'yearly' => now()->addYear(),
-            default => now()->addMonth(),
-        };
+            // Update user premium_until jika kamu gunakan kolom itu
+            if ($subscription->user && $subscription->user->premium_until !== null) {
+                $subscription->user->update(['premium_until' => $expiredAt]);
+            }
 
-        $newSub = Subscription::create([
-            'user_id' => $subscription->user_id,
-            'plan' => $subscription->plan,
-            'duration' => $subscription->duration,
-            'expired_at' => $newExpiredAt,
-            'auto_renew' => true,
-        ]);
+            // Optional: Auto-renew
+            if ($subscription->auto_renew && in_array($subscription->payment_type, ['credit_card', 'debit'])) {
+                $newExpiredAt = match ($subscription->duration) {
+                    'monthly' => now()->addMonth(),
+                    'yearly' => now()->addYear(),
+                    default => now()->addMonth(),
+                };
 
-        // Trigger Midtrans token here
-        app(\App\Services\MidtransService::class)->createTransaction($newSub);
-    }
-}
+                $newSub = Subscription::create([
+                    'user_id'    => $subscription->user_id,
+                    'plan'       => $subscription->plan,
+                    'duration'   => $subscription->duration,
+                    'status'     => 'unpaid',
+                    'expired_at' => $newExpiredAt,
+                    'auto_renew' => true,
+                ]);
+
+                app(\App\Services\MidtransService::class)->createTransaction($newSub);
+            }
+        }
+
         return response()->json(['message' => 'Webhook received']);
     }
 }

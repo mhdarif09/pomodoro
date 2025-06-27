@@ -7,8 +7,8 @@ use App\Http\Controllers\PomodoroController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\WebhookController;
-use App\Models\Plan;
-
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Api\GeminiController;
 use Inertia\Inertia;
 
 /*
@@ -31,21 +31,28 @@ Route::get('/', function () {
     ]);
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard', [
-            'plans' => \App\Models\Plan::all(),
-            'subscription' => \App\Models\Subscription::where('user_id', auth()->id())
-                ->orderByDesc('expired_at')
-                ->first(),
-        ]);
-    })->name('dashboard');
 
-    Route::get('/subscribe', [SubscriptionController::class, 'index'])->name('subscribe.index');
-    Route::post('/subscribe', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
-});
-});
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+// Route::middleware(['auth'])->group(function () {
+//     Route::middleware(['auth'])->group(function () {
+//     Route::get('/dashboard', function () {
+//         return Inertia::render('Dashboard', [
+//             'plans' => \App\Models\Plan::all(),
+//             'subscription' => \App\Models\Subscription::where('user_id', auth()->id())
+//                 ->orderByDesc('expired_at')
+//                 ->first(),
+//         ]);
+//     })->name('dashboard');
+
+// //     Route::get('/subscribe', [SubscriptionController::class, 'index'])->name('subscribe.index');
+// //     Route::post('/subscribe', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
+// // });
+// });
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -62,7 +69,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/pomodoro', [PomodoroController::class, 'index'])->name('pomodoro.index');
     Route::post('/pomodoro/store', [PomodoroController::class, 'store'])->name('pomodoro.store');
+    Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout']);
 });
+
 
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('/subscribe', [SubscriptionController::class, 'index'])->name('subscribe.index');

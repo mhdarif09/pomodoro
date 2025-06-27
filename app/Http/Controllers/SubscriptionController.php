@@ -25,7 +25,7 @@ class SubscriptionController extends Controller
     $userId = auth()->id();
     $plan = Plan::where('name', $request->plan)->firstOrFail();
 
-    // Cek apakah sudah ada transaksi unpaid yang aktif
+    // Cek apakah ada transaksi UNPAID sebelumnya untuk plan ini
     $existing = Subscription::where('user_id', $userId)
         ->where('plan', $plan->name)
         ->where('status', 'unpaid')
@@ -33,22 +33,37 @@ class SubscriptionController extends Controller
         ->first();
 
     if ($existing && $existing->snap_token) {
-        return response()->json(['snap_token' => $existing->snap_token]);
+        return response()->json([
+            'snap_token' => $existing->snap_token,
+            'status' => 'reused',
+        ]);
     }
 
-    // Buat subscription baru tanpa expired_at dulu
+    // Hitung expired_at jika nanti berhasil (untuk ditampilkan)
+    $expiredAt = match ($plan->duration) {
+        'monthly' => now()->addMonth(),
+        'yearly' => now()->addYear(),
+        default => now()->addMonth(),
+    };
+
+    // Buat subscription baru
     $subscription = Subscription::create([
-        'user_id' => $userId,
-        'plan' => $plan->name,
-        'duration' => $plan->duration,
-        'status' => 'unpaid',
+        'user_id'    => $userId,
+        'plan'       => $plan->name,
+        'duration'   => $plan->duration,
+        'status'     => 'unpaid',
+        'expired_at' => null, // Akan diisi saat pembayaran sukses via webhook
     ]);
 
     // Kirim ke Midtrans
     $snap = $midtrans->createTransaction($subscription);
 
-    return response()->json(['snap_token' => $snap->token]);
+    return response()->json([
+        'snap_token' => $snap->token,
+        'status' => 'new',
+    ]);
 }
+
 public function history()
 {
     $userId = auth()->id();
