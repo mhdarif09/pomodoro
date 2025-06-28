@@ -1,5 +1,5 @@
 // resources/js/Pages/Pomodoro.jsx
-// Versi yang sudah disesuaikan agar tab counter selalu berjalan
+// Versi final dengan limitasi fitur untuk user gratis
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
@@ -11,7 +11,7 @@ import { SparklesIcon, DocumentTextIcon, XMarkIcon, PaperAirplaneIcon, ArrowPath
 
 // Main Pomodoro Component
 export default function Pomodoro({ auth, isPremium, plans = [] }) {
-    // --- State tidak berubah ---
+    // --- State ---
     const [secondsLeft, setSecondsLeft] = useState(25 * 60);
     const [isRunning, setIsRunning] = useState(false);
     const [startTime, setStartTime] = useState(null);
@@ -27,6 +27,12 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
     const [aiQuery, setAiQuery] = useState('');
     const [isLoadingAI, setIsLoadingAI] = useState(false);
     const [aiChatHistory, setAiChatHistory] = useState([]);
+
+    // --- STATE BARU UNTUK LIMIT FITUR ---
+    const [freeAiChatsUsed, setFreeAiChatsUsed] = useState(0);
+    const FREE_AI_CHAT_LIMIT = 2; // Definisikan limit di sini agar mudah diubah
+    // ------------------------------------
+
     const chatEndRef = useRef(null);
     const [pdfFile, setPdfFile] = useState(null);
     const [pdfQuery, setPdfQuery] = useState('');
@@ -34,7 +40,7 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
     const [loadingPdfAI, setLoadingPdfAI] = useState(false);
     const [showPdfAI, setShowPdfAI] = useState(false);
 
-    // --- Logika/Effect tidak berubah, KECUALI satu baris ---
+    // --- Hooks & Effects ---
     useEffect(() => {
         if ('Notification' in window) {
             Notification.requestPermission().then(setNotificationPermission);
@@ -45,12 +51,8 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [aiChatHistory]);
 
-    // ==========================================================
-    // INI ADALAH PERUBAHANNYA
-    // ==========================================================
     useEffect(() => {
         const handleVisibilityChange = () => {
-            // Kondisi `!document.hidden` berarti pengguna sedang TIDAK berada di tab ini
             if (!document.hidden && isRunning) {
                 setTabWarningCount(prev => prev + 1);
                 setShowTabWarning(true);
@@ -63,7 +65,7 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [isRunning, notificationPermission]); // <-- Hapus blockedUrls dari dependency array
+    }, [isRunning, notificationPermission]);
 
     useEffect(() => {
         const handleBeforeUnload = (e) => {
@@ -89,12 +91,23 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
         }
         return () => clearInterval(timer);
     }, [isRunning, secondsLeft]);
-    // ==========================================================
-    // AKHIR PERUBAHAN
-    // ==========================================================
+
+    // --- Handlers & Functions ---
 
     const handleAIQuery = async () => {
+        // 1. Cek apakah pengguna boleh mengirim pesan
+        if (!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT) {
+            setShowUpgradeModal(true); // Tampilkan modal upgrade jika jatah habis
+            return; // Hentikan fungsi
+        }
+
         if (!aiQuery.trim() || isLoadingAI) return;
+
+        // 2. Jika bukan premium, tambahkan hitungan penggunaan
+        if (!isPremium) {
+            setFreeAiChatsUsed(prev => prev + 1);
+        }
+
         const userMessage = { role: 'user', content: aiQuery };
         setAiChatHistory(prev => [...prev, userMessage]);
         setIsLoadingAI(true);
@@ -131,11 +144,14 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
         }
     };
     
-    // Fungsi-fungsi helper lainnya tetap sama
     const startSession = () => {
-        setStartTime(dayjs()); setIsRunning(true); setTabWarningCount(0);
+        setStartTime(dayjs());
+        setIsRunning(true);
+        setTabWarningCount(0);
         setSecondsLeft(customFocusTime * 60);
+        setFreeAiChatsUsed(0); // Reset jatah chat gratis setiap sesi baru
     };
+
     const resetTimer = () => { setSecondsLeft(customFocusTime * 60); setIsRunning(false); };
     const stopSession = () => { if(isRunning) saveSession(true); resetTimer(); };
     const saveSession = (manuallyStopped = false) => {
@@ -148,24 +164,29 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
             ai_questions_asked: aiChatHistory.filter(msg => msg.role === 'user').length,
         }, { preserveState: true });
     };
+
     const formatTime = () => {
         const minutes = Math.floor(secondsLeft / 60);
         const seconds = secondsLeft % 60;
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     };
+
     const handleBlockedUrlChange = (index, value) => {
         const newUrls = [...blockedUrls]; newUrls[index] = value; setBlockedUrls(newUrls);
     };
+
     const addBlockedUrl = () => {
         if (!isPremium && blockedUrls.filter(url => url.trim() !== '').length >= 1) {
             setShowUpgradeModal(true); return;
         }
         setBlockedUrls([...blockedUrls, '']);
     };
+
     const removeBlockedUrl = (index) => {
         if (blockedUrls.length > 1) { setBlockedUrls(blockedUrls.filter((_, i) => i !== index)); } 
         else { setBlockedUrls(['']); }
     };
+
     const handleCustomTimeChange = (type, value) => {
         const numValue = Number(value);
         if (!isPremium && ((type === 'focus' && numValue !== 25) || (type === 'break' && numValue !== 5))) {
@@ -175,12 +196,14 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
             setCustomFocusTime(numValue); if (!isRunning) setSecondsLeft(numValue * 60);
         } else { setCustomBreakTime(numValue); }
     };
+
     const handlePdfFileChange = (e) => {
         const file = e.target.files[0];
         if (file && file.type === 'application/pdf') {
             setPdfFile(file); setPdfAnswer('');
         } else { alert('Harap pilih file PDF yang valid.'); }
     };
+
     const handleUpgrade = async (plan) => {
         try {
             const response = await axios.post('/subscribe/checkout', { plan: plan.name });
@@ -188,8 +211,7 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
         } catch (err) { alert('Gagal memulai pembayaran.'); }
     };
 
-
-    // Sub-komponen dan JSX render tidak perlu diubah sama sekali
+    // Sub-komponen LockOverlay
     const LockOverlay = ({ message }) => (
         <div className="absolute inset-0 bg-slate-800/60 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 p-4 text-center">
             <div className="space-y-3">
@@ -202,12 +224,12 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
         </div>
     );
     
+    // --- JSX Render ---
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Pomodoro Timer" />
-            <audio ref={audioRef} src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSBvT19PAN/6/f8A/gD+/P7+/v79/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/vD+/PwC" />
+            <audio ref={audioRef} src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSBvT19PAN/6/f8A/gD+/P7+/v79/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/vD+/PwC" />
 
-            {/* Floating Action Buttons (FABs) */}
             <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-40">
                 <motion.button onClick={() => setShowAIAssistant(true)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="bg-teal-500 hover:bg-teal-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-3">
                     <SparklesIcon className="h-6 w-6" />
@@ -222,7 +244,6 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
 
             <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 px-4 py-8 flex flex-col items-center space-y-8">
                 <div className="w-full max-w-2xl mx-auto space-y-8">
-                    {/* Main Timer Display */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white/60 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 rounded-2xl shadow-xl text-center">
                         <h1 className="text-xl font-bold text-teal-600 dark:text-teal-400 mb-2">Fokus Sesi</h1>
                         <p className="text-8xl md:text-9xl font-mono font-bold text-slate-900 dark:text-white mb-6">{formatTime()}</p>
@@ -236,7 +257,6 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
                         </div>
                     </motion.div>
 
-                    {/* Settings Section */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white/60 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 rounded-2xl shadow-xl">
                         <h2 className="text-xl font-bold mb-6">Pengaturan Sesi</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -263,7 +283,6 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
             </div>
 
             {/* --- MODALS & SIDEBARS --- */}
-            {/* (Tidak ada perubahan di bagian ini) */}
             <AnimatePresence>
                 {showAIAssistant && (
                      <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed top-0 right-0 h-full w-full max-w-md bg-slate-100 dark:bg-slate-800 shadow-2xl z-50 flex flex-col">
@@ -286,10 +305,27 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
                             <div ref={chatEndRef} />
                         </div>
                         <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 backdrop-blur-lg">
+                             {!isPremium && (
+                                <div className="text-center text-xs text-slate-500 mb-2">
+                                    Jatah chat gratis tersisa: {Math.max(0, FREE_AI_CHAT_LIMIT - freeAiChatsUsed)} / {FREE_AI_CHAT_LIMIT}
+                                </div>
+                            )}
                              <form onSubmit={(e) => { e.preventDefault(); handleAIQuery(); }}>
                                 <div className="flex items-center bg-slate-100 dark:bg-slate-700 rounded-lg">
-                                    <input value={aiQuery} onChange={(e) => setAiQuery(e.target.value)} placeholder="Tanya apa saja..." className="flex-1 p-3 bg-transparent focus:outline-none text-sm" disabled={isLoadingAI} />
-                                    <button type="submit" disabled={isLoadingAI || !aiQuery.trim()} className="p-3 text-white bg-teal-500 rounded-r-lg hover:bg-teal-600 disabled:bg-slate-400 dark:disabled:bg-slate-600"><PaperAirplaneIcon className="h-5 w-5"/></button>
+                                    <input
+                                        value={aiQuery}
+                                        onChange={(e) => setAiQuery(e.target.value)}
+                                        placeholder={!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT ? "Jatah chat gratis habis..." : "Tanya apa saja..."}
+                                        className="flex-1 p-3 bg-transparent focus:outline-none text-sm"
+                                        disabled={isLoadingAI || (!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT)}
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={isLoadingAI || !aiQuery.trim() || (!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT)}
+                                        className="p-3 text-white bg-teal-500 rounded-r-lg hover:bg-teal-600 disabled:bg-slate-400 dark:disabled:bg-slate-600"
+                                    >
+                                        <PaperAirplaneIcon className="h-5 w-5"/>
+                                    </button>
                                 </div>
                             </form>
                         </div>
