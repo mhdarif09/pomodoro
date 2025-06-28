@@ -76,7 +76,7 @@ export default function Welcome({ auth }) {
                             </Link>
                             <nav className="flex items-center gap-2 text-sm font-semibold sm:gap-4">
                                 <Link
-                                    href="#komunitas"
+                                    href="https://discord.gg/ChptY9WU"
                                     className="hidden rounded-lg px-4 py-2 text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white sm:block"
                                 >
                                     Komunitas
@@ -207,7 +207,7 @@ export default function Welcome({ auth }) {
                         Ini bukan sekadar aplikasi, ini adalah gerakan. 'Sarang Tumbuh' adalah tempat kita saling support, berbagi tips produktif, dan tumbuh bareng. No gatekeeping, just good vibes.
                     </p>
                     <div className="mt-8">
-                        <ActionButton href="#"> {/* TODO: Add Discord/Community Link */}
+                        <ActionButton href="https://discord.gg/ChptY9WU"> {/* TODO: Add Discord/Community Link */}
                             Join the Community
                             <ArrowRightIcon className="ml-2 h-5 w-5" />
                         </ActionButton>
