@@ -43,19 +43,22 @@ const SubscriptionModal = ({ user, plans }) => {
                 transition={{ ease: "easeInOut", duration: 0.3 }}
                 className="w-full max-w-4xl"
             >
-                <div className="text-center mb-8">
+                <div className="text-center mb-6 md:mb-8">
+                    {/* Ukuran font disesuaikan untuk mobile */}
                     <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Satu Langkah Lagi, {user.name}!</h1>
-                    <p className="mt-3 text-lg text-slate-300">Pilih paket untuk membuka semua fitur dan meningkatkan produktivitas Anda.</p>
+                    <p className="mt-3 text-base md:text-lg text-slate-300">Pilih paket untuk membuka semua fitur produktivitas.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                {/* Grid dibuat scrollable di sumbu Y jika kontennya terlalu panjang di layar kecil */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] md:max-h-none overflow-y-auto md:overflow-y-visible">
                     {plans.map((plan, index) => (
                         <motion.div
                             key={plan.id}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 * (index + 1), duration: 0.4 }}
-                            className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl p-8 flex flex-col"
+                            // Padding disesuaikan untuk mobile
+                            className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl p-6 md:p-8 flex flex-col"
                         >
                             <h3 className="text-xl font-semibold text-teal-500 dark:text-teal-400">{plan.name}</h3>
                             <p className="mt-2 text-4xl font-extrabold text-slate-900 dark:text-white">Rp{Number(plan.price).toLocaleString('id-ID')}</p>
@@ -96,13 +99,14 @@ const TutorialModal = ({ onFinish }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ ease: "easeInOut", duration: 0.3 }}
-                className="bg-white dark:bg-slate-800 shadow-2xl rounded-2xl p-8 sm:p-10 text-center max-w-2xl w-full"
+                // Padding dan ukuran font disesuaikan untuk mobile
+                className="bg-white dark:bg-slate-800 shadow-2xl rounded-2xl p-6 sm:p-8 text-center max-w-2xl w-full"
             >
-                <RocketLaunchIcon className="h-16 w-16 text-teal-500 dark:text-teal-400 mx-auto"/>
-                <h1 className="mt-5 text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Pembayaran Berhasil & Selamat Datang!</h1>
-                <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">Akun Anda sekarang premium. Berikut adalah beberapa fitur utama yang baru saja Anda buka:</p>
+                <RocketLaunchIcon className="h-12 sm:h-16 w-12 sm:w-16 text-teal-500 dark:text-teal-400 mx-auto"/>
+                <h1 className="mt-4 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Pembayaran Berhasil & Selamat Datang!</h1>
+                <p className="mt-3 text-base sm:text-lg text-slate-600 dark:text-slate-300">Akun Anda sekarang premium. Berikut fitur utama yang baru saja Anda buka:</p>
                 
-                <div className="mt-8 space-y-4 text-left">
+                <div className="mt-6 sm:mt-8 space-y-4 text-left">
                     <div className="flex items-start gap-4 p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
                         <BookOpenIcon className="h-7 w-7 text-teal-500 dark:text-teal-400 mt-1 flex-shrink-0"/>
                         <div>
@@ -121,9 +125,9 @@ const TutorialModal = ({ onFinish }) => {
 
                 <button
                     onClick={onFinish}
-                    className="mt-10 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-8 py-3 rounded-full shadow-lg shadow-teal-500/20 text-base transition-all duration-300 transform hover:scale-105"
+                    className="mt-8 sm:mt-10 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-8 py-3 rounded-full shadow-lg shadow-teal-500/20 text-base transition-all duration-300 transform hover:scale-105"
                 >
-                    Mulai Produktif Sekarang!
+                    Mulai Produktif!
                 </button>
             </motion.div>
         </div>
@@ -166,21 +170,23 @@ const MainDashboard = ({ auth, subscription, pomodoroStats, leaderboard }) => {
     };
 
     return (
-        <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+        // Padding utama halaman disesuaikan untuk mobile
+        <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6">
                 <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">👋 Selamat datang, {auth.user.name}!</h3>
                 {subscription?.expired_at ? (
                      <p className="text-sm text-teal-600 dark:text-teal-400 mt-2 flex items-center gap-2 font-semibold">
                         <CheckCircleIcon className="h-5 w-5"/>
-                        <span>Status Premium aktif hingga: {new Date(subscription.expired_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        <span>Premium aktif hingga: {new Date(subscription.expired_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                     </p>
                 ) : (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Pilih paket langganan untuk membuka semua fitur produktivitas.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Pilih paket untuk membuka semua fitur produktivitas.</p>
                 )}
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6 space-y-6">
                 <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3"><ChartBarIcon className="h-6 w-6 text-teal-500" />Analisis Produktivitas</h3>
+                {/* Grid untuk stats card sudah responsif */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                      <StatsCard icon={<ArrowTrendingUpIcon className="h-6 w-6 text-teal-600 dark:text-teal-400"/>} label="Total Sesi" value={pomodoroStats?.totalSessions ?? 0} unit="sesi" />
                     <StatsCard icon={<ClockIcon className="h-6 w-6 text-teal-600 dark:text-teal-400"/>} label="Waktu Fokus" value={Math.round((pomodoroStats?.totalFocusMinutes ?? 0) / 60)} unit="jam" />
@@ -198,21 +204,22 @@ const MainDashboard = ({ auth, subscription, pomodoroStats, leaderboard }) => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl">
                 <div className="p-6">
                     <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-100">🏆 Leaderboard Fokus</h3>
+                    {/* Leaderboard dibuat scrollable agar tidak merusak layout mobile */}
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-sm">
                             <thead className="border-b-2 border-slate-200 dark:border-slate-700">
                                 <tr>
                                     <th className="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">#</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Nama Pengguna</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Total Sesi</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Total Fokus (Jam)</th>
+                                    <th className="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Nama</th>
+                                    <th className="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Sesi</th>
+                                    <th className="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Fokus (Jam)</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                                {leaderboard.map((user, index) => (
+                                {(leaderboard || []).map((user, index) => (
                                     <tr key={user.id} className={`${user.id === auth.user.id ? 'bg-teal-50 dark:bg-teal-900/50' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors`}>
                                         <td className="px-4 py-3 font-bold text-lg">{getMedal(index)}</td>
-                                        <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">{user.name}</td>
+                                        <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100 whitespace-nowrap">{user.name}</td>
                                         <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{user.pomodoro_sessions_count}</td>
                                         <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{Math.round(user.total_focus_minutes / 60)}</td>
                                     </tr>
@@ -255,7 +262,6 @@ export default function Dashboard({ auth, subscription = null, leaderboard = [],
         >
             <Head title="Dashboard" />
             
-            {/* Wrapper untuk konten utama yang bisa di-blur */}
             <div className={`transition-all duration-500 ${showTutorial || showSubscriptionModal ? 'blur-md' : ''}`}>
                 <MainDashboard
                     auth={auth}
@@ -265,7 +271,6 @@ export default function Dashboard({ auth, subscription = null, leaderboard = [],
                 />
             </div>
 
-            {/* AnimatePresence digunakan agar animasi 'exit' bisa berjalan saat komponen di-unmount */}
             <AnimatePresence>
                 {showTutorial && <TutorialModal onFinish={handleFinishTutorial} />}
                 
