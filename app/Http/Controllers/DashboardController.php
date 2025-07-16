@@ -2,29 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Plan; // <-- Tambahkan ini
 use Illuminate\Http\Request;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Models\PomodoroSession; // <-- Import model PomodoroSession
-use Illuminate\Support\Facades\DB; // <-- Import DB Facade untuk subquery
+use App\Models\PomodoroSession;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request) // <-- Tambahkan Request
     {
         $user = auth()->user();
 
-        // 1. Ambil langganan aktif (logika ini sudah bagus, tidak perlu diubah)
-        $subscription = Subscription::where('user_id', $user->id)
+        // 1. Cek langganan aktif
+        $activeSubscription = Subscription::where('user_id', $user->id)
             ->where('status', 'paid')
             ->where('expired_at', '>=', now())
             ->latest('expired_at')
             ->first();
 
-        // 2. Hitung statistik Pomodoro untuk pengguna saat ini
-        $sessionsQuery = $user->pomodoroSessions();
+        // Cek apakah kita harus menampilkan tutorial setelah pembayaran sukses
+        // Session 'show_tutorial' akan kita set di langkah berikutnya
+        $showTutorial = $request->session()->get('show_tutorial', false);
+        
+        // 2. Jika user BELUM punya langganan aktif DAN tidak sedang dalam mode tutorial
+        if (!$activeSubscription && !$showTutorial) {
+            // Kirim user ke halaman pemilihan paket
+            return Inertia::render('Dashboard', [
+                'auth' => ['user' => $user],
+                'subscription' => null,
+                'plans' => Plan::all(), // <-- Kirim data semua plan
+            ]);
+        }
 
+        // 3. Jika user SUDAH berlangganan atau baru selesai bayar (mode tutorial)
+        // Lanjutkan untuk mengambil data statistik & leaderboard
+        $sessionsQuery = $user->pomodoroSessions();
         $pomodoroStats = [
             'totalSessions' => $sessionsQuery->count(),
             'totalFocusMinutes' => $sessionsQuery->clone()->sum('focus_minutes'),
@@ -32,8 +47,6 @@ class DashboardController extends Controller
             'tabSwitches' => $sessionsQuery->clone()->sum('tab_switches'),
         ];
         
-        // 3. Data untuk Leaderboard (disempurnakan dengan total menit fokus)
-        // Menggunakan subquery untuk performa yang lebih baik daripada withCount/withSum
         $leaderboard = User::query()
             ->select('id', 'name')
             ->addSelect(DB::raw('(SELECT COUNT(*) FROM pomodoro_sessions WHERE pomodoro_sessions.user_id = users.id) as pomodoro_sessions_count'))
@@ -45,9 +58,11 @@ class DashboardController extends Controller
         // 4. Kirim semua data ke view Inertia
         return Inertia::render('Dashboard', [
             'auth' => ['user' => $user],
-            'subscription' => $subscription,
+            'subscription' => $activeSubscription,
             'leaderboard' => $leaderboard,
-            'pomodoroStats' => $pomodoroStats, // <-- Tambahkan prop baru ini
+            'pomodoroStats' => $pomodoroStats,
+            'plans' => [], // Kirim array kosong jika sudah subscribe
+            'showTutorial' => $showTutorial, // <-- Prop baru untuk tutorial
         ]);
     }
 }

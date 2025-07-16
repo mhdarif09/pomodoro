@@ -71,7 +71,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/pomodoro', [PomodoroController::class, 'index'])->name('pomodoro.index');
     Route::post('/pomodoro/store', [PomodoroController::class, 'store'])->name('pomodoro.store');
-    Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout']);
+Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
 });
 
 
@@ -102,5 +102,9 @@ Route::post('/midtrans/webhook', [WebhookController::class, 'handle'])->name('mi
 Route::middleware(['auth'])->group(function () {
     Route::get('/transactions', [SubscriptionController::class, 'history'])->name('transactions.history');
 });
+
+Route::get('/subscription/payment-success', [SubscriptionController::class, 'paymentSuccessRedirect'])
+    ->middleware(['auth', 'verified'])
+    ->name('subscription.success');
 
 require __DIR__.'/auth.php';

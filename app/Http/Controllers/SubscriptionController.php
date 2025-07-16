@@ -6,6 +6,7 @@ use App\Models\Subscription;
 use App\Models\Plan;
 use App\Services\MidtransService;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
@@ -63,6 +64,12 @@ class SubscriptionController extends Controller
         'status' => 'new',
     ]);
 }
+
+ public function paymentSuccessRedirect(Request $request)
+    {
+        session()->flash('show_tutorial', true);
+        return Redirect::route('dashboard');
+    }
 
 public function history()
 {
