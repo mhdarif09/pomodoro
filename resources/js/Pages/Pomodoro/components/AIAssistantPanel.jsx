@@ -1,10 +1,9 @@
-// File: resources/js/Pages/Pomodoro/components/AIAssistantPanel.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SparklesIcon, XMarkIcon, PaperAirplaneIcon, ArrowPathIcon, ArrowsPointingOutIcon, ComputerDesktopIcon } from '@heroicons/react/24/solid';
-import { FREE_AI_CHAT_LIMIT } from '../index';
+// DIUBAH: Impor dari file konstanta terpisah untuk memutus ketergantungan melingkar.
+import { FREE_AI_CHAT_LIMIT } from '../constants';
 
 const sizeOptions = {
     default: 'max-w-md',
