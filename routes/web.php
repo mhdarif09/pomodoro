@@ -10,6 +10,8 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\VoiceController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Inertia\Inertia;
 
 /*
@@ -64,9 +66,8 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    Route::get('/admin', function () {
-        return Inertia::render('Admin/Dashboard');
-    });
+    // Arahkan ke controller yang baru dibuat
+    Route::get('/admin', AdminDashboardController::class)->name('admin.dashboard');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -111,4 +112,12 @@ Route::get('/subscription/payment-success', [SubscriptionController::class, 'pay
 Route::get('/voice', function () {
     return inertia('Voice/Index');
 })->middleware(['auth', 'verified'])->name('voice.index'); 
+
+Route::middleware(['auth', 'can:viewAdmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('/users/{user}/promote', [AdminUserController::class, 'promote'])->name('users.promote');
+    Route::post('/users/{user}/demote', [AdminUserController::class, 'demote'])->name('users.demote');
+    Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
+    Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
+});
 require __DIR__.'/auth.php';

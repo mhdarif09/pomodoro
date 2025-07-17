@@ -5,9 +5,8 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 
-// A simple, modern avatar component to display user initials
+// Komponen Avatar (tidak perlu diubah)
 const UserAvatar = ({ user }) => {
-    // Generates the first two initials from the user's name
     const initials = user.name
         .split(' ')
         .map((n) => n[0])
@@ -23,23 +22,26 @@ const UserAvatar = ({ user }) => {
 
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
-    
-    // An array to hold our navigation links for easier management
+
+    // Array untuk link navigasi umum
     const navLinks = [
         { routeName: 'dashboard', label: 'Dashboard' },
+        { routeName: 'voice.index', label: 'Kelas Suara' }, // <-- MODIFIKASI: Tambahkan link Kelas Suara
         { routeName: 'pomodoro.index', label: 'Pomodoro' },
         { routeName: 'transactions.history', label: 'History' },
     ];
     
+    // Array untuk link khusus admin
     const adminLinks = [
-        { routeName: 'admin.plans.index', label: 'Premium Plans' }
+        { routeName: 'admin.plans.index', label: 'Premium Plans' },
+        { routeName: 'admin.users.index', label: 'Manajemen User' } // <-- MODIFIKASI: Tambahkan link Manajemen User
     ];
 
-    // Midtrans script logic - remains unchanged as it's a background task
+    // Logika skrip Midtrans (tidak perlu diubah)
     useEffect(() => {
         const script = document.createElement('script');
         script.src = 'https://app.midtrans.com/snap/snap.js';
-        script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_CLIENT_KEY); // Use standard VITE client key
+        script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_CLIENT_KEY);
         script.async = true;
         document.body.appendChild(script);
 
@@ -50,16 +52,17 @@ export default function Authenticated({ user, header, children }) {
 
     return (
         <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900">
-            {/* --- MODERN STICKY NAVBAR --- */}
+            {/* --- Navbar Modern Sticky (tidak perlu diubah) --- */}
             <nav className="sticky top-0 z-40 w-full border-b border-slate-900/10 bg-white/80 backdrop-blur-sm dark:border-slate-300/10 dark:bg-slate-900/80">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
-                        {/* Logo and Main Navigation Links */}
+                        {/* Logo dan Link Navigasi Utama */}
                         <div className="flex items-center gap-6">
                             <Link href="/">
                                 <ApplicationLogo className="block h-9 w-auto fill-current text-slate-800 dark:text-slate-200" />
                             </Link>
                             <div className="hidden items-center gap-4 sm:flex">
+                                {/* Logika render link ini sudah otomatis menangani penambahan link baru */}
                                 {navLinks.map((link) => (
                                     <NavLink key={link.routeName} href={route(link.routeName)} active={route().current(link.routeName)}>
                                         {link.label}
@@ -73,7 +76,7 @@ export default function Authenticated({ user, header, children }) {
                             </div>
                         </div>
 
-                        {/* User Dropdown and Mobile Menu Button */}
+                        {/* Dropdown User dan Tombol Menu Mobile (tidak perlu diubah) */}
                         <div className="flex items-center gap-4">
                             <div className="hidden sm:flex sm:items-center">
                                 <Dropdown>
@@ -97,7 +100,7 @@ export default function Authenticated({ user, header, children }) {
                                 </Dropdown>
                             </div>
 
-                            {/* Hamburger Menu Button */}
+                            {/* Tombol Hamburger */}
                             <div className="-me-2 flex items-center sm:hidden">
                                 <button
                                     onClick={() => setShowingNavigationDropdown((prevState) => !prevState)}
@@ -113,10 +116,11 @@ export default function Authenticated({ user, header, children }) {
                     </div>
                 </div>
 
-                {/* --- MODERN RESPONSIVE NAVIGATION PANEL --- */}
+                {/* --- Panel Navigasi Responsif Modern (tidak perlu diubah) --- */}
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden absolute inset-x-0 top-16 z-30 origin-top-right transform p-2 transition'}>
                     <div className="divide-y-2 divide-slate-100/10 rounded-lg bg-white/95 shadow-lg ring-1 ring-black/5 backdrop-blur-sm dark:bg-slate-900/95">
                         <div className="space-y-1 p-5">
+                            {/* Logika render link ini juga sudah otomatis menangani penambahan link baru */}
                             {navLinks.map((link) => (
                                 <ResponsiveNavLink key={link.routeName} href={route(link.routeName)} active={route().current(link.routeName)}>
                                     {link.label}

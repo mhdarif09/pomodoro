@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'banned_at',
     ];
 
     /**
@@ -58,10 +59,11 @@ public function getHasActiveSubscriptionAttribute()
         ->exists();
 }
 
-public function subscriptions()
-{
-    return $this->hasMany(\App\Models\Subscription::class);
-}
+  public function subscriptions()
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
 public function isPremium()
 {
     return $this->subscription()
@@ -69,6 +71,28 @@ public function isPremium()
         ->where('expired_at', '>', now())
         ->exists();
 }
+
+ public function getIsBannedAttribute(): bool
+    {
+        return !is_null($this->banned_at);
+    }
+
+    /**
+     * Atribut untuk memeriksa apakah user premium.
+     */
+     public function getIsPremiumAttribute(): bool
+    {
+        // User dianggap premium HANYA JIKA:
+        // 1. Memiliki langganan (tidak null)
+        // 2. Status langganan adalah 'active'
+        // 3. Tanggal expired_at ada (tidak null)
+        // 4. Tanggal expired_at belum lewat (ada di masa depan)
+        return $this->subscription &&
+               $this->subscription->status === 'active' &&
+               $this->subscription->expired_at &&
+               $this->subscription->expired_at->isFuture();
+    }
+
 
 public function pomodoroSessions()
 {
