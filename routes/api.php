@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GeminiController;
 
-
+use App\Http\Controllers\VoiceController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -23,4 +23,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/gemini/ask', [GeminiController::class, 'ask']);
     Route::post('/gemini/pdf', [GeminiController::class, 'askFromPdf'])->name('gemini.pdf');
 
-
+    Route::post('/transcribe', [VoiceController::class, 'transcribe'])
+      ->middleware('auth:sanctum')
+      ->name('transcribe.store');

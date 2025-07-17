@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Http\Controllers\VoiceController;
 use Inertia\Inertia;
 
 /*
@@ -107,4 +108,7 @@ Route::get('/subscription/payment-success', [SubscriptionController::class, 'pay
     ->middleware(['auth', 'verified'])
     ->name('subscription.success');
 
+Route::get('/voice', function () {
+    return inertia('Voice/Index');
+})->middleware(['auth', 'verified'])->name('voice.index'); 
 require __DIR__.'/auth.php';
