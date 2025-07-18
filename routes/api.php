@@ -23,6 +23,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/gemini/ask', [GeminiController::class, 'ask']);
     Route::post('/gemini/pdf', [GeminiController::class, 'askFromPdf'])->name('gemini.pdf');
 
-    Route::post('/transcribe', [VoiceController::class, 'transcribe'])
-      ->middleware('auth:sanctum')
-      ->name('transcribe.store');
+    Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);
+Route::get('/voice/settings', [VoiceController::class, 'getVoiceSettings']);
+Route::delete('/voice/cleanup', [VoiceController::class, 'cleanupOldAudioFiles']);
+
+// Middleware untuk CORS jika diperlukan
+Route::group(['middleware' => ['cors']], function () {
+    Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);
+});
