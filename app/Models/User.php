@@ -24,6 +24,11 @@ class User extends Authenticatable
         'password',
         'role',
         'banned_at',
+        'growth_goals',
+        'learning_style',
+        'focus_time',
+        'personal_motivation',
+        'onboarding_complete',
     ];
 
     /**
@@ -34,6 +39,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        
     ];
 
     /**
@@ -44,6 +50,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'growth_goals' => 'array',
+        'onboarding_complete' => 'boolean',
     ];
 
     public function subscription()
@@ -98,5 +106,14 @@ public function pomodoroSessions()
 {
     return $this->hasMany(\App\Models\PomodoroSession::class);
 }
+
+public function todaysGoal()
+{
+        return $this->hasOne(DailyGoal::class)->whereDate('goal_date', today());
+}
+    public function dailyGoals()
+    {
+        return $this->hasMany(DailyGoal::class);
+    }
 
 }
