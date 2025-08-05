@@ -1,90 +1,70 @@
-import { useState } from 'react';
+// File: resources/js/Pages/Subscribe/Index.jsx
 import { Head, usePage } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import axios from 'axios';
+import { useState, useEffect } from 'react';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
-export default function Subscribe({ auth, plans }) {
-    const [isRedirecting, setIsRedirecting] = useState(false);
-    const [loadingPlanId, setLoadingPlanId] = useState(null);
+// Ini adalah komponen Halaman Penuh, bukan Modal
+export default function SubscribeIndex() {
+    const { message, plans, auth } = usePage().props;
+    const [isLoading, setIsLoading] = useState(false);
+    
+    // Memuat skrip Midtrans saat halaman dimuat
+    useEffect(() => {
+        if (!window.snap) {
+            const isProduction = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true';
+            const snapUrl = isProduction ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js';
+            const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+            const script = document.createElement('script');
+            script.src = snapUrl;
+            script.setAttribute('data-client-key', clientKey);
+            document.body.appendChild(script);
+        }
+    }, []);
 
-    const pay = async (plan) => {
+    const handleSubscribe = async (planId) => {
+        setIsLoading(true);
         try {
-            setLoadingPlanId(plan.id);
-
-            const response = await axios.post('/subscribe', { plan: plan.name }, {
-                headers: {
-                    'X-Inertia': false // <- FIX agar tidak dianggap Inertia request
-                }
-            });
-
-            const snapToken = response.data.snap_token;
-
-            window.snap.pay(snapToken, {
-                onSuccess: function (result) {
-                    console.log('Success', result);
-                    setIsRedirecting(true);
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 3000);
-                },
-                onPending: function (result) {
-                    alert('Pembayaran sedang diproses...');
-                    window.location.href = '/dashboard';
-                },
-                onError: function (result) {
-                    alert('Terjadi kesalahan saat pembayaran.');
-                    console.error(result);
-                },
-                onClose: function () {
-                    console.log('Snap closed by user');
-                    setLoadingPlanId(null);
-                },
+            const response = await axios.post(route('subscription.checkout'), { plan_id: planId });
+            window.snap.pay(response.data.snap_token, {
+                onSuccess: () => window.location.href = route('subscription.payment.success'),
+                onPending: () => { setIsLoading(false); alert("Menunggu pembayaran..."); },
+                onError: () => { setIsLoading(false); alert("Pembayaran gagal!"); },
+                onClose: () => setIsLoading(false)
             });
         } catch (error) {
-            console.error('Checkout failed', error);
-            alert('Gagal memproses pembayaran.');
-            setLoadingPlanId(null);
+            console.error('Checkout error:', error);
+            setIsLoading(false);
         }
     };
-
+    
     return (
-        <AuthenticatedLayout user={auth.user}>
-            <Head title="Langganan Premium" />
-
-            <div className="p-6 text-white">
-                <h1 className="text-2xl font-bold mb-6">Pilih Paket Premium</h1>
-
-                {isRedirecting ? (
-                    <div className="text-center mt-10">
-                        <p className="text-lg">✅ Pembayaran berhasil! Mengarahkan ke dashboard...</p>
-                        <div className="mt-4">
-                            <svg className="animate-spin h-8 w-8 mx-auto text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                        </div>
+        <>
+            <Head title="Berlangganan" />
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 flex flex-col items-center justify-center p-4">
+                 <div className="w-full max-w-4xl mx-auto">
+                    <div className="text-center">
+                         <h1 className="text-4xl font-bold text-teal-500">Akses Anda Telah Berakhir</h1>
+                         <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">{message || 'Pilih paket di bawah ini untuk melanjutkan perjalanan pertumbuhan Anda.'}</p>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        {plans.map(plan => (
-                            <div key={plan.id} className="bg-gray-800 p-6 rounded-xl shadow-md">
-                                <h2 className="text-xl font-semibold capitalize mb-2">{plan.name}</h2>
-                                <p className="text-2xl font-bold mb-4">Rp {plan.price.toLocaleString()}</p>
 
-                                <button
-                                    onClick={() => pay(plan)}
-                                    className={`w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition ${
-                                        loadingPlanId === plan.id ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                    disabled={loadingPlanId === plan.id}
-                                >
-                                    {loadingPlanId === plan.id ? 'Memproses...' : 'Bayar Sekarang'}
-                                </button>
-                            </div>
-                        ))}
+                    <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                         {(plans || []).map((plan) => (
+                              <div key={plan.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-8 flex flex-col shadow-lg">
+                                   <h3 className="text-xl font-semibold text-teal-500 dark:text-teal-400">{plan.name}</h3>
+                                   <p className="mt-2 text-4xl font-extrabold text-slate-900 dark:text-white">Rp{Number(plan.price).toLocaleString('id-ID')}</p>
+                                   <p className="text-sm text-slate-500 dark:text-slate-400">per {plan.duration === 'monthly' ? 'bulan' : 'tahun'}</p>
+                                   <ul className="mt-8 space-y-3 text-slate-600 dark:text-slate-300 flex-grow">
+                                        {(plan.features || []).map((feature, idx) => (
+                                             <li key={idx} className="flex items-center gap-3"><CheckCircleIcon className="h-5 w-5 text-teal-500" /><span>{feature}</span></li>
+                                        ))}
+                                   </ul>
+                                   <button onClick={() => handleSubscribe(plan.id)} disabled={isLoading} className="mt-10 w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 rounded-lg shadow-lg transition transform hover:scale-105 disabled:bg-slate-400">{isLoading ? 'Memproses...' : 'Pilih Paket'}</button>
+                              </div>
+                         ))}
                     </div>
-                )}
+                </div>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

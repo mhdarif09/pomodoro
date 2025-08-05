@@ -1,22 +1,27 @@
+// File: resources/js/Pages/Dashboard.jsx (Full Code - FINAL PREMIUM VERSION)
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 
-// Impor Komponen Eksternal
+// Impor SEMUA Komponen Modal yang dibutuhkan
 import OnboardingModal from '@/Components/OnboardingModal';
 import DailyGoalModal from '@/Components/DailyGoalModal';
+import UpgradeModal from '@/Components/UpgradeModal'; // <-- Impor Komponen Premium
 
-// Impor Ikon
-import { CheckCircleIcon, PlayIcon, PauseIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
+// Ikon-ikon yang digunakan
+import { CheckCircleIcon as CheckCircleSolid, ClockIcon as ClockSolid, PlayIcon, PauseIcon, ArrowPathIcon, SparklesIcon as SparklesSolid, CalendarDaysIcon as CalendarSolid, LockClosedIcon } from '@heroicons/react/24/solid';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 
+
 // ====================================================================
-// KOMPONEN-KOMPONEN INTERNAL UNTUK DASHBOARD
+// BAGIAN 1: KOMPONEN INTERNAL DASHBOARD (dengan penyesuaian premium)
 // ====================================================================
 
-// KOMPONEN 1: Pomodoro Timer Interaktif
+/**
+ * Komponen 1: Pomodoro Timer Interaktif.
+ */
 const PomodoroTimer = () => {
     const [minutes, setMinutes] = useState(25);
     const [seconds, setSeconds] = useState(0);
@@ -47,19 +52,15 @@ const PomodoroTimer = () => {
                     if (s > 0) return s - 1;
                     setMinutes(m => {
                         if (m > 0) return m - 1;
-                        // Timer selesai
                         if (audioRef.current) {
                             audioRef.current.play().catch(e => console.error("Error playing sound:", e));
                         }
-                        // Ganti ke fase berikutnya
                         resetTimer(phase === 'focus' ? 'shortBreak' : 'focus');
-                        return 0; // Kembalikan nilai baru untuk menit
+                        return 0;
                     });
-                    return 59; // Kembalikan nilai baru untuk detik
+                    return 59;
                 });
             }, 1000);
-        } else {
-             if(intervalRef.current) clearInterval(intervalRef.current);
         }
         return () => { if(intervalRef.current) clearInterval(intervalRef.current) };
     }, [isActive, phase, resetTimer]);
@@ -84,95 +85,151 @@ const PomodoroTimer = () => {
     );
 };
 
-// KOMPONEN 2: Konten Dashboard Baru
-const MainDashboard = ({ auth, todaysGoal, onEditGoalClick }) => {
-    return (
-        <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-6">
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-white">👋 Hai, {auth.user.name}!</h1>
-                <p className="text-lg text-slate-600 dark:text-slate-300 mt-1">Siap bertumbuh hari ini?</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center"><span className="text-2xl mr-3">🎯</span>Goal Harian Kamu</h3>
-                {todaysGoal?.goal ? (<p className="text-slate-700 dark:text-slate-200 text-lg mt-2 pl-9">"{todaysGoal.goal}"</p>) : (<p className="text-slate-500 dark:text-slate-400 mt-2 pl-9">Kamu belum mengatur goal untuk hari ini.</p>)}
-                <button onClick={onEditGoalClick} className="text-sm font-semibold text-teal-600 dark:text-teal-400 hover:underline mt-3 ml-9">{todaysGoal?.goal ? 'Ganti Goal' : 'Atur Goal Sekarang'}</button>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 ml-2 flex items-center"><span className="text-2xl mr-3">⏱</span>Quick Start Pomodoro</h3>
-                <PomodoroTimer />
-            </motion.div>
+/**
+ * Kartu untuk menampilkan status Refleksi Harian, dengan logika premium.
+ */
+const ReflectionCard = ({ hasReflectedToday, isPremium, onUpgradeClick }) => (
+    <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6 h-full flex flex-col">
+        <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center mb-2">
+            <SparklesSolid className="w-5 h-5 mr-2 text-yellow-400"/>
+            Refleksi Harian
+        </h3>
+        <div className="flex-grow flex flex-col justify-center">
+            {/* Tampilan untuk Pengguna Premium */}
+            {isPremium && (
+                hasReflectedToday ? (
+                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                        <p className="text-green-800 dark:text-green-300">Hebat! Kamu sudah berefleksi hari ini 🙏</p>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">Mulai sesi percakapan mendalam dengan AI GrowthBot.</p>
+                        <Link href={route('refleksi.index')} className="w-full text-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 shadow-lg">Mulai Refleksi</Link>
+                    </>
+                )
+            )}
+
+            {/* Tampilan untuk Pengguna Gratis */}
+            {!isPremium && (
+                <div className="text-center p-4 border-2 border-dashed border-amber-400/50 dark:border-amber-500/40 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                    <div className="w-12 h-12 mx-auto bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center mb-3">
+                        <LockClosedIcon className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+                    </div>
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Refleksi AI Mendalam</p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">Fitur Premium</p>
+                    <button onClick={onUpgradeClick} className="w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105 text-sm">
+                        Upgrade untuk Membuka
+                    </button>
+                </div>
+            )}
         </div>
-    );
-};
+    </div>
+);
 
-// KOMPONEN 3 & 4 (Placeholder, tidak digunakan)
-const SubscriptionModal = ({ user, plans }) => { /* ... Logika modal langganan Anda bisa ditaruh di sini ... */ return null; };
-const TutorialModal = ({ onFinish }) => { /* ... Logika modal tutorial Anda bisa ditaruh di sini ... */ return null; };
+/**
+ * Kartu untuk menampilkan statistik Progress Mingguan.
+ */
+const WeeklyProgressCard = ({ stats }) => (
+    <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6 h-full">
+        <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center mb-4"><CalendarSolid className="w-5 h-5 mr-2 text-indigo-400"/>Progress Minggu Ini</h3>
+        <div className="space-y-4">
+            <div className="flex justify-between items-center"><span className="flex items-center text-sm text-slate-600 dark:text-slate-300"><ClockSolid className="w-5 h-5 mr-3 text-rose-400"/> Sesi Pomodoro</span><span className="font-bold text-lg text-slate-800 dark:text-white">{stats?.pomodoros ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="flex items-center text-sm text-slate-600 dark:text-slate-300"><SparklesSolid className="w-5 h-5 mr-3 text-yellow-400"/> Hari Refleksi</span><span className="font-bold text-lg text-slate-800 dark:text-white">{stats?.reflections ?? 0}</span></div>
+            <div className="flex justify-between items-center"><span className="flex items-center text-sm text-slate-600 dark:text-slate-300"><CheckCircleSolid className="w-5 h-5 mr-3 text-green-400"/> Goal Tercapai</span><span className="font-bold text-lg text-slate-800 dark:text-white">{stats?.goalsAchieved ?? 0} / 7</span></div>
+        </div>
+    </div>
+);
 
 // ====================================================================
-// Komponen UTAMA: EXPORT DEFAULT DASHBOARD (Pengatur Semua Modal)
+// BAGIAN 2: HALAMAN DASHBOARD UTAMA (Main View)
 // ====================================================================
-export default function Dashboard({
-    auth, subscription = null, plans = [],
-    showTutorial = false, showOnboarding = false,
-    hasTodaysGoal = true, todaysGoal = null
-}) {
+const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, hasReflectedToday, weeklyStats, onUpgradeClick }) => (
+    <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-white">👋 Hai, {auth.user.name}!</h1>
+            <p className="text-lg text-slate-600 dark:text-slate-300 mt-1">Siap bertumbuh hari ini?</p>
+        </motion.div>
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center"><span className="text-2xl mr-3">🎯</span>Goal Harian Kamu</h3>
+                    {todaysGoal?.goal ? (<p className="text-slate-700 dark:text-slate-200 text-lg mt-2 pl-9 italic">"{todaysGoal.goal}"</p>) : (<p className="text-slate-500 dark:text-slate-400 mt-2 pl-9">Kamu belum mengatur goal untuk hari ini.</p>)}
+                    <button onClick={onEditGoalClick} className="text-sm font-semibold text-teal-600 dark:text-teal-400 hover:underline mt-3 ml-9">{todaysGoal?.goal ? 'Ganti Goal' : 'Atur Goal Sekarang'}</button>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3 ml-2 flex items-center"><span className="text-2xl mr-3">⏱</span>Quick Start Pomodoro</h3>
+                    <PomodoroTimer />
+                </motion.div>
+            </div>
+            <div className="space-y-6">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
+                    <ReflectionCard hasReflectedToday={hasReflectedToday} isPremium={auth.user.is_premium} onUpgradeClick={onUpgradeClick} />
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}><WeeklyProgressCard stats={weeklyStats} /></motion.div>
+            </div>
+        </div>
+    </div>
+);
+
+// ====================================================================
+// BAGIAN 3: EXPORT UTAMA & PENGATUR MODAL (dengan logika premium)
+// ====================================================================
+export default function Dashboard(props) {
+    const { auth, plans, showOnboarding, hasTodaysGoal, todaysGoal, hasReflectedToday, weeklyStats, snap_token } = props;
+    const { flash } = usePage().props;
+
     const [isProcessing, setIsProcessing] = useState(false);
     const [isEditingGoal, setIsEditingGoal] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     useEffect(() => {
-        const needsSubscriptionModal = !showOnboarding && hasTodaysGoal && !isEditingGoal && !subscription && !showTutorial && (plans || []).length > 0;
-        if (needsSubscriptionModal && !window.snap) {
-            const script = document.createElement('script'); script.src = 'https://app.midtrans.com/snap/snap.js';
-            script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_CLIENT_KEY); script.async = true; document.body.appendChild(script);
+        if (flash?.show_upgrade_modal) {
+            setShowUpgradeModal(true);
         }
-    }, [showOnboarding, hasTodaysGoal, isEditingGoal, subscription, showTutorial, plans]);
+    }, [flash]);
 
     const shouldShowOnboarding = showOnboarding;
     const shouldShowDailyGoal = (!showOnboarding && !hasTodaysGoal) || isEditingGoal;
-    const shouldShowSubscription = !showOnboarding && !shouldShowDailyGoal && !subscription && !showTutorial && (plans || []).length > 0;
-    const shouldShowTutorial = !shouldShowOnboarding && !shouldShowDailyGoal && !shouldShowSubscription && showTutorial;
-    const anyModalActive = shouldShowOnboarding || shouldShowDailyGoal || shouldShowSubscription || shouldShowTutorial;
+    const shouldShowUpgrade = !shouldShowOnboarding && !shouldShowDailyGoal && showUpgradeModal;
 
-    // Handler untuk menyelesaikan Onboarding, mengirim semua data.
+    const anyModalActive = shouldShowOnboarding || shouldShowDailyGoal || shouldShowUpgrade;
+    const renderMainContent = !showOnboarding;
+
     const handleOnboardingFinish = (data) => {
         setIsProcessing(true);
         const { daily_goal, ...onboarding_data } = data;
-        router.post(route('daily-goal.store'), { goal: daily_goal, onboarding_data }, {
-            onFinish: () => setIsProcessing(false)
-        });
+        router.post(route('daily-goal.store'), { goal: daily_goal, onboarding_data }, { onFinish: () => setIsProcessing(false) });
     };
 
-    // Handler HANYA untuk pop-up Goal Harian dengan LOGIKA FIX
     const handleSaveDailyGoal = (goal) => {
         setIsProcessing(true);
-        router.post(route('daily-goal.store'), { goal }, {
-            onSuccess: () => { setIsEditingGoal(false); },
-            onFinish: () => { setIsProcessing(false); }
-        });
+        router.post(route('daily-goal.store'), { goal }, { onSuccess: () => setIsEditingGoal(false), onFinish: () => setIsProcessing(false) });
     };
-    
-    const handleFinishTutorial = () => router.get(route('dashboard'), {}, { preserveState: false, replace: true });
-    
-    const renderMainContent = !showOnboarding;
 
     return (
         <AuthenticatedLayout user={auth.user} header={<h2 className="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">Dashboard</h2>}>
             <Head title="Dashboard" />
+            
             <div className={`transition-all duration-500 ${anyModalActive ? 'blur-md' : ''}`}>
                 {renderMainContent &&
                     <MainDashboard
-                        auth={auth}
-                        todaysGoal={todaysGoal}
+                        {...props}
                         onEditGoalClick={() => setIsEditingGoal(true)}
+                        onUpgradeClick={() => setShowUpgradeModal(true)}
                     />
                 }
             </div>
+            
             <AnimatePresence>
-                {shouldShowOnboarding && <OnboardingModal onFinish={handleOnboardingFinish} isProcessing={isProcessing} />}
-                {shouldShowDailyGoal && <DailyGoalModal onSave={handleSaveDailyGoal} isProcessing={isProcessing} onClose={() => setIsEditingGoal(false)} />}
-                {shouldShowTutorial && <TutorialModal onFinish={handleFinishTutorial} />}
-                {shouldShowSubscription && <SubscriptionModal user={auth.user} plans={plans} />}
+                {shouldShowOnboarding && (
+                    <OnboardingModal onFinish={handleOnboardingFinish} isProcessing={isProcessing} />
+                )}
+                {shouldShowDailyGoal && (
+                    <DailyGoalModal onSave={handleSaveDailyGoal} isProcessing={isProcessing} onClose={() => setIsEditingGoal(false)} />
+                )}
+                {shouldShowUpgrade && (
+                    <UpgradeModal show={shouldShowUpgrade} onClose={() => setShowUpgradeModal(false)} plans={plans} snap_token={snap_token} />
+                )}
             </AnimatePresence>
         </AuthenticatedLayout>
     );

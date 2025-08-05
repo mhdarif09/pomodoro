@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\VoiceController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\DailyGoalController;
+use App\Http\Controllers\ReflectionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Inertia\Inertia;
@@ -40,13 +41,14 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Rute utama Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Rute BARU untuk menyimpan data Onboarding
+Route::post('/dashboard/dismiss-upgrade-modal', [DashboardController::class, 'dismissUpgradeModal'])->name('dashboard.dismiss-upgrade-modal');    // Rute BARU untuk menyimpan data Onboarding
 
         Route::post('/daily-goal', [DailyGoalController::class, 'storeOrUpdate'])->name('daily-goal.store');
-
+ Route::get('/refleksi', [ReflectionController::class, 'index'])->name('refleksi.index');
+    Route::post('/refleksi', [ReflectionController::class, 'store'])->name('refleksi.store');
     // Route::post('/onboarding/complete', [OnboardingController::class, 'store'])->name('onboarding.store');
 
+    
     // Rute yang sudah ada (pastikan masih ada)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -94,10 +96,10 @@ Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout'])-
 });
 
 
-// Route::middleware(['auth'])->group(function () {
-//     Route::get('/subscribe', [SubscriptionController::class, 'index'])->name('subscribe.index');
-//     Route::post('/subscribe', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
-// });
+Route::middleware(['auth'])->group(function () {
+    Route::get('/subscribe', [SubscriptionController::class, 'index'])->name('subscribe.index');
+    Route::post('/subscribe', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
+});
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/premium-plans', [PlanController::class, 'index'])->name('admin.plans.index');
@@ -129,6 +131,9 @@ Route::get('/subscription/payment-success', [SubscriptionController::class, 'pay
 Route::get('/voice', function () {
     return inertia('Voice/Index');
 })->middleware(['auth', 'verified'])->name('voice.index'); 
+
+Route::get('/pricing', [SubscriptionController::class, 'index'])->name('subscribe.index');
+
 
 Route::middleware(['auth', 'can:viewAdmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');

@@ -27,6 +27,7 @@ Route::post('/gemini/ask', [GeminiController::class, 'ask']);
 Route::get('/voice/settings', [VoiceController::class, 'getVoiceSettings']);
 Route::delete('/voice/cleanup', [VoiceController::class, 'cleanupOldAudioFiles']);
 
+
 // Middleware untuk CORS jika diperlukan
 Route::group(['middleware' => ['cors']], function () {
     Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);

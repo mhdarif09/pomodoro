@@ -29,6 +29,7 @@ class User extends Authenticatable
         'focus_time',
         'personal_motivation',
         'onboarding_complete',
+        'personality_summary',
     ];
 
     /**
@@ -52,6 +53,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'growth_goals' => 'array',
         'onboarding_complete' => 'boolean',
+    
     ];
 
     public function subscription()
@@ -116,4 +118,7 @@ public function todaysGoal()
         return $this->hasMany(DailyGoal::class);
     }
 
+      public function reflections() {
+        return $this->hasMany(Reflection::class);
+    }
 }

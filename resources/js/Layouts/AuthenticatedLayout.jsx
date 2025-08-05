@@ -26,7 +26,7 @@ export default function Authenticated({ user, header, children }) {
     // Array untuk link navigasi umum
     const navLinks = [
         { routeName: 'dashboard', label: 'Dashboard' },
-        { routeName: 'voice.index', label: 'Kelas Suara' }, // <-- MODIFIKASI: Tambahkan link Kelas Suara
+        // { routeName: 'voice.index', label: 'Kelas Suara' }, // <-- MODIFIKASI: Tambahkan link Kelas Suara
         { routeName: 'pomodoro.index', label: 'Pomodoro' },
         { routeName: 'transactions.history', label: 'History' },
     ];
