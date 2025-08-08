@@ -45,14 +45,21 @@ Route::post('/dashboard/dismiss-upgrade-modal', [DashboardController::class, 'di
 
         Route::post('/daily-goal', [DailyGoalController::class, 'storeOrUpdate'])->name('daily-goal.store');
  Route::get('/refleksi', [ReflectionController::class, 'index'])->name('refleksi.index');
-    Route::post('/refleksi', [ReflectionController::class, 'store'])->name('refleksi.store');
-    // Route::post('/onboarding/complete', [OnboardingController::class, 'store'])->name('onboarding.store');
+    Route::post('/refleksi', [ReflectionController::class, 'store'])->name('refleksi.store');    // Route::post('/onboarding/complete', [OnboardingController::class, 'store'])->name('onboarding.store');
 
     
     // Rute yang sudah ada (pastikan masih ada)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Route untuk halaman refleksi
+    Route::get('/refleksi', [ReflectionController::class, 'index'])->name('refleksi.index');
+    
+    // Route untuk submit jawaban refleksi
+    Route::post('/refleksi', [ReflectionController::class, 'store'])->name('refleksi.store');
 });
 // Route::get('/dashboard', [DashboardController::class, 'index'])
 //     ->middleware(['auth', 'verified'])

@@ -26,22 +26,28 @@ class GeminiService {
             $this->getStandardPrompt($formattedHistory);
         
         try {
-            $result = Gemini::gemini15Pro()->generateContent($prompt)->text();
-            $parts = explode('|||', $result, 3); // Premium prompt punya 3 bagian
+      $result = Gemini::generativeModel('models/gemini-1.5-pro-latest')
+                            ->generateContent($prompt)
+                            ->text();
+            
+            $parts = explode('|||', $result, 3);
 
-            // Jika premium dan ada insight, simpan
             if ($user->is_premium && isset($parts[2]) && trim($parts[2]) !== "NONE") {
                 $user->update(['personality_summary' => trim($parts[2])]);
             }
+
             return [
                 'feedback' => trim($parts[0] ?? 'Terima kasih telah berbagi.'),
                 'next_question' => trim($parts[1] ?? 'Ada lagi yang ingin diceritakan?'),
             ];
         } catch (\Exception $e) {
+            // Saran: Log errornya untuk debugging di masa depan
+            Log::error('Gemini API Error: ' . $e->getMessage()); 
+            
+            // Fallback response jika API gagal
             return ['feedback' => 'Terima kasih telah berbagi.', 'next_question' => 'Boleh ceritakan lebih lanjut?'];
         }
-    }
-    
+    }    
     // Prompt untuk pengguna non-premium (hanya tanya-jawab biasa)
     private function getStandardPrompt(string $history): string {
         return "You are 'GrowthBot', a supportive AI journaling assistant speaking Indonesian. Continue a natural conversation based on the history. Respond with feedback, then a new question.\n\n<HISTORY>\n{$history}\n</HISTORY>\n\nFormat: [Feedback]|||[New Question]";
