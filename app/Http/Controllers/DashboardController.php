@@ -10,28 +10,33 @@ use Illuminate\Support\Facades\Redirect;
 
 class DashboardController extends Controller
 {
+    // Definisikan kuota gratis di sini agar mudah diubah
+    private const FREE_REFLECTION_LIMIT = 10;
+
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         if ($user instanceof \Illuminate\Database\Eloquent\Model) {
             $user->load('todaysGoal');
         }
 
-        // Ambil semua plan
         $plans = Plan::all();
-
-        // Cek langganan aktif
         $activeSubscription = Subscription::where('user_id', $user->id)
             ->where('status', 'paid')
             ->where('expired_at', '>=', now())
             ->latest('expired_at')
             ->first();
+            
+        // --- LOGIKA BARU UNTUK KUOTA GRATIS ---
+        // Hitung berapa banyak jawaban yang sudah diberikan oleh pengguna
+        $usageCount = $user->reflections()->whereNotNull('user_answer')->count();
+        $remainingQuota = self::FREE_REFLECTION_LIMIT - $usageCount;
+        // ------------------------------------
 
-        // Tentukan apakah modal upgrade harus ditampilkan
         $showUpgradeModal = !$request->session()->get('dismissed_upgrade_modal', false) &&
             (!$activeSubscription || ($activeSubscription && $activeSubscription->expired_at->diffInDays(now()) <= 7));
 
-        // Siapkan props untuk frontend
         $props = [
             'auth' => [
                 'user' => [
@@ -45,15 +50,17 @@ class DashboardController extends Controller
             'showOnboarding' => !$user->onboarding_complete,
             'todaysGoal' => $user->todaysGoal,
             'hasTodaysGoal' => (bool) $user->todaysGoal,
-            'hasReflectedToday' => $user->reflections()->whereDate('reflection_date', today())->whereNotNull('user_answer')->exists(),
+            'hasReflectedToday' => $user->reflections()->whereDate('reflection_date', today())->exists(),
             'weeklyStats' => $this->getWeeklyStats($user),
             'subscription' => $activeSubscription,
             'showTutorial' => $request->session()->pull('show_tutorial', false),
             'plans' => $plans,
             'snap_token' => $request->query('snap_token'),
             'flash' => [
-                'show_upgrade_modal' => $showUpgradeModal,
+                'show_upgrade_modal' => $request->session()->get('show_upgrade_modal') || $showUpgradeModal,
             ],
+            // TAMBAHKAN PROP BARU INI
+            'remainingQuota' => max(0, $remainingQuota), 
         ];
 
         return Inertia::render('Dashboard', $props);
@@ -81,6 +88,6 @@ class DashboardController extends Controller
     public function dismissUpgradeModal(Request $request)
     {
         $request->session()->put('dismissed_upgrade_modal', true);
-        return Redirect::route('dashboard'); // Redirect to dashboard instead of JSON
+        return Redirect::route('dashboard');
     }
 }

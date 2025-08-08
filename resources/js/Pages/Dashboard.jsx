@@ -1,4 +1,4 @@
-// File: resources/js/Pages/Dashboard.jsx (Full Code - FINAL PREMIUM VERSION)
+// File: resources/js/Pages/Dashboard.jsx (Full Code - FINAL FREEMIUM VERSION)
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, Link, usePage } from '@inertiajs/react';
@@ -16,7 +16,7 @@ import { BellAlertIcon } from '@heroicons/react/24/outline';
 
 
 // ====================================================================
-// BAGIAN 1: KOMPONEN INTERNAL DASHBOARD (dengan penyesuaian premium)
+// BAGIAN 1: KOMPONEN INTERNAL DASHBOARD (dengan penyesuaian freemium)
 // ====================================================================
 
 /**
@@ -86,9 +86,9 @@ const PomodoroTimer = () => {
 };
 
 /**
- * Kartu untuk menampilkan status Refleksi Harian, dengan logika premium.
+ * Kartu untuk menampilkan status Refleksi Harian, dengan logika freemium.
  */
-const ReflectionCard = ({ hasReflectedToday, isPremium, onUpgradeClick }) => (
+const ReflectionCard = ({ hasReflectedToday, isPremium, remainingQuota, onUpgradeClick }) => (
     <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6 h-full flex flex-col">
         <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center mb-2">
             <SparklesSolid className="w-5 h-5 mr-2 text-yellow-400"/>
@@ -111,16 +111,38 @@ const ReflectionCard = ({ hasReflectedToday, isPremium, onUpgradeClick }) => (
 
             {/* Tampilan untuk Pengguna Gratis */}
             {!isPremium && (
-                <div className="text-center p-4 border-2 border-dashed border-amber-400/50 dark:border-amber-500/40 rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                    <div className="w-12 h-12 mx-auto bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center mb-3">
-                        <LockClosedIcon className="w-6 h-6 text-amber-500 dark:text-amber-400" />
-                    </div>
-                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Refleksi AI Mendalam</p>
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">Fitur Premium</p>
-                    <button onClick={onUpgradeClick} className="w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105 text-sm">
-                        Upgrade untuk Membuka
-                    </button>
-                </div>
+                <>
+                    {/* Kondisi 1: Kuota masih ada */}
+                    {remainingQuota > 0 && (
+                        hasReflectedToday ? (
+                            <div className="text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                                <p className="text-green-800 dark:text-green-300">Sesi gratis hari ini sudah dimulai. Lanjutkan di halaman refleksi!</p>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-slate-600 dark:text-slate-300 text-sm mb-2">Coba fitur refleksi dengan AI GrowthBot.</p>
+                                <Link href={route('refleksi.index')} className="w-full text-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 shadow-lg">Mulai Sesi Gratis</Link>
+                                <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-3">
+                                    Kuota tersisa: <span className="font-bold">{remainingQuota} balasan</span>
+                                </p>
+                            </>
+                        )
+                    )}
+                    
+                    {/* Kondisi 2: Kuota sudah habis */}
+                    {remainingQuota <= 0 && (
+                        <div className="text-center p-4 border-2 border-dashed border-amber-400/50 dark:border-amber-500/40 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                            <div className="w-12 h-12 mx-auto bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center mb-3">
+                                <LockClosedIcon className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+                            </div>
+                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Kuota Gratis Habis</p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">Lanjutkan percakapan tanpa batas.</p>
+                            <button onClick={onUpgradeClick} className="w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105 text-sm">
+                                Upgrade ke Premium
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     </div>
@@ -143,7 +165,7 @@ const WeeklyProgressCard = ({ stats }) => (
 // ====================================================================
 // BAGIAN 2: HALAMAN DASHBOARD UTAMA (Main View)
 // ====================================================================
-const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, hasReflectedToday, weeklyStats, onUpgradeClick }) => (
+const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, hasReflectedToday, weeklyStats, remainingQuota, onUpgradeClick }) => (
     <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-white">👋 Hai, {auth.user.name}!</h1>
@@ -163,7 +185,12 @@ const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, hasReflectedToday, w
             </div>
             <div className="space-y-6">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-                    <ReflectionCard hasReflectedToday={hasReflectedToday} isPremium={auth.user.is_premium} onUpgradeClick={onUpgradeClick} />
+                    <ReflectionCard 
+                        hasReflectedToday={hasReflectedToday} 
+                        isPremium={auth.user.is_premium} 
+                        remainingQuota={remainingQuota} 
+                        onUpgradeClick={onUpgradeClick} 
+                    />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}><WeeklyProgressCard stats={weeklyStats} /></motion.div>
             </div>
@@ -175,7 +202,18 @@ const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, hasReflectedToday, w
 // BAGIAN 3: EXPORT UTAMA & PENGATUR MODAL (dengan logika premium)
 // ====================================================================
 export default function Dashboard(props) {
-    const { auth, plans, showOnboarding, hasTodaysGoal, todaysGoal, hasReflectedToday, weeklyStats, snap_token } = props;
+    // Ekstrak SEMUA props yang dikirim dari controller
+    const { 
+        auth, 
+        plans, 
+        showOnboarding, 
+        hasTodaysGoal, 
+        todaysGoal, 
+        hasReflectedToday, 
+        weeklyStats, 
+        snap_token, 
+        remainingQuota // <-- Jangan lupa ekstrak prop baru ini
+    } = props;
     const { flash } = usePage().props;
 
     const [isProcessing, setIsProcessing] = useState(false);
@@ -183,31 +221,43 @@ export default function Dashboard(props) {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     useEffect(() => {
+        // Logika untuk menampilkan modal upgrade dari flash message
         if (flash?.show_upgrade_modal) {
             setShowUpgradeModal(true);
         }
     }, [flash]);
 
+    // Menentukan modal mana yang harus aktif
     const shouldShowOnboarding = showOnboarding;
     const shouldShowDailyGoal = (!showOnboarding && !hasTodaysGoal) || isEditingGoal;
     const shouldShowUpgrade = !shouldShowOnboarding && !shouldShowDailyGoal && showUpgradeModal;
 
     const anyModalActive = shouldShowOnboarding || shouldShowDailyGoal || shouldShowUpgrade;
-    const renderMainContent = !showOnboarding;
+    const renderMainContent = !showOnboarding; // Hanya render konten utama jika onboarding selesai
 
+    // Handler untuk menyelesaikan onboarding
     const handleOnboardingFinish = (data) => {
         setIsProcessing(true);
         const { daily_goal, ...onboarding_data } = data;
-        router.post(route('daily-goal.store'), { goal: daily_goal, onboarding_data }, { onFinish: () => setIsProcessing(false) });
+        router.post(route('daily-goal.store'), { goal: daily_goal, onboarding_data }, { 
+            onFinish: () => setIsProcessing(false) 
+        });
     };
 
+    // Handler untuk menyimpan goal harian
     const handleSaveDailyGoal = (goal) => {
         setIsProcessing(true);
-        router.post(route('daily-goal.store'), { goal }, { onSuccess: () => setIsEditingGoal(false), onFinish: () => setIsProcessing(false) });
+        router.post(route('daily-goal.store'), { goal }, { 
+            onSuccess: () => setIsEditingGoal(false), 
+            onFinish: () => setIsProcessing(false) 
+        });
     };
 
     return (
-        <AuthenticatedLayout user={auth.user} header={<h2 className="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">Dashboard</h2>}>
+        <AuthenticatedLayout 
+            user={auth.user} 
+            header={<h2 className="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">Dashboard</h2>}
+        >
             <Head title="Dashboard" />
             
             <div className={`transition-all duration-500 ${anyModalActive ? 'blur-md' : ''}`}>
@@ -228,7 +278,12 @@ export default function Dashboard(props) {
                     <DailyGoalModal onSave={handleSaveDailyGoal} isProcessing={isProcessing} onClose={() => setIsEditingGoal(false)} />
                 )}
                 {shouldShowUpgrade && (
-                    <UpgradeModal show={shouldShowUpgrade} onClose={() => setShowUpgradeModal(false)} plans={plans} snap_token={snap_token} />
+                    <UpgradeModal 
+                        show={shouldShowUpgrade} 
+                        onClose={() => setShowUpgradeModal(false)} 
+                        plans={plans} 
+                        snap_token={snap_token} 
+                    />
                 )}
             </AnimatePresence>
         </AuthenticatedLayout>
