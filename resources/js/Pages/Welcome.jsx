@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, Head } from '@inertiajs/react';
 import { useInView } from 'react-intersection-observer';
 import { FaInstagram, FaSpotify, FaYoutube, FaTiktok, FaLinkedin, FaTwitter } from 'react-icons/fa';
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
 import {
     RocketLaunchIcon,
     ClockIcon,
@@ -37,7 +39,6 @@ const FeatureCard = ({ icon, title, children, isComingSoon = false }) => (
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
             {isComingSoon && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">Segera</span>}
         </div>
-        {/* Pastikan 'children' (deskripsi) dirender di sini */}
         <p className="mt-2 flex-grow text-gray-600 dark:text-gray-400">{children}</p>
     </div>
 );
@@ -90,6 +91,37 @@ const FounderCard = ({ member, index }) => {
     );
 };
 
+const ParticlesBackground = () => {
+    const [init, setInit] = useState(false);
+    useEffect(() => {
+        initParticlesEngine(async (engine) => await loadSlim(engine)).then(() => setInit(true));
+    }, []);
+
+    const particlesLoaded = useCallback(async container => {}, []);
+
+    const options = {
+        background: { color: { value: 'transparent' } },
+        fpsLimit: 60,
+        interactivity: {
+            events: { onHover: { enable: true, mode: 'grab' } },
+            modes: { grab: { distance: 140, links: { opacity: 0.5 } } },
+        },
+        particles: {
+            color: { value: '#10b981' }, // emerald-500
+            links: { color: '#34d399', distance: 150, enable: true, opacity: 0.1, width: 1 }, // emerald-400
+            move: { direction: 'none', enable: true, outModes: { default: 'bounce' }, random: false, speed: 0.5, straight: false },
+            number: { density: { enable: true, area: 800 }, value: 40 },
+            opacity: { value: 0.2 },
+            shape: { type: 'circle' },
+            size: { value: { min: 1, max: 3 } },
+        },
+        detectRetina: true,
+    };
+
+    if (init) return <Particles id="tsparticles" particlesLoaded={particlesLoaded} options={options} />;
+    return <></>;
+};
+
 // =======================================================================
 //  2. DATA UNTUK SETIAP SECTION
 // =======================================================================
@@ -116,9 +148,9 @@ const testimonials = [
 ];
 
 const teamMembers = [
-  { name: 'Founder Satu', role: 'Chief Executive Officer', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&q=80', linkedin: '#', twitter: '#' },
-  { name: 'Founder Dua', role: 'Chief Technology Officer', avatar: 'https://images.unsplash.com/photo-1557862921-37829c790f19?w=500&q=80', linkedin: '#', twitter: '#' },
-  { name: 'Founder Tiga', role: 'Chief Product Officer', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286de2?w=500&q=80', linkedin: '#', twitter: '#' },
+  { name: 'Muhammad Arif Rahmad Syahputra', role: 'Chief Executive Officer', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&q=80', linkedin: '#', twitter: '#' },
+  { name: 'Muhammad Rizky Fatahilla', role: 'Chief Finance Officer', avatar: 'https://images.unsplash.com/photo-1557862921-37829c790f19?w=500&q=80', linkedin: '#', twitter: '#' },
+  { name: 'Wahyu Rohmatul Abidin', role: 'Chief Technology Officer', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286de2?w=500&q=80', linkedin: '#', twitter: '#' },
 ];
 
 // =======================================================================
@@ -138,7 +170,6 @@ export default function Welcome({ auth }) {
     return (
         <>
             <Head title="Sarang Tumbuh - Fokus, Refleksi, Bertumbuh" />
-
             <div className="w-full bg-gray-50 text-gray-800 selection:bg-emerald-500 selection:text-white dark:bg-gray-900 dark:text-white">
 
                 {/* --- HERO SECTION --- */}
@@ -147,9 +178,7 @@ export default function Welcome({ auth }) {
                     <div className="absolute bottom-0 right-0 hidden h-96 w-96 translate-x-1/4 translate-y-1/4 rounded-full bg-teal-500/30 opacity-50 blur-[120px] dark:block" />
                     <div className="relative z-10 flex h-full min-h-screen flex-col">
                         <header className="container mx-auto flex items-center justify-between p-6">
-                            <Link href="/" className="text-xl font-bold tracking-tighter text-gray-900 dark:text-white">
-                                Sarang<span className="text-emerald-500">Tumbuh</span>.
-                            </Link>
+                            <Link href="/" className="text-xl font-bold tracking-tighter text-gray-900 dark:text-white">Sarang<span className="text-emerald-500">Tumbuh</span>.</Link>
                             <nav className="flex items-center gap-2 text-sm font-semibold sm:gap-4">
                                 <Link href="#fitur" className="hidden rounded-lg px-4 py-2 text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white sm:block">Fitur</Link>
                                 <Link href="#perjalanan" className="hidden rounded-lg px-4 py-2 text-gray-600 transition hover:bg-gray-200 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white sm:block">Perjalanan</Link>
@@ -165,33 +194,17 @@ export default function Welcome({ auth }) {
                         </header>
                         <main className="container relative mx-auto flex flex-1 flex-col items-center justify-center p-6 text-center">
                             <div aria-hidden="true" className="absolute inset-0 z-[-1] hidden md:block">
-                                <div className="absolute top-[10%] left-[15%] animate-float [animation-duration:8s]" style={{ transform: `translate(${(mousePos.x - width / 2) / -25}px, ${(mousePos.y - height / 2) / -25}px)` }}>
-                                    <ChatBubbleLeftRightIcon className="h-24 w-24 text-gray-900/5 dark:text-white/5" />
-                                </div>
-                                <div className="absolute bottom-[15%] right-[10%] animate-float [animation-delay:-2s]" style={{ transform: `translate(${(mousePos.x - width / 2) / 35}px, ${(mousePos.y - height / 2) / 35}px)` }}>
-                                    <ChartBarIcon className="h-28 w-28 text-gray-900/5 dark:text-white/5" />
-                                </div>
+                                <div className="absolute top-[10%] left-[15%] animate-float [animation-duration:8s]" style={{ transform: `translate(${(mousePos.x - width / 2) / -25}px, ${(mousePos.y - height / 2) / -25}px)` }}><ChatBubbleLeftRightIcon className="h-24 w-24 text-gray-900/5 dark:text-white/5" /></div>
+                                <div className="absolute bottom-[15%] right-[10%] animate-float [animation-delay:-2s]" style={{ transform: `translate(${(mousePos.x - width / 2) / 35}px, ${(mousePos.y - height / 2) / 35}px)` }}><ChartBarIcon className="h-28 w-28 text-gray-900/5 dark:text-white/5" /></div>
                             </div>
                             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-gray-900/10 bg-gray-900/5 px-4 py-1 text-xs font-medium text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
-                                <SparklesIcon className="h-4 w-4 text-emerald-500" />
-                                <span>Platform All-in-One untuk Pertumbuhan Diri</span>
+                                <SparklesIcon className="h-4 w-4 text-emerald-500" /><span>Platform All-in-One untuk Pertumbuhan Diri</span>
                             </div>
                             <h1 className="text-4xl font-extrabold tracking-tighter sm:text-6xl lg:text-7xl">
-                                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                                    Fokus. Refleksi.
-                                    <br />
-                                    Bertumbuh Setiap Hari.
-                                </span>
+                                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Fokus. Refleksi.<br />Bertumbuh Setiap Hari.</span>
                             </h1>
-                            <p className="mx-auto mt-6 max-w-xl text-lg text-gray-600 dark:text-gray-400">
-                                Sarang Tumbuh adalah ruang digital Anda untuk meningkatkan produktivitas dan kesadaran diri. Semua tools yang Anda butuhkan, dalam satu platform.
-                            </p>
-                            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
-                                <ActionButton href={auth.user ? route('dashboard') : route('register')}>
-                                    <RocketLaunchIcon className="mr-2 h-5 w-5" />
-                                    Mulai Perjalananmu
-                                </ActionButton>
-                            </div>
+                            <p className="mx-auto mt-6 max-w-xl text-lg text-gray-600 dark:text-gray-400">Sarang Tumbuh adalah ruang digital Anda untuk meningkatkan produktivitas dan kesadaran diri. Semua tools yang Anda butuhkan, dalam satu platform.</p>
+                            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row"><ActionButton href={auth.user ? route('dashboard') : route('register')}><RocketLaunchIcon className="mr-2 h-5 w-5" />Mulai Perjalananmu</ActionButton></div>
                         </main>
                     </div>
                 </div>
@@ -204,12 +217,7 @@ export default function Welcome({ auth }) {
                             <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-400">Dirancang minimalis tapi super powerfull untuk mendukung perjalananmu.</p>
                         </div>
                         <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-                            {/* [FIXED] Mem-passing deskripsi sebagai children ke komponen FeatureCard */}
-                            {features.map((feature, index) => (
-                                <FeatureCard key={index} icon={feature.icon} title={feature.title} isComingSoon={feature.isComingSoon}>
-                                    {feature.description}
-                                </FeatureCard>
-                            ))}
+                            {features.map((feature) => (<FeatureCard key={feature.title} icon={feature.icon} title={feature.title} isComingSoon={feature.isComingSoon}>{feature.description}</FeatureCard>))}
                         </div>
                     </div>
                 </div>
@@ -218,17 +226,12 @@ export default function Welcome({ auth }) {
                 <div id="perjalanan" className="bg-gray-50 py-20 dark:bg-gray-900 sm:py-32">
                     <div className="container mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mx-auto max-w-2xl text-center">
-                            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                                Perjalanan Kami
-                                <span className="block bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                                    Membangun Sarang Tumbuh
-                                </span>
-                            </h2>
+                            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Perjalanan Kami<span className="block bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Membangun Sarang Tumbuh</span></h2>
                             <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-400">Sebuah cerita singkat tentang bagaimana sebuah ide menjadi sebuah gerakan.</p>
                         </div>
                         <div className="relative mx-auto mt-16 max-w-3xl">
                             <div className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-gray-200 dark:bg-gray-700"></div>
-                            {timelineData.map((item, index) => (<TimelineItem key={index} data={item} position={index % 2 === 0 ? 'left' : 'right'} />))}
+                            {timelineData.map((item, index) => (<TimelineItem key={item.title} data={item} position={index % 2 === 0 ? 'left' : 'right'} />))}
                         </div>
                     </div>
                 </div>
@@ -241,8 +244,8 @@ export default function Welcome({ auth }) {
                              <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-400">Kisah nyata dari para pengguna yang sedang bertumbuh bersama kami.</p>
                         </div>
                         <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-                             {testimonials.map((item, index) => (
-                                 <div key={index} className="flex flex-col rounded-2xl bg-white p-8 shadow-lg ring-1 ring-gray-900/5 dark:bg-white/5 dark:ring-white/10">
+                             {testimonials.map((item) => (
+                                 <div key={item.name} className="flex flex-col rounded-2xl bg-white p-8 shadow-lg ring-1 ring-gray-900/5 dark:bg-white/5 dark:ring-white/10">
                                      <p className="flex-grow text-gray-600 dark:text-gray-300">"{item.quote}"</p>
                                      <div className="mt-6 flex items-center gap-4">
                                          <img className="h-12 w-12 rounded-full bg-gray-50" src={item.avatar} alt={item.name} />
@@ -265,31 +268,26 @@ export default function Welcome({ auth }) {
                             <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-400">Orang-orang yang bersemangat membantu Anda berkembang.</p>
                         </div>
                         <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-8 sm:grid-cols-3 lg:mx-0 lg:max-w-none">
-                            {teamMembers.map((member, index) => (<FounderCard key={index} member={member} index={index} />))}
+                            {teamMembers.map((member, index) => (<FounderCard key={member.name} member={member} index={index} />))}
                         </div>
                     </div>
                 </div>
 
                 {/* --- COMMUNITY CTA SECTION --- */}
-                <div id="komunitas" className="bg-white py-20 dark:bg-gray-900/70 dark:backdrop-blur-sm sm:py-32">
-                    <div className="container mx-auto max-w-4xl px-6 text-center lg:px-8">
-                        <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                            Kamu Nggak Sendirian.
-                        </h2>
-                        <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">
-                           Bergabunglah dengan komunitas 'Sarang Tumbuh'. Ini bukan sekadar aplikasi, ini adalah gerakan untuk tumbuh bareng. No gatekeeping, just good vibes.
-                        </p>
-                        <div className="mt-8">
-                            <ActionButton href="#"> {/* TODO: Ganti dengan link Discord/komunitas Anda */}
-                                Join Komunitas Sarang Tumbuh
-                                <ArrowRightIcon className="ml-2 h-5 w-5" />
-                            </ActionButton>
+                <div id="komunitas" className="relative overflow-hidden bg-gray-900 py-24 sm:py-32">
+                    <div className="absolute inset-0 z-0"><ParticlesBackground /></div>
+                    <div className="relative z-10 mx-auto max-w-4xl px-6 text-center lg:px-8">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-400">
+                            <UserGroupIcon className="h-5 w-5" /><span>Telah bergabung 1,000+ member</span>
                         </div>
+                        <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Kamu Nggak Sendirian.</h2>
+                        <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-300">Bergabunglah dengan komunitas 'Sarang Tumbuh'. Ini bukan sekadar aplikasi, ini adalah gerakan untuk tumbuh bareng. No gatekeeping, just good vibes.</p>
+                        <div className="mt-10"><ActionButton href="#">{/* TODO: Ganti dengan link Discord/komunitas Anda */}Join Komunitas Sarang Tumbuh<ArrowRightIcon className="ml-2 h-5 w-5" /></ActionButton></div>
                     </div>
                 </div>
 
                 {/* --- FOOTER --- */}
-                <footer className="border-t border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-gray-900">
+                <footer className="border-t border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
                     <div className="container mx-auto flex flex-col items-center justify-between gap-6 p-8 sm:flex-row">
                         <p className="text-sm text-gray-500 dark:text-gray-400">© {new Date().getFullYear()} Sarang Tumbuh. All rights reserved.</p>
                         <div className="flex items-center gap-x-6">
