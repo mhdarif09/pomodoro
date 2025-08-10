@@ -73,6 +73,8 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - ./nginx/conf.d:/etc/nginx/conf.d
     entrypoint: /bin/sh
+    networks:
+      - laravel
 
 networks:
   laravel:

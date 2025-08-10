@@ -1,6 +1,5 @@
 <?php
 // File: app/Http/Controllers/GeminiController.php
-// Versi lengkap dengan debugging detail untuk tracking error
 
 namespace App\Http\Controllers;
 
