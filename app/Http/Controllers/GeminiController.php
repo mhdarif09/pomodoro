@@ -1,19 +1,19 @@
 <?php
 // File: app/Http/Controllers/GeminiController.php
-// --- VERSI LENGKAP DAN FINAL ---
+// Versi lengkap dengan debugging detail untuk tracking error
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\RequestException; // <-- Import class Exception yang diperlukan
+use Illuminate\Http\Client\RequestException;
 use Smalot\PdfParser\Parser;
 use Imagick;
 
 class GeminiController extends Controller
 {
     /**
-     * Menangani pertanyaan umum ke Gemini.
+     * Menangani pertanyaan umum ke Gemini dengan debugging lengkap.
      */
     public function ask(Request $request)
     {
@@ -30,13 +30,17 @@ class GeminiController extends Controller
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . env('GEMINI_API_KEY');
 
         try {
-            // Blok untuk mencoba request ke API
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                          ->retry(3, 1500) // Coba lagi 3x jika gagal, jeda 1.5 detik
+                          ->retry(3, 1500)
                           ->post($url, $payload);
-            
-            // Melempar exception jika status code bukan 2xx (sukses)
-            // Ini akan ditangkap oleh blok catch di bawah.
+
+            // Debug langsung response status dan body
+            dd([
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'json' => $response->json(),
+            ]);
+
             $response->throw();
 
             $output = $response->json();
@@ -45,26 +49,30 @@ class GeminiController extends Controller
             return response()->json(['response' => $content]);
 
         } catch (RequestException $e) {
-            // Menangkap semua kegagalan koneksi atau server dari Http client
             \Log::error('Gemini Request Exception (ask): ' . $e->getMessage());
 
-            // Periksa jika ada respons error dan status kodenya 503 (Overloaded)
+            // Debug error dan response
+            dd([
+                'error' => $e->getMessage(),
+                'response' => $e->response ? $e->response->body() : null,
+                'status' => $e->response ? $e->response->status() : null,
+            ]);
+
             if ($e->response && $e->response->status() === 503) {
                 return response()->json(['error' => 'Server AI sedang sibuk. Silakan coba lagi beberapa saat.'], 503);
             }
-            
-            // Untuk semua jenis error koneksi lainnya
+
             return response()->json(['error' => 'Gagal terhubung ke layanan AI.'], 500);
         }
     }
 
     /**
-     * Menangani pertanyaan dari konteks dokumen PDF.
+     * Menangani pertanyaan dari konteks dokumen PDF dengan debugging lengkap.
      */
     public function askFromPdf(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:pdf|max:2048', // max 2MB
+            'file' => 'required|mimes:pdf|max:2048',
             'query' => 'required|string',
         ]);
 
@@ -83,12 +91,11 @@ class GeminiController extends Controller
             return response()->json(['error' => 'Gagal memproses file PDF. File mungkin rusak atau tidak didukung.'], 500);
         }
 
-        // Fallback ke OCR jika teks dari parser kosong
         if (empty(trim($text))) {
             \Log::warning('Fallback ke OCR (Tesseract) karena teks kosong...');
 
             try {
-                $imagick = new \Imagick();
+                $imagick = new Imagick();
                 $imagick->setResolution(300, 300);
                 $imagick->readImage($file->getPathname());
                 $imagick->setImageFormat('jpeg');
@@ -102,7 +109,11 @@ class GeminiController extends Controller
                     $outputFile = tempnam(sys_get_temp_dir(), 'ocr_');
                     $command = "tesseract " . escapeshellarg($tempPath) . " " . escapeshellarg($outputFile) . " -l ind+eng";
                     exec($command);
-                    $ocrText .= "\n" . file_get_contents($outputFile . '.txt');
+
+                    // Debug isi file OCR untuk tiap halaman
+                    $ocrPageText = file_get_contents($outputFile . '.txt');
+                    \Log::debug("OCR page $i text length: " . strlen($ocrPageText));
+                    $ocrText .= "\n" . $ocrPageText;
 
                     unlink($tempPath);
                     unlink($outputFile . '.txt');
@@ -142,13 +153,19 @@ class GeminiController extends Controller
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . env('GEMINI_API_KEY');
 
-        // --- INILAH BLOK KODE YANG DIPERBAIKI ---
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
                           ->retry(3, 1500)
                           ->post($url, $payload);
-                          
-            $response->throw(); // Melempar exception jika status code error (4xx atau 5xx)
+
+            // Debug langsung response dari API
+            dd([
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'json' => $response->json(),
+            ]);
+
+            $response->throw();
 
             $data = $response->json();
             if (empty($data['candidates'])) {
@@ -160,32 +177,34 @@ class GeminiController extends Controller
             return response()->json(['response' => $content]);
 
         } catch (RequestException $e) {
-            // "Menangkap" error yang dilempar oleh ->retry() atau ->throw()
             \Log::error('Gemini Request Exception (PDF): ' . $e->getMessage());
 
+            dd([
+                'error' => $e->getMessage(),
+                'response' => $e->response ? $e->response->body() : null,
+                'status' => $e->response ? $e->response->status() : null,
+            ]);
+
             if ($e->response && $e->response->status() === 503) {
-                // Jika errornya karena overload, kirim pesan yang jelas dan terkontrol
                 return response()->json(['error' => 'Server AI sedang sibuk. Silakan coba lagi beberapa saat.'], 503);
             }
-            
-            // Untuk semua error koneksi atau server lain dari Gemini
+
             return response()->json(['error' => 'Terjadi kesalahan saat berkomunikasi dengan layanan AI.'], 500);
         }
     }
 
     /**
-     * Method ini ada di kode Anda sebelumnya.
-     * Walaupun tidak dipanggil, kita tetap sertakan agar tidak ada kode yang hilang.
+     * Method lama untuk menjalankan OCR Tesseract pada gambar.
      */
     private function runTesseractOnImage($imagePath)
     {
-        $outputFile = tempnam(sys_get_temp_dir(), 'ocr_'); // buat file output temp
+        $outputFile = tempnam(sys_get_temp_dir(), 'ocr_');
         $command = "tesseract " . escapeshellarg($imagePath) . " " . escapeshellarg($outputFile) . " -l eng";
 
-        exec($command); // jalankan perintah tesseract
+        exec($command);
 
         $text = file_get_contents($outputFile . ".txt");
-        unlink($outputFile . ".txt"); // hapus file hasil
+        unlink($outputFile . ".txt");
         return $text;
     }
 }
