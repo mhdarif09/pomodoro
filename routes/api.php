@@ -2,33 +2,33 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GeminiController;
-
+use App\Http\Controllers\OpenAIController; // Ganti dari DeepseekController
 use App\Http\Controllers\VoiceController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
+| Semua route di sini akan otomatis punya prefix `/api`
+| dan biasanya digunakan untuk API (AJAX, frontend JS, mobile, dsb).
+|--------------------------------------------------------------------------
 */
 
+// Auth check
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/gemini/ask', [GeminiController::class, 'ask']);
-    Route::post('/gemini/pdf', [GeminiController::class, 'askFromPdf'])->name('gemini.pdf');
+// OpenAI (ganti dari Deepseek)
+Route::post('/ask', [OpenAIController::class, 'ask']);
+Route::post('/ask-from-pdf', [OpenAIController::class, 'askFromPdf']);
 
-    Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);
+// Voice processing
+Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);
 Route::get('/voice/settings', [VoiceController::class, 'getVoiceSettings']);
 Route::delete('/voice/cleanup', [VoiceController::class, 'cleanupOldAudioFiles']);
 
-
-// Middleware untuk CORS jika diperlukan
+// Optional: CORS middleware untuk API tertentu
 Route::group(['middleware' => ['cors']], function () {
     Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);
 });

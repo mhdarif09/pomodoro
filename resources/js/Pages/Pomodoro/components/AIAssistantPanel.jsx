@@ -40,7 +40,7 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, freeAiCha
         setAiQuery('');
 
         try {
-            const response = await axios.post('/api/gemini/ask', { query: aiQuery, history: aiChatHistory });
+const response = await axios.post('/api/ask', { query: aiQuery, history: aiChatHistory });
             const aiMessage = { role: 'assistant', content: response.data.response };
             setAiChatHistory(prev => [...prev, aiMessage]);
         } catch (error) {

@@ -2,19 +2,24 @@
 namespace App\Services;
 
 use App\Models\User;
-use Gemini\Laravel\Facades\Gemini;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
-class GeminiService
+class OpenAIService
 {
-    private const CONTEXT_WINDOW_LIMIT = 15; // Maks chat history yang dipakai
-    private const PERSONALITY_UPDATE_THRESHOLD = 3; // Update insight setiap 3 turn
+    private const CONTEXT_WINDOW_LIMIT = 15;
+    private const PERSONALITY_UPDATE_THRESHOLD = 3;
+    private string $apiKey;
+    private string $apiUrl;
 
-    /**
-     * Sapaan awal yang hangat dan variatif
-     */
+    public function __construct()
+    {
+        $this->apiKey = env('OPENAI_API_KEY');
+        $this->apiUrl = 'https://api.openai.com/v1/chat/completions';
+    }
+
     public function getInitialReflectionQuestion(string $userName): string
     {
         $greetings = [
@@ -26,60 +31,39 @@ class GeminiService
         return $greetings[array_rand($greetings)];
     }
 
-    /**
-     * Dapatkan respons AI dengan personalisasi mendalam dan context awareness
-     * @param Collection $chatHistory Obrolan terdahulu (kronologis)
-     * @param User $user User aktif
-     * @param string $currentUserInput Input terbaru user untuk konteks tambahan
-     * @return array feedback, next_question, mood_detected, topics_discussed, personality_insight
-     */
     public function getConversationResponse(Collection $chatHistory, User $user, string $currentUserInput = ''): array
     {
         try {
-            // Ambil konteks penting dan recent, limit supaya gak overload token
             $relevantHistory = $this->getRelevantContext($chatHistory, $user->id);
-
-            // Analisis konteks: mood, topik, kedalaman pembicaraan
             $contextAnalysis = $this->analyzeConversationContext($relevantHistory, $currentUserInput);
-
-            // Format obrolan lengkap dengan analisis kontekstual untuk prompt
             $formattedHistory = $this->formatConversationHistory($relevantHistory, $contextAnalysis);
 
-            // Pilih prompt premium atau standar sesuai status user
             $prompt = $user->is_premium
                 ? $this->getPremiumContextualPrompt($user, $formattedHistory, $contextAnalysis)
                 : $this->getStandardContextualPrompt($formattedHistory, $contextAnalysis);
 
-            // Generate respons dari Gemini dengan retry
-            $result = $this->generateGeminiResponse($prompt);
+            $result = $this->generateOpenAIResponse($prompt);
 
-            // Parsing hasil respons dan validasi
-            $parsedResponse = $this->parseGeminiResponse($result, $user, $contextAnalysis);
+            $parsedResponse = $this->parseResponse($result, $user, $contextAnalysis);
 
-            // Update insight kepribadian kalau premium dan ada insight baru
             if ($user->is_premium && !empty($parsedResponse['personality_insight'])) {
                 $this->updatePersonalityInsights($user, $parsedResponse['personality_insight'], $contextAnalysis);
             }
 
-            // Cache insights untuk performa dan analitik
             $this->cacheConversationInsights($user->id, $contextAnalysis);
 
             return $parsedResponse;
 
         } catch (\Exception $e) {
-            Log::error('GeminiService Error: ' . $e->getMessage(), [
+            Log::error('OpenAIService Error: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'history_count' => $chatHistory->count(),
-                'stack_trace' => $e->getTraceAsString()
             ]);
 
             return $this->getFallbackResponse($user, $currentUserInput);
         }
     }
 
-    /**
-     * Ambil obrolan paling relevan (recent + penting)
-     */
     private function getRelevantContext(Collection $chatHistory, int $userId): Collection
     {
         $recentHistory = $chatHistory->sortByDesc('created_at')
@@ -91,9 +75,6 @@ class GeminiService
         return $recentHistory->merge($importantChats)->unique('id')->sortBy('created_at');
     }
 
-    /**
-     * Analisis konteks: mood, topik, kedalaman percakapan
-     */
     private function analyzeConversationContext(Collection $history, string $currentInput): array
     {
         $analysis = [
@@ -109,11 +90,10 @@ class GeminiService
             return $analysis;
         }
 
-        // Keyword mood positif, negatif, netral (bisa dikembangkan)
         $moodKeywords = [
-            'positive' => ['senang', 'bahagia', 'semangat', 'grateful', 'optimis', 'bangga', 'lega', 'happy', 'joy'],
-            'negative' => ['sedih', 'kecewa', 'frustasi', 'marah', 'anxious', 'stress', 'takut', 'khawatir', 'down', 'bad'],
-            'neutral' => ['biasa', 'oke', 'normal', 'standar', 'fine', 'so so'],
+            'positive' => ['senang', 'bahagia', 'semangat', 'grateful', 'optimis', 'bangga', 'lega'],
+            'negative' => ['sedih', 'kecewa', 'frustasi', 'marah', 'anxious', 'stress', 'takut', 'khawatir'],
+            'neutral' => ['biasa', 'oke', 'normal', 'standar', 'fine'],
         ];
 
         foreach ($history as $chat) {
@@ -130,13 +110,12 @@ class GeminiService
             }
         }
 
-        // Topik yang sering muncul
         $allText = $history->pluck('user_answer')->filter()->implode(' ') . ' ' . $currentInput;
         $topicKeywords = [
-            'karir' => ['kerja', 'karir', 'job', 'bos', 'karyawan', 'resign', 'promosi'],
-            'relationship' => ['pacar', 'putus', 'teman', 'keluarga', 'ortu', 'love', 'cinta'],
-            'personal_growth' => ['belajar', 'skill', 'develop', 'goal', 'target', 'growth'],
-            'mental_health' => ['stress', 'anxiety', 'depresi', 'burnout', 'overwhelm', 'mental health'],
+            'karir' => ['kerja', 'karir', 'job', 'bos', 'karyawan'],
+            'relationship' => ['pacar', 'putus', 'teman', 'keluarga', 'ortu'],
+            'personal_growth' => ['belajar', 'skill', 'develop', 'goal'],
+            'mental_health' => ['stress', 'anxiety', 'depresi', 'burnout'],
         ];
 
         foreach ($topicKeywords as $topic => $keywords) {
@@ -149,7 +128,6 @@ class GeminiService
             }
         }
 
-        // Mood terkini berdasarkan 3 jawaban terakhir
         $recentMoods = array_slice($analysis['mood_progression'], -3);
         if (!empty($recentMoods)) {
             $moodCount = array_count_values($recentMoods);
@@ -157,20 +135,9 @@ class GeminiService
             $analysis['emotional_state'] = array_key_first($moodCount);
         }
 
-        // Deteksi kedalaman percakapan berdasarkan kata kunci tertentu
-        $deepIndicators = ['kenapa', 'mengapa', 'bagaimana', 'feel', 'rasanya', 'makna', 'tujuan', 'perasaan', 'pikiran'];
-        $deepCount = 0;
-        foreach ($deepIndicators as $indicator) {
-            $deepCount += substr_count(strtolower($allText), $indicator);
-        }
-        $analysis['conversation_depth'] = $deepCount > 3 ? 'deep' : 'surface';
-
         return $analysis;
     }
 
-    /**
-     * Format obrolan + konteks jadi string untuk prompt AI
-     */
     private function formatConversationHistory(Collection $history, array $context): string
     {
         if ($history->isEmpty()) {
@@ -185,131 +152,81 @@ class GeminiService
             return "Turn {$turnNumber}:\nGrowthBot: {$turn->ai_question}\n{$turn->user->name}: {$userAnswer}{$aiFeedback}";
         })->implode("\n\n");
 
-        $contextSummary = "\n\n=== CONTEXT ANALYSIS ===\n";
-        $contextSummary .= "Emotional State: " . $context['emotional_state'] . "\n";
-        $contextSummary .= "Conversation Depth: " . $context['conversation_depth'] . "\n";
-        if (!empty($context['recurring_topics'])) {
-            $contextSummary .= "Main Topics: " . implode(', ', array_keys($context['recurring_topics'])) . "\n";
-        }
-
-        return $formatted . $contextSummary;
+        return $formatted;
     }
 
-    /**
-     * Prompt premium yang kaya konteks dan insight
-     */
     private function getPremiumContextualPrompt(User $user, string $formattedHistory, array $context): string
     {
         $personalityMemory = $user->personality_summary
             ? "PERSONALITY INSIGHTS SEJAUH INI:\n" . $user->personality_summary . "\n\n"
             : "PERSONALITY INSIGHTS: Masih dalam tahap eksplorasi awal.\n\n";
 
-        $contextGuidance = $this->generateContextualGuidance($context);
-
         return <<<PROMPT
 Kamu adalah 'GrowthBot', AI companion yang sangat empatik dan expert dalam psikologi serta personal development.
-Kamu sedang berbicara dengan {$user->name} dan sudah membangun hubungan yang dalam.
+Kamu sedang berbicara dengan {$user->name}.
 
 {$personalityMemory}
-
-CONVERSATION HISTORY & CONTEXT:
-{$formattedHistory}
-
-CONTEXTUAL GUIDANCE:
-{$contextGuidance}
-
-INSTRUKSI:
-1. Berikan respons yang sangat personal, peka, dan menyesuaikan dengan emotional state {$user->name}.
-2. Rujuk ke obrolan sebelumnya dan buat percakapan terasa nyambung.
-3. Berikan insight baru dan progress, hindari pengulangan.
-4. Rayakan growth dan highlight concern jika ada.
-5. Gunakan bahasa Indonesia natural, santai, dan penuh perhatian ala Gen Z.
-
-FORMAT RESPONSE:
-[Feedback yang dalam, empatik, dan personal]|||[Pertanyaan lanjutan yang mengulik lebih dalam]|||[Updated personality insight singkat, atau NONE]
-
-Pastikan response menunjukkan continuity dan growth yang jelas!
-PROMPT;
-    }
-
-    /**
-     * Prompt standar untuk user non-premium dengan konteks sederhana
-     */
-    private function getStandardContextualPrompt(string $formattedHistory, array $context): string
-    {
-        $contextGuidance = $this->generateContextualGuidance($context);
-
-        return <<<PROMPT
-Kamu adalah GrowthBot, teman curhat yang asik dan perhatian.
-Tunjukkan bahwa kamu ingat dan paham percakapan sebelumnya.
 
 CONVERSATION HISTORY:
 {$formattedHistory}
 
-GUIDANCE BERDASARKAN CONTEXT:
-{$contextGuidance}
+MOOD SAAT INI: {$context['emotional_state']}
 
-ATURAN:
-1. Refer ke obrolan sebelumnya supaya percakapan terasa natural dan nyambung.
-2. Bangun pertanyaan dari topik yang sudah dibahas.
-3. Tunjukkan empati sesuai mood user.
-4. Jangan ulang topik yang sudah dibahas, tapi berikan value baru.
+INSTRUKSI:
+1. Berikan respons yang personal dan sesuai dengan mood {$user->name}.
+2. Buat percakapan terasa nyambung dengan obrolan sebelumnya.
+3. Hindari pengulangan topik yang sama.
+4. Gunakan bahasa Indonesia santai ala Gen Z.
+5. Batasi respons maksimal 100 kata agar efisien.
 
-FORMAT:
-[Feedback yang personal dan nyambung]|||[Pertanyaan lanjutan]
-
-Jangan buat kesan seperti ngobrol pertama kali!
+FORMAT RESPONSE:
+[Feedback singkat dan personal]|||[Pertanyaan lanjutan]|||[Insight kepribadian singkat atau NONE]
 PROMPT;
     }
 
-    /**
-     * Bantu buat guidance konteks berdasarkan analisis
-     */
-    private function generateContextualGuidance(array $context): string
+    private function getStandardContextualPrompt(string $formattedHistory, array $context): string
     {
-        $guidance = [];
+        return <<<PROMPT
+Kamu adalah GrowthBot, teman curhat yang asik dan perhatian.
 
-        // Mood
-        switch ($context['emotional_state']) {
-            case 'positive':
-                $guidance[] = "User sedang mood positif - bisa gali lebih jauh potensi dan goals-nya.";
-                break;
-            case 'negative':
-                $guidance[] = "User lagi struggle - fokus validasi dan support dulu sebelum kasih saran.";
-                break;
-            default:
-                $guidance[] = "User mood netral - cocok untuk eksplorasi santai dan open-ended.";
-        }
+CONVERSATION HISTORY:
+{$formattedHistory}
 
-        // Depth percakapan
-        if ($context['conversation_depth'] === 'deep') {
-            $guidance[] = "Obrolan cukup dalam - teruskan dengan pertanyaan yang meaningful dan reflektif.";
-        } else {
-            $guidance[] = "Obrolan masih permukaan - arahkan perlahan ke topik yang lebih bermakna.";
-        }
+MOOD SAAT INI: {$context['emotional_state']}
 
-        // Topik utama
-        if (!empty($context['recurring_topics'])) {
-            $mainTopic = array_key_first($context['recurring_topics']);
-            $guidance[] = "Topik utama yang sering muncul: {$mainTopic}. Gali dari berbagai sisi.";
-        }
+ATURAN:
+1. Refer ke obrolan sebelumnya agar natural.
+2. Tunjukkan empati sesuai mood user.
+3. Batasi respons maksimal 80 kata.
 
-        return implode("\n", $guidance);
+FORMAT:
+[Feedback singkat]|||[Pertanyaan lanjutan]
+PROMPT;
     }
 
-    /**
-     * Generate respons ke Gemini API dengan retry
-     */
-    private function generateGeminiResponse(string $prompt): string
+    private function generateOpenAIResponse(string $prompt): string
     {
         $maxRetries = 3;
         $retryCount = 0;
 
         while ($retryCount < $maxRetries) {
             try {
-                return Gemini::generativeModel('models/gemini-2.5-pro')
-                    ->generateContent($prompt)
-                    ->text();
+                $response = Http::withToken($this->apiKey)
+                    ->timeout(30)
+                    ->post($this->apiUrl, [
+                        'model' => 'gpt-4o-mini',
+                        'messages' => [
+                            ['role' => 'user', 'content' => $prompt]
+                        ],
+                        'max_tokens' => 300, // Batasi token untuk hemat biaya
+                        'temperature' => 0.7,
+                    ]);
+
+                if ($response->successful()) {
+                    return $response->json('choices.0.message.content');
+                }
+                
+                throw new \Exception('API request failed');
             } catch (\Exception $e) {
                 $retryCount++;
                 if ($retryCount >= $maxRetries) {
@@ -320,10 +237,7 @@ PROMPT;
         }
     }
 
-    /**
-     * Parse respons AI dan validasi isi
-     */
-    private function parseGeminiResponse(string $result, User $user, array $context): array
+    private function parseResponse(string $result, User $user, array $context): array
     {
         $parts = explode('|||', $result, 3);
 
@@ -331,7 +245,6 @@ PROMPT;
         $nextQuestion = trim($parts[1] ?? '');
         $personalityInsight = isset($parts[2]) ? trim($parts[2]) : '';
 
-        // Fallback respons bila kosong
         if (empty($feedback)) {
             $feedback = $this->generateContextualFallbackFeedback($context);
         }
@@ -349,9 +262,6 @@ PROMPT;
         ];
     }
 
-    /**
-     * Update insight kepribadian secara akumulatif dan cerdas
-     */
     private function updatePersonalityInsights(User $user, string $newInsight, array $context): void
     {
         $currentInsight = $user->personality_summary ?? '';
@@ -365,36 +275,26 @@ PROMPT;
         $user->update(['personality_summary' => $updatedInsight]);
     }
 
-    /**
-     * Merge insight personality secara sederhana (bisa dikembangkan pakai AI summarization)
-     */
     private function mergePersonalityInsights(string $current, string $new, array $context): string
     {
         if (strlen($current) > 500) {
-            // Ringkas jika sudah terlalu panjang
             return $new . " | Previous: " . substr($current, 0, 200) . "...";
         }
 
         return $current . " | Update: " . $new;
     }
 
-    /**
-     * Cache insights untuk performa dan analitik
-     */
     private function cacheConversationInsights(int $userId, array $insights): void
     {
         Cache::put("conversation_insights_user_{$userId}", $insights, now()->addHours(24));
     }
 
-    /**
-     * Fallback respons personal sesuai mood
-     */
     private function generateContextualFallbackFeedback(array $context): string
     {
         $fallbacks = [
-            'positive' => 'Seneng banget denger update dari kamu! Keep up the positive vibes ya.',
-            'negative' => 'Gue ngerti ini nggak gampang buat kamu. Makasih udah percaya cerita sama gue.',
-            'neutral' => 'Thanks udah cerita, gue appreciate openness kamu buat refleksi bareng.',
+            'positive' => 'Seneng denger update dari kamu! Keep it up ya.',
+            'negative' => 'Gue ngerti ini nggak gampang. Makasih udah cerita.',
+            'neutral' => 'Thanks udah cerita, appreciate openness kamu.',
         ];
 
         return $fallbacks[$context['emotional_state']] ?? $fallbacks['neutral'];
@@ -403,21 +303,18 @@ PROMPT;
     private function generateContextualFallbackQuestion(array $context): string
     {
         $questions = [
-            'positive' => 'Dengan energi positif ini, apa hal baru yang pengen kamu capai?',
-            'negative' => 'Dari situasi ini, ada hal kecil yang bisa bikin kamu lebih lega gak?',
-            'neutral' => 'Ada hal lain dari hidup kamu yang pengen kita obrolin lebih dalam gak?',
+            'positive' => 'Dengan energi positif ini, apa yang pengen kamu capai?',
+            'negative' => 'Ada hal kecil yang bisa bikin kamu lega gak?',
+            'neutral' => 'Ada hal lain yang pengen kita obrolin?',
         ];
 
         return $questions[$context['emotional_state']] ?? $questions['neutral'];
     }
 
-    /**
-     * Fallback response kalau error
-     */
     private function getFallbackResponse(User $user, string $currentInput): array
     {
         return [
-            'feedback' => "Hey {$user->name}, maaf ya, ada masalah teknis sebentar. Tapi gue tetap siap dengerin kamu kok.",
+            'feedback' => "Hey {$user->name}, ada masalah teknis sebentar. Tapi gue tetap siap dengerin kamu kok.",
             'next_question' => 'Mau lanjut cerita? Gue siap dengerin.',
             'personality_insight' => '',
             'mood_detected' => 'neutral',
@@ -425,9 +322,6 @@ PROMPT;
         ];
     }
 
-    /**
-     * Analitik obrolan untuk dashboard atau laporan
-     */
     public function getConversationAnalytics(User $user): array
     {
         $insights = Cache::get("conversation_insights_user_{$user->id}", []);

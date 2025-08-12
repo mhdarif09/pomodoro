@@ -3,23 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\GeminiService;
+use App\Services\OpenAIService; // Ganti dari GeminiService
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Models\Reflection;
-use App\Models\User; // <-- Tambahkan ini
+use App\Models\User;
 
 class ReflectionController extends Controller
 {
-    protected $geminiService;
+    protected $openAIService; // Ganti nama variable
     // Definisikan batas kuota gratis di sini agar mudah diubah
     private const FREE_REFLECTION_LIMIT = 10;
 
-    public function __construct(GeminiService $geminiService)
+    public function __construct(OpenAIService $openAIService) // Ganti dari GeminiService
     {
-        $this->geminiService = $geminiService;
+        $this->openAIService = $openAIService;
     }
 
     public function index()
@@ -43,7 +43,7 @@ class ReflectionController extends Controller
         $history = Reflection::where('session_id', $session_id)->orderBy('created_at')->get();
         
         if ($history->isEmpty()) {
-            $initialQuestion = $this->geminiService->getInitialReflectionQuestion($user->name);
+            $initialQuestion = $this->openAIService->getInitialReflectionQuestion($user->name); // Ganti service
             Reflection::create([
                 'user_id' => $user->id, 
                 'session_id' => $session_id, 
@@ -84,8 +84,8 @@ class ReflectionController extends Controller
 
         $chatHistory = Reflection::where('session_id', $validated['session_id'])->orderBy('created_at')->get();
         
-        // Memanggil fungsi baru yang lebih pintar
-        $aiResponse = $this->geminiService->getConversationResponse($chatHistory, $user);
+        // Memanggil service OpenAI yang baru
+        $aiResponse = $this->openAIService->getConversationResponse($chatHistory, $user);
         
         $lastTurn->update(['ai_feedback' => $aiResponse['feedback']]);
 

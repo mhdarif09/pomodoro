@@ -35,7 +35,7 @@ export default function PDFQueryModal({ isOpen, onClose }) {
 
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const res = await axios.post('/api/gemini/pdf', formData, {
+            const res = await axios.post('ask-from-pdf', formData, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
                     'X-CSRF-TOKEN': csrfToken,
