@@ -5,8 +5,9 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 
-// Komponen Avatar (tidak perlu diubah)
+// Komponen Avatar untuk menampilkan inisial nama pengguna
 const UserAvatar = ({ user }) => {
+    // Membuat inisial dari nama user (maksimal 2 karakter)
     const initials = user.name
         .split(' ')
         .map((n) => n[0])
@@ -20,24 +21,26 @@ const UserAvatar = ({ user }) => {
     );
 };
 
+// Komponen Layout Utama untuk halaman yang memerlukan autentikasi
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
-    // Array untuk link navigasi umum
+    // Array untuk link navigasi yang bisa diakses semua user terautentikasi
     const navLinks = [
         { routeName: 'dashboard', label: 'Dashboard' },
-        // { routeName: 'voice.index', label: 'Kelas Suara' }, // <-- MODIFIKASI: Tambahkan link Kelas Suara
+        { routeName: 'mini-moduls.index', label: 'Mini Modul' }, // <-- MODIFIKASI: Tambahan link untuk user
         { routeName: 'pomodoro.index', label: 'Pomodoro' },
         { routeName: 'transactions.history', label: 'History' },
     ];
     
-    // Array untuk link khusus admin
+    // Array untuk link navigasi yang hanya bisa diakses oleh admin
     const adminLinks = [
+        { routeName: 'admin.mini-moduls.index', label: 'Manajemen Modul' }, // <-- MODIFIKASI: Tambahan link untuk admin
         { routeName: 'admin.plans.index', label: 'Premium Plans' },
-        { routeName: 'admin.users.index', label: 'Manajemen User' } // <-- MODIFIKASI: Tambahkan link Manajemen User
+        { routeName: 'admin.users.index', label: 'Manajemen User' }
     ];
 
-    // Logika skrip Midtrans (tidak perlu diubah)
+    // useEffect untuk memuat skrip Midtrans Snap.js
     useEffect(() => {
         const script = document.createElement('script');
         script.src = 'https://app.midtrans.com/snap/snap.js';
@@ -45,6 +48,7 @@ export default function Authenticated({ user, header, children }) {
         script.async = true;
         document.body.appendChild(script);
 
+        // Cleanup function untuk menghapus skrip saat komponen di-unmount
         return () => {
             document.body.removeChild(script);
         };
@@ -52,22 +56,23 @@ export default function Authenticated({ user, header, children }) {
 
     return (
         <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900">
-            {/* --- Navbar Modern Sticky (tidak perlu diubah) --- */}
+            {/* --- Navbar Modern Sticky --- */}
             <nav className="sticky top-0 z-40 w-full border-b border-slate-900/10 bg-white/80 backdrop-blur-sm dark:border-slate-300/10 dark:bg-slate-900/80">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
-                        {/* Logo dan Link Navigasi Utama */}
+                        {/* Bagian Kiri: Logo dan Link Navigasi Utama */}
                         <div className="flex items-center gap-6">
                             <Link href="/">
                                 <ApplicationLogo className="block h-9 w-auto fill-current text-slate-800 dark:text-slate-200" />
                             </Link>
                             <div className="hidden items-center gap-4 sm:flex">
-                                {/* Logika render link ini sudah otomatis menangani penambahan link baru */}
+                                {/* Render link navigasi umum */}
                                 {navLinks.map((link) => (
                                     <NavLink key={link.routeName} href={route(link.routeName)} active={route().current(link.routeName)}>
                                         {link.label}
                                     </NavLink>
                                 ))}
+                                {/* Render link khusus admin jika rolenya 'admin' */}
                                 {user.role === 'admin' && adminLinks.map((link) => (
                                     <NavLink key={link.routeName} href={route(link.routeName)} active={route().current(link.routeName)}>
                                         {link.label}
@@ -76,7 +81,7 @@ export default function Authenticated({ user, header, children }) {
                             </div>
                         </div>
 
-                        {/* Dropdown User dan Tombol Menu Mobile (tidak perlu diubah) */}
+                        {/* Bagian Kanan: Dropdown User dan Tombol Menu Mobile */}
                         <div className="flex items-center gap-4">
                             <div className="hidden sm:flex sm:items-center">
                                 <Dropdown>
@@ -100,7 +105,7 @@ export default function Authenticated({ user, header, children }) {
                                 </Dropdown>
                             </div>
 
-                            {/* Tombol Hamburger */}
+                            {/* Tombol Hamburger untuk tampilan mobile */}
                             <div className="-me-2 flex items-center sm:hidden">
                                 <button
                                     onClick={() => setShowingNavigationDropdown((prevState) => !prevState)}
@@ -116,16 +121,17 @@ export default function Authenticated({ user, header, children }) {
                     </div>
                 </div>
 
-                {/* --- Panel Navigasi Responsif Modern (tidak perlu diubah) --- */}
+                {/* --- Panel Navigasi Responsif untuk Mobile --- */}
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden absolute inset-x-0 top-16 z-30 origin-top-right transform p-2 transition'}>
                     <div className="divide-y-2 divide-slate-100/10 rounded-lg bg-white/95 shadow-lg ring-1 ring-black/5 backdrop-blur-sm dark:bg-slate-900/95">
                         <div className="space-y-1 p-5">
-                            {/* Logika render link ini juga sudah otomatis menangani penambahan link baru */}
+                            {/* Render link navigasi umum di mobile */}
                             {navLinks.map((link) => (
                                 <ResponsiveNavLink key={link.routeName} href={route(link.routeName)} active={route().current(link.routeName)}>
                                     {link.label}
                                 </ResponsiveNavLink>
                             ))}
+                            {/* Render link khusus admin di mobile */}
                             {user.role === 'admin' && adminLinks.map((link) => (
                                <ResponsiveNavLink key={link.routeName} href={route(link.routeName)} active={route().current(link.routeName)}>
                                     {link.label}
@@ -148,12 +154,14 @@ export default function Authenticated({ user, header, children }) {
                 </div>
             </nav>
 
+            {/* Render header jika ada */}
             {header && (
                 <header className="border-b border-slate-200 dark:border-slate-700">
                     <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">{header}</div>
                 </header>
             )}
 
+            {/* Render konten utama halaman */}
             <main>{children}</main>
         </div>
     );
