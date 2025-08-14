@@ -15,6 +15,11 @@ use App\Http\Controllers\DailyGoalController;
 use App\Http\Controllers\ReflectionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\MiniModulCategoryController;
+use App\Http\Controllers\Admin\MiniModulController as AdminMiniModulController;
+use App\Http\Controllers\Admin\MiniModulChapterController;
+use App\Http\Controllers\MiniModulController;
+use App\Http\Controllers\MiniModulAiController;
 use Inertia\Inertia;
 
 /*
@@ -149,4 +154,42 @@ Route::middleware(['auth', 'can:viewAdmin'])->prefix('admin')->name('admin.')->g
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
 });
+
+// Admin Routes - Mini Modul Management
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Categories Management
+    Route::resource('mini-modul-categories', MiniModulCategoryController::class);
+    
+    // Moduls Management
+    Route::resource('mini-moduls', AdminMiniModulController::class);
+    
+    // Chapters Management
+    Route::prefix('mini-moduls/{miniModul}')->name('mini-moduls.')->group(function () {
+        Route::resource('chapters', MiniModulChapterController::class);
+        Route::post('chapters/reorder', [MiniModulChapterController::class, 'reorder'])
+            ->name('chapters.reorder');
+    });
+});
+
+// User Routes - Mini Modul Learning
+Route::middleware(['auth'])->group(function () {
+    
+    // Mini Modul Index & Detail
+    Route::get('/mini-moduls', [MiniModulController::class, 'index'])->name('mini-moduls.index');
+    Route::get('/mini-moduls/{miniModul:slug}', [MiniModulController::class, 'show'])->name('mini-moduls.show');
+    Route::get('/mini-moduls/{miniModul:slug}/{chapter:slug}', [MiniModulController::class, 'chapter'])->name('mini-moduls.chapter');
+    
+    // Progress Management
+    Route::post('/mini-moduls/{miniModul}/{chapter}/complete', [MiniModulController::class, 'completeChapter'])
+        ->name('mini-moduls.complete-chapter');
+    
+    // AI Discussion Routes
+    Route::prefix('mini-moduls/{miniModul}/{chapter}')->name('mini-moduls.ai.')->group(function () {
+        Route::post('/ai/discuss', [MiniModulAiController::class, 'startDiscussion'])->name('discuss');
+        Route::get('/ai/discussions', [MiniModulAiController::class, 'getDiscussions'])->name('discussions');
+        Route::post('/ai/role-play', [MiniModulAiController::class, 'simulateRole'])->name('role-play');
+    });
+});
+
 require __DIR__.'/auth.php';

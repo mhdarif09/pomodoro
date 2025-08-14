@@ -15,17 +15,18 @@ use Exception;
 
 class OpenAIController extends Controller
 {
-    protected string $apiBaseUrl;
+      protected string $apiBaseUrl;
     protected PendingRequest $httpClient;
+    protected ?string $serperApiKey;
 
     public function __construct()
     {
         $this->apiBaseUrl = "https://api.openai.com/v1/chat/completions";
-        
         $apiKey = env('OPENAI_API_KEY');
+        $this->serperApiKey = env('SERPER_API_KEY'); // Ambil kunci API Serper
 
         if (empty($apiKey)) {
-            throw new Exception("OPENAI_API_KEY tidak diatur di file .env. Silakan periksa konfigurasi Anda.");
+            throw new Exception("OPENAI_API_KEY tidak diatur.");
         }
         
         $this->httpClient = Http::withToken($apiKey)
@@ -37,48 +38,109 @@ class OpenAIController extends Controller
     public function ask(Request $request)
     {
         $request->validate([
-            'query'   => 'required|string|max:4000',
-            'history' => 'nullable|array',
+            'query'     => 'required|string|max:4000',
+            'history'   => 'nullable|array',
+            'webSearch' => 'nullable|boolean',
         ]);
 
+        $query = $request->input('query');
         $history = $request->input('history', []);
+        $isWebSearchEnabled = $request->input('webSearch', false);
 
+        $sources = [];
         $messages = [];
-        foreach ($history as $msg) {
-            if (isset($msg['role']) && isset($msg['content'])) {
+        
+        if ($isWebSearchEnabled) {
+            Log::info('Fitur Pencarian Web diaktifkan untuk query: ' . $query);
+            try {
+                // Langkah 1: Panggil API Pencari untuk dapatkan LINK ASLI
+                $searchResult = $this->performWebSearch($query);
+                $sources = $searchResult['sources']; // Ini daftar link asli untuk frontend
+                
+                // Langkah 2: Buat konteks untuk diberikan ke AI
                 $messages[] = [
-                    'role'    => $msg['role'],
-                    'content' => $msg['content'],
+                    'role' => 'system',
+                    'content' => "Anda adalah asisten AI peneliti. Jawab pertanyaan pengguna secara komprehensif HANYA berdasarkan konteks dari hasil pencarian web di bawah ini. Sebutkan sumber yang Anda gunakan dengan format [Sumber 1], [Sumber 2], dst. di akhir kalimat yang relevan.\n\n--- KONTEKS HASIL PENCARIAN WEB ---\n" . $searchResult['context'] . "\n--- AKHIR KONTEKS ---"
                 ];
+
+            } catch (Exception $e) {
+                Log::error('Gagal melakukan pencarian web: ' . $e->getMessage());
+                return response()->json(['error' => 'Gagal mengambil data dari web. Silakan coba lagi.'], 500);
             }
         }
 
-        $messages[] = [
-            'role'    => 'user',
-            'content' => $request->input('query'),
-        ];
+        foreach ($history as $msg) {
+            if (isset($msg['role']) && isset($msg['content'])) {
+                $messages[] = ['role' => $msg['role'], 'content' => $msg['content']];
+            }
+        }
+        $messages[] = ['role' => 'user', 'content' => $query];
 
         $payload = [
-            'model'    => 'gpt-4o-mini', // Model hemat tapi tetap cerdas
-            'messages' => $messages,
-            'max_tokens' => 1000, // Batasi token untuk efisiensi
-            'temperature' => 0.7,
+            'model'       => 'gpt-4o-mini',
+            'messages'    => $messages,
+            'max_tokens'  => 1500,
+            'temperature' => 0.5,
         ];
 
         try {
+            // Langkah 3: Panggil AI untuk meringkas konteks
             $response = $this->httpClient->post($this->apiBaseUrl, $payload);
             $response->throw();
-
             $content = $response->json('choices.0.message.content', 'Tidak ada respons dari AI.');
 
-            return response()->json(['response' => $content]);
+            // Langkah 4: Kirim jawaban AI + DAFTAR LINK ASLI ke frontend
+            return response()->json([
+                'response' => $content,
+                'sources'  => $sources,
+            ]);
 
         } catch (RequestException $e) {
-            \Log::error('OpenAI Request Exception (ask): ' . $e->getMessage());
+            Log::error('OpenAI Request Exception (ask): ' . $e->getMessage());
             return $this->handleApiException($e);
         }
     }
 
+    private function performWebSearch(string $query): array
+    {
+        if (empty($this->serperApiKey)) {
+            throw new Exception('SERPER_API_KEY tidak diatur. Fitur pencarian web tidak dapat digunakan.');
+        }
+
+        // Ini memanggil API pencari (Serper)
+        $response = Http::withHeaders([
+            'X-API-KEY' => $this->serperApiKey,
+            'Content-Type' => 'application/json'
+        ])->post('https://google.serper.dev/search', [
+            'q' => $query . " filetype:pdf OR site:*.ac.id OR site:*.edu", // Bonus: Prioritaskan jurnal/situs edu
+            'num' => 5
+        ]);
+
+        if (!$response->successful()) {
+            throw new Exception('Gagal menghubungi layanan pencarian web.');
+        }
+
+        $results = $response->json('organic', []);
+        $context = '';
+        $sources = [];
+
+        foreach ($results as $index => $result) {
+            $title = $result['title'] ?? 'Tanpa judul';
+            $link = $result['link'] ?? '#';
+            $snippet = $result['snippet'] ?? 'Tidak ada kutipan.';
+            
+            // Konteks untuk AI
+            $context .= "Sumber " . ($index + 1) . ":\nJudul: {$title}\nURL: {$link}\nKutipan: {$snippet}\n\n";
+
+            // Data bersih untuk frontend
+            $sources[] = ['title' => $title, 'url'   => $link];
+        }
+
+        if (empty($context)) {
+            return ['context' => 'Tidak ditemukan hasil pencarian yang relevan.', 'sources' => []];
+        }
+        return ['context' => $context, 'sources' => $sources];
+    }
     public function askFromPdf(Request $request)
     {
         $request->validate([
