@@ -51,4 +51,23 @@
 .dark .ai-panel-chat-area {
   scrollbar-color: #475569 transparent;
 }
+
+.prose ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+}
+
+.prose li::marker {
+  color: #4b5563; /* Tailwind gray-600 */
+}
+.prose p {
+  margin-top: 1rem;   /* 16px */
+  margin-bottom: 1rem;
+}
+
 }

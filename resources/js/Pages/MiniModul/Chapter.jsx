@@ -8,8 +8,6 @@ import AiDiscussionPanel from './Partials/AiDiscussionPanel';
 import { Transition } from '@headlessui/react';
 
 export default function Chapter({ auth, modul, chapter, userProgress, navigation, allChapters }) {
-    
-    // --- State Management ---
     const [isCompleted, setIsCompleted] = useState(userProgress?.is_completed || false);
     const [showAiDiscussion, setShowAiDiscussion] = useState(false);
     const [discussions, setDiscussions] = useState([]);
@@ -18,14 +16,10 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
     const [selectedRole, setSelectedRole] = useState('teacher');
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 
-    // --- Side Effects ---
     useEffect(() => {
-        if (showAiDiscussion && discussions.length === 0) {
-            loadDiscussions();
-        }
+        if (showAiDiscussion && discussions.length === 0) loadDiscussions();
     }, [showAiDiscussion]);
 
-    // --- API Interactions ---
     const loadDiscussions = async () => {
         try {
             const response = await fetch(route('mini-moduls.ai.discussions', { 
@@ -51,9 +45,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             });
-            if (response.ok) {
-                setIsCompleted(true);
-            }
+            if (response.ok) setIsCompleted(true);
         } catch (error) {
             console.error('Error completing chapter:', error);
         }
@@ -70,21 +62,21 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                 chapter: chapter.id
             }), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+                },
                 body: JSON.stringify({ message: newMessage })
             });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
 
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
+
             if (data.success) {
                 setDiscussions(prev => [...prev, data.discussion]);
                 setNewMessage('');
-            } else {
-                throw new Error(data.message || 'Unknown error');
-            }
+            } else throw new Error(data.message || 'Unknown error');
+
         } catch (error) {
             console.error('Error sending message:', error);
             alert(`Gagal mengirim pesan: ${error.message}`);
@@ -112,16 +104,16 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                 chapter: chapter.id
             }), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: JSON.stringify({ role: selectedRole, scenario: scenario })
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+                },
+                body: JSON.stringify({ role: selectedRole, scenario })
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-            
+
             setDiscussions(prev => prev.map(d => 
                 d.id === tempUserMessage.id
                 ? {
@@ -155,20 +147,30 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                     <ChapterHeader modul={modul} navigation={navigation} />
 
                     <div className="lg:grid lg:grid-cols-4 lg:gap-8">
-                        {/* Kolom Konten Utama */}
+                        {/* Konten Utama */}
                         <main className="lg:col-span-3">
-                            <article className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sm:p-8 lg:p-10">
+                            <article className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 lg:p-10 text-base sm:text-lg leading-relaxed">
                                 <header className="mb-8">
                                     <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">{modul.category?.name}</p>
-                                    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{chapter.title}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-extrabold leading-tight text-gray-900 dark:text-white tracking-tight">{chapter.title}</h1>
                                     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{chapter.estimated_duration} menit perkiraan waktu baca</p>
                                 </header>
-                                
-                                <div
-                                    className="prose prose-lg dark:prose-invert max-w-none prose-a:text-green-600 dark:prose-a:text-green-400 prose-strong:text-gray-800 dark:prose-strong:text-gray-200"
-                                    dangerouslySetInnerHTML={{ __html: chapter.content }}
-                                />
-                                
+
+                                {/* Konten dengan list, code, gambar responsif */}
+                              <div
+  className="prose prose-lg dark:prose-invert max-w-none
+             prose-img:rounded-lg prose-img:mx-auto prose-img:max-h-[400px] prose-img:w-full prose-img:object-contain
+             prose-a:text-green-600 dark:prose-a:text-green-400
+             prose-strong:text-gray-800 dark:prose-strong:text-gray-200
+             prose-ol:list-decimal prose-ul:list-disc prose-li:my-2
+             prose-p:my-4
+             prose-h2:mt-8 prose-h2:mb-4 prose-h3:mt-6 prose-h3:mb-3
+             prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-pre:p-4 prose-pre:rounded-md prose-pre:overflow-x-auto
+             prose-blockquote:border-l-4 prose-blockquote:border-green-300 dark:prose-blockquote:border-green-600 prose-blockquote:pl-4 prose-blockquote:italic"
+  dangerouslySetInnerHTML={{ __html: chapter.content }}
+/>
+
+
                                 <footer className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <button
                                         onClick={() => setShowAiDiscussion(!showAiDiscussion)}
@@ -217,7 +219,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                             </article>
                         </main>
 
-                        {/* Sidebar di Desktop */}
+                        {/* Sidebar Desktop */}
                         <aside className="hidden lg:block lg:col-span-1">
                             <div className="sticky top-24">
                                 <ChapterSidebar 
@@ -231,7 +233,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                     </div>
                 </div>
 
-                 {/* Tombol Sidebar Melayang di Mobile */}
+                 {/* Tombol Sidebar Mobile */}
                  <div className="lg:hidden fixed bottom-4 right-4 z-20">
                      <button 
                         onClick={() => setSidebarVisible(!isSidebarVisible)}
@@ -243,7 +245,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                      </button>
                  </div>
                  
-                 {/* Panel Sidebar di Mobile (Off-canvas) */}
+                 {/* Panel Sidebar Mobile */}
                  <Transition show={isSidebarVisible} as={React.Fragment}>
                      <div className="lg:hidden fixed inset-0 z-30" onClick={() => setSidebarVisible(false)}>
                          <Transition.Child
@@ -257,8 +259,8 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                          <Transition.Child
                              as="div"
                              className="absolute inset-y-0 left-0 w-4/5 max-w-sm"
-                             enter="transition ease-in-out duration-300 transform" enterFrom="-translate-x-full" enterTo="translate-x-0"
-                             leave="transition ease-in-out duration-300 transform" leaveFrom="translate-x-0" leaveTo="-translate-x-full"
+                             enter="transition ease-in-out duration-500 transform" enterFrom="-translate-x-full" enterTo="translate-x-0"
+                             leave="transition ease-in-out duration-500 transform" leaveFrom="translate-x-0" leaveTo="-translate-x-full"
                          >
                             <div className="h-full p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
                                <ChapterSidebar 
