@@ -65,9 +65,5 @@
 .prose li::marker {
   color: #4b5563; /* Tailwind gray-600 */
 }
-.prose p {
-  margin-top: 0.5rem;   /* 16px */
-  margin-bottom: 0.5rem;
-}
 
 }
