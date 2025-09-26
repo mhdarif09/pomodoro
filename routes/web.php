@@ -130,7 +130,7 @@ Route::middleware(['auth', 'premium'])->group(function () {
     })->name('pomodoro.statistics');
 });
 
-Route::post('/midtrans/webhook', [WebhookController::class, 'handle'])->name('midtrans.webhook');
+Route::post('//webhook', [WebhookController::class, 'handle'])->name('midtrans.webhook');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/transactions', [SubscriptionController::class, 'history'])->name('transactions.history');

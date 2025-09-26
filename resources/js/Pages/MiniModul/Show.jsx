@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ClockIcon, BookOpenIcon, PlayIcon } from '@heroicons/react/24/solid';
 import ChapterListItem from './Partials/ChapterListItem';
 import RelatedModulItem from './Partials/RelatedModulItem';
+import ShareButton from './Partials/ShareButton'; // Import komponen ShareButton
 
 export default function Show({ auth, modul, userProgress, relatedModuls }) {
     
@@ -58,7 +59,7 @@ export default function Show({ auth, modul, userProgress, relatedModuls }) {
                                 <p className="text-lg text-gray-500 dark:text-gray-400 mb-6">
                                     {modul.description}
                                 </p>
-                                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6">
                                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${difficulty.style}`}>
                                         {difficulty.label}
                                     </span>
@@ -70,6 +71,11 @@ export default function Show({ auth, modul, userProgress, relatedModuls }) {
                                         <ClockIcon className="w-5 h-5 mr-2" />
                                         <span>{modul.total_duration} menit total</span>
                                     </div>
+                                </div>
+                                
+                                {/* Tambahkan Share Button di sini */}
+                                <div className="flex gap-4">
+                                    <ShareButton modul={modul} />
                                 </div>
                             </div>
                         </div>
@@ -127,6 +133,15 @@ export default function Show({ auth, modul, userProgress, relatedModuls }) {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Share Card untuk Sidebar (Opsional) */}
+                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bagikan Modul</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                                        Bagikan modul ini kepada teman-teman Anda
+                                    </p>
+                                    <ShareButton modul={modul} />
+                                </div>
 
                                 {/* Related Moduls Card */}
                                 {relatedModuls.length > 0 && (
