@@ -1,73 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Icons dari Heroicons untuk UI generik (sudah benar)
 import { ShareIcon, XMarkIcon, LinkIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { 
-    FacebookIcon, 
-    TwitterIcon, 
-    LinkedinIcon, 
-    WhatsappIcon, 
-    TelegramIcon 
-} from '@heroicons/react/24/solid';
+
+// Icons dari React Icons untuk logo brand (ini perbaikannya)
+import { FaFacebook, FaTwitter, FaLinkedin, FaWhatsapp, FaTelegram } from "react-icons/fa6";
 
 const ShareButton = ({ modul }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [shareUrl, setShareUrl] = useState('');
+    const [showNativeShare, setShowNativeShare] = useState(false);
 
-    const shareUrl = window.location.href;
+    // Gunakan useEffect untuk mengakses objek 'window' dan 'navigator' dengan aman
+    // Ini memastikan kode hanya berjalan di sisi client (browser)
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setShareUrl(window.location.href);
+        }
+        if (typeof navigator !== 'undefined' && navigator.share) {
+            setShowNativeShare(true);
+        }
+    }, []);
+
+    // Definisikan shareText di sini agar bisa diakses oleh shareOptions
     const shareText = `Saya sedang belajar "${modul.title}" - ${modul.description}`;
     
+    // Array opsi share dengan icon yang sudah diperbaiki
     const shareOptions = [
         {
             name: 'Facebook',
-            icon: FacebookIcon,
+            icon: FaFacebook,
             color: 'bg-blue-600 hover:bg-blue-700',
             url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
         },
         {
             name: 'Twitter',
-            icon: TwitterIcon,
+            icon: FaTwitter,
             color: 'bg-sky-500 hover:bg-sky-600',
             url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`
         },
         {
             name: 'LinkedIn',
-            icon: LinkedinIcon,
+            icon: FaLinkedin,
             color: 'bg-blue-700 hover:bg-blue-800',
             url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
         },
         {
             name: 'WhatsApp',
-            icon: WhatsappIcon,
+            icon: FaWhatsapp,
             color: 'bg-green-500 hover:bg-green-600',
             url: `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`
         },
         {
             name: 'Telegram',
-            icon: TelegramIcon,
+            icon: FaTelegram,
             color: 'bg-blue-500 hover:bg-blue-600',
             url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`
         }
     ];
 
     const handleShare = (url) => {
-        window.open(url, '_blank', 'width=600,height=400');
+        window.open(url, '_blank', 'noopener,noreferrer,width=600,height=400');
     };
 
     const handleCopyLink = async () => {
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch (err) {
-            // Fallback untuk browser yang tidak mendukung clipboard API
+        if (!navigator.clipboard) {
+            // Fallback untuk browser lama atau koneksi non-HTTPS
             const textArea = document.createElement('textarea');
             textArea.value = shareUrl;
             document.body.appendChild(textArea);
+            textArea.focus();
             textArea.select();
-            document.execCommand('copy');
+            try {
+                document.execCommand('copy');
+                setCopied(true);
+            } catch (err) {
+                console.error('Fallback: Gagal menyalin teks: ', err);
+            }
             document.body.removeChild(textArea);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                setCopied(true);
+            } catch (err) {
+                console.error('Gagal menyalin teks: ', err);
+            }
         }
+        setTimeout(() => setCopied(false), 2000);
     };
 
     const handleNativeShare = async () => {
@@ -79,7 +99,7 @@ const ShareButton = ({ modul }) => {
                     url: shareUrl
                 });
             } catch (err) {
-                console.log('Error sharing:', err);
+                console.log('Error saat menggunakan Web Share API:', err);
             }
         }
     };
@@ -139,28 +159,28 @@ const ShareButton = ({ modul }) => {
                                 />
                                 <button
                                     onClick={handleCopyLink}
-                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    className={`flex-shrink-0 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                                         copied 
                                             ? 'bg-green-500 text-white' 
                                             : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
                                     }`}
                                 >
                                     {copied ? (
-                                        <CheckIcon className="w-4 h-4" />
+                                        <CheckIcon className="w-5 h-5" />
                                     ) : (
-                                        <LinkIcon className="w-4 h-4" />
+                                        <LinkIcon className="w-5 h-5" />
                                     )}
                                 </button>
                             </div>
                             {copied && (
-                                <p className="text-green-600 text-xs mt-1">Link berhasil disalin!</p>
+                                <p className="text-green-600 dark:text-green-400 text-xs mt-1">Link berhasil disalin!</p>
                             )}
                         </div>
 
                         {/* Social Media Buttons */}
                         <div className="space-y-3">
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Share ke Social Media
+                                Bagikan ke Media Sosial
                             </p>
                             <div className="grid grid-cols-2 gap-3">
                                 {shareOptions.map((option) => {
@@ -169,7 +189,7 @@ const ShareButton = ({ modul }) => {
                                         <button
                                             key={option.name}
                                             onClick={() => handleShare(option.url)}
-                                            className={`flex items-center gap-3 ${option.color} text-white px-4 py-3 rounded-lg font-medium text-sm transition-colors duration-200`}
+                                            className={`flex items-center justify-center gap-3 ${option.color} text-white px-4 py-3 rounded-lg font-medium text-sm transition-colors duration-200`}
                                         >
                                             <IconComponent className="w-5 h-5" />
                                             <span>{option.name}</span>
@@ -180,13 +200,13 @@ const ShareButton = ({ modul }) => {
                         </div>
 
                         {/* Native Share (Mobile) */}
-                        {navigator.share && (
+                        {showNativeShare && (
                             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                                 <button
                                     onClick={handleNativeShare}
                                     className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                 >
-                                    Share dengan Aplikasi Lain
+                                    Bagikan dengan Aplikasi Lain
                                 </button>
                             </div>
                         )}
