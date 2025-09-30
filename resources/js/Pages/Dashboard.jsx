@@ -88,6 +88,7 @@ const PomodoroTimer = () => {
 /**
  * Kartu untuk menampilkan status Refleksi Harian, dengan logika freemium.
  */
+// Di Dashboard.jsx - bagian MainDashboard
 const ReflectionCard = ({ hasReflectedToday, isPremium, remainingQuota, onUpgradeClick }) => (
     <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl p-6 h-full flex flex-col">
         <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center mb-2">
@@ -95,7 +96,52 @@ const ReflectionCard = ({ hasReflectedToday, isPremium, remainingQuota, onUpgrad
             Refleksi Harian
         </h3>
         <div className="flex-grow flex flex-col justify-center">
-            {/* Tampilan untuk Pengguna Premium */}
+            {/* Untuk user gratis dengan quota masih ada */}
+            {!isPremium && remainingQuota > 0 && (
+                <>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-2">
+                        Coba fitur refleksi AI ({remainingQuota} balasan gratis tersisa)
+                    </p>
+                    <Link 
+                        href={route('refleksi.index')} 
+                        className="w-full text-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 shadow-lg"
+                    >
+                        Mulai Sesi Gratis
+                    </Link>
+                    <button 
+                        onClick={onUpgradeClick}
+                        className="mt-2 text-center text-amber-600 hover:text-amber-700 font-medium py-2 text-sm transition-colors"
+                    >
+                        Upgrade untuk akses tanpa batas →
+                    </button>
+                </>
+            )}
+            
+            {/* Untuk user gratis dengan quota habis */}
+            {!isPremium && remainingQuota <= 0 && (
+                <div className="text-center p-4 border-2 border-dashed border-amber-400/50 dark:border-amber-500/40 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                    <div className="w-12 h-12 mx-auto bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center mb-3">
+                        <LockClosedIcon className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+                    </div>
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                        Kuota Gratis Habis
+                    </p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">
+                        Upgrade untuk lanjutkan percakapan
+                    </p>
+                    <button 
+                        onClick={onUpgradeClick} 
+                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105 text-sm"
+                    >
+                        Upgrade ke Premium
+                    </button>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        atau coba lagi besok
+                    </p>
+                </div>
+            )}
+
+            {/* Untuk user premium */}
             {isPremium && (
                 hasReflectedToday ? (
                     <div className="text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
@@ -103,46 +149,17 @@ const ReflectionCard = ({ hasReflectedToday, isPremium, remainingQuota, onUpgrad
                     </div>
                 ) : (
                     <>
-                        <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">Mulai sesi percakapan mendalam dengan AI GrowthBot.</p>
-                        <Link href={route('refleksi.index')} className="w-full text-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 shadow-lg">Mulai Refleksi</Link>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">
+                            Mulai sesi percakapan mendalam dengan AI GrowthBot.
+                        </p>
+                        <Link 
+                            href={route('refleksi.index')} 
+                            className="w-full text-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 shadow-lg"
+                        >
+                            Mulai Refleksi
+                        </Link>
                     </>
                 )
-            )}
-
-            {/* Tampilan untuk Pengguna Gratis */}
-            {!isPremium && (
-                <>
-                    {/* Kondisi 1: Kuota masih ada */}
-                    {remainingQuota > 0 && (
-                        hasReflectedToday ? (
-                            <div className="text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                                <p className="text-green-800 dark:text-green-300">Sesi gratis hari ini sudah dimulai. Lanjutkan di halaman refleksi!</p>
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-slate-600 dark:text-slate-300 text-sm mb-2">Coba fitur refleksi dengan AI GrowthBot.</p>
-                                <Link href={route('refleksi.index')} className="w-full text-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 shadow-lg">Mulai Sesi Gratis</Link>
-                                <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-3">
-                                    Kuota tersisa: <span className="font-bold">{remainingQuota} balasan</span>
-                                </p>
-                            </>
-                        )
-                    )}
-                    
-                    {/* Kondisi 2: Kuota sudah habis */}
-                    {remainingQuota <= 0 && (
-                        <div className="text-center p-4 border-2 border-dashed border-amber-400/50 dark:border-amber-500/40 rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                            <div className="w-12 h-12 mx-auto bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center mb-3">
-                                <LockClosedIcon className="w-6 h-6 text-amber-500 dark:text-amber-400" />
-                            </div>
-                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Kuota Gratis Habis</p>
-                            <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">Lanjutkan percakapan tanpa batas.</p>
-                            <button onClick={onUpgradeClick} className="w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105 text-sm">
-                                Upgrade ke Premium
-                            </button>
-                        </div>
-                    )}
-                </>
             )}
         </div>
     </div>
@@ -282,7 +299,6 @@ export default function Dashboard(props) {
                         show={shouldShowUpgrade} 
                         onClose={() => setShowUpgradeModal(false)} 
                         plans={plans} 
-                        snap_token={snap_token} 
                     />
                 )}
             </AnimatePresence>
