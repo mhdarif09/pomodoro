@@ -1,315 +1,463 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import Lenis from '@studio-freight/lenis';
+import clsx from 'clsx';
 import { 
-  RocketLaunchIcon, SparklesIcon, BoltIcon, ShieldCheckIcon, ChartBarIcon, 
-  UserGroupIcon, CheckIcon, ArrowRightIcon, StarIcon, CpuChipIcon, CodeBracketIcon
+  RocketLaunchIcon, CheckIcon, ArrowRightIcon, StarIcon,
+  ChatBubbleLeftRightIcon, UserGroupIcon, DocumentTextIcon, SparklesIcon,
+  ClockIcon, PresentationChartLineIcon, ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
-// --- Helper Components for Advanced UI ---
+// --- Komponen Ikon Media Sosial (didefinisikan di luar agar bersih) ---
+const FaTwitter = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
+const FaLinkedin = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>;
+const FaInstagram = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.024.048-1.378.06-3.808.06s-2.784-.012-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.08 2.525c.636-.247 1.363-.416 2.427-.465C9.53 2.013 9.884 2 12.315 2zm-1.04 2.74a6.732 6.732 0 01-2.248-.035c-.75.036-1.144.17-1.502.31a3.027 3.027 0 00-1.12 1.12c-.14.358-.274.752-.31 1.502a6.732 6.732 0 01-.035 2.248c.036.75.17 1.144.31 1.502a3.027 3.027 0 001.12 1.12c.358.14.752.274 1.502.31a6.732 6.732 0 012.248.035c.75-.036 1.144-.17 1.502-.31a3.027 3.027 0 001.12-1.12c.14-.358.274-.752.31-1.502a6.732 6.732 0 01.035-2.248c-.036-.75-.17-1.144-.31-1.502a3.027 3.027 0 00-1.12-1.12c-.358-.14-.752-.274-1.502-.31zM12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zm0 1.5a2.25 2.25 0 110 4.5 2.25 2.25 0 010-4.5z" clipRule="evenodd" /></svg>;
 
-const CursorLight = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+// --- Helper Components & Hooks ---
 
-  useEffect(() => {
-    const onMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => window.removeEventListener('mousemove', onMouseMove);
-  }, []);
-
+const AnimatedSection = ({ children, className = '', id = '' }) => {
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   return (
-    <div 
-      className="pointer-events-none fixed inset-0 z-30 transition duration-300"
-      style={{
-        background: `radial-gradient(600px at ${position.x}px ${position.y}px, rgba(34, 197, 94, 0.1), transparent 80%)`
-      }}
-    />
+    <motion.section
+      id={id} ref={ref} initial="hidden" animate={inView ? "visible" : "hidden"}
+      variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+      className={className}
+    >
+      {children}
+    </motion.section>
   );
 };
 
-const StatCounter = ({ end, duration = 2000, suffix = "" }) => {
-    const [count, setCount] = useState(0);
-    const targetRef = useRef(null);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) {
-                let start = 0;
-                const increment = end / (duration / 16);
-                const timer = setInterval(() => {
-                    start += increment;
-                    if (start >= end) {
-                        setCount(end);
-                        clearInterval(timer);
-                    } else {
-                        setCount(Math.ceil(start));
-                    }
-                }, 16);
-                observer.disconnect();
-            }
-        }, { threshold: 0.1 });
-
-        if (targetRef.current) {
-            observer.observe(targetRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, [end, duration]);
-    
-    return <span ref={targetRef}>{count.toLocaleString()}{suffix}</span>;
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40, scale: 0.98 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
 };
+
+const FeatureCard = ({ feature }) => {
+    const ref = useRef(null);
+    const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+    const y = useTransform(scrollYProgress, [0, 1], ['-8%', '8%']);
+    const [rotateX, setRotateX] = useState(0);
+    const [rotateY, setRotateY] = useState(0);
+    const handleMouseMove = (event) => {
+        const card = event.currentTarget;
+        const { left, top, width, height } = card.getBoundingClientRect();
+        const x = (event.clientX - left) / width - 0.5;
+        const y = (event.clientY - top) / height - 0.5;
+        setRotateX(-y * 25); setRotateY(x * 25);
+    };
+    const handleMouseLeave = () => { setRotateX(0); setRotateY(0); };
+
+    return (
+        <motion.div ref={ref} variants={fadeInUp} className="group relative p-8 rounded-3xl border border-white/10 bg-gray-900/40 backdrop-blur-xl overflow-hidden" style={{ perspective: '1000px' }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute -inset-px rounded-3xl border border-transparent group-hover:border-emerald-500/50 transition-colors duration-500"></div>
+            <motion.div className="transition-transform duration-300 ease-out" style={{ y, rotateX, rotateY, transformStyle: 'preserve-3d' }}>
+                <div style={{ transform: 'translateZ(50px)' }}>
+                    <div className="text-emerald-400 mb-4">{feature.icon && <div className="w-12 h-12 p-3 bg-white/5 rounded-lg border border-white/10 shadow-lg shadow-emerald-500/10">{feature.icon}</div>}</div>
+                    <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                    <p className="text-gray-400 text-sm flex-grow">{feature.description}</p>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
+const FAQItem = ({ question, answer }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <motion.div variants={fadeInUp} className="border-b border-white/10">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center py-6 text-left">
+                <span className="text-lg font-medium text-white">{question}</span>
+                <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                    <ChevronDownIcon className="w-6 h-6 text-emerald-400"/>
+                </motion.div>
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }} className="overflow-hidden">
+                        <p className="pb-6 text-gray-400">{answer}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+}
+
+const Marquee = ({ children, direction = 'left' }) => (
+    <div className="relative flex w-full overflow-hidden">
+        <motion.div className="flex min-w-full shrink-0 items-center justify-around gap-8" variants={{ animate: { translateX: direction === 'left' ? ['0%', '-50%'] : ['-50%', '0%'], transition: { ease: 'linear', duration: 50, repeat: Infinity }}}} animate="animate">{children}</motion.div>
+        <motion.div className="flex min-w-full shrink-0 items-center justify-around gap-8" variants={{ animate: { translateX: direction === 'left' ? ['0%', '-50%'] : ['-50%', '0%'], transition: { ease: 'linear', duration: 50, repeat: Infinity }}}} animate="animate">{children}</motion.div>
+    </div>
+);
 
 // --- Main Page Component ---
 
-export default function HyperModernLandingPage() {
+export default function OdysseyLandingPage() {
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const heroMockupRef = useRef(null);
-
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   useEffect(() => {
-    const el = heroMockupRef.current;
-    if (!el) return;
-
-    const onMouseMove = (e) => {
-      const { left, top, width, height } = el.getBoundingClientRect();
-      const x = (e.clientX - left) / width - 0.5;
-      const y = (e.clientY - top) / height - 0.5;
-      el.style.setProperty('--rotateX', `${-y * 10}deg`);
-      el.style.setProperty('--rotateY', `${x * 10}deg`);
-    };
-
-    const onMouseLeave = () => {
-      el.style.setProperty('--rotateX', '0deg');
-      el.style.setProperty('--rotateY', '0deg');
-    };
-
-    el.addEventListener('mousemove', onMouseMove);
-    el.addEventListener('mouseleave', onMouseLeave);
-
-    return () => {
-      el.removeEventListener('mousemove', onMouseMove);
-      el.removeEventListener('mouseleave', onMouseLeave);
-    };
+    const lenis = new Lenis();
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
   }, []);
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+  }, [isMenuOpen]);
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+
+  const heroTextY = useTransform(scrollYProgress, [0, 1], ['0%', '200%']);
+  const heroFragmentsY = useTransform(scrollYProgress, [0, 1], ['0%', '500%']);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  
   const features = [
-    { icon: <BoltIcon className="h-8 w-8" />, title: 'AI-Powered Journaling', description: 'Unlock insights from your daily experiences with an AI that understands you.', size: 'large' },
-    { icon: <ShieldCheckIcon className="h-8 w-8" />, title: 'Intelligent Pomodoro', description: 'Conquer goals with a focus timer that adapts to your workflow.' },
-    { icon: <SparklesIcon className="h-8 w-8" />, title: 'PDF Intelligence', description: 'Instantly extract key insights and summaries from any PDF.' },
-    { icon: <ChartBarIcon className="h-8 w-8" />, title: 'Dynamic Goal Mapping', description: 'Visualize your dreams and transform them into achievable milestones.', size: 'large' },
-    { icon: <UserGroupIcon className="h-8 w-8" />, title: 'Community Alliances', description: 'Join forces with like-minded achievers.' },
-    { icon: <RocketLaunchIcon className="h-8 w-8" />, title: 'Learning Expeditions', description: 'Embark on curated learning paths to level up.' }
+    { icon: <ClockIcon className="w-full h-full" />, title: 'Timer Pomodoro', description: 'Kuasai fokus Anda dengan timer cerdas yang dirancang untuk sesi kerja mendalam dan istirahat yang efektif.'},
+    { icon: <SparklesIcon className="w-full h-full" />, title: 'Wawasan Pertumbuhan AI', description: 'Terima wawasan dan saran yang dipersonalisasi berdasarkan kemajuan Anda untuk mempercepat pertumbuhan.'},
+    { icon: <PresentationChartLineIcon className="w-full h-full" />, title: 'Analitik Belajar', description: 'Visualisasikan pola kerja Anda, lacak produktivitas, dan identifikasi area untuk perbaikan.'},
+    { icon: <UserGroupIcon className="w-full h-full" />, title: 'Komunitas', description: 'Bergabung dengan para pencapai ambisius lainnya. Berbagi strategi, merayakan kemenangan, dan tumbuh bersama.'},
+    { icon: <ChatBubbleLeftRightIcon className="w-full h-full" />, title: 'Asisten Chat AI', description: 'Rekan AI pribadi Anda untuk bertukar pikiran, mengatasi kebuntuan, dan tetap termotivasi.'},
+    { icon: <DocumentTextIcon className="w-full h-full" />, title: 'Chat dengan PDF', description: 'Ajukan pertanyaan pada dokumen Anda. Dapatkan ringkasan dan jawaban instan dari PDF apa pun.'}
+  ];
+
+  const topics = [
+    { name: 'Kiat Produktivitas' }, { name: 'Pengembangan Diri' }, { name: 'AI & Masa Depan' },
+    { name: 'Pengembangan Karir' }, { name: 'Kesehatan Mental' }, { name: 'Filsafat Stoik' }
   ];
 
   const testimonials = [
-    { quote: "This platform completely transformed how I approach my goals. The AI journaling feature is like having a personal coach available 24/7.", name: "Sarah Chen", role: "Product Designer", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80", rating: 5},
-    { quote: "The Pomodoro timer with AI insights helped me finish my thesis 2 weeks early. I'm more focused than ever before!", name: "Marcus Johnson", role: "PhD Candidate", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", rating: 5},
-    { quote: "Finally, a productivity tool that understands me. The community support is incredible, and I've achieved goals I thought were impossible.", name: "Priya Sharma", role: "Entrepreneur", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80", rating: 5}
+    { quote: "Platform ini benar-benar mengubah cara saya meraih tujuan. Fitur AI-nya seperti memiliki pelatih pribadi 24/7.", name: "Sarah Chen", role: "Product Designer", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80"},
+    { quote: "Timer Pomodoro cerdasnya membantu saya menyelesaikan tesis 2 minggu lebih cepat. Saya jadi lebih fokus dari sebelumnya!", name: "Marcus Johnson", role: "Kandidat PhD", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"},
+    { quote: "Akhirnya, sebuah aplikasi produktivitas yang benar-benar mengerti saya. Dukungan komunitasnya luar biasa.", name: "Priya Sharma", role: "Wirausahawan", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80"},
+    { quote: "Analitik dari Sarang Tumbuh mengubah segalanya. Saya menemukan jam produktif puncak saya dan berhasil melipatgandakan hasil kerja.", name: "David Lee", role: "Software Engineer", avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&q=80"},
+    { quote: "Bisa 'chatting' dengan PDF itu luar biasa. Riset yang biasanya butuh berhari-hari kini selesai dalam hitungan menit. Sangat direkomendasikan!", name: "Dr. Emily Carter", role: "Peneliti", avatar: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&q=80"},
+    { quote: "Wawasan pertumbuhan dari AI-nya sangat akurat. Seolah-olah aplikasi ini tahu apa yang perlu saya perbaiki sebelum saya sadar.", name: "Alex Rivera", role: "Pendiri Startup", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80"},
+  ];
+  
+  const faqData = [
+      { question: "Siapa yang cocok menggunakan Sarang Tumbuh?", answer: "Sarang Tumbuh dirancang untuk pelajar, profesional, peneliti, dan siapa saja yang ambisius dan ingin memaksimalkan potensi diri. Jika Anda ingin lebih teratur, fokus, dan produktif, Sarang Tumbuh adalah untuk Anda." },
+      { question: "Apakah data saya aman?", answer: "Tentu saja. Keamanan dan privasi data adalah prioritas utama kami. Semua data Anda dienkripsi baik saat transit maupun saat disimpan. Kami tidak akan pernah membagikan data Anda dengan pihak ketiga." },
+      { question: "Bagaimana cara kerja fitur AI?", answer: "Kami menggunakan model bahasa canggih (Large Language Models) yang telah dilatih khusus untuk tugas-tugas produktivitas dan sintesis pengetahuan. AI ini beroperasi di dalam lingkungan aman kami untuk menganalisis data Anda dan memberikan wawasan yang relevan." },
+      { question: "Bisakah saya membatalkan langganan kapan saja?", answer: "Ya. Anda bisa membatalkan langganan paket berbayar Anda kapan saja tanpa denda. Anda akan tetap memiliki akses ke fitur premium hingga akhir siklus penagihan Anda." }
   ];
 
+  // --- PERUBAHAN HARGA 1: Memperbarui nilai harga ---
   const pricingPlans = [
-    { plan: 'Explorer', price: { monthly: 'Free', yearly: 'Free' }, features: ['AI Journaling (10 entries/month)', 'Basic Pomodoro Timer', 'Goal Tracking (3 goals)', 'Community Access'] },
-    { plan: 'Navigator', price: { monthly: '$12', yearly: '$120' }, features: ['Unlimited AI Journaling', 'Advanced Pomodoro Analytics', 'Unlimited Goals', 'PDF Intelligence (50/month)', 'Priority Support'], highlighted: true },
-    { plan: 'Captain', price: { monthly: '$29', yearly: '$280' }, features: ['Everything in Navigator', 'Team Collaboration (5 members)', 'Unlimited PDF Processing', 'Advanced AI Insights'], comingSoon: true }
+    { plan: 'Penjelajah', price: { monthly: 'Gratis', yearly: 'Gratis' }, features: ['Jurnal AI (10/bulan)', 'Timer Pomodoro Dasar', 'Peta Tujuan (3 tujuan)', 'Akses Komunitas'] },
+    { plan: 'Navigator', price: { monthly: 20000, yearly: 16000 }, features: ['Jurnal AI Tanpa Batas', 'Pomodoro Cerdas', 'Tujuan Tanpa Batas', 'Kecerdasan PDF (50/bulan)', 'Dukungan Prioritas'], highlighted: true },
+    { plan: 'Kapten', price: { monthly: 29000, yearly: 23200 }, features: ['Semua di Navigator', 'Kolaborasi Tim (5 anggota)', 'Proses PDF Tanpa Batas', 'API Wawasan AI Lanjutan'], comingSoon: true }
   ];
-
-  const GlowingCard = ({ children, className = '', large = false }) => (
-    <div className={`relative p-px rounded-3xl bg-white/5 group ${className} ${large ? 'lg:col-span-2' : ''}`}>
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
-      <div className="relative bg-gray-900/80 backdrop-blur-sm rounded-[23px] h-full p-8">
-        {children}
-      </div>
-    </div>
-  );
-
+  
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-200 font-sans antialiased overflow-x-hidden">
-      <div className="fixed inset-0 -z-10 bg-[url('/grid.svg')] bg-repeat opacity-[0.03]"></div>
-      <CursorLight />
-      
-      <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-lg bg-gray-950/50 border-b border-white/10">
+    <div className="min-h-screen bg-[#000011] text-gray-200 font-sans antialiased overflow-x-hidden">
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[url('/stars.png')] opacity-40"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#000011] via-transparent to-transparent"></div>
+        <div className="absolute top-1/4 left-1/2 w-[1000px] h-[1000px] -translate-x-1/2 -translate-y-1/2 bg-gradient-radial from-emerald-500/20 to-transparent rounded-full blur-3xl filter animate-pulse-slow"></div>
+      </div>
+
+      <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.5, ease: 'easeOut' }} className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-[#000011]/30 border-b border-white/10">
         <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-            Sarang<span className="text-white font-light">Tumbuh</span>
+          <div className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent tracking-tighter">Sarang Tumbuh</div>
+          
+          <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
+            <a href="#features" className="hover:text-white transition-colors">Fitur</a>
+            <a href="#topics" className="hover:text-white transition-colors">Topik</a>
+            <a href="#testimonials" className="hover:text-white transition-colors">Testimoni</a>
+            <a href="#pricing" className="hover:text-white transition-colors">Harga</a>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm">
-            <a href="#features" className="text-gray-300 hover:text-white transition duration-300">Features</a>
-            <a href="#testimonials" className="text-gray-300 hover:text-white transition duration-300">Testimonials</a>
-            <a href="#pricing" className="text-gray-300 hover:text-white transition duration-300">Pricing</a>
+          
+          <div className="hidden md:block">
+            <motion.a href="/register" whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }} whileTap={{ scale: 0.95 }} className="px-5 py-2 rounded-full font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-white transition-shadow">
+              Mulai Petualangan
+            </motion.a>
           </div>
-          <button className="bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2 rounded-full font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/40 transition-all duration-300 transform hover:scale-105">
-            Get Started
-          </button>
+
+          <div className="md:hidden">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="z-50 relative w-8 h-8 text-white">
+              <motion.span animate={{ rotate: isMenuOpen ? 45 : 0, y: isMenuOpen ? 0 : -6 }} style={{ transformOrigin: 'center' }} className="absolute block h-0.5 w-full bg-current transform transition duration-300 ease-in-out"></motion.span>
+              <motion.span animate={{ opacity: isMenuOpen ? 0 : 1 }} className="absolute block h-0.5 w-full bg-current transform transition duration-300 ease-in-out" style={{top: '50%', transform: 'translateY(-50%)'}}></motion.span>
+              <motion.span animate={{ rotate: isMenuOpen ? -45 : 0, y: isMenuOpen ? 0 : 6 }} style={{ transformOrigin: 'center' }} className="absolute block h-0.5 w-full bg-current transform transition duration-300 ease-in-out"></motion.span>
+            </button>
+          </div>
         </nav>
-      </header>
+      </motion.header>
 
-      <main className="relative z-10">
-        <section className="pt-48 pb-20 px-6 text-center" style={{ perspective: '2000px' }}>
-          <div className="container mx-auto max-w-5xl">
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
-              Engineer Your<br/>
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                Personal Growth
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-12">
-              An intelligent ecosystem to organize your mind, supercharge your focus, and achieve what once seemed impossible.
-            </p>
-            <div className="flex justify-center gap-4">
-              <button className="group relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105">
-                <span className="flex items-center gap-2">Start Free <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></span>
-              </button>
-            </div>
-          </div>
-          <div 
-            ref={heroMockupRef}
-            className="relative mt-20 max-w-5xl mx-auto transition-transform duration-100 ease-out" 
-            style={{ transform: 'rotateX(var(--rotateX)) rotateY(var(--rotateY))', transformStyle: 'preserve-3d' }}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="fixed inset-0 z-40 bg-[#000011]/80 backdrop-blur-xl md:hidden"
           >
-            <div className="absolute inset-0 bg-white/10 rounded-2xl blur-2xl"></div>
-            <div className="relative bg-gray-900/80 p-2 rounded-2xl border border-white/10 backdrop-blur-lg shadow-2xl shadow-black/40">
-                <div className="aspect-video bg-gray-800 rounded-lg p-4 border border-white/10 flex flex-col">
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div><div className="w-3 h-3 rounded-full bg-yellow-500"></div><div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    </div>
-                    <div className="flex-grow bg-gray-900/50 rounded-md p-4 border border-white/10 text-gray-500 text-left">
-                        <p className="font-mono text-sm text-emerald-400">&gt; Loading personal dashboard...</p>
-                        <p className="font-mono text-sm text-gray-400">&gt; Goals synced: 3/3</p>
-                        <p className="font-mono text-sm text-gray-400">&gt; Focus session active: Project Phoenix</p>
-                    </div>
-                </div>
-            </div>
+            <motion.div
+              initial={{ y: "-100%" }}
+              animate={{ y: "0%" }}
+              exit={{ y: "-100%" }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="container mx-auto h-full flex flex-col items-center justify-center gap-8 text-center"
+            >
+              <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-300 hover:text-emerald-400">Fitur</a>
+              <a href="#topics" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-300 hover:text-emerald-400">Topik</a>
+              <a href="#testimonials" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-300 hover:text-emerald-400">Testimoni</a>
+              <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-300 hover:text-emerald-400">Harga</a>
+              <motion.a href="/register" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-4 px-8 py-3 rounded-full font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+                Mulai Gratis
+              </motion.a>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <main className="relative z-10">
+        <section ref={heroRef} className="h-[200vh] relative">
+          <div className="sticky top-0 h-screen flex flex-col items-center justify-center text-center px-6">
+            <motion.div style={{ y: heroTextY, opacity: heroOpacity }} className="relative z-10">
+              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+                Rancang Sarang Anda.
+                <br/>
+                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+                  Kuasai Potensi Diri.
+                </span>
+              </h1>
+              <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-12">
+                Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil.
+              </p>
+              <motion.a href="/register" whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(16, 185, 129, 0.6)' }} whileTap={{ scale: 0.95 }} className="group inline-block relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full font-bold text-lg text-white transition-shadow duration-300">
+                <span className="flex items-center gap-2">Mulai Gratis <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></span>
+              </motion.a>
+            </motion.div>
+            <motion.div style={{ y: heroFragmentsY, opacity: heroOpacity }} className="absolute inset-0 w-full h-full z-0">
+                <div className="absolute top-[10%] left-[15%] w-48 h-32 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md"></div>
+                <div className="absolute bottom-[15%] right-[20%] w-64 h-40 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md"></div>
+            </motion.div>
           </div>
         </section>
 
-        <section id="features" className="py-20 sm:py-32 px-6">
+        {/* Sections Features, Topics, Testimonials remain unchanged */}
+        <AnimatedSection id="features" className="py-20 sm:py-32 px-6 bg-[#000011]/80 backdrop-blur-xl">
           <div className="container mx-auto max-w-7xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter">The Complete Toolkit for <span className="text-emerald-400">Peak Performance</span></h2>
-              <p className="text-lg text-gray-400 max-w-3xl mx-auto">From scattered thoughts to structured success. We've built the tools, you build the future.</p>
+              <motion.h2 variants={fadeInUp} className="text-4xl md:text-6xl font-black tracking-tight mb-4">Perangkat Lengkap untuk <span className="text-emerald-400">Performa Puncak</span></motion.h2>
+              <motion.p variants={fadeInUp} className="text-lg text-gray-400 max-w-3xl mx-auto">Dari ide acak menjadi kesuksesan terstruktur. Kami siapkan alatnya, Anda ciptakan masa depan.</motion.p>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {features.map((feature, idx) => (
-                <GlowingCard key={idx} large={feature.size === 'large'}>
-                  <div className="inline-flex p-3 bg-white/5 border border-white/10 rounded-xl mb-6 text-emerald-400">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400">{feature.description}</p>
-                </GlowingCard>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {features.map((feature, i) => <FeatureCard key={i} feature={feature} />)}
             </div>
           </div>
-        </section>
-
-        <section className="py-20 sm:py-32 px-6">
-          <div className="container mx-auto max-w-5xl">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter">Converse with Your Content</h2>
-              <p className="text-lg text-gray-400">Our AI goes beyond summarizing. Ask questions, get insights, and turn static documents into dynamic knowledge.</p>
+        </AnimatedSection>
+        
+        <AnimatedSection id="topics" className="py-20 sm:py-32">
+            <div className="container mx-auto">
+              <motion.div variants={fadeInUp} className="text-center mb-12 px-6">
+                  <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
+                    Jelajahi <span className="text-emerald-400">Konstelasi Ide</span>
+                  </h2>
+                  <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                    Terhubung dengan para pembelajar dan pencapai yang penuh semangat.
+                  </p>
+              </motion.div>
+              <motion.div variants={fadeInUp}>
+                <Marquee>
+                    {topics.map((topic) => (
+                      <div key={topic.name} className="px-6 py-3 border border-white/10 rounded-full bg-white/5 backdrop-blur-sm text-lg font-semibold whitespace-nowrap">
+                        {topic.name}
+                      </div>
+                    ))}
+                </Marquee>
+              </motion.div>
             </div>
-            <div className="relative bg-gray-900 border border-white/10 rounded-2xl p-6 lg:p-8 shadow-2xl shadow-black/40">
-                <div className="flex flex-col lg:flex-row gap-8">
-                    <div className="lg:w-1/3">
-                        <h3 className="font-bold text-white mb-4 text-xl flex items-center gap-2"><CpuChipIcon className="w-6 h-6 text-emerald-400"/> AI Assistant</h3>
-                        <p className="text-gray-400 mb-4">Prompt the AI with a command. It understands context and provides detailed responses.</p>
-                        <div className="bg-white/5 p-4 rounded-lg font-mono text-sm text-emerald-300 border border-white/10">
-                            <p>&gt; Summarize the key arguments in this research paper about neuroplasticity.</p>
-                        </div>
+        </AnimatedSection>
+        
+        <AnimatedSection id="testimonials" className="py-20 sm:py-32">
+          <div className="container mx-auto">
+            <motion.div variants={fadeInUp} className="text-center mb-16 px-6">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-4">Dicintai Para Pencapai</h2>
+              <motion.p variants={fadeInUp} className="text-lg text-gray-400">Dengarkan apa kata mereka yang telah bertransformasi.</motion.p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className="space-y-8">
+              <Marquee>
+                {testimonials.slice(0, 3).map((t) => (
+                  <div key={t.name} className="relative w-96 flex-shrink-0 p-px rounded-3xl bg-gradient-to-b from-white/10 to-transparent">
+                    <div className="bg-gray-900/80 backdrop-blur-xl rounded-[23px] h-full p-8 flex flex-col">
+                      <div className="flex gap-1 mb-4">{[...Array(5)].map((_, i) => <StarIcon key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}</div>
+                      <p className="text-gray-300 mb-6 italic flex-grow">"{t.quote}"</p>
+                      <div className="flex items-center gap-4 border-t border-white/10 pt-6 mt-auto">
+                        <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-emerald-400/50" />
+                        <div><div className="font-bold text-white">{t.name}</div><div className="text-sm text-gray-500">{t.role}</div></div>
+                      </div>
                     </div>
-                    <div className="flex-1 bg-white/5 p-4 rounded-lg border border-white/10 min-h-[200px]">
-                        <p className="font-mono text-sm text-gray-300 typing-animation">The paper argues that... </p>
-                    </div>
-                </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="testimonials" className="py-20 sm:py-32 px-6">
-          <div className="container mx-auto max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter">Join <StatCounter end={50000} suffix="+" /> High Achievers</h2>
-              <p className="text-lg text-gray-400">Don't just take our word for it. Here's what our users say.</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {testimonials.map((t, idx) => (
-                <GlowingCard key={idx} className="hover:-translate-y-2 transition-transform duration-300">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(t.rating)].map((_, i) => <StarIcon key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}
                   </div>
-                  <p className="text-gray-300 mb-6 italic">"{t.quote}"</p>
-                  <div className="flex items-center gap-4 border-t border-white/10 pt-4">
-                    <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-emerald-400/50" />
-                    <div>
-                      <div className="font-bold text-white">{t.name}</div><div className="text-sm text-gray-500">{t.role}</div>
+                ))}
+              </Marquee>
+              <Marquee direction="right">
+                {testimonials.slice(3, 6).map((t) => (
+                  <div key={t.name} className="relative w-96 flex-shrink-0 p-px rounded-3xl bg-gradient-to-b from-white/10 to-transparent">
+                    <div className="bg-gray-900/80 backdrop-blur-xl rounded-[23px] h-full p-8 flex flex-col">
+                      <div className="flex gap-1 mb-4">{[...Array(5)].map((_, i) => <StarIcon key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}</div>
+                      <p className="text-gray-300 mb-6 italic flex-grow">"{t.quote}"</p>
+                      <div className="flex items-center gap-4 border-t border-white/10 pt-6 mt-auto">
+                        <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover border-2 border-emerald-400/50" />
+                        <div><div className="font-bold text-white">{t.name}</div><div className="text-sm text-gray-500">{t.role}</div></div>
+                      </div>
                     </div>
                   </div>
-                </GlowingCard>
-              ))}
-            </div>
+                ))}
+              </Marquee>
+            </motion.div>
           </div>
-        </section>
+        </AnimatedSection>
+        {/* End of unchanged sections */}
 
-        <section id="pricing" className="py-20 sm:py-32 px-6">
+        <AnimatedSection id="pricing" className="py-20 sm:py-32 px-6">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter">Find Your Perfect Plan</h2>
-              <p className="text-lg text-gray-400">Start for free, upgrade when you're ready.</p>
+              <motion.h2 variants={fadeInUp} className="text-4xl md:text-6xl font-black tracking-tight mb-4">Temukan Paket Sempurna Anda</motion.h2>
+              <motion.p variants={fadeInUp} className="text-lg text-gray-400">Mulai gratis, tingkatkan saat ambisi Anda melampaui batas.</motion.p>
             </div>
-            {/* Pricing Toggle can be added here if needed */}
-            <div className="grid lg:grid-cols-3 gap-8 items-start">
-              {pricingPlans.map((plan) => (
-                <div key={plan.plan} className={`relative p-8 rounded-3xl ${plan.highlighted ? 'bg-gradient-to-br from-emerald-600 to-teal-700' : 'bg-white/5 border border-white/10'}`}>
-                  {plan.highlighted && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-sm font-bold">Most Popular</div>}
-                  <h3 className="text-2xl font-bold text-white">{plan.plan}</h3>
-                  <div className="mt-4 flex items-baseline"><span className="text-5xl font-extrabold text-white">{plan.price.monthly}</span>{plan.price.monthly !== 'Free' && <span className="ml-2 text-white/70">/month</span>}</div>
-                  <ul className="mt-8 space-y-4 flex-grow">
-                    {plan.features.map((feature, idx) => (<li key={idx} className="flex items-start gap-3"><CheckIcon className={`h-6 w-6 flex-shrink-0 ${plan.highlighted ? 'text-white' : 'text-emerald-400'}`} /><span>{feature}</span></li>))}
-                  </ul>
-                  <button disabled={plan.comingSoon} className={`mt-10 w-full rounded-xl py-4 font-bold text-lg transition-all duration-300 ${plan.comingSoon ? 'bg-gray-600 cursor-not-allowed opacity-60' : plan.highlighted ? 'bg-white text-emerald-600 hover:bg-gray-100' : 'bg-emerald-500 hover:bg-emerald-600'}`}>{plan.comingSoon ? 'Coming Soon' : 'Choose Plan'}</button>
+            <motion.div variants={fadeInUp} className="flex justify-center items-center gap-4 mb-12">
+                <span className={clsx("font-semibold", billingCycle === 'monthly' ? 'text-white' : 'text-gray-500')}>Bulanan</span>
+                <div onClick={() => setBillingCycle(c => c === 'monthly' ? 'yearly' : 'monthly')} className="w-14 h-8 flex items-center bg-white/5 rounded-full p-1 cursor-pointer">
+                    <motion.div layout transition={{ type: 'spring', stiffness: 700, damping: 30 }} className="w-6 h-6 bg-emerald-500 rounded-full" style={{ marginLeft: billingCycle === 'yearly' ? 'auto' : '0' }}/>
                 </div>
+                <span className={clsx("font-semibold", billingCycle === 'yearly' ? 'text-white' : 'text-gray-500')}>Tahunan</span>
+                <span className="bg-emerald-400/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full">Hemat 20%</span>
+            </motion.div>
+            <div className="grid lg:grid-cols-3 gap-8 items-stretch">
+              {pricingPlans.map((plan) => (
+                <motion.div key={plan.plan} variants={fadeInUp} className={clsx('relative p-8 rounded-3xl flex flex-col border', plan.highlighted ? 'border-emerald-500 bg-gray-900/50' : 'border-white/10 bg-gray-900/50')}>
+                  {plan.highlighted && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-bold">Paling Populer</div>}
+                  <h3 className="text-2xl font-bold text-white">{plan.plan}</h3>
+                  <div className="mt-4 flex items-baseline min-h-[64px] text-white">
+                    <AnimatePresence mode="wait">
+                      <motion.span 
+                        key={billingCycle} 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }} 
+                        transition={{ duration: 0.2 }} 
+                        className="text-5xl font-extrabold tracking-tight"
+                      >
+                        {/* --- PERUBAHAN HARGA 2: Memformat angka ke format Rupiah --- */}
+                        {typeof plan.price[billingCycle] === 'number' 
+                          ? `Rp${plan.price[billingCycle].toLocaleString('id-ID')}` 
+                          : plan.price[billingCycle]}
+                      </motion.span>
+                    </AnimatePresence>
+                    {plan.price.monthly !== 'Gratis' && <span className="ml-2 text-white/50">/bulan</span>}
+                  </div>
+                  <ul className="mt-8 space-y-4 flex-grow text-gray-300">{plan.features.map((f, i) => (<li key={i} className="flex items-start gap-3"><CheckIcon className="h-6 w-6 flex-shrink-0 text-emerald-400" /><span>{f}</span></li>))}</ul>
+                  
+                  {plan.comingSoon ? (
+                    <button disabled className="mt-10 w-full rounded-xl py-4 font-bold text-lg transition-all duration-300 bg-gray-600 cursor-not-allowed text-center">
+                        Segera Hadir
+                    </button>
+                  ) : (
+                    <motion.a 
+                        href={`/register?plan=${plan.plan.toLowerCase()}`}
+                        whileHover={{ scale: 1.02 }} 
+                        whileTap={{ scale: 0.98 }} 
+                        className={clsx('block text-center mt-10 w-full rounded-xl py-4 font-bold text-lg transition-all duration-300', plan.highlighted ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-white/10 hover:bg-white/20 text-white')}>
+                        Pilih Paket
+                    </motion.a>
+                  )}
+                </motion.div>
               ))}
             </div>
           </div>
-        </section>
-
-        <section className="py-20 sm:py-32 px-6">
-          <div className="container mx-auto max-w-4xl text-center">
-            <GlowingCard>
-              <h2 className="text-4xl md:text-5xl font-black mb-6 text-white tracking-tighter">Ready to Build Your Future?</h2>
-              <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">Your journey to peak performance starts now. No credit card required.</p>
-              <button className="group px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full font-bold text-xl hover:shadow-2xl hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105">
-                <span className="flex items-center gap-3">Claim Your Free Account <RocketLaunchIcon className="h-6 w-6 group-hover:rotate-12 transition-transform" /></span>
-              </button>
-            </GlowingCard>
-          </div>
-        </section>
+        </AnimatedSection>
+        
+        <AnimatedSection id="faq" className="py-20 sm:py-32 px-6">
+            <div className="container mx-auto max-w-4xl">
+                <motion.div variants={fadeInUp} className="text-center mb-12">
+                  <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
+                    Pertanyaan Umum
+                  </h2>
+                  <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                    Punya pertanyaan? Kami punya jawabannya.
+                  </p>
+                </motion.div>
+                <div className="max-w-3xl mx-auto">
+                    {faqData.map((faq, i) => (
+                        <FAQItem key={i} question={faq.question} answer={faq.answer}/>
+                    ))}
+                </div>
+            </div>
+        </AnimatedSection>
+        
+        <AnimatedSection className="py-20 sm:py-32 px-6">
+            <div className="container mx-auto max-w-4xl text-center">
+              <motion.div variants={fadeInUp} className="relative p-px rounded-3xl bg-gradient-to-b from-white/10 to-transparent">
+                  <div className="p-8 md:p-12 border border-white/10 rounded-[23px] bg-gray-950 bg-gradient-to-br from-emerald-950/20 to-transparent">
+                    <h2 className="text-4xl md:text-6xl font-black mb-6 text-white tracking-tight">Siap Memulai Sarang Anda?</h2>
+                    <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">Perjalanan Anda menuju performa puncak dimulai sekarang. Tidak perlu kartu kredit.</p>
+                    <motion.a href="/register" whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(16,185,129,0.6)' }} whileTap={{ scale: 0.95 }} className="group inline-block px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full font-bold text-xl text-white transition-shadow">
+                      <span className="flex items-center gap-3">Klaim Akun Gratis Anda <RocketLaunchIcon className="h-6 w-6 group-hover:rotate-12 transition-transform" /></span>
+                    </motion.a>
+                  </div>
+              </motion.div>
+            </div>
+        </AnimatedSection>
       </main>
-      
-      {/* Footer - Simplified for brevity, can be expanded */}
-      <footer className="border-t border-white/10 mt-20">
-        <div className="container mx-auto px-6 py-8 text-center text-gray-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} Sarang Tumbuh. All rights reserved.</p>
+
+      <footer className="border-t border-white/10 mt-20 bg-[#000011]/50 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
+            <div className="md:col-span-2">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent tracking-tighter mb-4">Sarang Tumbuh</h3>
+              <p className="text-gray-400 max-w-sm mx-auto md:mx-0 mb-6">
+                Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil.
+              </p>
+              <div className="flex justify-center md:justify-start gap-6">
+                <a href="#" className="text-gray-400 hover:text-emerald-400 transition"><FaTwitter /></a>
+                <a href="#" className="text-gray-400 hover:text-emerald-400 transition"><FaLinkedin /></a>
+                <a href="#" className="text-gray-400 hover:text-emerald-400 transition"><FaInstagram /></a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-4">Produk</h4>
+              <ul className="space-y-3 text-gray-400">
+                <li><a href="#features" className="hover:text-emerald-400 transition">Fitur</a></li>
+                <li><a href="#pricing" className="hover:text-emerald-400 transition">Harga</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition">Integrasi</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition">Keamanan</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-4">Perusahaan</h4>
+              <ul className="space-y-3 text-gray-400">
+                <li><a href="/about" className="hover:text-emerald-400 transition">Tentang Kami</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition">Blog</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition">Karir</a></li>
+                <li><a href="#" className="hover:text-emerald-400 transition">Hubungi Kami</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-16 border-t border-white/10 pt-8 text-center text-gray-500 text-sm">
+            <p>&copy; {new Date().getFullYear()} Sarang Tumbuh. Hak Cipta Dilindungi.</p>
+          </div>
         </div>
       </footer>
-      
       <style jsx global>{`
-        .typing-animation {
-          width: 0;
-          overflow: hidden;
-          white-space: nowrap;
-          border-right: .15em solid #2dd4bf;
-          animation: typing 3s steps(30, end) forwards, blink-caret .75s step-end infinite;
+        .animate-pulse-slow { animation: pulse-slow 20s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse-slow {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.2; }
+          50% { transform: scale(1.2) rotate(45deg); opacity: 0.3; }
         }
-
-        @keyframes typing {
-          from { width: 0 }
-          to { width: 100% }
-        }
-
-        @keyframes blink-caret {
-          from, to { border-color: transparent }
-          50% { border-color: #2dd4bf; }
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000011; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
       `}</style>
     </div>
   );

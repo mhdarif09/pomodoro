@@ -42,6 +42,10 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get("/about", function () {
+    return Inertia::render('About');
+})->name('about');
+
 // Google OAuth Routes
 Route::get('/login/google/redirect', [GoogleLoginController::class, 'redirectToGoogle'])->name('login.google.redirect');
 Route::get('/login/google/callback', [GoogleLoginController::class, 'handleGoogleCallback'])->name('login.google.callback');
