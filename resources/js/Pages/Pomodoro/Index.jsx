@@ -1,20 +1,17 @@
 // File: resources/js/Pages/Pomodoro/index.jsx
-// Versi final yang bersih dan terstruktur
+// VERSI FINAL LENGKAP - Modern & Terintegrasi
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import dayjs from 'dayjs';
 
-// Impor komponen-komponen baru dari folder `components`
 import PomodoroTimer from './components/PomodoroTimer';
 import SessionSettings from './components/SessionSettings';
 import AIAssistantPanel from './components/AIAssistantPanel';
-import PDFQueryModal from './components/PDFQueryModal';
 import UpgradeModal from './components/UpgradeModal';
 import FloatingActionButtons from './components/FloatingActionButtons';
 
-// DIUBAH: Variabel yang sebelumnya diekspor sekarang diimpor dari file constants.
 import { FREE_AI_CHAT_LIMIT } from './constants';
 
 export default function Pomodoro({ auth, isPremium, plans = [] }) {
@@ -28,7 +25,6 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
 
     // --- State Visibilitas UI ---
     const [showAIAssistant, setShowAIAssistant] = useState(false);
-    const [showPdfAI, setShowPdfAI] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     
     // --- State Fungsional ---
@@ -47,11 +43,11 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
     
     useEffect(() => {
         const handleVisibilityChange = () => {
-            if (!document.hidden && isRunning) {
+            if (document.hidden && isRunning) {
                 setTabWarningCount(prev => prev + 1);
                 setShowTabWarning(true);
                 if (notificationPermission === 'granted') {
-                    new Notification('🍅 Kembali Fokus!', { body: 'Timer masih berjalan.' });
+                    new Notification('🍅 Kembali Fokus!', { body: 'Timer masih berjalan. Jangan tinggalkan sesi fokus Anda.' });
                 }
                 if (audioRef.current) audioRef.current.play().catch(e => console.error("Audio play failed:", e));
                 setTimeout(() => setShowTabWarning(false), 3000);
@@ -82,6 +78,7 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
             if (notificationPermission === 'granted') {
                 new Notification('🎉 Sesi Selesai!', { body: 'Waktunya istirahat sejenak.' });
             }
+            if (audioRef.current) audioRef.current.play().catch(e => console.error("Audio play failed:", e));
         }
         return () => clearInterval(timer);
     }, [isRunning, secondsLeft]);
@@ -93,7 +90,7 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
         setTabWarningCount(0);
         setSecondsLeft(customFocusTime * 60);
         setFreeAiChatsUsed(0);
-        sessionStorage.removeItem('aiChatHistory'); // Hapus riwayat chat lama saat sesi baru mulai
+        sessionStorage.removeItem('aiChatHistory');
     };
 
     const stopSession = () => {
@@ -126,18 +123,25 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
     
     const triggerUpgradeModal = () => setShowUpgradeModal(true);
 
+    const totalDuration = customFocusTime * 60;
+
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Pomodoro Timer" />
-            <audio ref={audioRef} src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSBvT19PAN/6/f8A/gD+/P7+/v79/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/vD+/PwC" />
+            <audio ref={audioRef} src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSBvT19PAN/6/f8A/gD+/P7+/v79/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/vD+/wC" />
 
-            <div className="fixed inset-0 bg-slate-100 dark:bg-slate-900 -z-10" />
+            <div className="fixed inset-0 bg-slate-50 dark:bg-slate-900 -z-10 bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900" />
 
-            <main className="w-full h-full text-slate-800 dark:text-slate-200 px-4 py-8 flex flex-col items-center">
-                <div className="w-full max-w-2xl mx-auto space-y-8">
+            <main className="min-h-screen w-full text-slate-800 dark:text-slate-200 px-4 py-8 sm:py-12 flex flex-col items-center">
+                
+                <h1 className="text-2xl sm:text-3xl font-bold text-center text-slate-800 dark:text-slate-100 mb-2">Pomodoro Focus</h1>
+                <p className="text-center text-slate-500 dark:text-slate-400 mb-10">Selesaikan tugas Anda, satu sesi pada satu waktu.</p>
+                
+                <div className="w-full max-w-lg mx-auto space-y-8">
                     <PomodoroTimer
                         secondsLeft={secondsLeft}
                         isRunning={isRunning}
+                        totalDuration={totalDuration}
                         onStart={startSession}
                         onStop={stopSession}
                         onReset={resetTimer}
@@ -156,9 +160,7 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
             </main>
 
             <FloatingActionButtons
-                isPremium={isPremium}
                 onAIChatClick={() => setShowAIAssistant(true)}
-                onPDFQueryClick={() => isPremium ? setShowPdfAI(true) : triggerUpgradeModal()}
             />
 
             <AIAssistantPanel
@@ -168,11 +170,6 @@ export default function Pomodoro({ auth, isPremium, plans = [] }) {
                 freeAiChatsUsed={freeAiChatsUsed}
                 setFreeAiChatsUsed={setFreeAiChatsUsed}
                 onUpgrade={triggerUpgradeModal}
-            />
-
-            <PDFQueryModal
-                isOpen={showPdfAI && isPremium}
-                onClose={() => setShowPdfAI(false)}
             />
             
             <UpgradeModal

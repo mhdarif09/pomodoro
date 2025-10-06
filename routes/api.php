@@ -2,33 +2,21 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\OpenAIController; // Ganti dari DeepseekController
-use App\Http\Controllers\VoiceController;
+use App\Http\Controllers\OpenAIController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-| Semua route di sini akan otomatis punya prefix `/api`
-| dan biasanya digunakan untuk API (AJAX, frontend JS, mobile, dsb).
-|--------------------------------------------------------------------------
-*/
+// ==========================
+// ROUTE UNTUK AI ASSISTANT
+// ==========================
 
-// Auth check
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// 🧠 Chat Mode (AI umum)
+Route::post('/ask', [OpenAIController::class, 'ask'])->name('ai.ask');
 
-// OpenAI (ganti dari Deepseek)
-Route::post('/ask', [OpenAIController::class, 'ask']);
-Route::post('/ask-from-pdf', [OpenAIController::class, 'askFromPdf']);
+// 📄 Reviewer Mode (analisis PDF jurnal)
+Route::post('/ask-from-paper', [OpenAIController::class, 'askFromPaper'])->name('ai.askFromPaper');
 
-// Voice processing
-Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);
-Route::get('/voice/settings', [VoiceController::class, 'getVoiceSettings']);
-Route::delete('/voice/cleanup', [VoiceController::class, 'cleanupOldAudioFiles']);
+// ✍️ Writer Mode (penulisan akademik otomatis)
+Route::post('/ask-academic-writer', [OpenAIController::class, 'askAcademicWriter'])->name('ai.askAcademicWriter');
 
-// Optional: CORS middleware untuk API tertentu
-Route::group(['middleware' => ['cors']], function () {
-    Route::post('/voice/transcribe', [VoiceController::class, 'transcribe']);
-});
+// 📚 Analisis dari file PDF / Excel (fitur unggah)
+Route::post('/ask-from-pdf', [OpenAIController::class, 'askFromPdf'])->name('ai.askFromPdf');
+Route::post('/ask-from-excel', [OpenAIController::class, 'askFromExcel'])->name('ai.askFromExcel');

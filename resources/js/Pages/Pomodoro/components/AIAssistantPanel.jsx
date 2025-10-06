@@ -1,211 +1,302 @@
-// Misal di: resources/js/Components/AIAssistantPanel.jsx
+// File: resources/js/Pages/Pomodoro/components/AIAssistantPanel.jsx
+// VERSI FINAL — dengan toggle Mode (Chat, Reviewer, Writer), Upload PDF/XLSX/CSV, Preview interaktif,
+// Hapus Percakapan, dan Pencarian Web
 
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import TextareaAutosize from 'react-textarea-autosize';
-import { SparklesIcon, XMarkIcon, PaperAirplaneIcon, ArrowPathIcon, ArrowsPointingOutIcon, ComputerDesktopIcon, GlobeAltIcon } from '@heroicons/react/24/solid';
+import * as XLSX from 'xlsx';
+import {
+  SparklesIcon, XMarkIcon, PaperAirplaneIcon, ArrowsPointingOutIcon,
+  ComputerDesktopIcon, DocumentArrowUpIcon, AcademicCapIcon, ClipboardDocumentListIcon, GlobeAltIcon
+} from '@heroicons/react/24/solid';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Remarkable } from 'remarkable';
 
-// Anggap konstanta ini ada di file terpisah, misal `resources/js/constants.js`
-// export const FREE_AI_CHAT_LIMIT = 5;
-const FREE_AI_CHAT_LIMIT = 5; // Untuk contoh ini kita letakkan di sini
+const md = new Remarkable({ html: true, breaks: true, linkify: true });
 
 const sizeOptions = {
-    default: 'sm:max-w-md',
-    wide: 'sm:max-w-2xl',
+  default: 'sm:max-w-md',
+  wide: 'sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl'
 };
 
 const messageVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
-export default function AIAssistantPanel({ isOpen, onClose, isPremium, freeAiChatsUsed, setFreeAiChatsUsed, onUpgrade }) {
-    const [aiQuery, setAiQuery] = useState('');
-    const [isLoadingAI, setIsLoadingAI] = useState(false);
-    const [aiChatHistory, setAiChatHistory] = useState(() => JSON.parse(sessionStorage.getItem('aiChatHistory') || '[]'));
-    const [size, setSize] = useState('default');
-    const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
-    const chatEndRef = useRef(null);
+const renderMarkdown = (content) => ({ __html: md.render(content) });
 
-    useEffect(() => {
-        sessionStorage.setItem('aiChatHistory', JSON.stringify(aiChatHistory));
-        if (!isLoadingAI) {
-            chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-    }, [aiChatHistory, isLoadingAI]);
+const LoadingBubble = () => (
+    <div className="flex items-center space-x-1.5">
+        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+    </div>
+);
 
-    const handleAIQuery = async () => {
-        if (!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT) {
-            onUpgrade();
-            return;
-        }
-        if (!aiQuery.trim() || isLoadingAI) return;
 
-        if (!isPremium) {
-            setFreeAiChatsUsed(prev => prev + 1);
-        }
+const EmptyState = ({ onAttachmentClick }) => (
+  <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 dark:text-slate-400 p-8">
+    <SparklesIcon className="h-16 w-16 mb-4 text-slate-400 dark:text-slate-500" />
+    <h3 className="font-semibold text-lg text-slate-700 dark:text-slate-300">Asisten Riset Cerdas</h3>
+    <p className="text-sm mt-1 max-w-xs">Tanya apa saja, aktifkan mode Reviewer atau Writer untuk kebutuhan akademik.</p>
+    <button
+      onClick={onAttachmentClick}
+      className="mt-6 flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg shadow-teal-500/30 transition-all">
+      <DocumentArrowUpIcon className="h-5 w-5" />
+      Unggah Dokumen (PDF/Excel/CSV)
+    </button>
+  </div>
+);
 
-        const userMessage = { role: 'user', content: aiQuery, webSearch: isWebSearchEnabled };
-        
-        const newHistory = [...aiChatHistory, userMessage];
-        setAiChatHistory(newHistory);
-        setIsLoadingAI(true);
-        setAiQuery('');
+export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade }) {
+  const [aiQuery, setAiQuery] = useState('');
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [aiChatHistory, setAiChatHistory] = useState(() => JSON.parse(sessionStorage.getItem('aiChatHistory') || '[]'));
+  const [size, setSize] = useState('default');
+  const [mode, setMode] = useState('chat'); // Mode: chat / reviewer / writer
+  const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
 
-        try {
-            const response = await axios.post('/api/ask', {
-                query: aiQuery,
-                history: aiChatHistory,
-                webSearch: isWebSearchEnabled,
-            });
+  // file states
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState(null);
+  const [fileType, setFileType] = useState(null);
+  const [tableHtml, setTableHtml] = useState(null);
 
-            const aiMessage = {
-                role: 'assistant',
-                content: response.data.response,
-                sources: response.data.sources || [],
-            };
-            setAiChatHistory(prev => [...prev, aiMessage]);
-        } catch (error) {
-            const errorMessage = error.response?.data?.error || 'Maaf, terjadi kesalahan tak terduga.';
-            const errorMsg = { role: 'assistant', content: errorMessage, isError: true };
-            setAiChatHistory(prev => [...prev, errorMsg]);
-        } finally {
-            setIsLoadingAI(false);
-            setIsWebSearchEnabled(false);
-        }
+  const fileInputRef = useRef(null);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    sessionStorage.setItem('aiChatHistory', JSON.stringify(aiChatHistory));
+    if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, [aiChatHistory]);
+
+  useEffect(() => {
+    return () => {
+      if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
     };
-    
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleAIQuery();
-        }
+  }, [filePreviewUrl]);
+
+  const addMessageToHistory = (message) => {
+    setAiChatHistory(prev => [...prev, message]);
+  };
+  
+  const handleClearChat = () => {
+    setAiChatHistory([]);
+    sessionStorage.removeItem('aiChatHistory');
+  };
+
+  const handleAttachmentClick = () => {
+    if (!isPremium) { onUpgrade(); return; }
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'pdf') {
+      const newUrl = URL.createObjectURL(file);
+      setUploadedFile(file);
+      setFilePreviewUrl(newUrl);
+      setFileType('pdf');
+      setTableHtml(null);
+      addMessageToHistory({ role: 'system', content: `✅ PDF "${file.name}" dimuat.` });
+      setSize('wide');
+    } else if (['xlsx', 'xls', 'csv'].includes(ext)) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const data = new Uint8Array(ev.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const html = XLSX.utils.sheet_to_html(sheet);
+        setUploadedFile(file);
+        setFileType('excel');
+        setTableHtml(html);
+        addMessageToHistory({ role: 'system', content: `📊 File "${file.name}" dimuat.` });
+        setSize('wide');
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      addMessageToHistory({ role: 'assistant', content: '❌ Format tidak didukung. Pilih PDF, XLSX, atau CSV.', isError: true });
+    }
+
+    e.target.value = null;
+  };
+
+  const handleRemoveFile = () => {
+    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+    setUploadedFile(null);
+    setFilePreviewUrl(null);
+    setFileType(null);
+    setTableHtml(null);
+    setSize('default');
+    addMessageToHistory({ role: 'system', content: `📄 Sesi dokumen ditutup.` });
+  };
+
+  const handleAIQuery = async () => {
+    if (!aiQuery.trim() || isLoadingAI) return;
+
+    const currentQuery = aiQuery;
+    const previousHistory = aiChatHistory; // Capture history for context
+
+    addMessageToHistory({ role: 'user', content: currentQuery });
+    setAiQuery('');
+    setIsLoadingAI(true);
+    addMessageToHistory({ role: 'assistant', content: '', isLoading: true });
+
+    const updateLastMessage = (newMessage) => {
+      setAiChatHistory(prev => {
+        const historyWithoutLoader = prev.filter(msg => !msg.isLoading);
+        return [...historyWithoutLoader, newMessage];
+      });
     };
 
-    const handleClearChat = () => setAiChatHistory([]);
-    const toggleSize = () => setSize(currentSize => (currentSize === 'default' ? 'wide' : 'default'));
+    try {
+      let response;
 
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    className={`fixed inset-0 sm:inset-auto sm:top-0 sm:right-0 sm:h-full w-full bg-slate-100 dark:bg-slate-900 shadow-2xl z-50 flex flex-col transition-all duration-300 ease-in-out ${sizeOptions[size]}`}
-                    initial={{ x: "100%" }}
-                    animate={{ x: 0 }}
-                    exit={{ x: "100%" }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                >
-                    <header className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg flex-shrink-0">
-                        <h3 className="text-lg font-bold flex items-center gap-2"><SparklesIcon className="h-6 w-6 text-teal-500"/>Asisten AI</h3>
-                        <div>
-                            <button onClick={toggleSize} title="Ubah Ukuran" className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-full transition-colors hidden sm:inline-block">
-                                {size === 'default' ? <ArrowsPointingOutIcon className="h-5 w-5" /> : <ComputerDesktopIcon className="h-5 w-5" />}
-                            </button>
-                            <button onClick={handleClearChat} title="Hapus Chat" className="p-2 text-slate-500 hover:text-rose-500 rounded-full transition-colors"><ArrowPathIcon className="h-5 w-5"/></button>
-                            <button onClick={onClose} title="Tutup" className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-full transition-colors"><XMarkIcon className="h-6 w-6"/></button>
-                        </div>
-                    </header>
+      if (mode === 'reviewer' && uploadedFile) {
+        const formData = new FormData();
+        formData.append('file', uploadedFile);
+        response = await axios.post('/api/ask-from-paper', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else if (mode === 'writer') {
+        response = await axios.post('/api/ask-academic-writer', {
+          topic: currentQuery, section: 'umum'
+        });
+      } else { // Default Chat Mode
+        if (uploadedFile) {
+          const formData = new FormData();
+          formData.append('file', uploadedFile);
+          formData.append('query', currentQuery);
+          const endpoint = fileType === 'pdf' ? '/api/ask-from-pdf' : '/api/ask-from-sheet'; // FIX: Endpoint name
+          response = await axios.post(endpoint, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        } else {
+          response = await axios.post('/api/ask', {
+            query: currentQuery,
+            history: previousHistory,
+            webSearch: isWebSearchEnabled,
+          });
+          if (isWebSearchEnabled) setIsWebSearchEnabled(false);
+        }
+      }
 
-                    <div className="flex-1 overflow-y-auto p-4 ai-panel-chat-area">
-                        <AnimatePresence initial={false}>
-                            {aiChatHistory.map((msg, index) => (
-                                <motion.div
-                                    key={index}
-                                    layout
-                                    variants={messageVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    className={`flex my-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                >
-                                    <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow-md ${msg.role === 'user' ? 'bg-teal-500 text-white rounded-br-lg' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200 rounded-bl-lg' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-lg')}`}>
-                                        {msg.role === 'user' && msg.webSearch && (
-                                            <div className="flex items-center gap-1.5 text-white/80 mb-1 text-xs">
-                                                <GlobeAltIcon className="h-3 w-3" />
-                                                <span>Pencarian Web Aktif</span>
-                                            </div>
-                                        )}
-                                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                                        
-                                        {msg.sources && msg.sources.length > 0 && (
-                                            <div className="mt-3 pt-3 border-t border-slate-200/50 dark:border-slate-600/50">
-                                                <h4 className="text-xs font-bold mb-1.5 text-slate-600 dark:text-slate-400">Referensi:</h4>
-                                                <ul className="space-y-1.5">
-                                                    {msg.sources.map((source, i) => (
-                                                        <li key={i} className="text-xs flex items-start gap-2">
-                                                            <span className="text-teal-400 mt-0.5">🔗</span>
-                                                            <a href={source.url} target="_blank" rel="noopener noreferrer" className="hover:underline text-teal-600 dark:text-teal-400 break-all">
-                                                                {source.title}
-                                                            </a>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                        {isLoadingAI && (
-                            <motion.div layout variants={messageVariants} initial="hidden" animate="visible" className="flex justify-start my-2">
-                                <div className="p-3 rounded-lg bg-white dark:bg-slate-700 rounded-bl-lg shadow-md">
-                                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-500"></div>
-                                        Berpikir...
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-                        <div ref={chatEndRef} />
+      updateLastMessage({ role: 'assistant', content: response.data.response || 'Tidak ada respons dari AI.' });
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || '❌ Terjadi kesalahan saat memproses permintaan.';
+      updateLastMessage({ role: 'assistant', content: errorMessage, isError: true });
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAIQuery(); }
+  };
+
+  const toggleSize = () => setSize(current => (current === 'default' ? 'wide' : 'default'));
+
+  const modeLabel = {
+    chat: 'Chat Mode', reviewer: 'Reviewer Mode', writer: 'Writer Mode'
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/30 z-40 sm:hidden" />
+          <motion.div
+            className={`fixed inset-y-0 right-0 sm:top-0 sm:h-full w-full bg-slate-50 dark:bg-slate-900 shadow-2xl z-50 flex flex-col transition-all duration-300 ease-in-out ${sizeOptions[size]}`}
+            initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+            {/* HEADER */}
+            <header className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg">
+              <div className="flex items-center gap-2">
+                <SparklesIcon className="h-6 w-6 text-teal-500" />
+                <span className="font-bold truncate">{modeLabel[mode]}</span>
+              </div>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <button onClick={() => setMode('chat')} title="Chat Mode" className={`p-2 rounded ${mode === 'chat' ? 'bg-teal-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><SparklesIcon className="h-5 w-5" /></button>
+                <button onClick={() => setMode('reviewer')} title="Reviewer Mode" className={`p-2 rounded ${mode === 'reviewer' ? 'bg-teal-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><ClipboardDocumentListIcon className="h-5 w-5" /></button>
+                <button onClick={() => setMode('writer')} title="Writer Mode" className={`p-2 rounded ${mode === 'writer' ? 'bg-teal-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><AcademicCapIcon className="h-5 w-5" /></button>
+                <div className="border-l h-6 border-slate-200 dark:border-slate-700 mx-1"></div>
+                <button onClick={toggleSize} className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hidden sm:inline-block" title={size === 'default' ? 'Perlebar' : 'Perkecil'}>
+                  {size === 'default' ? <ArrowsPointingOutIcon className="h-5 w-5" /> : <ComputerDesktopIcon className="h-5 w-5" />}
+                </button>
+                <button onClick={handleClearChat} className="p-2 text-slate-500 hover:text-rose-500" title="Bersihkan Percakapan"><TrashIcon className="h-5 w-5" /></button>
+                <button onClick={onClose} className="p-2 text-slate-500 hover:text-rose-500" title="Tutup"><XMarkIcon className="h-6 w-6" /></button>
+              </div>
+            </header>
+
+            {/* BODY */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {uploadedFile ? (
+                <PanelGroup direction={size === 'default' ? 'vertical' : 'horizontal'} className="flex-1">
+                  <Panel defaultSize={55} minSize={20}>
+                    <div className="w-full h-full bg-slate-100 dark:bg-slate-800 overflow-auto">
+                      {fileType === 'pdf' && filePreviewUrl && <iframe src={filePreviewUrl} title="Preview PDF" className="w-full h-full border-none" />}
+                      {fileType === 'excel' && tableHtml && (<div className="p-4 overflow-auto h-full"><div dangerouslySetInnerHTML={{ __html: tableHtml }} className="prose dark:prose-invert" /></div>)}
                     </div>
+                  </Panel>
+                  <PanelResizeHandle className="h-2 w-full sm:h-full sm:w-2 bg-slate-300 dark:bg-slate-700 hover:bg-teal-500 transition-colors" />
+                  <Panel defaultSize={45} minSize={20} className="flex flex-col bg-slate-100/50 dark:bg-slate-900/50">
+                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        {aiChatHistory.map((msg, index) => (
+                          <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                             <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${ msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
+                               {msg.isLoading ? <LoadingBubble /> : <div dangerouslySetInnerHTML={renderMarkdown(msg.content)} />}
+                             </div>
+                           </motion.div>
+                         ))}
+                         <div ref={chatEndRef} />
+                       </div>
+                  </Panel>
+                </PanelGroup>
+              ) : (
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {aiChatHistory.length === 0 ? <EmptyState onAttachmentClick={handleAttachmentClick} />
+                    : aiChatHistory.map((msg, index) => (
+                        <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${ msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
+                           {msg.isLoading ? <LoadingBubble /> : <div dangerouslySetInnerHTML={renderMarkdown(msg.content)} />}
+                          </div>
+                        </motion.div>
+                      ))}
+                    <div ref={chatEndRef} />
+                </div>
+              )}
+            </div>
 
-                    <footer className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg flex-shrink-0">
-                        {!isPremium && (
-                           <div className="text-center text-xs text-slate-500 mb-2">
-                               Jatah chat gratis tersisa: {Math.max(0, FREE_AI_CHAT_LIMIT - freeAiChatsUsed)} / {FREE_AI_CHAT_LIMIT}
-                           </div>
-                       )}
-
-                        <div className="flex items-center justify-between mb-2">
-                            <label htmlFor="web-search-toggle" className="flex items-center cursor-pointer select-none">
-                                <GlobeAltIcon className={`h-5 w-5 mr-2 transition-colors ${isWebSearchEnabled ? 'text-teal-500' : 'text-slate-400'}`} />
-                                <span className={`text-sm font-medium transition-colors ${isWebSearchEnabled ? 'text-slate-800 dark:text-slate-200' : 'text-slate-500'}`}>
-                                    Cari di Web
-                                </span>
-                            </label>
-                            <button
-                                id="web-search-toggle"
-                                onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)}
-                                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-all duration-300 ease-in-out ${isWebSearchEnabled ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-600'}`}
-                            >
-                                <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 ease-in-out ${isWebSearchEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                            </button>
-                        </div>
-                        
-                        <form onSubmit={(e) => { e.preventDefault(); handleAIQuery(); }}>
-                           <div className="flex items-end bg-slate-200 dark:bg-slate-700 rounded-lg overflow-hidden ring-1 ring-transparent focus-within:ring-teal-500">
-                               <TextareaAutosize
-                                   value={aiQuery}
-                                   onChange={(e) => setAiQuery(e.target.value)}
-                                   onKeyDown={handleKeyDown}
-                                   placeholder={!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT ? "Jatah chat gratis habis..." : "Tanya apa saja..."}
-                                   className="flex-1 p-3 bg-transparent focus:outline-none text-sm text-slate-900 dark:text-white resize-none"
-                                   disabled={isLoadingAI || (!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT)}
-                                   rows={1}
-                                   maxRows={5}
-                               />
-                               <button
-                                   type="submit"
-                                   disabled={isLoadingAI || !aiQuery.trim() || (!isPremium && freeAiChatsUsed >= FREE_AI_CHAT_LIMIT)}
-                                   className="p-3 text-white bg-teal-500 hover:bg-teal-600 disabled:bg-slate-400 dark:disabled:bg-slate-600 transition-colors self-stretch flex items-center"
-                               >
-                                   <PaperAirplaneIcon className="h-5 w-5"/>
-                               </button>
-                           </div>
-                       </form>
-                    </footer>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
+            {/* FOOTER */}
+            <footer className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg flex-shrink-0 space-y-3">
+              <form onSubmit={(e) => { e.preventDefault(); handleAIQuery(); }}>
+                <div className="flex items-end bg-slate-200 dark:bg-slate-700/50 rounded-lg overflow-hidden ring-2 ring-transparent focus-within:ring-teal-500 transition-shadow">
+                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.xlsx,.xls,.csv" className="hidden" />
+                  <button type="button" onClick={() => setIsWebSearchEnabled(prev => !prev)} disabled={!!uploadedFile} title={isWebSearchEnabled ? "Pencarian Web Aktif" : "Aktifkan Pencarian Web"} className={`p-3 transition-colors ${ isWebSearchEnabled ? 'text-teal-500' : 'text-slate-500 hover:text-teal-500'} disabled:text-slate-400 disabled:hover:text-slate-400`}>
+                    <GlobeAltIcon className="h-5 w-5" />
+                  </button>
+                  <button type="button" onClick={handleAttachmentClick} title="Unggah Dokumen" className="p-3 text-slate-500 hover:text-teal-500 transition-colors"><DocumentArrowUpIcon className="h-5 w-5" /></button>
+                  <TextareaAutosize value={aiQuery} onChange={(e) => setAiQuery(e.target.value)} onKeyDown={handleKeyDown}
+                    placeholder={mode === 'writer' ? "Masukkan topik untuk ditulis..." : (mode === 'reviewer' ? "Unggah jurnal lalu klik kirim untuk dianalisis..." : "Tanya apa saja...")}
+                    className="flex-1 p-3 bg-transparent focus:outline-none text-sm text-slate-900 dark:text-white resize-none" rows={1} maxRows={5}
+                  />
+                  <button type="submit" disabled={isLoadingAI || !aiQuery.trim()} className="p-3 text-white bg-teal-500 hover:bg-teal-600 transition-colors m-1 rounded-md disabled:bg-teal-400/80 disabled:cursor-not-allowed">
+                    <PaperAirplaneIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </form>
+            </footer>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 }
