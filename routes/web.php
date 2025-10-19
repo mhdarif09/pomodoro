@@ -47,6 +47,14 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/terms-of-service', function () {
+    return Inertia::render('TermsOfService');
+})->name('terms.show');
+
+Route::get('/privacy-policy', function () {
+    return Inertia::render('PrivacyPolicy');
+})->name('policy.show');
+
 Route::get("/about", function () {
     return Inertia::render('About');
 })->name('about');
