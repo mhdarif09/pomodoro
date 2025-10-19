@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Head, useForm } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AuthenticatedLayout from '@/Layouts/AdminLayout';
 import CategoryForm from './Partials/CategoryForm';
 
 export default function Edit({ auth, category }) {

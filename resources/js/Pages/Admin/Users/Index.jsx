@@ -1,25 +1,32 @@
 import React, { useState } from 'react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 import Modal from '@/Components/Modal';
 import { Dialog } from '@headlessui/react';
 import { 
-    CheckCircleIcon, 
+    CheckCircleIcon as CheckCircleOutline, 
     ExclamationTriangleIcon, 
     UserPlusIcon, 
     MagnifyingGlassIcon,
     ArrowPathIcon,
-    ShieldCheckIcon,
+    ShieldCheckIcon as ShieldCheckOutline,
     NoSymbolIcon,
-    BanknotesIcon
+    BanknotesIcon,
+    ArrowUpOnSquareIcon,
+    ArrowDownOnSquareIcon
 } from '@heroicons/react/24/outline';
 
-// --- Sub-Komponen untuk Tampilan yang Bersih ---
-
-const UserAvatar = ({ name }) => (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-        {name ? name.charAt(0).toUpperCase() : '?'}
+const UserAvatar = ({ name, role }) => (
+    <div className="relative">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+            {name ? name.charAt(0).toUpperCase() : '?'}
+        </div>
+        {role === 'admin' && (
+            <span className="absolute -bottom-1 -right-1 block h-5 w-5 rounded-full bg-purple-500 border-2 border-white dark:border-gray-800" title="Admin">
+                <ShieldCheckOutline className="h-full w-full p-0.5 text-white" />
+            </span>
+        )}
     </div>
 );
 
@@ -35,7 +42,7 @@ const StatusBadge = ({ isPremium, isBanned }) => {
     if (isPremium) {
         return (
             <div className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-200">
-                <ShieldCheckIcon className="h-3 w-3" />
+                <ShieldCheckOutline className="h-3 w-3" />
                 Premium
             </div>
         );
@@ -59,20 +66,14 @@ const ActionButton = ({ onClick, className, children, title }) => (
     </button>
 );
 
-
-// --- Komponen Utama Halaman ---
-
 export default function UserIndex({ auth, users, plans, filters, flash }) {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userToPromote, setUserToPromote] = useState(null);
 
-    // Opsi standar untuk setiap request router untuk menjaga UI tetap sinkron
     const routerOptions = {
         preserveScroll: true,
         onSuccess: () => {
-            // Ini adalah KUNCI untuk UI yang selalu akurat.
-            // Setelah setiap aksi berhasil, minta data 'users' dan 'flash' yang baru dari server.
             router.reload({ only: ['users', 'flash'] });
         },
     };
@@ -91,10 +92,10 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
             route('admin.users.promote', userToPromote.id),
             { plan_id: planId },
             {
-                ...routerOptions, // Gabungkan opsi standar
-                onSuccess: () => { // Ganti onSuccess spesifik untuk modal
-                    closeModal(); // Tutup modal dulu
-                    router.reload({ only: ['users', 'flash'] }); // Lalu refresh data
+                ...routerOptions,
+                onSuccess: () => {
+                    closeModal();
+                    router.reload({ only: ['users', 'flash'] });
                 }
             }
         );
@@ -103,7 +104,6 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
     const handleSimpleAction = (e, routeUrl, userName, actionText) => {
         e.preventDefault();
         if (confirm(`Apakah Anda yakin ingin ${actionText} untuk pengguna "${userName}"?`)) {
-            // Gunakan routerOptions untuk semua aksi sederhana
             router.post(routeUrl, {}, routerOptions);
         }
     };
@@ -117,7 +117,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
     };
 
     return (
-        <AuthenticatedLayout
+        <AdminLayout
             user={auth.user}
             header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manajemen Pengguna</h2>}
         >
@@ -128,7 +128,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                     {flash.success && (
                         <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-4">
                             <div className="flex">
-                                <CheckCircleIcon className="h-5 w-5 flex-shrink-0 text-green-400" aria-hidden="true" />
+                                <CheckCircleOutline className="h-5 w-5 flex-shrink-0 text-green-400" aria-hidden="true" />
                                 <div className="ml-3"><p className="text-sm font-medium text-green-800 dark:text-green-300">{flash.success}</p></div>
                             </div>
                         </div>
@@ -172,7 +172,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                                         <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/20">
                                             <td className="px-4 py-4 sm:px-6 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
-                                                    <UserAvatar name={user.name} />
+                                                    <UserAvatar name={user.name} role={user.role} />
                                                     <div>
                                                         <div className="font-semibold">{user.name}</div>
                                                         <div className="text-xs text-gray-500">{user.email}</div>
@@ -187,6 +187,15 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                                             </td>
                                             <td className="px-4 py-4 sm:px-6">
                                                 <div className="flex justify-end items-center gap-2">
+                                                    {user.role === 'admin' ? (
+                                                        <ActionButton title="Cabut Peran Admin" onClick={(e) => handleSimpleAction(e, route('admin.users.revoke-admin', user.id), user.name, 'mencabut peran admin')} className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
+                                                            <ArrowDownOnSquareIcon className="h-4 w-4" />
+                                                        </ActionButton>
+                                                    ) : (
+                                                        <ActionButton title="Jadikan Admin" onClick={(e) => handleSimpleAction(e, route('admin.users.make-admin', user.id), user.name, 'menjadikan admin')} className="bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/40 dark:text-purple-200 dark:hover:bg-purple-900/60">
+                                                            <ArrowUpOnSquareIcon className="h-4 w-4" />
+                                                        </ActionButton>
+                                                    )}
                                                     {user.subscription ? (
                                                         <ActionButton title="Cabut Status Premium" onClick={(e) => handleSimpleAction(e, route('admin.users.demote', user.id), user.name, 'mencabut premium')} className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-200 dark:hover:bg-yellow-900/60">
                                                             <ArrowPathIcon className="h-4 w-4" />
@@ -198,7 +207,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                                                     )}
                                                     {user.banned_at ? (
                                                         <ActionButton title="Buka Ban Pengguna" onClick={(e) => handleSimpleAction(e, route('admin.users.unban', user.id), user.name, 'membuka ban')} className="bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-200 dark:hover:bg-green-900/60">
-                                                            <CheckCircleIcon className="h-4 w-4" />
+                                                            <CheckCircleOutline className="h-4 w-4" />
                                                         </ActionButton>
                                                     ) : (
                                                         <ActionButton title="Ban Pengguna" onClick={(e) => handleSimpleAction(e, route('admin.users.ban', user.id), user.name, 'mem-banned')} className="bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60">
@@ -229,7 +238,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                 <div className="p-2 sm:p-0">
                     <div className="sm:flex sm:items-start sm:gap-4">
                         <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/40 sm:mx-0 sm:h-10 sm:w-10">
-                            <ShieldCheckIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-300" aria-hidden="true" />
+                            <ShieldCheckOutline className="h-6 w-6 text-indigo-600 dark:text-indigo-300" aria-hidden="true" />
                         </div>
                         <div className="mt-3 text-center sm:mt-0 sm:text-left flex-grow">
                             <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">
@@ -250,7 +259,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                             >
                                 <div className="font-semibold text-gray-800 dark:text-gray-200">{plan.name}</div>
                                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    Rp{plan.price.toLocaleString('id-ID')} / {plan.duration}
+                                    Rp{Number(plan.price).toLocaleString('id-ID')} / {plan.duration}
                                 </span>
                             </button>
                         ))}
@@ -270,6 +279,6 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                     </div>
                 </div>
             </Modal>
-        </AuthenticatedLayout>
+        </AdminLayout>
     );
 }

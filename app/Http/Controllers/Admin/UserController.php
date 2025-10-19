@@ -82,4 +82,29 @@ class UserController extends Controller
         $user->update(['banned_at' => null]);
         return back()->with('success', "Ban untuk pengguna {$user->name} berhasil dicabut.");
     }
+
+    
+        public function makeAdmin(User $user)
+    {
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat mengubah peran Anda sendiri.');
+        }
+
+        $user->update(['role' => 'admin']);
+        
+        return back()->with('success', "Pengguna {$user->name} berhasil dijadikan Admin.");
+    }
+
+
+    public function revokeAdmin(User $user)
+    {
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat mengubah peran Anda sendiri.');
+        }
+        
+        // Asumsi role default adalah 'user'
+        $user->update(['role' => 'user']);
+        
+        return back()->with('success', "Peran admin untuk {$user->name} berhasil dicabut.");
+    }
 }

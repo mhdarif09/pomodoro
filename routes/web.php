@@ -20,6 +20,10 @@ use App\Http\Controllers\Admin\MiniModulController as AdminMiniModulController;
 use App\Http\Controllers\Admin\MiniModulChapterController;
 use App\Http\Controllers\MiniModulController;
 use App\Http\Controllers\MiniModulAiController;
+
+// [ PENAMBAHAN 1: Impor TaskController di sini ]
+use App\Http\Controllers\TaskController;
+
 use Inertia\Inertia;
 
 /*
@@ -33,6 +37,7 @@ use Inertia\Inertia;
 |
 */
 
+// [ KODE ASLI ANDA - TIDAK DIUBAH ]
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -58,26 +63,40 @@ Route::post('/webhook/midtrans', [WebhookController::class, 'handle'])->name('mi
 
 // Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Dashboard Routes
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/dismiss-upgrade-modal', [DashboardController::class, 'dismissUpgradeModal'])->name('dashboard.dismiss-upgrade-modal');
 
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Daily Goal Routes
     Route::post('/daily-goal', [DailyGoalController::class, 'storeOrUpdate'])->name('daily-goal.store');
 
-    // Reflection Routes
-    Route::get('/refleksi', [ReflectionController::class, 'index'])->name('refleksi.index');
-    Route::post('/refleksi', [ReflectionController::class, 'store'])->name('refleksi.store');
+    // // [ KODE ASLI ANDA - TIDAK DIUBAH ]
+    // // Reflection Routes
+    // Route::get('/refleksi', [ReflectionController::class, 'index'])->name('refleksi.index');
+    // Route::post('/refleksi', [ReflectionController::class, 'store'])->name('refleksi.store');
 
+     Route::patch('/tasks/{task}/toggle-complete', [TaskController::class, 'toggleComplete'])->name('tasks.toggle-complete');
+
+    // [ PENAMBAHAN 2: Daftarkan route untuk To-Do List (Tasks) di sini ]
+    // Ini secara otomatis akan membuat route untuk store, update, destroy, dll.
+    Route::resource('tasks', TaskController::class)->only([
+        'store', 'update', 'destroy'
+    ]);
+    
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Pomodoro Routes
     Route::get('/pomodoro', [PomodoroController::class, 'index'])->name('pomodoro.index');
     Route::post('/pomodoro/store', [PomodoroController::class, 'store'])->name('pomodoro.store');
 
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Subscription Routes
      Route::get('/subscribe', [SubscriptionController::class, 'index'])->name('subscribe.index');
     Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
@@ -87,11 +106,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/transactions', [SubscriptionController::class, 'history'])->name('transactions.history');
     Route::post('/subscription/dismiss-modal', [SubscriptionController::class, 'dismissModal'])->name('subscription.dismiss-modal');
 
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Voice Routes
     Route::get('/voice', function () {
         return inertia('Voice/Index');
     })->name('voice.index');
 
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Premium-only Pomodoro Features
     Route::middleware(['premium'])->group(function () {
         Route::get('/pomodoro/custom', function () {
@@ -103,6 +124,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('pomodoro.statistics');
     });
 
+    // [ KODE ASLI ANDA - TIDAK DIUBAH ]
     // Mini Modul Learning Routes
     Route::prefix('mini-moduls')->group(function () {
         Route::get('/', [MiniModulController::class, 'index'])->name('mini-moduls.index');
@@ -122,6 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+// [ KODE ASLI ANDA - TIDAK DIUBAH ]
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Admin Dashboard
@@ -133,6 +156,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{user}/demote', [AdminUserController::class, 'demote'])->name('users.demote');
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
+    Route::post('/users/{user}/make-admin', [AdminUserController::class, 'makeAdmin'])->name('users.make-admin');
+    Route::post('/users/{user}/revoke-admin', [AdminUserController::class, 'revokeAdmin'])->name('users.revoke-admin');
+    
 
     // Plan Management
     Route::prefix('plans')->name('plans.')->group(function () {

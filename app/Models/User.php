@@ -74,6 +74,11 @@ class User extends Authenticatable
         return $this->hasMany(DailyGoal::class);
     }
 
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+    
     public function reflections()
     {
         return $this->hasMany(Reflection::class);

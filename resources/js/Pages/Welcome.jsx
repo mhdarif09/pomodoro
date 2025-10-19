@@ -14,7 +14,6 @@ const FaTwitter = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 
 const FaLinkedin = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>;
 const FaInstagram = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.024.048-1.378.06-3.808.06s-2.784-.012-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.08 2.525c.636-.247 1.363-.416 2.427-.465C9.53 2.013 9.884 2 12.315 2zm-1.04 2.74a6.732 6.732 0 01-2.248-.035c-.75.036-1.144.17-1.502.31a3.027 3.027 0 00-1.12 1.12c-.14.358-.274.752-.31 1.502a6.732 6.732 0 01-.035 2.248c.036.75.17 1.144.31 1.502a3.027 3.027 0 001.12 1.12c.358.14.752.274 1.502.31a6.732 6.732 0 012.248.035c.75-.036 1.144-.17 1.502-.31a3.027 3.027 0 001.12-1.12c.14-.358.274-.752.31-1.502a6.732 6.732 0 01.035-2.248c-.036-.75-.17-1.144-.31-1.502a3.027 3.027 0 00-1.12-1.12c-.358-.14-.752-.274-1.502-.31zM12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zm0 1.5a2.25 2.25 0 110 4.5 2.25 2.25 0 010-4.5z" clipRule="evenodd" /></svg>;
 
-// --- Helper Components & Hooks ---
 
 const AnimatedSection = ({ children, className = '', id = '' }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -92,7 +91,6 @@ const Marquee = ({ children, direction = 'left' }) => (
     </div>
 );
 
-// --- Main Page Component ---
 
 export default function OdysseyLandingPage() {
   const [billingCycle, setBillingCycle] = useState('monthly');
@@ -149,7 +147,7 @@ export default function OdysseyLandingPage() {
       { question: "Bisakah saya membatalkan langganan kapan saja?", answer: "Ya. Anda bisa membatalkan langganan paket berbayar Anda kapan saja tanpa denda. Anda akan tetap memiliki akses ke fitur premium hingga akhir siklus penagihan Anda." }
   ];
 
-  // --- PERUBAHAN HARGA 1: Memperbarui nilai harga ---
+
   const pricingPlans = [
     { plan: 'Penjelajah', price: { monthly: 'Gratis', yearly: 'Gratis' }, features: ['Jurnal AI (10/bulan)', 'Timer Pomodoro Dasar', 'Peta Tujuan (3 tujuan)', 'Akses Komunitas'] },
     { plan: 'Navigator', price: { monthly: 20000, yearly: 16000 }, features: ['Jurnal AI Tanpa Batas', 'Pomodoro Cerdas', 'Tujuan Tanpa Batas', 'Kecerdasan PDF (50/bulan)', 'Dukungan Prioritas'], highlighted: true },
@@ -173,10 +171,11 @@ export default function OdysseyLandingPage() {
             <a href="#topics" className="hover:text-white transition-colors">Topik</a>
             <a href="#testimonials" className="hover:text-white transition-colors">Testimoni</a>
             <a href="#pricing" className="hover:text-white transition-colors">Harga</a>
+            <a href="/about" className="hover:text-white transition-colors">Tentang Kami</a>
           </div>
           
           <div className="hidden md:block">
-            <motion.a href="/register" whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }} whileTap={{ scale: 0.95 }} className="px-5 py-2 rounded-full font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-white transition-shadow">
+            <motion.a href="/login" whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }} whileTap={{ scale: 0.95 }} className="px-5 py-2 rounded-full font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-white transition-shadow">
               Mulai Petualangan
             </motion.a>
           </div>
@@ -211,7 +210,7 @@ export default function OdysseyLandingPage() {
               <a href="#topics" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-300 hover:text-emerald-400">Topik</a>
               <a href="#testimonials" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-300 hover:text-emerald-400">Testimoni</a>
               <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-300 hover:text-emerald-400">Harga</a>
-              <motion.a href="/register" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-4 px-8 py-3 rounded-full font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+              <motion.a href="/login" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-4 px-8 py-3 rounded-full font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
                 Mulai Gratis
               </motion.a>
             </motion.div>
@@ -233,7 +232,7 @@ export default function OdysseyLandingPage() {
               <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-12">
                 Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil.
               </p>
-              <motion.a href="/register" whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(16, 185, 129, 0.6)' }} whileTap={{ scale: 0.95 }} className="group inline-block relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full font-bold text-lg text-white transition-shadow duration-300">
+              <motion.a href="/login" whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(16, 185, 129, 0.6)' }} whileTap={{ scale: 0.95 }} className="group inline-block relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full font-bold text-lg text-white transition-shadow duration-300">
                 <span className="flex items-center gap-2">Mulai Gratis <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></span>
               </motion.a>
             </motion.div>
@@ -317,7 +316,6 @@ export default function OdysseyLandingPage() {
             </motion.div>
           </div>
         </AnimatedSection>
-        {/* End of unchanged sections */}
 
         <AnimatedSection id="pricing" className="py-20 sm:py-32 px-6">
           <div className="container mx-auto max-w-6xl">
@@ -364,7 +362,7 @@ export default function OdysseyLandingPage() {
                     </button>
                   ) : (
                     <motion.a 
-                        href={`/register?plan=${plan.plan.toLowerCase()}`}
+                        href={`/login?plan=${plan.plan.toLowerCase()}`}
                         whileHover={{ scale: 1.02 }} 
                         whileTap={{ scale: 0.98 }} 
                         className={clsx('block text-center mt-10 w-full rounded-xl py-4 font-bold text-lg transition-all duration-300', plan.highlighted ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-white/10 hover:bg-white/20 text-white')}>
@@ -401,7 +399,7 @@ export default function OdysseyLandingPage() {
                   <div className="p-8 md:p-12 border border-white/10 rounded-[23px] bg-gray-950 bg-gradient-to-br from-emerald-950/20 to-transparent">
                     <h2 className="text-4xl md:text-6xl font-black mb-6 text-white tracking-tight">Siap Memulai Sarang Anda?</h2>
                     <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">Perjalanan Anda menuju performa puncak dimulai sekarang. Tidak perlu kartu kredit.</p>
-                    <motion.a href="/register" whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(16,185,129,0.6)' }} whileTap={{ scale: 0.95 }} className="group inline-block px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full font-bold text-xl text-white transition-shadow">
+                    <motion.a href="/login" whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(16,185,129,0.6)' }} whileTap={{ scale: 0.95 }} className="group inline-block px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full font-bold text-xl text-white transition-shadow">
                       <span className="flex items-center gap-3">Klaim Akun Gratis Anda <RocketLaunchIcon className="h-6 w-6 group-hover:rotate-12 transition-transform" /></span>
                     </motion.a>
                   </div>

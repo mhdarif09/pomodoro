@@ -14,6 +14,49 @@ class OpenAIService
     private string $apiKey;
     private string $apiUrl;
 
+
+     public function determineTaskPriority(string $title, string $description, string $dueDate): string
+    {
+        // Definisikan pilihan prioritas yang valid sesuai dengan enum di database
+        $availablePriorities = ['Rendah', 'Sedang', 'Tinggi', 'Mendesak'];
+
+        // Buat prompt yang sangat spesifik untuk tugas ini
+        $prompt = <<<PROMPT
+Anda adalah asisten manajer proyek yang sangat efisien. Tugas Anda adalah menentukan tingkat prioritas untuk sebuah tugas baru.
+Pilihan prioritas yang tersedia adalah: Rendah, Sedang, Tinggi, Mendesak.
+
+Analisis informasi berikut:
+Judul Tugas: "{$title}"
+Deskripsi: "{$description}"
+Tenggat Waktu: {$dueDate} (Hari ini adalah: {date('Y-m-d')})
+
+Pertimbangkan urgensi dalam judul/deskripsi (misalnya kata 'segera', 'bug', 'critical') dan kedekatan tenggat waktu.
+Berikan jawaban HANYA SATU KATA nama prioritasnya dari pilihan yang ada (contoh: 'Tinggi') tanpa penjelasan atau teks tambahan apapun.
+PROMPT;
+
+        try {
+            // Kita gunakan ulang method generateOpenAIResponse yang sudah ada
+            $result = $this->generateOpenAIResponse($prompt);
+            $priority = trim($result);
+
+            // Validasi: pastikan respons dari AI sesuai dengan pilihan yang kita miliki
+            if (in_array($priority, $availablePriorities)) {
+                return $priority;
+            }
+            
+            // Jika respons tidak valid, kembalikan nilai default
+            Log::warning('OpenAI returned an invalid priority: ' . $priority);
+            return 'Sedang';
+
+        } catch (\Exception $e) {
+            // Jika API gagal, catat error dan kembalikan nilai default yang aman
+            Log::error('Failed to determine task priority from OpenAI: ' . $e->getMessage(), [
+                'title' => $title
+            ]);
+            return 'Sedang';
+        }
+    }
+    
     public function __construct()
     {
         $this->apiKey = env('OPENAI_API_KEY');
