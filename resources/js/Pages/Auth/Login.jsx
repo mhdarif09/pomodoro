@@ -65,7 +65,7 @@ export default function Login({ status }) {
                 )}
 
                 <div className="mt-8">
-                    <GoogleLoginButton href={route('login.google.callback')} />
+                    <GoogleLoginButton href={route('login.google.redirect')} />
                 </div>
 
                 <div className="mt-8">
