@@ -1,4 +1,4 @@
-// File: resources/js/Components/TodoList/TodoListCard.jsx (Final - with Infinite Scroll Logic)
+// File: resources/js/Components/TodoList/TodoListCard.jsx (FINAL FIXED VERSION)
 
 import { useState, useRef, useEffect } from 'react';
 import { router } from '@inertiajs/react';
@@ -7,12 +7,14 @@ import { PlusIcon } from '@heroicons/react/24/solid';
 import TaskItem from './TaskItem';
 import TaskForm from './TaskForm';
 
-export default function TodoListCard({ tasks, listTitle = 'Daftar Tugas' }) {
+export default function TodoListCard({ 
+    tasks = { data: [], links: [], total: 0 }, // Memberi nilai default struktur pagination
+    listTitle = 'Daftar Tugas' 
+}) {
     const [view, setView] = useState(null);
     const [editingTask, setEditingTask] = useState(null);
     const scrollContainerRef = useRef(null);
 
-    // `tasks` adalah objek pagination, `tasks.data` adalah array tugasnya
     const taskItems = tasks.data;
 
     const handleAddNew = () => setView('adding');
@@ -22,37 +24,30 @@ export default function TodoListCard({ tasks, listTitle = 'Daftar Tugas' }) {
 
     const showForm = view === 'adding' || view === 'editing';
 
-    // Logika Infinite Scroll menggunakan IntersectionObserver
     useEffect(() => {
         if (!scrollContainerRef.current) return;
-
         const observer = new IntersectionObserver(
             entries => {
                 if (entries[0].isIntersecting && tasks.next_page_url) {
                     router.get(tasks.next_page_url, {}, {
                         preserveState: true,
                         preserveScroll: true,
-                        only: ['tasks'], // Hanya minta prop `tasks` agar lebih cepat
+                        only: ['tasks'],
                     });
                 }
             },
             { root: scrollContainerRef.current, threshold: 1.0 }
         );
-
-        // Ambil elemen terakhir yang perlu diobservasi
         const lastTaskElement = scrollContainerRef.current.querySelector('.task-item:last-of-type');
-        
         if (lastTaskElement) {
             observer.observe(lastTaskElement);
         }
-
-        // Cleanup
         return () => {
             if (lastTaskElement) {
                 observer.unobserve(lastTaskElement);
             }
         };
-    }, [tasks, scrollContainerRef]); // Re-run effect saat data `tasks` berubah
+    }, [tasks, scrollContainerRef]);
 
     return (
         <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-lg border border-slate-200 dark:border-slate-700 shadow-lg sm:rounded-2xl flex flex-col h-full min-h-[500px]">

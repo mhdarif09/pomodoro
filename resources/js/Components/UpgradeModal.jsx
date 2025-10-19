@@ -1,186 +1,357 @@
-// File: resources/js/Components/UpgradeModal.jsx (atau path file Anda yang benar)
 import { router, usePage } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { SparklesIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function UpgradeModal({ isOpen, onClose, plans, snap_token }) {
+export default function UpgradeModal({ show, onClose, plans = [] }) {
     const [isLoading, setIsLoading] = useState(false);
-    const { midtrans_client_key, midtrans_is_production } = usePage().props;
+    const [paymentStatus, setPaymentStatus] = useState('');
+    const { snap_token, flash } = usePage().props;
+    const paymentTimeoutRef = useRef(null);
+    const snapLoadedRef = useRef(false);
 
-    // Efek untuk memuat script Midtrans secara dinamis
+    // Load Snap.js script dynamically
     useEffect(() => {
-        if (!isOpen) return;
+        if (!show) return;
 
-        if (!midtrans_client_key || midtrans_client_key === 'undefined') {
-            console.error('Midtrans Client Key tidak ditemukan. Pastikan sudah dikirim dari controller.');
-            return;
-        }
+        const loadSnapScript = () => {
+            // Check if script already loaded
+            if (window.snap || snapLoadedRef.current) {
+                console.log('Snap.js already loaded');
+                return;
+            }
 
-        const scriptId = 'midtrans-snap-script';
-        if (document.getElementById(scriptId)) {
-            return;
-        }
+            // Check if script tag already exists
+            if (document.querySelector('script[src*="snap.js"]')) {
+                console.log('Snap.js script tag exists, waiting for load...');
+                return;
+            }
 
-        const snapSrc = midtrans_is_production
-            ? 'https://app.midtrans.com/snap/snap.js'
-            : 'https://app.sandbox.midtrans.com/snap/snap.js';
+            console.log('Loading Snap.js script...');
+            const script = document.createElement('script');
+            
+            // Use sandbox for development, production for live
+            const isProduction = window.location.hostname !== 'localhost';
+            script.src = isProduction 
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js';
+            
+            // Get client key from meta tag
+            const clientKey = document.querySelector('meta[name="midtrans-client-key"]')?.getAttribute('content');
+            if (clientKey) {
+                script.setAttribute('data-client-key', clientKey);
+            }
+
+            script.onload = () => {
+                console.log('Snap.js loaded successfully');
+                snapLoadedRef.current = true;
+            };
+
+            script.onerror = () => {
+                console.error('Failed to load Snap.js');
+            };
+
+            document.body.appendChild(script);
+        };
+
+        loadSnapScript();
+    }, [show]);
+
+    if (!show) return null;
+
+    const checkSnapLoaded = (callback, maxAttempts = 20) => {
+        let attempts = 0;
         
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = snapSrc;
-        script.setAttribute('data-client-key', midtrans_client_key);
-        script.async = true;
-
-        document.body.appendChild(script);
-
-        return () => {
-            const existingScript = document.getElementById(scriptId);
-            if (existingScript) {
-                document.body.removeChild(existingScript);
+        const check = () => {
+            attempts++;
+            console.log(`Checking Snap.js... Attempt ${attempts}`);
+            
+            if (typeof window.snap !== 'undefined') {
+                console.log('Snap.js is loaded and ready!');
+                callback(true);
+            } else if (attempts >= maxAttempts) {
+                console.error('Snap.js failed to load after maximum attempts');
+                callback(false);
+            } else {
+                setTimeout(check, 500); // Check every 500ms
             }
         };
-    }, [isOpen, midtrans_client_key, midtrans_is_production]);
+        
+        check();
+    };
 
-    // Efek untuk menangani snap_token yang datang dari URL (redirect)
-    useEffect(() => {
-        if (snap_token && window.snap) {
-            window.snap.pay(snap_token);
+    const handleClose = () => {
+        if (paymentTimeoutRef.current) {
+            clearTimeout(paymentTimeoutRef.current);
         }
-    }, [snap_token]);
+        
+        console.log('User closed upgrade modal - continuing with free features');
+        onClose();
+    };
 
-
-    const handleUpgrade = (plan) => {
+    const handleCheckout = async (planName) => {
         setIsLoading(true);
+        setPaymentStatus('preparing');
+        
+        try {
+            const response = await fetch('/subscribe/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ plan: planName })
+            });
 
-        router.post(route('subscribe.checkout'), {
-            plan_id: plan.id,
-        }, {
-            onSuccess: (page) => {
-                const newSnapToken = page.props.flash?.snap_token;
-                if (newSnapToken && window.snap) {
-                    window.snap.pay(newSnapToken, {
-                        onSuccess: (result) => {
-                            router.get(route('subscription.payment.success'), { order_id: result.order_id });
-                        },
-                        onPending: (result) => {
-                            router.get(route('subscription.payment.success'), { order_id: result.order_id });
-                        },
-                        onError: (result) => {
-                            console.error('Payment Error:', result);
-                            setIsLoading(false);
-                            alert('Pembayaran gagal. Silakan coba lagi.');
-                        },
-                        onClose: () => {
-                            console.log('Pop-up pembayaran ditutup oleh pengguna.');
-                            setIsLoading(false);
-                        },
-                    });
-                } else if (!window.snap) {
-                    alert('Layanan pembayaran gagal dimuat. Coba refresh halaman.');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.success && data.snap_token) {
+                setPaymentStatus('loading_snap');
+                console.log('Snap token received:', data.snap_token);
+                
+                checkSnapLoaded((isLoaded) => {
+                    if (isLoaded) {
+                        openSnapPayment(data.snap_token);
+                    } else {
+                        handleSnapNotLoaded();
+                    }
+                });
+                
+            } else {
+                throw new Error(data.message || 'Gagal membuat transaksi');
+            }
+            
+        } catch (error) {
+            console.error('Checkout error:', error);
+            alert('Gagal memulai pembayaran: ' + error.message);
+            setIsLoading(false);
+            setPaymentStatus('error');
+        }
+    };
+
+    const openSnapPayment = (token) => {
+        console.log('Opening Snap payment with token:', token);
+        setPaymentStatus('opening_payment');
+        
+        if (paymentTimeoutRef.current) {
+            clearTimeout(paymentTimeoutRef.current);
+        }
+
+        paymentTimeoutRef.current = setTimeout(() => {
+            if (paymentStatus === 'opening_payment') {
+                handlePaymentTimeout();
+            }
+        }, 30000);
+
+        try {
+            window.snap.pay(token, {
+                onSuccess: (result) => {
+                    clearTimeout(paymentTimeoutRef.current);
+                    console.log('Payment success:', result);
+                    setPaymentStatus('success');
+                    window.location.href = '/subscription/payment-success';
+                },
+                onPending: (result) => {
+                    clearTimeout(paymentTimeoutRef.current);
+                    console.log('Payment pending:', result);
+                    setPaymentStatus('pending');
+                    window.location.href = '/subscription/payment-success';
+                },
+                onError: (result) => {
+                    clearTimeout(paymentTimeoutRef.current);
+                    console.error('Payment error:', result);
+                    setPaymentStatus('error');
+                    alert('Pembayaran gagal, silakan coba lagi.');
                     setIsLoading(false);
+                },
+                onClose: () => {
+                    clearTimeout(paymentTimeoutRef.current);
+                    console.log('Payment popup closed by user');
+                    setPaymentStatus('closed');
+                    setIsLoading(false);
+                },
+            });
+        } catch (error) {
+            console.error('Error opening Snap payment:', error);
+            clearTimeout(paymentTimeoutRef.current);
+            setPaymentStatus('error');
+            alert('Error membuka pembayaran: ' + error.message);
+            setIsLoading(false);
+        }
+    };
+
+    const handlePaymentTimeout = () => {
+        console.error('Payment timeout occurred');
+        setPaymentStatus('timeout');
+        alert('Pembayaran sedang diproses. Jika popup pembayaran tidak terbuka, silakan refresh halaman dan coba lagi.');
+        setIsLoading(false);
+    };
+
+    const handleSnapNotLoaded = () => {
+        console.error('Snap.js failed to load');
+        setPaymentStatus('snap_error');
+        alert('Sistem pembayaran sedang tidak tersedia. Silakan refresh halaman dan coba lagi dalam beberapa saat.');
+        setIsLoading(false);
+    };
+
+    // Handle snap token dari props
+    useEffect(() => {
+        if (snap_token && show && !isLoading) {
+            console.log('Snap token from props received:', snap_token);
+            setPaymentStatus('loading_snap');
+            setIsLoading(true);
+            
+            checkSnapLoaded((isLoaded) => {
+                if (isLoaded) {
+                    openSnapPayment(snap_token);
                 } else {
-                    alert('Gagal mendapatkan token pembayaran. Silakan coba lagi.');
-                    setIsLoading(false);
+                    handleSnapNotLoaded();
                 }
-            },
-            onError: (errors) => {
-                console.error('Checkout Error:', errors);
-                alert(errors.message || 'Terjadi kesalahan saat mempersiapkan pembayaran.');
-                setIsLoading(false);
-            },
-        });
+            });
+        }
+    }, [snap_token, show]);
+
+    // Cleanup
+    useEffect(() => {
+        return () => {
+            if (paymentTimeoutRef.current) {
+                clearTimeout(paymentTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const getLoadingText = () => {
+        switch (paymentStatus) {
+            case 'preparing': return 'Mempersiapkan pembayaran...';
+            case 'loading_snap': return 'Memuat sistem pembayaran...';
+            case 'opening_payment': return 'Membuka halaman pembayaran...';
+            case 'success': return 'Pembayaran berhasil!';
+            case 'pending': return 'Pembayaran tertunda...';
+            case 'error': return 'Terjadi kesalahan';
+            case 'snap_error': return 'Error sistem pembayaran';
+            case 'timeout': return 'Sedang memproses...';
+            case 'closed': return 'Pembayaran ditutup';
+            default: return 'Memproses...';
+        }
+    };
+
+    const getSubText = () => {
+        switch (paymentStatus) {
+            case 'loading_snap': return 'Sedang memuat Midtrans...';
+            case 'opening_payment': return 'Popup pembayaran akan segera terbuka...';
+            case 'timeout': return 'Jika popup tidak terbuka, silakan refresh';
+            default: return 'Jangan tutup halaman ini';
+        }
     };
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                    onClick={onClose}
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative bg-white dark:bg-slate-800 shadow-xl rounded-2xl p-8 w-full max-w-md text-center"
+            >
+                <button 
+                    onClick={handleClose}
+                    disabled={isLoading && !['timeout', 'error', 'snap_error'].includes(paymentStatus)}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors"
+                    title="Tutup dan lanjutkan dengan fitur gratis"
                 >
-                    <motion.div
-                        initial={{ scale: 0.9, y: 20 }}
-                        animate={{ scale: 1, y: 0 }}
-                        exit={{ scale: 0.9, y: 20 }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-8 text-center relative"
-                    >
-                        <button 
-                            onClick={onClose}
-                            disabled={isLoading}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors"
-                            title="Tutup"
-                        >
-                            <XMarkIcon className="h-6 w-6" />
-                        </button>
-
-                        <div className="w-16 h-16 mx-auto bg-gradient-to-tr from-yellow-400 to-amber-500 rounded-full flex items-center justify-center">
-                            <SparklesIcon className="w-10 h-10 text-white" />
-                        </div>
-                        
-                        <h2 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">
-                            ✨ Upgrade ke Premium
-                        </h2>
-                        <p className="mt-2 text-slate-600 dark:text-slate-300">
-                            Buka semua fitur canggih untuk produktivitas maksimal.
-                        </p>
-                        
-                        {!isLoading && (
-                            <div className="mt-6 space-y-4">
-                                {plans && plans.length > 0 ? (
-                                    plans.map((plan) => (
-                                        <div key={plan.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg text-left hover:border-amber-300 transition-colors">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <h3 className="font-semibold text-slate-900 dark:text-white">{plan.name}</h3>
-                                                    <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">
-                                                        Rp {Number(plan.price).toLocaleString('id-ID')} / {plan.duration === 'monthly' ? 'bulan' : 'tahun'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleUpgrade(plan)}
-                                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 hover:scale-105 shadow-lg shadow-amber-500/30"
-                                            >
-                                                Pilih {plan.name}
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-slate-500 py-4">Paket premium tidak tersedia saat ini.</p>
-                                )}
-                                
-                                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <XMarkIcon className="h-6 w-6" />
+                </button>
+                
+                <div className="w-16 h-16 mx-auto bg-gradient-to-tr from-yellow-400 to-amber-500 rounded-full flex items-center justify-center">
+                    <SparklesIcon className="w-10 h-10 text-white" />
+                </div>
+                
+                <h2 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">Tingkatkan ke Premium</h2>
+                <p className="mt-2 text-slate-600 dark:text-slate-300">
+                    Nikmati fitur lengkap tanpa batas. Atau lanjutkan dengan fitur gratis.
+                </p>
+                
+                {!isLoading && (
+                    <div className="mt-6 space-y-4">
+                        {plans.length > 0 ? (
+                            plans.map((plan) => (
+                                <div key={plan.name} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-left hover:border-amber-300 transition-colors">
+                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{plan.name}</h3>
+                                    <p className="text-slate-600 dark:text-slate-300 mt-1">
+                                        Rp {plan.price?.toLocaleString('id-ID')} / {plan.duration === 'monthly' ? 'bulan' : 'tahun'}
+                                    </p>
                                     <button
-                                        onClick={onClose}
-                                        className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 text-sm font-medium transition-colors"
+                                        onClick={() => handleCheckout(plan.name)}
+                                        disabled={isLoading}
+                                        className={`mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 ${
+                                            isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 shadow-lg shadow-amber-500/30'
+                                        }`}
                                     >
-                                        Lanjutkan dengan fitur gratis →
+                                        {isLoading ? 'Memproses...' : `Upgrade ke ${plan.name}`}
                                     </button>
                                 </div>
-                            </div>
+                            ))
+                        ) : (
+                            <p className="text-slate-600 dark:text-slate-300 py-4">Tidak ada paket tersedia.</p>
                         )}
+                        
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <button
+                                onClick={handleClose}
+                                className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 text-sm font-medium transition-colors"
+                            >
+                                Lanjutkan dengan fitur gratis →
+                            </button>
+                        </div>
+                    </div>
+                )}
 
-                        {isLoading && (
-                            <div className="mt-6 space-y-4">
-                                <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-6 text-center">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
-                                    <p className="text-slate-600 dark:text-slate-300 font-medium text-lg">
-                                        Mempersiapkan pembayaran...
-                                    </p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                                        Popup pembayaran akan segera terbuka...
-                                    </p>
+                {isLoading && (
+                    <div className="mt-6 space-y-4">
+                        <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-6 text-center">
+                            <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4 ${
+                                ['timeout', 'error', 'snap_error'].includes(paymentStatus) ? 'hidden' : ''
+                            }`}></div>
+                            
+                            {['timeout', 'error', 'snap_error'].includes(paymentStatus) && (
+                                <div className="w-12 h-12 mx-auto mb-4 text-amber-500">
+                                    <XMarkIcon className="w-12 h-12" />
                                 </div>
-                            </div>
-                        )}
-                    </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                            )}
+                            
+                            <p className="text-slate-600 dark:text-slate-300 font-medium text-lg">
+                                {getLoadingText()}
+                            </p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                                {getSubText()}
+                            </p>
+                            
+                            {paymentStatus === 'timeout' && (
+                                <div className="mt-4 space-y-2">
+                                    <p className="text-xs text-slate-500">Popup pembayaran mungkin terbuka di belakang browser</p>
+                                    <div className="flex gap-2 justify-center">
+                                        <button
+                                            onClick={() => window.location.reload()}
+                                            className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+                                        >
+                                            Refresh Halaman
+                                        </button>
+                                        <button
+                                            onClick={handleClose}
+                                            className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+                                        >
+                                            Batalkan
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </motion.div>
+        </div>
     );
 }

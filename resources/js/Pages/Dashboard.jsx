@@ -1,8 +1,8 @@
-// File: resources/js/Pages/Dashboard.jsx (Final - Integrated Layout with Pagination)
+// File: resources/js/Pages/Dashboard.jsx (FINAL FINAL FIXED VERSION)
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react'; // <-- PERBAIKAN DI SINI
+import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OnboardingModal from '@/Components/OnboardingModal';
 import DailyGoalModal from '@/Components/DailyGoalModal';
@@ -11,8 +11,7 @@ import TodoListCard from '@/Components/TodoList/TodoListCard';
 import StatCard from '@/Components/Dashboard/StatCard';
 import { ListBulletIcon, CheckCircleIcon, CalendarDaysIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 
-const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, allTasks, taskStats, filters }) => {
-    // State untuk filter dipegang oleh URL, dibaca dari props 'filters'
+const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, allTasks, taskStats, filters = {} }) => {
     const activeFilter = filters.filter || 'all';
 
     const handleFilterChange = (newFilter) => {
@@ -44,9 +43,13 @@ const MainDashboard = ({ auth, todaysGoal, onEditGoalClick, allTasks, taskStats,
                 initial="hidden" animate="visible"
                 variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
             >
-                {filterCards.map(card => (
-                    <motion.div key={card.key} variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}>
-                        <StatCard {...card} isActive={activeFilter === card.key} onClick={() => handleFilterChange(card.key)} />
+                {filterCards.map(({ key, ...cardProps }) => (
+                    <motion.div key={key} variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}>
+                        <StatCard 
+                            {...cardProps} 
+                            isActive={activeFilter === key} 
+                            onClick={() => handleFilterChange(key)} 
+                        />
                     </motion.div>
                 ))}
             </motion.div>
@@ -114,8 +117,8 @@ export default function Dashboard(props) {
     
     const mainDashboardProps = {
         auth,
-        allTasks: tasks, // Kirim seluruh objek pagination
-        taskStats,
+        allTasks: tasks || { data: [], links: [], total: 0 },
+        taskStats: taskStats || { total: 0, completed: 0, dueThisWeek: 0, overdue: 0 },
         filters,
         todaysGoal,
         onEditGoalClick: () => setIsEditingGoal(true),
