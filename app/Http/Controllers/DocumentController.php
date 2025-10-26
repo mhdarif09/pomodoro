@@ -42,7 +42,7 @@ class DocumentController extends Controller
     ]);
     }
 
-    public function create()
+    public function store()
     {
         $document = auth()->user()->documents()->create();
         return redirect()->route('docs.show', $document);
