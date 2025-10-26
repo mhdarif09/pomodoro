@@ -19,5 +19,9 @@ export default {
         },
     },
 
-    plugins: [forms],
+    plugins: [],
+  corePlugins: {
+    preflight: true,
+  },
+  important: false, // Jangan set true
 };

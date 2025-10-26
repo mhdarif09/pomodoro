@@ -2,55 +2,41 @@ import { router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { SparklesIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 
 export default function UpgradeModal({ show, onClose, plans = [] }) {
     const [isLoading, setIsLoading] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState('');
-    const { snap_token, flash } = usePage().props;
+    const { snap_token } = usePage().props;
     const paymentTimeoutRef = useRef(null);
     const snapLoadedRef = useRef(false);
 
-    // Load Snap.js script dynamically
     useEffect(() => {
         if (!show) return;
 
         const loadSnapScript = () => {
-            // Check if script already loaded
             if (window.snap || snapLoadedRef.current) {
-                console.log('Snap.js already loaded');
                 return;
             }
-
-            // Check if script tag already exists
             if (document.querySelector('script[src*="snap.js"]')) {
-                console.log('Snap.js script tag exists, waiting for load...');
                 return;
             }
-
-            console.log('Loading Snap.js script...');
             const script = document.createElement('script');
-            
-            // Use sandbox for development, production for live
-            const isProduction = window.location.hostname !== 'localhost';
+            const isProduction = !['localhost', '127.0.0.1'].includes(window.location.hostname);
             script.src = isProduction 
                 ? 'https://app.midtrans.com/snap/snap.js'
                 : 'https://app.sandbox.midtrans.com/snap/snap.js';
             
-            // Get client key from meta tag
             const clientKey = document.querySelector('meta[name="midtrans-client-key"]')?.getAttribute('content');
             if (clientKey) {
                 script.setAttribute('data-client-key', clientKey);
             }
-
             script.onload = () => {
-                console.log('Snap.js loaded successfully');
                 snapLoadedRef.current = true;
             };
-
             script.onerror = () => {
-                console.error('Failed to load Snap.js');
+                console.error('Gagal memuat Snap.js');
             };
-
             document.body.appendChild(script);
         };
 
@@ -61,22 +47,16 @@ export default function UpgradeModal({ show, onClose, plans = [] }) {
 
     const checkSnapLoaded = (callback, maxAttempts = 20) => {
         let attempts = 0;
-        
         const check = () => {
             attempts++;
-            console.log(`Checking Snap.js... Attempt ${attempts}`);
-            
             if (typeof window.snap !== 'undefined') {
-                console.log('Snap.js is loaded and ready!');
                 callback(true);
             } else if (attempts >= maxAttempts) {
-                console.error('Snap.js failed to load after maximum attempts');
                 callback(false);
             } else {
-                setTimeout(check, 500); // Check every 500ms
+                setTimeout(check, 500);
             }
         };
-        
         check();
     };
 
@@ -84,8 +64,6 @@ export default function UpgradeModal({ show, onClose, plans = [] }) {
         if (paymentTimeoutRef.current) {
             clearTimeout(paymentTimeoutRef.current);
         }
-        
-        console.log('User closed upgrade modal - continuing with free features');
         onClose();
     };
 
@@ -94,26 +72,14 @@ export default function UpgradeModal({ show, onClose, plans = [] }) {
         setPaymentStatus('preparing');
         
         try {
-            const response = await fetch('/subscribe/checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ plan: planName })
+            const response = await axios.post(route('subscribe.checkout'), {
+                plan: planName,
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = response.data;
             
             if (data.success && data.snap_token) {
                 setPaymentStatus('loading_snap');
-                console.log('Snap token received:', data.snap_token);
-                
                 checkSnapLoaded((isLoaded) => {
                     if (isLoaded) {
                         openSnapPayment(data.snap_token);
@@ -121,46 +87,54 @@ export default function UpgradeModal({ show, onClose, plans = [] }) {
                         handleSnapNotLoaded();
                     }
                 });
-                
             } else {
                 throw new Error(data.message || 'Gagal membuat transaksi');
             }
             
         } catch (error) {
-            console.error('Checkout error:', error);
-            alert('Gagal memulai pembayaran: ' + error.message);
+            let errorMessage = 'Gagal memulai pembayaran.';
+            if (error.response) {
+                console.error('Checkout error:', error.response.data);
+                if (error.response.status === 419) {
+                    errorMessage = 'Sesi Anda telah kedaluwarsa. Silakan refresh halaman dan coba lagi.';
+                } else {
+                    errorMessage = error.response.data.message || errorMessage;
+                }
+            } else {
+                console.error('Network or request error:', error.message);
+                errorMessage = 'Terjadi masalah jaringan. Periksa koneksi Anda.';
+            }
+
+            alert(errorMessage);
             setIsLoading(false);
             setPaymentStatus('error');
         }
     };
 
     const openSnapPayment = (token) => {
-        console.log('Opening Snap payment with token:', token);
         setPaymentStatus('opening_payment');
         
         if (paymentTimeoutRef.current) {
             clearTimeout(paymentTimeoutRef.current);
         }
 
-        paymentTimeoutRef.current = setTimeout(() => {
-            if (paymentStatus === 'opening_payment') {
-                handlePaymentTimeout();
-            }
-        }, 30000);
+        paymentTimeoutRef.current = setTimeout(handlePaymentTimeout, 30000);
 
         try {
             window.snap.pay(token, {
                 onSuccess: (result) => {
                     clearTimeout(paymentTimeoutRef.current);
-                    console.log('Payment success:', result);
                     setPaymentStatus('success');
-                    window.location.href = '/subscription/payment-success';
+                    router.get(route('subscription.payment.success'), {}, {
+                        onFinish: () => setIsLoading(false)
+                    });
                 },
                 onPending: (result) => {
                     clearTimeout(paymentTimeoutRef.current);
-                    console.log('Payment pending:', result);
                     setPaymentStatus('pending');
-                    window.location.href = '/subscription/payment-success';
+                    router.get(route('subscription.payment.success'), {}, {
+                        onFinish: () => setIsLoading(false)
+                    });
                 },
                 onError: (result) => {
                     clearTimeout(paymentTimeoutRef.current);
@@ -171,13 +145,11 @@ export default function UpgradeModal({ show, onClose, plans = [] }) {
                 },
                 onClose: () => {
                     clearTimeout(paymentTimeoutRef.current);
-                    console.log('Payment popup closed by user');
                     setPaymentStatus('closed');
                     setIsLoading(false);
                 },
             });
         } catch (error) {
-            console.error('Error opening Snap payment:', error);
             clearTimeout(paymentTimeoutRef.current);
             setPaymentStatus('error');
             alert('Error membuka pembayaran: ' + error.message);
@@ -186,26 +158,21 @@ export default function UpgradeModal({ show, onClose, plans = [] }) {
     };
 
     const handlePaymentTimeout = () => {
-        console.error('Payment timeout occurred');
         setPaymentStatus('timeout');
         alert('Pembayaran sedang diproses. Jika popup pembayaran tidak terbuka, silakan refresh halaman dan coba lagi.');
         setIsLoading(false);
     };
 
     const handleSnapNotLoaded = () => {
-        console.error('Snap.js failed to load');
         setPaymentStatus('snap_error');
         alert('Sistem pembayaran sedang tidak tersedia. Silakan refresh halaman dan coba lagi dalam beberapa saat.');
         setIsLoading(false);
     };
 
-    // Handle snap token dari props
     useEffect(() => {
         if (snap_token && show && !isLoading) {
-            console.log('Snap token from props received:', snap_token);
             setPaymentStatus('loading_snap');
             setIsLoading(true);
-            
             checkSnapLoaded((isLoaded) => {
                 if (isLoaded) {
                     openSnapPayment(snap_token);
@@ -216,7 +183,6 @@ export default function UpgradeModal({ show, onClose, plans = [] }) {
         }
     }, [snap_token, show]);
 
-    // Cleanup
     useEffect(() => {
         return () => {
             if (paymentTimeoutRef.current) {
