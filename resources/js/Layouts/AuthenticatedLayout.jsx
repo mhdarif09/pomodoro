@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, ClockIcon, CreditCardIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, ClockIcon, CreditCardIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+
 import ApplicationLogo from '@/Components/ApplicationLogo';
 
 const UserAvatar = ({ user }) => {
@@ -29,6 +30,7 @@ export default function Authenticated({ children, header }) {
         { routeName: 'mini-moduls.index', label: 'Mini Modul', icon: <BookOpenIcon className="h-5 w-5 mr-2" /> },
         { routeName: 'pomodoro.index', label: 'Pomodoro', icon: <ClockIcon className="h-5 w-5 mr-2" /> },
         { routeName: 'transactions.history', label: 'History', icon: <CreditCardIcon className="h-5 w-5 mr-2" /> },
+        { routeName: 'docs.index', label: 'Documents', icon: <DocumentTextIcon className="h-5 w-5 mr-2" /> },
     ];
 
     const sidebarVariants = {
