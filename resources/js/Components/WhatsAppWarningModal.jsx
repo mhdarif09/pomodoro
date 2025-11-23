@@ -21,6 +21,9 @@ export default function WhatsAppWarningModal() {
 
         if (!isTutorialDone) return;
 
+        // Check if upgrade modal has been dismissed (wait for it to show first)
+        if (localStorage.getItem('upgrade_modal_dismissed') !== 'true') return;
+
         // Check if permanently dismissed
         if (localStorage.getItem('whatsapp_warning_seen') === 'true') return;
 

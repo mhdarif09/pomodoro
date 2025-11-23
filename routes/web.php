@@ -69,9 +69,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('tasks', TaskController::class)->only(['store', 'update', 'destroy']);
     Route::get('/voice', fn() => inertia('Voice/Index'))->name('voice.index');
 
-    // Subscription Routes
-    Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
-    Route::post('/subscribe/direct-checkout', [SubscriptionController::class, 'directCheckout'])->name('subscribe.direct-checkout');
+    // Subscription Routes with Rate Limiting
+    Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout'])
+        ->middleware('throttle:5,1') // Max 5 requests per minute
+        ->name('subscribe.checkout');
+    Route::post('/subscribe/direct-checkout', [SubscriptionController::class, 'directCheckout'])
+        ->middleware('throttle:5,1')
+        ->name('subscribe.direct-checkout');
     Route::get('/subscription/payment-success', [SubscriptionController::class, 'paymentSuccessRedirect'])->name('subscription.payment.success');
     Route::get('/subscription/payment-cancel', [SubscriptionController::class, 'paymentCancel'])->name('subscription.payment.cancel');
     Route::post('/subscription/dismiss-modal', [SubscriptionController::class, 'dismissModal'])->name('subscription.dismiss-modal');

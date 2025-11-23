@@ -17,11 +17,6 @@ export default function Index({ documents, currentUser, kanbanTasks, activeTab =
         router.post(route('docs.store'));
     };
 
-    const handleCreateTask = () => {
-        // TODO: Implement create task modal
-        alert('Create task feature coming soon!');
-    };
-
     return (
         <AuthenticatedLayout
             header={
@@ -29,13 +24,15 @@ export default function Index({ documents, currentUser, kanbanTasks, activeTab =
                     <h2 className="font-bold text-2xl text-gray-900 dark:text-white">
                         {currentTab === 'documents' ? '📄 Documents' : '📋 Kanban Board'}
                     </h2>
-                    <button
-                        onClick={currentTab === 'documents' ? handleCreateDocument : handleCreateTask}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-200 transform hover:scale-105"
-                    >
-                        <PlusIcon className="w-5 h-5" />
-                        {currentTab === 'documents' ? 'New Document' : 'New Task'}
-                    </button>
+                    {currentTab === 'documents' && (
+                        <button
+                            onClick={handleCreateDocument}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-200 transform hover:scale-105"
+                        >
+                            <PlusIcon className="w-5 h-5" />
+                            New Document
+                        </button>
+                    )}
                 </div>
             }
         >
@@ -119,15 +116,8 @@ export default function Index({ documents, currentUser, kanbanTasks, activeTab =
                                     No Tasks Yet
                                 </h3>
                                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                                    Organize your work with a Kanban board. Create your first task to get started.
+                                    Click the "+ Add Task" button in any column to create your first task.
                                 </p>
-                                <button
-                                    onClick={handleCreateTask}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-200 transform hover:scale-105"
-                                >
-                                    <PlusIcon className="w-5 h-5" />
-                                    Create Your First Task
-                                </button>
                             </div>
                         )}
                     </div>

@@ -30,23 +30,63 @@ class SubscriptionController extends Controller
 
    public function checkout(Request $request, MidtransService $midtrans)
 {
-    $request->validate([
-        'plan' => 'required|string',
+    // Validate and sanitize input
+    $validated = $request->validate([
+        'plan' => 'required|string|max:50|alpha_dash', // Only alphanumeric and dashes
     ]);
 
     $userId = auth()->id();
+    $user = auth()->user();
     
-    // Cari plan
-    $plan = Plan::where('name', $request->plan)->first();
+    // Rate limiting: Prevent spam checkout requests
+    $recentCheckouts = Subscription::where('user_id', $userId)
+        ->where('created_at', '>=', now()->subMinutes(5))
+        ->count();
+        
+    if ($recentCheckouts >= 3) {
+        Log::warning("Too many checkout attempts", ['user_id' => $userId]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Terlalu banyak permintaan. Silakan tunggu beberapa menit.'
+        ], 429);
+    }
+    
+    // Sanitize plan name
+    $planName = strip_tags(trim($validated['plan']));
+    
+    // Cari plan dengan validation
+    $plan = Plan::where('name', $planName)->first();
 
     if (!$plan) {
+        Log::warning("Invalid plan attempted", ['user_id' => $userId, 'plan' => $planName]);
         return response()->json([
             'success' => false,
             'message' => 'Paket tidak ditemukan'
         ], 404);
     }
+    
+    // Check if active column exists and validate
+    if (Schema::hasColumn('plans', 'is_active') && !$plan->is_active) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Paket tidak tersedia saat ini'
+        ], 403);
+    }
 
-    // Cek apakah ada transaksi UNPAID sebelumnya
+    // Cek apakah user sudah punya subscription aktif
+    $activeSubscription = Subscription::where('user_id', $userId)
+        ->where('status', 'paid')
+        ->where('expired_at', '>', now())
+        ->first();
+        
+    if ($activeSubscription) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda sudah memiliki subscription aktif'
+        ], 400);
+    }
+
+    // Cek apakah ada transaksi UNPAID sebelumnya dalam 24 jam
     $existing = Subscription::where('user_id', $userId)
         ->where('plan', $plan->name)
         ->where('status', 'unpaid')
@@ -60,37 +100,39 @@ class SubscriptionController extends Controller
     if ($existing && $existing->snap_token) {
         $snapToken = $existing->snap_token;
         $subscription = $existing;
-        \Log::info("Using existing snap token", ['user_id' => $userId, 'subscription_id' => $existing->id]);
+        Log::info("Using existing snap token", ['user_id' => $userId, 'subscription_id' => $existing->id]);
     } else {
-        // Buat subscription baru
+        // Buat subscription baru dengan validated data
         $subscriptionData = [
             'user_id' => $userId,
             'plan' => $plan->name,
             'status' => 'unpaid',
             'expired_at' => null,
+            'price' => $plan->price ?? 0,
+            'duration' => $plan->duration ?? 'monthly',
         ];
 
-        if (isset($plan->price)) {
-            $subscriptionData['price'] = $plan->price;
-        }
-        
-        if (isset($plan->duration)) {
-            $subscriptionData['duration'] = $plan->duration;
-        }
-
         $subscription = Subscription::create($subscriptionData);
-        \Log::info("Created new subscription", ['user_id' => $userId, 'subscription_id' => $subscription->id]);
+        Log::info("Created new subscription", ['user_id' => $userId, 'subscription_id' => $subscription->id]);
 
-        // Buat transaksi Midtrans
+        // Buat transaksi Midtrans dengan error handling
         try {
             $snap = $midtrans->createTransaction($subscription);
             $snapToken = $snap->token;
             
             $subscription->update(['snap_token' => $snapToken]);
-            \Log::info("Created snap token", ['user_id' => $userId, 'subscription_id' => $subscription->id, 'token' => $snapToken]);
+            Log::info("Created snap token", ['user_id' => $userId, 'subscription_id' => $subscription->id]);
             
         } catch (\Exception $e) {
-            \Log::error('Midtrans error', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            Log::error('Midtrans error', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Delete failed subscription
+            $subscription->delete();
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat transaksi pembayaran. Silakan coba lagi.'

@@ -15,10 +15,30 @@ class StoreTaskRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:start_date',
-            'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:2048'
+            'description' => 'nullable|string|max:2000', // Max 2000 chars untuk security
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after_or_equal:start_date',
+            'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:2048',
+            'status' => 'nullable|in:todo,in_progress,done', // Whitelist status values
         ];
+    }
+
+    /**
+     * Prepare the data for validation - sanitize inputs
+     */
+    protected function prepareForValidation()
+    {
+        // Sanitize title and description
+        if ($this->has('title')) {
+            $this->merge([
+                'title' => strip_tags($this->title), // Remove HTML tags
+            ]);
+        }
+
+        if ($this->has('description')) {
+            $this->merge([
+                'description' => strip_tags($this->description), // Remove HTML tags
+            ]);
+        }
     }
 }

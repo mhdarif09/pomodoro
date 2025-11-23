@@ -191,8 +191,14 @@ export default function Dashboard(props) {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     useEffect(() => {
-        if (flash?.show_upgrade_modal) { setShowUpgradeModal(true); }
-    }, [flash]);
+        // Only show upgrade modal if tutorial is already completed
+        const localSeen = localStorage.getItem('tutorial_seen');
+        const isTutorialDone = auth.user.has_seen_tutorial || localSeen === 'true';
+
+        if (flash?.show_upgrade_modal && isTutorialDone) {
+            setShowUpgradeModal(true);
+        }
+    }, [flash, auth.user.has_seen_tutorial]);
 
     const shouldShowOnboarding = false; // Disabled by user request
     // Removed DailyGoalModal logic
@@ -222,6 +228,7 @@ export default function Dashboard(props) {
 
     const handleCloseUpgradeModal = () => {
         setShowUpgradeModal(false);
+        localStorage.setItem('upgrade_modal_dismissed', 'true'); // Mark as dismissed for WhatsApp Warning sequence
         router.post(route('dashboard.dismiss-upgrade-modal'), {}, { preserveState: true, preserveScroll: true });
     };
 

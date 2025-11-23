@@ -47,16 +47,16 @@ export default function Authenticated({ children, header }) {
 
             {/* Sidebar Desktop */}
             <aside className="hidden sm:flex sm:flex-col sm:w-64 sm:border-r sm:border-slate-200 dark:sm:border-slate-700 bg-white dark:bg-slate-900">
-                <div className="flex h-16 items-center justify-center border-b border-slate-200 dark:border-slate-700">
-                    <ApplicationLogo className="h-9 w-auto fill-current text-teal-600 dark:text-teal-400" />
+                <div className="flex h-14 items-center justify-center border-b border-slate-200 dark:border-slate-700 px-4">
+                    <ApplicationLogo className="h-8 w-auto fill-current text-teal-600 dark:text-teal-400" />
                 </div>
-                <nav className="flex-1 px-2 py-4 space-y-1">
+                <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
                     {navLinks.map((link) => (
                         <Link
                             key={link.routeName}
                             id={link.id}
                             href={route(link.routeName)}
-                            className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
+                            className={`flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
                                 ${route().current(link.routeName)
                                     ? 'bg-teal-100 text-teal-700 dark:bg-teal-800 dark:text-teal-200'
                                     : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
@@ -67,18 +67,18 @@ export default function Authenticated({ children, header }) {
                         </Link>
                     ))}
                 </nav>
-                <div className="border-t border-slate-200 dark:border-slate-700 p-4">
-                    <div className="flex items-center gap-3 mb-3">
+                <div className="border-t border-slate-200 dark:border-slate-700 p-3">
+                    <div className="flex items-center gap-2 mb-2">
                         <UserAvatar user={user} />
-                        <div className="flex-1">
-                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{user.name}</div>
-                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{user.email}</div>
+                        <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{user.name}</div>
+                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">{user.email}</div>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         <Link
                             href={route('profile.edit')}
-                            className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 transition-colors"
+                            className="flex-1 text-center px-2 py-1.5 text-xs font-medium rounded-lg bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 transition-colors"
                         >
                             Edit Profile
                         </Link>
@@ -86,13 +86,14 @@ export default function Authenticated({ children, header }) {
                             href={route('logout')}
                             method="post"
                             as="button"
-                            className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 transition-colors"
+                            className="flex-1 text-center px-2 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 transition-colors"
                         >
                             Keluar
                         </Link>
                     </div>
                 </div>
             </aside>
+
 
             {/* Sidebar Mobile */}
             <AnimatePresence>
@@ -104,25 +105,25 @@ export default function Authenticated({ children, header }) {
                         exit={{ opacity: 0 }}
                     >
                         <motion.div
-                            className="w-64 bg-white dark:bg-slate-900 h-full p-4"
+                            className="w-64 bg-white dark:bg-slate-900 h-full flex flex-col"
                             variants={sidebarVariants}
                             initial="hidden"
                             animate="visible"
                             exit="exit"
                         >
-                            <div className="flex items-center justify-between h-16 mb-4">
-                                <ApplicationLogo className="h-9 w-auto fill-current text-teal-600 dark:text-teal-400" />
-                                <button onClick={() => setSidebarOpen(false)} className="text-slate-600 dark:text-slate-300">
+                            <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+                                <ApplicationLogo className="h-8 w-auto fill-current text-teal-600 dark:text-teal-400" />
+                                <button onClick={() => setSidebarOpen(false)} className="text-slate-600 dark:text-slate-300 p-1">
                                     <XMarkIcon className="h-6 w-6" />
                                 </button>
                             </div>
-                            <nav className="space-y-1">
+                            <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
                                 {navLinks.map((link) => (
                                     <Link
                                         key={link.routeName}
                                         id={`mobile-${link.id}`}
                                         href={route(link.routeName)}
-                                        className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
+                                        className={`flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
                                         ${route().current(link.routeName)
                                                 ? 'bg-teal-100 text-teal-700 dark:bg-teal-800 dark:text-teal-200'
                                                 : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
@@ -134,18 +135,18 @@ export default function Authenticated({ children, header }) {
                                     </Link>
                                 ))}
                             </nav>
-                            <div className="border-t border-slate-200 dark:border-slate-700 mt-4 pt-4">
-                                <div className="flex items-center gap-3 mb-3">
+                            <div className="border-t border-slate-200 dark:border-slate-700 p-3 flex-shrink-0">
+                                <div className="flex items-center gap-2 mb-2">
                                     <UserAvatar user={user} />
-                                    <div className="flex-1">
-                                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{user.name}</div>
-                                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{user.email}</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{user.name}</div>
+                                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">{user.email}</div>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
                                     <Link
                                         href={route('profile.edit')}
-                                        className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 transition-colors"
+                                        className="flex-1 text-center px-2 py-1.5 text-xs font-medium rounded-lg bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 transition-colors"
                                         onClick={() => setSidebarOpen(false)}
                                     >
                                         Edit Profile
@@ -154,7 +155,7 @@ export default function Authenticated({ children, header }) {
                                         href={route('logout')}
                                         method="post"
                                         as="button"
-                                        className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 transition-colors"
+                                        className="flex-1 text-center px-2 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 transition-colors"
                                     >
                                         Keluar
                                     </Link>
