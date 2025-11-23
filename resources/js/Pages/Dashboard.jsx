@@ -194,11 +194,11 @@ export default function Dashboard(props) {
         if (flash?.show_upgrade_modal) { setShowUpgradeModal(true); }
     }, [flash]);
 
-    const shouldShowOnboarding = showOnboarding;
+    const shouldShowOnboarding = false; // Disabled by user request
     // Removed DailyGoalModal logic
     const shouldShowUpgrade = !shouldShowOnboarding && showUpgradeModal;
     const anyModalActive = shouldShowOnboarding || shouldShowUpgrade;
-    const renderMainContent = !showOnboarding;
+    const renderMainContent = true;
 
     const handleOnboardingFinish = (data) => {
         setIsProcessing(true);
