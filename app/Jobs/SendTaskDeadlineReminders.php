@@ -52,7 +52,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
         $tomorrow = Carbon::tomorrow()->format('Y-m-d');
 
         // Find all tasks with deadline tomorrow and not completed
-        $tasks = Task::with('user')
+        $tasks = Task::with(['user.subscription']) // Eager load subscription for efficiency
             ->whereDate('due_date', $tomorrow)
             ->where('is_completed', false)
             ->get();
@@ -62,8 +62,33 @@ class SendTaskDeadlineReminders implements ShouldQueue
             'tasks_found' => $tasks->count(),
         ]);
 
-        foreach ($tasks as $task) {
-            $this->sendNotification($task, $fonnteService, 'scheduled');
+        // Group tasks by user to apply limits
+        $tasksByUser = $tasks->groupBy('user_id');
+
+        foreach ($tasksByUser as $userId => $userTasks) {
+            $user = $userTasks->first()->user;
+            
+            if (!$user) continue;
+
+            // Determine limit based on premium status
+            $limit = $user->is_premium ? PHP_INT_MAX : 3;
+            
+            // Take only the allowed number of tasks
+            $tasksToSend = $userTasks->take($limit);
+
+            foreach ($tasksToSend as $task) {
+                $this->sendNotification($task, $fonnteService, 'scheduled');
+            }
+
+            // Log if some tasks were skipped due to limit
+            if ($userTasks->count() > $limit) {
+                Log::info('Skipped reminders for free user', [
+                    'user_id' => $userId,
+                    'total_tasks' => $userTasks->count(),
+                    'sent' => $limit,
+                    'skipped' => $userTasks->count() - $limit
+                ]);
+            }
         }
 
         Log::info('Deadline reminders job completed', [
