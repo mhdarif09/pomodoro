@@ -11,6 +11,9 @@ export default function WhatsAppWarningModal() {
         // Check if user has phone
         if (user.phone) return;
 
+        // Don't show if already on profile page
+        if (route().current('profile.edit')) return;
+
         // Check if tutorial is completed (either in DB or local storage)
         // We want to show this ONLY after tutorial is done
         const localSeen = localStorage.getItem('tutorial_seen');
