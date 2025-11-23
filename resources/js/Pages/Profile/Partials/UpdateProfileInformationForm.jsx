@@ -12,6 +12,7 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
         name: user.name,
         email: user.email,
         phone: user.phone || '',
+        timezone: user.timezone || 'WIB',
     });
 
     const submit = (e) => {
@@ -81,6 +82,27 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                     </p>
 
                     <InputError className="mt-2" message={errors.phone} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="timezone" value="Timezone" />
+
+                    <select
+                        id="timezone"
+                        className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                        value={data.timezone || 'WIB'}
+                        onChange={(e) => setData('timezone', e.target.value)}
+                    >
+                        <option value="WIB">WIB - Waktu Indonesia Barat (Jakarta, Jawa, Sumatra)</option>
+                        <option value="WITA">WITA - Waktu Indonesia Tengah (Bali, Kalimantan, Sulawesi)</option>
+                        <option value="WIT">WIT - Waktu Indonesia Timur (Papua, Maluku)</option>
+                    </select>
+
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Pilih timezone sesuai lokasi Anda. Digunakan untuk menentukan waktu pengiriman reminder WhatsApp (23:00 waktu lokal).
+                    </p>
+
+                    <InputError className="mt-2" message={errors.timezone} />
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (

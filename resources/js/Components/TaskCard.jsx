@@ -15,7 +15,8 @@ export default function TaskCard({ task }) {
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging ? 0.3 : 1,
+        cursor: isDragging ? 'grabbing' : 'grab',
     };
 
     const priorityColors = {
@@ -30,8 +31,22 @@ export default function TaskCard({ task }) {
             style={style}
             {...attributes}
             {...listeners}
-            className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing group"
+            className={`bg-white rounded-xl p-4 shadow-sm border-2 transition-all duration-200 select-none touch-none
+                ${isDragging
+                    ? 'border-emerald-400 shadow-2xl scale-105 rotate-2 z-50'
+                    : 'border-gray-200 hover:border-emerald-300 hover:shadow-lg'
+                }
+                cursor-grab active:cursor-grabbing group`}
         >
+            {/* Drag Handle Indicator */}
+            <div className="flex items-center justify-center mb-2 opacity-40 group-hover:opacity-70 transition-opacity">
+                <div className="flex gap-1">
+                    <div className="w-1 h-1 rounded-full bg-gray-400"></div>
+                    <div className="w-1 h-1 rounded-full bg-gray-400"></div>
+                    <div className="w-1 h-1 rounded-full bg-gray-400"></div>
+                </div>
+            </div>
+
             {/* Priority Badge */}
             {task.priority && (
                 <div className="flex items-center gap-2 mb-3">

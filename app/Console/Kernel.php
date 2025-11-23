@@ -12,9 +12,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Send WhatsApp reminders for tasks with deadline tomorrow (H-1)
-        // Runs every day at 9:00 AM
-        $schedule->command('reminders:send-deadline')->dailyAt('09:00');
+        // Send WhatsApp reminders for tasks with deadline tomorrow
+        // Runs at 23:00 for each Indonesian timezone (H-1 hour before deadline day)
+        // WIB (UTC+7): 23:00 = 16:00 UTC
+        // WITA (UTC+8): 23:00 = 15:00 UTC  
+        // WIT (UTC+9): 23:00 = 14:00 UTC
+        $schedule->command('reminders:send-deadline')->dailyAt('16:00'); // 23:00 WIB
+        $schedule->command('reminders:send-deadline')->dailyAt('15:00'); // 23:00 WITA
+        $schedule->command('reminders:send-deadline')->dailyAt('14:00'); // 23:00 WIT
     }
 
     /**

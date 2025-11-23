@@ -16,10 +16,37 @@ class SendTaskDeadlineReminders implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected $task;
+    protected $type;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct($task = null, $type = 'scheduled')
+    {
+        $this->task = $task;
+        $this->type = $type; // 'instant' or 'scheduled'
+    }
+
     /**
      * Execute the job.
      */
     public function handle(FonnteService $fonnteService): void
+    {
+        // If specific task provided (instant notification)
+        if ($this->task) {
+            $this->sendNotification($this->task, $fonnteService, 'instant');
+            return;
+        }
+
+        // Otherwise, process all tasks with deadline tomorrow (scheduled)
+        $this->processScheduledReminders($fonnteService);
+    }
+
+    /**
+     * Process scheduled reminders for all users
+     */
+    private function processScheduledReminders(FonnteService $fonnteService): void
     {
         // Get tomorrow's date
         $tomorrow = Carbon::tomorrow()->format('Y-m-d');
@@ -36,44 +63,87 @@ class SendTaskDeadlineReminders implements ShouldQueue
         ]);
 
         foreach ($tasks as $task) {
-            // Skip if user doesn't have a phone number
-            if (!$task->user || !$task->user->phone) {
-                Log::warning('User has no phone number, skipping reminder', [
-                    'task_id' => $task->id,
-                    'user_id' => $task->user_id,
-                ]);
-                continue;
-            }
-
-            // Format the message
-            $dueDate = Carbon::parse($task->due_date)->format('d M Y');
-            $message = "🔔 *Reminder Task Deadline*\n\n";
-            $message .= "Halo {$task->user->name}! 👋\n\n";
-            $message .= "Task *\"{$task->title}\"* akan deadline besok ({$dueDate})!\n\n";
-            $message .= "Jangan lupa diselesaikan ya 😊\n\n";
-            $message .= "Semangat! 💪";
-
-            // Send WhatsApp notification
-            $result = $fonnteService->sendMessage($task->user->phone, $message);
-
-            if ($result['success']) {
-                Log::info('Deadline reminder sent successfully', [
-                    'task_id' => $task->id,
-                    'user_id' => $task->user_id,
-                    'phone' => $task->user->phone,
-                ]);
-            } else {
-                Log::error('Failed to send deadline reminder', [
-                    'task_id' => $task->id,
-                    'user_id' => $task->user_id,
-                    'phone' => $task->user->phone,
-                    'error' => $result['error'] ?? $result['data'] ?? 'Unknown error',
-                ]);
-            }
+            $this->sendNotification($task, $fonnteService, 'scheduled');
         }
 
         Log::info('Deadline reminders job completed', [
             'tasks_processed' => $tasks->count(),
         ]);
+    }
+
+    /**
+     * Send notification for a specific task
+     */
+    private function sendNotification(Task $task, FonnteService $fonnteService, string $type): void
+    {
+        // Skip if user doesn't have a phone number
+        if (!$task->user || !$task->user->phone) {
+            Log::warning('User has no phone number, skipping reminder', [
+                'task_id' => $task->id,
+                'user_id' => $task->user_id,
+            ]);
+            return;
+        }
+
+        // Get user timezone
+        $timezone = $this->getTimezoneString($task->user->timezone ?? 'WIB');
+        $timezoneCode = $task->user->timezone ?? 'WIB';
+
+        // Format the message based on type
+        $dueDate = Carbon::parse($task->due_date)->format('d M Y');
+        
+        if ($type === 'instant') {
+            // Instant notification when task created
+            $message = "🔔 *Task Baru dengan Deadline Besok!*\n\n";
+            $message .= "Halo {$task->user->name}! 👋\n\n";
+            $message .= "Task: *\"{$task->title}\"*\n";
+            $message .= "Due Date: {$dueDate} 23:59 {$timezoneCode}\n";
+            $message .= "Priority: {$task->priority}\n\n";
+            $message .= "Jangan lupa diselesaikan ya! 😊\n\n";
+            $message .= "Semangat! 💪";
+        } else {
+            // Scheduled notification at 23:00
+            $message = "⏰ *Reminder: 1 Jam Lagi Deadline!*\n\n";
+            $message .= "Halo {$task->user->name}! 👋\n\n";
+            $message .= "Task: *\"{$task->title}\"*\n";
+            $message .= "Due Date: Besok, {$dueDate} 23:59 {$timezoneCode}\n";
+            $message .= "Priority: {$task->priority}\n\n";
+            $message .= "Tinggal 1 jam lagi sebelum hari deadline! ⏳\n\n";
+            $message .= "Semangat menyelesaikannya! 💪";
+        }
+
+        // Send WhatsApp notification
+        $result = $fonnteService->sendMessage($task->user->phone, $message);
+
+        if ($result['success']) {
+            Log::info("Deadline reminder sent successfully ({$type})", [
+                'task_id' => $task->id,
+                'user_id' => $task->user_id,
+                'phone' => $task->user->phone,
+                'type' => $type,
+            ]);
+        } else {
+            Log::error("Failed to send deadline reminder ({$type})", [
+                'task_id' => $task->id,
+                'user_id' => $task->user_id,
+                'phone' => $task->user->phone,
+                'type' => $type,
+                'error' => $result['error'] ?? $result['data'] ?? 'Unknown error',
+            ]);
+        }
+    }
+
+    /**
+     * Get PHP timezone string from Indonesian timezone code
+     */
+    private function getTimezoneString($timezone)
+    {
+        $timezones = [
+            'WIB' => 'Asia/Jakarta',      // UTC+7
+            'WITA' => 'Asia/Makassar',    // UTC+8
+            'WIT' => 'Asia/Jayapura',     // UTC+9
+        ];
+
+        return $timezones[$timezone] ?? 'Asia/Jakarta';
     }
 }

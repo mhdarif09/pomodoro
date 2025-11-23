@@ -36,6 +36,15 @@ class TaskController extends Controller
 
         DetermineTaskPriority::dispatch($task);
 
+        // Send instant WhatsApp notification if deadline is tomorrow
+        $user = $request->user();
+        $userTimezone = $this->getTimezoneString($user->timezone ?? 'WIB');
+        $tomorrow = now($userTimezone)->addDay()->toDateString();
+        
+        if ($task->due_date == $tomorrow && $user->phone) {
+            \App\Jobs\SendTaskDeadlineReminders::dispatch($task, 'instant');
+        }
+
         // PERBAIKAN DI SINI: Gunakan Redirect::back()
         // Ini memberitahu Inertia untuk kembali ke halaman sebelumnya (Dashboard)
         // dan secara otomatis memuat ulang data (props) terbaru.
@@ -103,5 +112,19 @@ class TaskController extends Controller
 
         // Kirim respons tanpa data, Inertia akan otomatis refresh
         return Redirect::back();
+    }
+
+    /**
+     * Get PHP timezone string from Indonesian timezone code
+     */
+    private function getTimezoneString($timezone)
+    {
+        $timezones = [
+            'WIB' => 'Asia/Jakarta',      // UTC+7
+            'WITA' => 'Asia/Makassar',    // UTC+8
+            'WIT' => 'Asia/Jayapura',     // UTC+9
+        ];
+
+        return $timezones[$timezone] ?? 'Asia/Jakarta';
     }
 }

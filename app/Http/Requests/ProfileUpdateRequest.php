@@ -19,6 +19,7 @@ class ProfileUpdateRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
             'phone' => ['nullable', 'string', 'regex:/^62[0-9]{9,12}$/', 'max:15'],
+            'timezone' => ['required', 'string', Rule::in(['WIB', 'WITA', 'WIT'])],
         ];
     }
 }
