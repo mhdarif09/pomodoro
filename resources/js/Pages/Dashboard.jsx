@@ -203,7 +203,11 @@ export default function Dashboard(props) {
     const handleOnboardingFinish = (data) => {
         setIsProcessing(true);
         const { daily_goal, ...onboarding_data } = data;
-        router.post(route('daily-goal.store'), { goal: daily_goal, onboarding_data }, { onFinish: () => setIsProcessing(false) });
+        router.post(route('daily-goal.store'), { goal: daily_goal, onboarding_data }, {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => setIsProcessing(false)
+        });
     };
 
     const handleSaveDailyGoal = (goal, onSuccess) => {
