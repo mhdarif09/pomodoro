@@ -44,7 +44,7 @@ export default function Authenticated({ children, header }) {
     return (
         <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
             <WhatsAppWarningModal />
-            <TutorialGuide />
+            <TutorialGuide setSidebarOpen={setSidebarOpen} />
 
             {/* Sidebar Desktop */}
             <aside className="hidden sm:flex sm:flex-col sm:w-64 sm:border-r sm:border-slate-200 dark:sm:border-slate-700 bg-white dark:bg-slate-900">
@@ -170,7 +170,7 @@ export default function Authenticated({ children, header }) {
             <div className="flex-1 flex flex-col">
                 {/* Header Mobile */}
                 <header className="sm:hidden flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-                    <button onClick={() => setSidebarOpen(true)} className="text-slate-600 dark:text-slate-300">
+                    <button id="mobile-menu-button" onClick={() => setSidebarOpen(true)} className="text-slate-600 dark:text-slate-300">
                         <Bars3Icon className="h-6 w-6" />
                     </button>
                     <ApplicationLogo className="h-9 w-auto fill-current text-teal-600 dark:text-teal-400" />

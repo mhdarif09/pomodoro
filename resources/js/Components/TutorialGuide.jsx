@@ -4,7 +4,7 @@ import 'driver.js/dist/driver.css';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 
-export default function TutorialGuide() {
+export default function TutorialGuide({ setSidebarOpen }) {
     const user = usePage().props.auth.user;
 
     useEffect(() => {
@@ -12,6 +12,112 @@ export default function TutorialGuide() {
         const localSeen = localStorage.getItem('tutorial_seen');
 
         if (!user.has_seen_tutorial && !localSeen) {
+            const isMobile = window.innerWidth < 640;
+
+            const desktopSteps = [
+                {
+                    element: '#dashboard-nav',
+                    popover: {
+                        title: '👋 Selamat Datang!',
+                        description: 'Ini adalah Dashboard Anda. Pusat kendali untuk melihat ringkasan aktivitas dan tugas harian.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#learning-nav',
+                    popover: {
+                        title: '📚 Learning Hub',
+                        description: 'Fokus belajar dengan Pomodoro Timer dan akses materi pembelajaran dalam satu tempat.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#documents-nav',
+                    popover: {
+                        title: '🗂️ Documents & Kanban',
+                        description: 'Kelola dokumen penting dan atur tugas-tugas Anda menggunakan Kanban Board yang interaktif.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#profile-nav',
+                    popover: {
+                        title: '⚙️ Profile & Settings',
+                        description: 'Atur profil dan notifikasi. Jangan lupa isi nomor WhatsApp untuk fitur reminder!',
+                        side: "right",
+                        align: 'start'
+                    }
+                }
+            ];
+
+            const mobileSteps = [
+                {
+                    element: 'body',
+                    popover: {
+                        title: '👋 Selamat Datang di SarangTumbuh!',
+                        description: 'Aplikasi produktivitas untuk membantu Anda fokus dan berkembang.',
+                        side: "bottom",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#mobile-menu-button',
+                    popover: {
+                        title: '🍔 Menu Navigasi',
+                        description: 'Klik menu ini untuk mengakses fitur aplikasi.',
+                        side: "bottom",
+                        align: 'start'
+                    },
+                    onNext: () => {
+                        // Programmatically open sidebar and wait for animation
+                        if (setSidebarOpen) {
+                            setSidebarOpen(true);
+                            // Return promise to wait for sidebar animation
+                            return new Promise((resolve) => setTimeout(resolve, 300));
+                        }
+                    }
+                },
+                {
+                    element: '#mobile-dashboard-nav',
+                    popover: {
+                        title: '📊 Dashboard',
+                        description: 'Ringkasan aktivitas dan tugas harian Anda.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#mobile-learning-nav',
+                    popover: {
+                        title: '📚 Learning Hub',
+                        description: 'Pomodoro Timer dan materi pembelajaran.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#mobile-documents-nav',
+                    popover: {
+                        title: '🗂️ Documents & Kanban',
+                        description: 'Manajemen dokumen dan tugas.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#mobile-profile-nav',
+                    popover: {
+                        title: '⚙️ Profile',
+                        description: 'Setup akun dan notifikasi WhatsApp.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                }
+            ];
+
             const driverObj = driver({
                 showProgress: true,
                 animate: true,
@@ -21,47 +127,15 @@ export default function TutorialGuide() {
                 prevBtnText: 'Kembali',
                 progressText: '{{current}} dari {{total}}',
                 popoverClass: 'driver-theme-green',
-                steps: [
-                    {
-                        element: '#dashboard-nav',
-                        popover: {
-                            title: '👋 Selamat Datang!',
-                            description: 'Ini adalah Dashboard Anda. Pusat kendali untuk melihat ringkasan aktivitas dan tugas harian.',
-                            side: "right",
-                            align: 'start'
-                        }
-                    },
-                    {
-                        element: '#learning-nav',
-                        popover: {
-                            title: '📚 Learning Hub',
-                            description: 'Fokus belajar dengan Pomodoro Timer dan akses materi pembelajaran dalam satu tempat.',
-                            side: "right",
-                            align: 'start'
-                        }
-                    },
-                    {
-                        element: '#documents-nav',
-                        popover: {
-                            title: '🗂️ Documents & Kanban',
-                            description: 'Kelola dokumen penting dan atur tugas-tugas Anda menggunakan Kanban Board yang interaktif.',
-                            side: "right",
-                            align: 'start'
-                        }
-                    },
-                    {
-                        element: '#profile-nav',
-                        popover: {
-                            title: '⚙️ Profile & Settings',
-                            description: 'Atur profil dan notifikasi. Jangan lupa isi nomor WhatsApp untuk fitur reminder!',
-                            side: "right",
-                            align: 'start'
-                        }
-                    }
-                ],
+                steps: isMobile ? mobileSteps : desktopSteps,
                 onDestroyStarted: () => {
                     if (!driverObj.hasNextStep() || confirm("Lewati tutorial?")) {
                         driverObj.destroy();
+
+                        // Close sidebar on finish
+                        if (isMobile && setSidebarOpen) {
+                            setSidebarOpen(false);
+                        }
 
                         // Optimistic update: set local storage immediately
                         localStorage.setItem('tutorial_seen', 'true');
