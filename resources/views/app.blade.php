@@ -15,13 +15,32 @@
         <link rel="preconnect" href="https://app.midtrans.com">
         <link rel="preconnect" href="https://app.sandbox.midtrans.com">
 
+        <!-- PWA & SEO -->
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#000011">
+        <meta name="description" content="Sarang Tumbuh - Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil.">
+        
         <!-- Scripts -->
         @routes
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
+
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        })
+                        .catch(err => {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
+        </script>
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased bg-[#000011]">
         @inertia
     </body>
 </html>
