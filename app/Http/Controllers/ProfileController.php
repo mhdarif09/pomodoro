@@ -60,4 +60,13 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Mark tutorial as seen for the user.
+     */
+    public function markTutorialSeen(Request $request)
+    {
+        $request->user()->update(['has_seen_tutorial' => true]);
+        return back();
+    }
 }

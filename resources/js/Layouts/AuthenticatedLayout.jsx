@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, ClockIcon, CreditCardIcon, DocumentTextIcon, UserIcon } from '@heroicons/react/24/outline';
 
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import WhatsAppWarningModal from '@/Components/WhatsAppWarningModal';
+import TutorialGuide from '@/Components/TutorialGuide';
 
 const UserAvatar = ({ user }) => {
     const initials = user.name
@@ -26,11 +28,11 @@ export default function Authenticated({ children, header }) {
     const user = auth.user;
 
     const navLinks = [
-        { routeName: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="h-5 w-5 mr-2" /> },
-        { routeName: 'learning.index', label: 'Learning', icon: <BookOpenIcon className="h-5 w-5 mr-2" /> },
-        { routeName: 'transactions.history', label: 'History', icon: <CreditCardIcon className="h-5 w-5 mr-2" /> },
-        { routeName: 'docs.index', label: 'Documents', icon: <DocumentTextIcon className="h-5 w-5 mr-2" /> },
-        { routeName: 'profile.edit', label: 'Profile', icon: <UserIcon className="h-5 w-5 mr-2" /> },
+        { routeName: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="h-5 w-5 mr-2" />, id: 'dashboard-nav' },
+        { routeName: 'learning.index', label: 'Learning', icon: <BookOpenIcon className="h-5 w-5 mr-2" />, id: 'learning-nav' },
+        { routeName: 'transactions.history', label: 'History', icon: <CreditCardIcon className="h-5 w-5 mr-2" />, id: 'history-nav' },
+        { routeName: 'docs.index', label: 'Documents', icon: <DocumentTextIcon className="h-5 w-5 mr-2" />, id: 'documents-nav' },
+        { routeName: 'profile.edit', label: 'Profile', icon: <UserIcon className="h-5 w-5 mr-2" />, id: 'profile-nav' },
     ];
 
     const sidebarVariants = {
@@ -41,6 +43,9 @@ export default function Authenticated({ children, header }) {
 
     return (
         <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
+            <WhatsAppWarningModal />
+            <TutorialGuide />
+
             {/* Sidebar Desktop */}
             <aside className="hidden sm:flex sm:flex-col sm:w-64 sm:border-r sm:border-slate-200 dark:sm:border-slate-700 bg-white dark:bg-slate-900">
                 <div className="flex h-16 items-center justify-center border-b border-slate-200 dark:border-slate-700">
@@ -50,6 +55,7 @@ export default function Authenticated({ children, header }) {
                     {navLinks.map((link) => (
                         <Link
                             key={link.routeName}
+                            id={link.id}
                             href={route(link.routeName)}
                             className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
                                 ${route().current(link.routeName)
@@ -115,6 +121,7 @@ export default function Authenticated({ children, header }) {
                                 {navLinks.map((link) => (
                                     <Link
                                         key={link.routeName}
+                                        id={`mobile-${link.id}`}
                                         href={route(link.routeName)}
                                         className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
                                         ${route().current(link.routeName)
