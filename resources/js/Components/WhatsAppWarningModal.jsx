@@ -92,7 +92,7 @@ export default function WhatsAppWarningModal() {
                                     <Link
                                         href={route('profile.edit')}
                                         className="inline-flex w-full justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:w-auto transition-all"
-                                        onClick={() => setOpen(false)}
+                                        onClick={handleDismiss}
                                     >
                                         Setup Sekarang
                                     </Link>
