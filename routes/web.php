@@ -22,6 +22,7 @@ use App\Http\Controllers\MiniModulController;
 use App\Http\Controllers\MiniModulAiController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\LearningController;
 use Inertia\Inertia;
 
 /*
@@ -80,6 +81,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // =========================================================================
     Route::prefix('dashboard')->group(function() {
 
+        // --- Learning Hub (Pomodoro + Mini Modul) ---
+        Route::get('/learning', [LearningController::class, 'index'])->name('learning.index');
+
         // --- Pomodoro ---
         Route::get('/pomodoro', [PomodoroController::class, 'index'])->name('pomodoro.index');
         Route::post('/pomodoro/store', [PomodoroController::class, 'store'])->name('pomodoro.store');
@@ -96,6 +100,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/docs/{document}/toggle-sharing', [DocumentController::class, 'toggleSharing'])->name('docs.toggle-sharing');
         Route::get('/docs/{document}/export', [DocumentController::class, 'exportDocx'])->name('docs.export');
         Route::post('/docs/{document}/invite', [DocumentController::class, 'invite'])->name('docs.invite');
+        
+        // Kanban routes
+        Route::get('/kanban', [App\Http\Controllers\KanbanController::class, 'index'])->name('kanban.index');
+        Route::patch('/kanban/{task}/status', [App\Http\Controllers\KanbanController::class, 'updateStatus'])->name('kanban.update-status');
 
         // --- Mini Moduls ---
         Route::prefix('mini-moduls')->name('mini-moduls.')->group(function () {

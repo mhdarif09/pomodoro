@@ -43,6 +43,10 @@ return [
     'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1'),
 ],
 
+'fonnte' => [
+    'token' => env('FONNTE_API_TOKEN'),
+],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

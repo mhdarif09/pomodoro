@@ -36,9 +36,22 @@ class DocumentController extends Controller
                         ->latest('updated_at')
                         ->paginate(12);
     
+    // Get tasks for Kanban board
+    $tasks = \App\Models\Task::where('user_id', $user->id)
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->groupBy('status');
+    
+    $kanbanTasks = [
+        'todo' => $tasks->get('todo', collect()),
+        'in_progress' => $tasks->get('in_progress', collect()),
+        'done' => $tasks->get('done', collect()),
+    ];
+    
     return Inertia::render('Docs/Index', [
         'documents' => $documents,
-        'currentUser' => $user
+        'currentUser' => $user,
+        'kanbanTasks' => $kanbanTasks
     ]);
     }
 

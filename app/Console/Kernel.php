@@ -12,7 +12,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Send WhatsApp reminders for tasks with deadline tomorrow (H-1)
+        // Runs every day at 9:00 AM
+        $schedule->command('reminders:send-deadline')->dailyAt('09:00');
     }
 
     /**

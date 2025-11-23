@@ -18,7 +18,8 @@ class Task extends Model
         'priority',
         'document_path',
         'user_id', 
-        'is_completed', 
+        'is_completed',
+        'status',
     ];
 
     /**

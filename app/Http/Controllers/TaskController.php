@@ -96,8 +96,9 @@ class TaskController extends Controller
         // Gunakan Policy untuk memastikan hanya pemilik yang bisa mengubah
         $this->authorize('update', $task);
 
-        // Ubah status boolean
+        // Ubah status boolean dan sync dengan status field
         $task->is_completed = !$task->is_completed;
+        $task->status = $task->is_completed ? 'done' : 'todo';
         $task->save();
 
         // Kirim respons tanpa data, Inertia akan otomatis refresh

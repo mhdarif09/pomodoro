@@ -1,125 +1,137 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import { PlusIcon } from '@heroicons/react/24/solid';
-import { DocumentIcon } from '@heroicons/react/24/outline';
+import { Head, Link, router } from '@inertiajs/react';
+import { PlusIcon, DocumentTextIcon, ViewColumnsIcon } from '@heroicons/react/24/solid';
+import { useState } from 'react';
+import DocumentCard from '@/Components/DocumentCard';
+import KanbanBoard from '@/Components/KanbanBoard';
 
-const DocumentCard = ({ document, currentUser }) => {
-    const isOwner = document.user.id === currentUser.id;
+export default function Index({ documents, currentUser, kanbanTasks, activeTab = 'documents' }) {
+    const [currentTab, setCurrentTab] = useState(activeTab);
 
-    const getPreview = (content) => {
-        if (!content || !Array.isArray(content) || content.length === 0) return 'Tidak ada konten...';
-        
-        let previewText = '';
-        const extractText = (blocks) => {
-            if (!blocks) return;
-            for (const block of blocks) {
-                if (previewText.length > 150) break;
-                if (block.content && Array.isArray(block.content)) {
-                    for (const item of block.content) {
-                        if (item.type === 'text' && item.text) {
-                            previewText += item.text.trim() + ' ';
-                        }
-                    }
-                }
-                if (block.children) {
-                    extractText(block.children);
-                }
-            }
-        };
+    const tabs = [
+        { id: 'documents', name: 'Documents', icon: DocumentTextIcon },
+        { id: 'kanban', name: 'Kanban Board', icon: ViewColumnsIcon },
+    ];
 
-        extractText(content);
-        if (!previewText.trim()) return 'Mulai menulis...';
-        return previewText.substring(0, 150) + (previewText.length > 150 ? '...' : '');
+    const handleCreateDocument = () => {
+        router.post(route('docs.store'));
+    };
+
+    const handleCreateTask = () => {
+        // TODO: Implement create task modal
+        alert('Create task feature coming soon!');
     };
 
     return (
-        <Link 
-            href={route('docs.show', document.id)}
-            className="group block bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 transition-all duration-200 hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-600 hover:-translate-y-1"
-        >
-            <div className="flex flex-col h-full">
-                <div className="flex items-start justify-between">
-                    <DocumentIcon className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                </div>
-                <div className="mt-4 flex-grow">
-                    <h3 className="text-base font-semibold text-slate-800 dark:text-white truncate">
-                        {document.title || 'Dokumen Tanpa Judul'}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2 h-10">
-                        {getPreview(document.content)}
-                    </p>
-                </div>
-                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                            {document.user.name.charAt(0)}
-                        </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                            {isOwner ? 'Dimiliki oleh Anda' : `Oleh ${document.user.name}`}
-                        </span>
-                    </div>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">
-                        {new Date(document.updated_at).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })}
-                    </span>
-                </div>
-            </div>
-        </Link>
-    );
-};
-
-export default function Index({ documents, currentUser }) {
-    return (
-        <AuthenticatedLayout 
+        <AuthenticatedLayout
             header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">
-                        Dokumen
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="font-bold text-2xl text-gray-900 dark:text-white">
+                        {currentTab === 'documents' ? '📄 Documents' : '📋 Kanban Board'}
                     </h2>
-                    <Link 
-                        href={route('docs.store')}
-                        method="post"
-                        as="button"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg shadow-sm hover:bg-emerald-700 transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                    <button
+                        onClick={currentTab === 'documents' ? handleCreateDocument : handleCreateTask}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-200 transform hover:scale-105"
                     >
-                        <PlusIcon className="w-5 h-5"/> Dokumen Baru
-                    </Link>
+                        <PlusIcon className="w-5 h-5" />
+                        {currentTab === 'documents' ? 'New Document' : 'New Task'}
+                    </button>
                 </div>
             }
         >
-            <Head title="Dokumen" />
+            <Head title={currentTab === 'documents' ? 'Documents' : 'Kanban Board'} />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    {documents.data && documents.data.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {documents.data.map(doc => (
-                                <DocumentCard 
-                                    key={doc.id}
-                                    document={doc}
-                                    currentUser={currentUser}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center bg-white dark:bg-slate-800 rounded-lg shadow-sm p-12">
-                            <DocumentIcon className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600" />
-                            <h3 className="mt-4 text-xl font-semibold text-slate-800 dark:text-white">
-                                Belum Ada Dokumen
-                            </h3>
-                            <p className="mt-2 text-sm text-slate-500">
-                                Mulai tulis ide brilian Anda dengan membuat dokumen pertama.
-                            </p>
-                            <Link 
-                                href={route('docs.store')}
-                                method="post"
-                                as="button"
-                                className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg shadow-sm hover:bg-emerald-700 transition"
-                            >
-                                <PlusIcon className="w-5 h-5"/> Buat Dokumen Baru
-                            </Link>
-                        </div>
-                    )}
+            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                {/* Tabs */}
+                <div className="mb-8">
+                    <div className="border-b border-gray-200">
+                        <nav className="-mb-px flex space-x-8">
+                            {tabs.map((tab) => {
+                                const Icon = tab.icon;
+                                const isActive = currentTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setCurrentTab(tab.id)}
+                                        className={`
+                                            group inline-flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200
+                                            ${isActive
+                                                ? 'border-emerald-500 text-emerald-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            }
+                                        `}
+                                    >
+                                        <Icon className={`w-5 h-5 ${isActive ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                                        {tab.name}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    </div>
                 </div>
+
+                {/* Tab Content */}
+                {currentTab === 'documents' && (
+                    <div>
+                        {documents?.data && documents.data.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {documents.data.map(doc => (
+                                    <DocumentCard
+                                        key={doc.id}
+                                        document={doc}
+                                        currentUser={currentUser}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center bg-white rounded-2xl shadow-sm p-16">
+                                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100">
+                                    <DocumentTextIcon className="w-8 h-8 text-emerald-600" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                    No Documents Yet
+                                </h3>
+                                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                                    Start writing your brilliant ideas by creating your first document.
+                                </p>
+                                <button
+                                    onClick={handleCreateDocument}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-200 transform hover:scale-105"
+                                >
+                                    <PlusIcon className="w-5 h-5" />
+                                    Create Your First Document
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {currentTab === 'kanban' && (
+                    <div>
+                        {kanbanTasks ? (
+                            <KanbanBoard initialTasks={kanbanTasks} />
+                        ) : (
+                            <div className="text-center bg-white rounded-2xl shadow-sm p-16">
+                                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100">
+                                    <ViewColumnsIcon className="w-8 h-8 text-emerald-600" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                    No Tasks Yet
+                                </h3>
+                                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                                    Organize your work with a Kanban board. Create your first task to get started.
+                                </p>
+                                <button
+                                    onClick={handleCreateTask}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-200 transform hover:scale-105"
+                                >
+                                    <PlusIcon className="w-5 h-5" />
+                                    Create Your First Task
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );

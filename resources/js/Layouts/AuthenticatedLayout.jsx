@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, ClockIcon, CreditCardIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, ClockIcon, CreditCardIcon, DocumentTextIcon, UserIcon } from '@heroicons/react/24/outline';
 
 import ApplicationLogo from '@/Components/ApplicationLogo';
 
@@ -27,10 +27,10 @@ export default function Authenticated({ children, header }) {
 
     const navLinks = [
         { routeName: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="h-5 w-5 mr-2" /> },
-        { routeName: 'mini-moduls.index', label: 'Mini Modul', icon: <BookOpenIcon className="h-5 w-5 mr-2" /> },
-        { routeName: 'pomodoro.index', label: 'Pomodoro', icon: <ClockIcon className="h-5 w-5 mr-2" /> },
+        { routeName: 'learning.index', label: 'Learning', icon: <BookOpenIcon className="h-5 w-5 mr-2" /> },
         { routeName: 'transactions.history', label: 'History', icon: <CreditCardIcon className="h-5 w-5 mr-2" /> },
         { routeName: 'docs.index', label: 'Documents', icon: <DocumentTextIcon className="h-5 w-5 mr-2" /> },
+        { routeName: 'profile.edit', label: 'Profile', icon: <UserIcon className="h-5 w-5 mr-2" /> },
     ];
 
     const sidebarVariants = {
@@ -44,7 +44,7 @@ export default function Authenticated({ children, header }) {
             {/* Sidebar Desktop */}
             <aside className="hidden sm:flex sm:flex-col sm:w-64 sm:border-r sm:border-slate-200 dark:sm:border-slate-700 bg-white dark:bg-slate-900">
                 <div className="flex h-16 items-center justify-center border-b border-slate-200 dark:border-slate-700">
-                    <ApplicationLogo className="h-9 w-auto fill-current text-purple-600 dark:text-purple-400" />
+                    <ApplicationLogo className="h-9 w-auto fill-current text-teal-600 dark:text-teal-400" />
                 </div>
                 <nav className="flex-1 px-2 py-4 space-y-1">
                     {navLinks.map((link) => (
@@ -52,10 +52,9 @@ export default function Authenticated({ children, header }) {
                             key={link.routeName}
                             href={route(link.routeName)}
                             className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
-                                ${
-                                    route().current(link.routeName)
-                                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-800 dark:text-purple-200'
-                                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                                ${route().current(link.routeName)
+                                    ? 'bg-teal-100 text-teal-700 dark:bg-teal-800 dark:text-teal-200'
+                                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                                 }`}
                         >
                             {link.icon}
@@ -63,12 +62,27 @@ export default function Authenticated({ children, header }) {
                         </Link>
                     ))}
                 </nav>
-                <div className="border-t border-slate-200 dark:border-slate-700 p-4 flex items-center gap-3">
-                    <UserAvatar user={user} />
-                    <div>
-                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{user.name}</div>
-                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{user.email}</div>
-                        <Link href={route('logout')} method="post" as="button" className="text-xs text-red-600 dark:text-red-400 hover:underline">
+                <div className="border-t border-slate-200 dark:border-slate-700 p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                        <UserAvatar user={user} />
+                        <div className="flex-1">
+                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{user.name}</div>
+                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{user.email}</div>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Link
+                            href={route('profile.edit')}
+                            className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 transition-colors"
+                        >
+                            Edit Profile
+                        </Link>
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 transition-colors"
+                        >
                             Keluar
                         </Link>
                     </div>
@@ -92,7 +106,7 @@ export default function Authenticated({ children, header }) {
                             exit="exit"
                         >
                             <div className="flex items-center justify-between h-16 mb-4">
-                                <ApplicationLogo className="h-9 w-auto fill-current text-purple-600 dark:text-purple-400" />
+                                <ApplicationLogo className="h-9 w-auto fill-current text-teal-600 dark:text-teal-400" />
                                 <button onClick={() => setSidebarOpen(false)} className="text-slate-600 dark:text-slate-300">
                                     <XMarkIcon className="h-6 w-6" />
                                 </button>
@@ -103,11 +117,10 @@ export default function Authenticated({ children, header }) {
                                         key={link.routeName}
                                         href={route(link.routeName)}
                                         className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
-                                        ${
-                                            route().current(link.routeName)
-                                                ? 'bg-purple-100 text-purple-700 dark:bg-purple-800 dark:text-purple-200'
+                                        ${route().current(link.routeName)
+                                                ? 'bg-teal-100 text-teal-700 dark:bg-teal-800 dark:text-teal-200'
                                                 : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
-                                        }`}
+                                            }`}
                                         onClick={() => setSidebarOpen(false)}
                                     >
                                         {link.icon}
@@ -115,12 +128,28 @@ export default function Authenticated({ children, header }) {
                                     </Link>
                                 ))}
                             </nav>
-                            <div className="border-t border-slate-200 dark:border-slate-700 mt-4 pt-4 flex items-center gap-3">
-                                <UserAvatar user={user} />
-                                <div>
-                                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{user.name}</div>
-                                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{user.email}</div>
-                                    <Link href={route('logout')} method="post" as="button" className="text-xs text-red-600 dark:text-red-400 hover:underline">
+                            <div className="border-t border-slate-200 dark:border-slate-700 mt-4 pt-4">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <UserAvatar user={user} />
+                                    <div className="flex-1">
+                                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{user.name}</div>
+                                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{user.email}</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Link
+                                        href={route('profile.edit')}
+                                        className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 transition-colors"
+                                        onClick={() => setSidebarOpen(false)}
+                                    >
+                                        Edit Profile
+                                    </Link>
+                                    <Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                        className="flex-1 text-center px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 transition-colors"
+                                    >
                                         Keluar
                                     </Link>
                                 </div>
@@ -137,7 +166,7 @@ export default function Authenticated({ children, header }) {
                     <button onClick={() => setSidebarOpen(true)} className="text-slate-600 dark:text-slate-300">
                         <Bars3Icon className="h-6 w-6" />
                     </button>
-                    <ApplicationLogo className="h-9 w-auto fill-current text-purple-600 dark:text-purple-400" />
+                    <ApplicationLogo className="h-9 w-auto fill-current text-teal-600 dark:text-teal-400" />
                     <div className="w-6" />
                 </header>
 

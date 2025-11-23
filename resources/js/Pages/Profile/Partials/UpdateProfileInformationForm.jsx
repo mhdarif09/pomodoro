@@ -11,6 +11,7 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: user.name,
         email: user.email,
+        phone: user.phone || '',
     });
 
     const submit = (e) => {
@@ -60,6 +61,26 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                     />
 
                     <InputError className="mt-2" message={errors.email} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="phone" value="WhatsApp Number" />
+
+                    <TextInput
+                        id="phone"
+                        type="text"
+                        className="mt-1 block w-full"
+                        value={data.phone || ''}
+                        onChange={(e) => setData('phone', e.target.value)}
+                        placeholder="628123456789 (format internasional)"
+                        autoComplete="tel"
+                    />
+
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Format: 628123456789 (tanpa tanda + atau 0 di depan). Digunakan untuk notifikasi WhatsApp reminder task.
+                    </p>
+
+                    <InputError className="mt-2" message={errors.phone} />
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (
