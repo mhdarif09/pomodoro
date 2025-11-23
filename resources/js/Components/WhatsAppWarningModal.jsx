@@ -11,6 +11,13 @@ export default function WhatsAppWarningModal() {
         // Check if user has phone
         if (user.phone) return;
 
+        // Check if tutorial is completed (either in DB or local storage)
+        // We want to show this ONLY after tutorial is done
+        const localSeen = localStorage.getItem('tutorial_seen');
+        const isTutorialDone = user.has_seen_tutorial || localSeen === 'true';
+
+        if (!isTutorialDone) return;
+
         // Check if dismissed recently (24 hours)
         const dismissedAt = localStorage.getItem('whatsapp_warning_dismissed');
         if (dismissedAt) {
@@ -22,7 +29,7 @@ export default function WhatsAppWarningModal() {
         // Show modal after a small delay for better UX
         const timer = setTimeout(() => setOpen(true), 1500);
         return () => clearTimeout(timer);
-    }, [user.phone]);
+    }, [user.phone, user.has_seen_tutorial]);
 
     const handleDismiss = () => {
         setOpen(false);
