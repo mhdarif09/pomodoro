@@ -12,7 +12,7 @@ export default function WhatsAppWarningModal() {
         if (user.phone) return;
 
         // Don't show if already on profile page
-        if (route().current('profile.edit')) return;
+        if (route().current('profile.edit') || window.location.pathname === '/profile') return;
 
         // Check if tutorial is completed (either in DB or local storage)
         // We want to show this ONLY after tutorial is done
