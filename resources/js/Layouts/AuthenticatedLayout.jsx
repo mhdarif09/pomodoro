@@ -32,7 +32,6 @@ export default function Authenticated({ children, header }) {
         { routeName: 'learning.index', label: 'Learning', icon: <BookOpenIcon className="h-5 w-5 mr-2" />, id: 'learning-nav' },
         { routeName: 'transactions.history', label: 'History', icon: <CreditCardIcon className="h-5 w-5 mr-2" />, id: 'history-nav' },
         { routeName: 'docs.index', label: 'Documents', icon: <DocumentTextIcon className="h-5 w-5 mr-2" />, id: 'documents-nav' },
-        { routeName: 'profile.edit', label: 'Profile', icon: <UserIcon className="h-5 w-5 mr-2" />, id: 'profile-nav' },
     ];
 
     const sidebarVariants = {

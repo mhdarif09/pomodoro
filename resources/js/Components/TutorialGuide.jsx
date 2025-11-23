@@ -41,15 +41,6 @@ export default function TutorialGuide({ setSidebarOpen }) {
                         side: "right",
                         align: 'start'
                     }
-                },
-                {
-                    element: '#profile-nav',
-                    popover: {
-                        title: '⚙️ Profile & Settings',
-                        description: 'Atur profil dan notifikasi. Jangan lupa isi nomor WhatsApp untuk fitur reminder!',
-                        side: "right",
-                        align: 'start'
-                    }
                 }
             ];
 
@@ -103,15 +94,6 @@ export default function TutorialGuide({ setSidebarOpen }) {
                     popover: {
                         title: '🗂️ Documents & Kanban',
                         description: 'Manajemen dokumen dan tugas.',
-                        side: "bottom",
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#mobile-profile-nav',
-                    popover: {
-                        title: '⚙️ Profile',
-                        description: 'Setup akun dan notifikasi WhatsApp.',
                         side: "bottom",
                         align: 'start'
                     }

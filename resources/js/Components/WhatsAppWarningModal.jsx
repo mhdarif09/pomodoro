@@ -18,13 +18,8 @@ export default function WhatsAppWarningModal() {
 
         if (!isTutorialDone) return;
 
-        // Check if dismissed recently (24 hours)
-        const dismissedAt = localStorage.getItem('whatsapp_warning_dismissed');
-        if (dismissedAt) {
-            const diff = new Date().getTime() - parseInt(dismissedAt);
-            const hours = diff / (1000 * 60 * 60);
-            if (hours < 24) return;
-        }
+        // Check if permanently dismissed
+        if (localStorage.getItem('whatsapp_warning_seen') === 'true') return;
 
         // Show modal after a small delay for better UX
         const timer = setTimeout(() => setOpen(true), 1500);
@@ -33,7 +28,7 @@ export default function WhatsAppWarningModal() {
 
     const handleDismiss = () => {
         setOpen(false);
-        localStorage.setItem('whatsapp_warning_dismissed', new Date().getTime().toString());
+        localStorage.setItem('whatsapp_warning_seen', 'true');
     };
 
     if (user.phone) return null;
