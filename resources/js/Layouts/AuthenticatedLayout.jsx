@@ -12,7 +12,9 @@ import {
     UserIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    SparklesIcon
+    SparklesIcon,
+    LockClosedIcon,
+    ChartBarIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
@@ -73,6 +75,7 @@ export default function Authenticated({ children, header }) {
         { routeName: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="h-5 w-5" />, id: 'dashboard-nav' },
         { routeName: 'ai-assistant.index', label: 'AI Assistant', icon: <SparklesIcon className="h-5 w-5" />, id: 'ai-nav' },
         { routeName: 'learning.index', label: 'Learning', icon: <BookOpenIcon className="h-5 w-5" />, id: 'learning-nav' },
+        { routeName: 'reports.index', label: 'Productivity', icon: <ChartBarIcon className="h-5 w-5" />, id: 'reports-nav' },
         { routeName: 'transactions.history', label: 'History', icon: <CreditCardIcon className="h-5 w-5" />, id: 'history-nav' },
         { routeName: 'docs.index', label: 'Documents', icon: <DocumentTextIcon className="h-5 w-5" />, id: 'documents-nav' },
     ];
@@ -118,40 +121,38 @@ export default function Authenticated({ children, header }) {
 
 
                 <nav className="flex-1 px-2.5 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
-                    {navLinks.map((link) => {
-                        // Skip AI Assistant for non-premium users
-                        if (link.routeName === 'ai-assistant.index' && !user.is_premium) {
-                            return null;
-                        }
-
-                        return (
-                            <Link
-                                key={link.routeName}
-                                id={link.id}
-                                href={route(link.routeName)}
-                                title={isCollapsed ? link.label : ''}
-                                className={`flex items-center rounded-xl transition-all duration-300 group
-                                    ${isCollapsed ? 'justify-center p-2' : 'px-3 py-2'}
-                                    ${route().current(link.routeName)
-                                        ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white'
-                                    }`}
-                            >
-                                <div className={`${!isCollapsed ? 'mr-3' : ''} transition-all duration-300 group-hover:scale-110`}>
-                                    {link.icon}
-                                </div>
-                                {!isCollapsed && (
-                                    <motion.span
-                                        initial={{ opacity: 0, x: -5 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        className="text-[13px] font-bold truncate tracking-tight"
-                                    >
-                                        {link.label}
-                                    </motion.span>
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.routeName}
+                            id={link.id}
+                            href={route(link.routeName)}
+                            title={isCollapsed ? link.label : ''}
+                            className={`flex items-center rounded-xl transition-all duration-300 group
+                                ${isCollapsed ? 'justify-center p-2' : 'px-3 py-2'}
+                                ${route().current(link.routeName)
+                                    ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
+                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white'
+                                }`}
+                        >
+                            <div className={`${!isCollapsed ? 'mr-3' : ''} transition-all duration-300 group-hover:scale-110 relative`}>
+                                {link.icon}
+                                {link.routeName === 'ai-assistant.index' && !user.is_premium && (
+                                    <div className="absolute -top-1 -right-1 p-0.5 bg-amber-500 rounded-full border border-white dark:border-slate-900">
+                                        <LockClosedIcon className="w-2 h-2 text-white" />
+                                    </div>
                                 )}
-                            </Link>
-                        );
-                    })}
+                            </div>
+                            {!isCollapsed && (
+                                <motion.span
+                                    initial={{ opacity: 0, x: -5 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="text-[13px] font-bold truncate tracking-tight flex-1"
+                                >
+                                    {link.label}
+                                </motion.span>
+                            )}
+                        </Link>
+                    ))}
                 </nav>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 p-3.5 bg-slate-50/30 dark:bg-slate-800/10">
@@ -221,27 +222,27 @@ export default function Authenticated({ children, header }) {
                                 </button>
                             </div>
                             <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
-                                {navLinks.map((link) => {
-                                    if (link.routeName === 'ai-assistant.index' && !user.is_premium) {
-                                        return null;
-                                    }
-                                    return (
-                                        <Link
-                                            key={link.routeName}
-                                            id={`mobile-${link.id}`}
-                                            href={route(link.routeName)}
-                                            className={`flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-                                            ${route().current(link.routeName)
-                                                    ? 'bg-teal-100 text-teal-700 dark:bg-teal-800 dark:text-teal-200'
-                                                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
-                                                }`}
-                                            onClick={() => setSidebarOpen(false)}
-                                        >
+                                {navLinks.map((link) => (
+                                    <Link
+                                        key={link.routeName}
+                                        id={`mobile-${link.id}`}
+                                        href={route(link.routeName)}
+                                        className={`flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors justify-between
+                                        ${route().current(link.routeName)
+                                                ? 'bg-teal-100 text-teal-700 dark:bg-teal-800 dark:text-teal-200'
+                                                : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                                            }`}
+                                        onClick={() => setSidebarOpen(false)}
+                                    >
+                                        <div className="flex items-center gap-2">
                                             {link.icon}
                                             {link.label}
-                                        </Link>
-                                    );
-                                })}
+                                        </div>
+                                        {link.routeName === 'ai-assistant.index' && !user.is_premium && (
+                                            <LockClosedIcon className="w-4 h-4 text-amber-500" />
+                                        )}
+                                    </Link>
+                                ))}
                             </nav>
                             <div className="border-t border-slate-200 dark:border-slate-700 p-3 flex-shrink-0">
                                 <div className="flex items-center gap-2 mb-2">

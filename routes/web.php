@@ -130,6 +130,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // --- Docs View ---
         Route::get('/docs', [DocumentPageController::class, 'index'])->name('docs.index');
+        Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
         Route::get('/docs/{document}', [DocumentPageController::class, 'show'])->name('docs.show'); // Still needed for the main view wrapper
         Route::get('/docs/{document}/export', [DocumentPageController::class, 'exportDocx'])->name('docs.export');
         

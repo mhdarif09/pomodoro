@@ -12,7 +12,8 @@ import {
     EllipsisVerticalIcon,
     MagnifyingGlassIcon,
     ShareIcon,
-    CpuChipIcon
+    CpuChipIcon,
+    LockClosedIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
@@ -152,13 +153,14 @@ export default function AIAssistantIndex() {
         <AuthenticatedLayout>
             <Head title="AI Assistant" />
 
-            <div className="flex h-[calc(100vh-140px)] bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-2xl">
+            <div className="relative flex h-[calc(100vh-140px)] bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-2xl">
                 {/* Sidebar History */}
                 <div className="hidden lg:flex flex-col w-72 border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                     <div className="p-6">
                         <button
                             onClick={createNewSession}
-                            className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95"
+                            disabled={!auth.user.is_premium}
+                            className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
                         >
                             <PlusIcon className="w-4 h-4" />
                             Chat Baru
@@ -169,12 +171,13 @@ export default function AIAssistantIndex() {
                         {sessions.map(s => (
                             <div
                                 key={s.id}
-                                onClick={() => setActiveSession(s)}
+                                onClick={() => auth.user.is_premium && setActiveSession(s)}
                                 className={`
                                     group relative p-3.5 rounded-2xl cursor-pointer transition-all
                                     ${activeSession?.id === s.id
                                         ? 'bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700'
                                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-500 dark:text-slate-400'}
+                                    ${!auth.user.is_premium ? 'opacity-50 grayscale cursor-not-allowed' : ''}
                                 `}
                             >
                                 <div className="flex items-center gap-3">
@@ -190,12 +193,6 @@ export default function AIAssistantIndex() {
                                         </p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={(e) => deleteSession(e, s.id)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
-                                >
-                                    <TrashIcon className="w-4 h-4" />
-                                </button>
                             </div>
                         ))}
                     </div>
@@ -206,9 +203,6 @@ export default function AIAssistantIndex() {
                     {/* Header */}
                     <div className="h-20 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 sticky top-0">
                         <div className="flex items-center gap-4">
-                            <div className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800" onClick={fetchSessions}>
-                                <PlusIcon className="w-5 h-5" />
-                            </div>
                             <div>
                                 <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                                     <CpuChipIcon className="w-5 h-5 text-teal-500" />
@@ -218,21 +212,6 @@ export default function AIAssistantIndex() {
                                     GrowthBot Engine v2.0 • Premium Access Only
                                 </p>
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setWebSearch(!webSearch)}
-                                className={`
-                                    flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all
-                                    ${webSearch
-                                        ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}
-                                `}
-                            >
-                                <GlobeAltIcon className="w-3.5 h-3.5" />
-                                Web Search: {webSearch ? 'ON' : 'OFF'}
-                            </button>
                         </div>
                     </div>
 
@@ -247,65 +226,62 @@ export default function AIAssistantIndex() {
                                 <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                                     Tanyakan apa pun, mulai dari analisis laporan, riset pasar, hingga strategi pertumbuhan pribadi Anda.
                                 </p>
-                                <div className="grid grid-cols-2 gap-3 mt-8 w-full">
-                                    {['Rangkum PDF Saya', 'Riset Trend AI 2025', 'Tips Produktivitas', 'Analisis Kompetitor'].map(q => (
-                                        <button
-                                            key={q}
-                                            onClick={() => setInput(q)}
-                                            className="p-3 text-[10px] font-bold text-left rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 hover:border-teal-300 transition-all"
-                                        >
-                                            {q}
-                                        </button>
-                                    ))}
-                                </div>
                             </div>
                         ) : (
                             <>
                                 {messages.map((m, idx) => (
                                     <MessageBubble key={idx} message={m} />
                                 ))}
-                                {isLoading && (
-                                    <div className="flex justify-start mb-6">
-                                        <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-3xl p-4 flex gap-1">
-                                            <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                            <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                            <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                        </div>
-                                    </div>
-                                )}
                                 <div ref={messagesEndRef} />
                             </>
                         )}
                     </div>
 
-                    {/* Input Area */}
+                    {/* Input Area (Visible but disabled) */}
                     <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative group">
+                        <div className="max-w-4xl mx-auto relative group">
                             <input
                                 type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Bagaimana saya bisa membantu pertumbuhan Anda hari ini?"
-                                className="w-full pl-6 pr-16 py-5 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-teal-500/50 text-sm shadow-inner transition-all"
+                                disabled
+                                placeholder="Upgrade ke Premium untuk mulai mengobrol..."
+                                className="w-full pl-6 pr-16 py-5 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none text-sm shadow-inner transition-all opacity-50 cursor-not-allowed"
                             />
-                            <button
-                                type="submit"
-                                disabled={isLoading || !input.trim()}
-                                className={`
-                                    absolute right-2 top-1/2 -translate-y-1/2 p-4 rounded-[1.5rem] transition-all
-                                    ${input.trim()
-                                        ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
-                                        : 'bg-slate-200 dark:bg-slate-700 text-slate-400'}
-                                `}
-                            >
-                                <PaperAirplaneIcon className="w-5 h-5" />
-                            </button>
-                        </form>
-                        <p className="text-center text-[9px] text-slate-400 mt-4 uppercase tracking-[0.2em]">
-                            Powered by Sarang Tumbuh Advanced Intelligence Node
-                        </p>
+                        </div>
                     </div>
                 </div>
+
+                {/* PREMIUM LOCK OVERLAY */}
+                {!auth.user.is_premium && (
+                    <div className="absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-white dark:bg-slate-800 rounded-[3rem] p-10 max-w-lg w-full text-center shadow-2xl border border-white/10"
+                        >
+                            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
+                                <LockClosedIcon className="w-10 h-10 text-amber-500" />
+                            </div>
+                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Fitur Terkunci</h3>
+                            <p className="text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
+                                GrowthBot Intelligence adalah fitur premium yang dirancang untuk mempercepat pertumbuhan Anda dengan AI canggih.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link
+                                    href={route('subscribe.index')}
+                                    className="px-8 py-4 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-2xl shadow-xl shadow-teal-500/20 transition-all active:scale-95"
+                                >
+                                    Upgrade Sekarang
+                                </Link>
+                                <Link
+                                    href={route('dashboard')}
+                                    className="px-8 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold rounded-2xl hover:bg-slate-200 transition-all"
+                                >
+                                    Kembali ke Dashboard
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );

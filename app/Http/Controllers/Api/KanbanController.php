@@ -106,7 +106,11 @@ class KanbanController extends Controller
                 $validated['document_path'] = $request->file('document')->store('documents', 'public');
             }
             
-            $task->update(array_merge($validated, ['estimated_minutes' => $estimatedMinutes]));
+            $task->update(array_merge($validated, [
+                'estimated_minutes' => $estimatedMinutes,
+                'notes' => $request->input('notes'),
+                'auto_open_url' => $request->input('auto_open_url'),
+            ]));
         });
 
         if ($task->wasChanged(['title', 'description', 'due_date'])) {

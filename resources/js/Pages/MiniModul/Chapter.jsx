@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { ChatBubbleLeftRightIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
+import { ChatBubbleLeftRightIcon, CheckCircleIcon, LockClosedIcon } from '@heroicons/react/24/solid';
 import ChapterHeader from './Partials/ChapterHeader';
 import ChapterSidebar from './Partials/ChapterSidebar';
 import AiDiscussionPanel from './Partials/AiDiscussionPanel';
 import { Transition } from '@headlessui/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from '@inertiajs/react';
 
-export default function Chapter({ auth, modul, chapter, userProgress, navigation, allChapters }) {
+export default function Chapter({ auth, modul, chapter, userProgress, navigation, allChapters, isLocked }) {
     const [isCompleted, setIsCompleted] = useState(userProgress?.is_completed || false);
     const [showAiDiscussion, setShowAiDiscussion] = useState(false);
     const [discussions, setDiscussions] = useState([]);
@@ -22,8 +24,8 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
 
     const loadDiscussions = async () => {
         try {
-            const response = await fetch(route('mini-moduls.ai.discussions', { 
-                miniModul: modul.id, 
+            const response = await fetch(route('mini-moduls.ai.discussions', {
+                miniModul: modul.id,
                 chapter: chapter.id
             }));
             const data = await response.json();
@@ -57,14 +59,14 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
 
         setIsLoading(true);
         try {
-            const response = await fetch(route('mini-moduls.ai.discuss', { 
+            const response = await fetch(route('mini-moduls.ai.discuss', {
                 miniModul: modul.id,
                 chapter: chapter.id
             }), {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({ message: newMessage })
             });
@@ -99,14 +101,14 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
         setDiscussions(prev => [...prev, tempUserMessage]);
 
         try {
-            const response = await fetch(route('mini-moduls.ai.role-play', { 
+            const response = await fetch(route('mini-moduls.ai.role-play', {
                 miniModul: modul.id,
                 chapter: chapter.id
             }), {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({ role: selectedRole, scenario })
             });
@@ -114,23 +116,23 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
 
-            setDiscussions(prev => prev.map(d => 
+            setDiscussions(prev => prev.map(d =>
                 d.id === tempUserMessage.id
-                ? {
-                    ...d,
-                    id: Date.now(),
-                    ai_response: data.success ? data.role_response : "Gagal mendapatkan respons.",
-                    context: data.success ? { type: 'roleplay', role: selectedRole } : { type: 'error' }
-                  }
-                : d
+                    ? {
+                        ...d,
+                        id: Date.now(),
+                        ai_response: data.success ? data.role_response : "Gagal mendapatkan respons.",
+                        context: data.success ? { type: 'roleplay', role: selectedRole } : { type: 'error' }
+                    }
+                    : d
             ));
 
         } catch (error) {
             console.error('Error in role play:', error);
             setDiscussions(prev => prev.map(d =>
-                d.id === tempUserMessage.id 
-                ? { ...d, ai_response: `Terjadi kesalahan: ${error.message}` } 
-                : d
+                d.id === tempUserMessage.id
+                    ? { ...d, ai_response: `Terjadi kesalahan: ${error.message}` }
+                    : d
             ));
         } finally {
             setIsLoading(false);
@@ -141,8 +143,41 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
         <AuthenticatedLayout user={auth.user}>
             <Head title={`${chapter.title} - ${modul.title}`} />
 
-            <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-                <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="bg-gray-50 dark:bg-gray-900 min-h-screen relative">
+                {/* PREMIUM LOCK OVERLAY */}
+                {isLocked && (
+                    <div className="absolute inset-0 z-50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-white dark:bg-slate-800 rounded-[3rem] p-10 max-w-lg w-full text-center shadow-2xl border border-slate-100 dark:border-slate-700"
+                        >
+                            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
+                                <LockClosedIcon className="w-10 h-10 text-amber-500" />
+                            </div>
+                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Materi Premium</h3>
+                            <p className="text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
+                                Upgrade ke **Premium** untuk membuka akses ke seluruh materi pembelajaran dan fitur diskusi AI yang mendalam.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link
+                                    href={route('subscribe.index')}
+                                    className="px-8 py-4 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-2xl shadow-xl shadow-teal-500/20 transition-all active:scale-95"
+                                >
+                                    Upgrade Sekarang
+                                </Link>
+                                <Link
+                                    href={route('mini-moduls.index')}
+                                    className="px-8 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold rounded-2xl hover:bg-slate-200 transition-all"
+                                >
+                                    Kembali ke Modul
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                <div className={`max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 ${isLocked ? 'grayscale' : ''}`}>
 
                     <ChapterHeader modul={modul} navigation={navigation} />
 
@@ -157,8 +192,8 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                                 </header>
 
                                 {/* Konten dengan list, code, gambar responsif */}
-                              <div
-  className="prose prose-lg dark:prose-invert max-w-none
+                                <div
+                                    className="prose prose-lg dark:prose-invert max-w-none
              prose-img:rounded-lg prose-img:mx-auto prose-img:max-h-[400px] prose-img:w-full prose-img:object-contain
              prose-a:text-green-600 dark:prose-a:text-green-400
              prose-strong:text-gray-800 dark:prose-strong:text-gray-200
@@ -167,8 +202,8 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
              prose-h2:mt-8 prose-h2:mb-4 prose-h3:mt-6 prose-h3:mb-3
              prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-pre:p-4 prose-pre:rounded-md prose-pre:overflow-x-auto
              prose-blockquote:border-l-4 prose-blockquote:border-green-300 dark:prose-blockquote:border-green-600 prose-blockquote:pl-4 prose-blockquote:italic"
-  dangerouslySetInnerHTML={{ __html: chapter.content }}
-/>
+                                    dangerouslySetInnerHTML={{ __html: chapter.content }}
+                                />
 
 
                                 <footer className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -190,7 +225,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                                         </button>
                                     ) : (
                                         <div className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/50 rounded-md">
-                                            <CheckCircleIcon className="w-5 h-5"/>
+                                            <CheckCircleIcon className="w-5 h-5" />
                                             <span>Selesai</span>
                                         </div>
                                     )}
@@ -205,7 +240,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                                     leaveFrom="opacity-100 translate-y-0"
                                     leaveTo="opacity-0 -translate-y-4"
                                 >
-                                    <AiDiscussionPanel 
+                                    <AiDiscussionPanel
                                         discussions={discussions}
                                         newMessage={newMessage}
                                         setNewMessage={setNewMessage}
@@ -222,7 +257,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                         {/* Sidebar Desktop */}
                         <aside className="hidden lg:block lg:col-span-1">
                             <div className="sticky top-24">
-                                <ChapterSidebar 
+                                <ChapterSidebar
                                     modul={modul}
                                     allChapters={allChapters}
                                     currentChapterId={chapter.id}
@@ -233,47 +268,47 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                     </div>
                 </div>
 
-                 {/* Tombol Sidebar Mobile */}
-                 <div className="lg:hidden fixed bottom-4 right-4 z-20">
-                     <button 
+                {/* Tombol Sidebar Mobile */}
+                <div className="lg:hidden fixed bottom-4 right-4 z-20">
+                    <button
                         onClick={() => setSidebarVisible(!isSidebarVisible)}
                         className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-lg text-gray-800 dark:text-gray-200 ring-1 ring-black ring-opacity-5"
                     >
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                         </svg>
-                     </button>
-                 </div>
-                 
-                 {/* Panel Sidebar Mobile */}
-                 <Transition show={isSidebarVisible} as={React.Fragment}>
-                     <div className="lg:hidden fixed inset-0 z-30" onClick={() => setSidebarVisible(false)}>
-                         <Transition.Child
-                             as={React.Fragment}
-                             enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
-                             leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0"
-                         >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Panel Sidebar Mobile */}
+                <Transition show={isSidebarVisible} as={React.Fragment}>
+                    <div className="lg:hidden fixed inset-0 z-30" onClick={() => setSidebarVisible(false)}>
+                        <Transition.Child
+                            as={React.Fragment}
+                            enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
+                            leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0"
+                        >
                             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-                         </Transition.Child>
-                         
-                         <Transition.Child
-                             as="div"
-                             className="absolute inset-y-0 left-0 w-4/5 max-w-sm"
-                             enter="transition ease-in-out duration-500 transform" enterFrom="-translate-x-full" enterTo="translate-x-0"
-                             leave="transition ease-in-out duration-500 transform" leaveFrom="translate-x-0" leaveTo="-translate-x-full"
-                         >
+                        </Transition.Child>
+
+                        <Transition.Child
+                            as="div"
+                            className="absolute inset-y-0 left-0 w-4/5 max-w-sm"
+                            enter="transition ease-in-out duration-500 transform" enterFrom="-translate-x-full" enterTo="translate-x-0"
+                            leave="transition ease-in-out duration-500 transform" leaveFrom="translate-x-0" leaveTo="-translate-x-full"
+                        >
                             <div className="h-full p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
-                               <ChapterSidebar 
-                                   modul={modul}
-                                   allChapters={allChapters}
-                                   currentChapterId={chapter.id}
-                                   userProgress={userProgress}
-                               />
+                                <ChapterSidebar
+                                    modul={modul}
+                                    allChapters={allChapters}
+                                    currentChapterId={chapter.id}
+                                    userProgress={userProgress}
+                                />
                             </div>
-                         </Transition.Child>
-                     </div>
-                 </Transition>
+                        </Transition.Child>
+                    </div>
+                </Transition>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 }

@@ -20,6 +20,8 @@ class Task extends Model
         'start_date',
         'user_id',
         'document_path',
+        'auto_open_url',
+        'notes',
         'estimated_minutes',
     ];
 

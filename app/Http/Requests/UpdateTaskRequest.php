@@ -29,6 +29,8 @@ class UpdateTaskRequest extends FormRequest
             'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:2048',
             'status' => 'nullable|in:todo,in_progress,done',
             'estimated_minutes' => 'nullable|integer|min:0',
+            'notes' => 'nullable|string',
+            'auto_open_url' => 'nullable|url',
         ];
     }
     

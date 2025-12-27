@@ -33,6 +33,7 @@ class PomodoroController extends Controller
             'blocked_urls.*' => 'url|max:500', // Each URL max 500 chars
             'tab_switches' => 'required|integer|min:0|max:10000', // Reasonable max
             'ai_questions_asked' => 'required|integer|min:0|max:1000', // Reasonable max
+            'task_id' => 'nullable|exists:tasks,id',
         ]);
 
         // Validate duration is reasonable (max 24 hours)
@@ -65,6 +66,7 @@ class PomodoroController extends Controller
                 'blocked_urls'   => json_encode(array_values($sanitizedUrls)),
                 'tab_switches'   => (int) $validated['tab_switches'],
                 'ai_questions_asked' => (int) $validated['ai_questions_asked'],
+                'task_id'        => $validated['task_id'] ?? null,
             ]);
 
             return response()->json([

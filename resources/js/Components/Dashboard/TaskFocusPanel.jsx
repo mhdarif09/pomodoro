@@ -9,13 +9,18 @@ import {
     ChevronUpIcon,
     ChevronRightIcon,
     ListBulletIcon,
-    CheckIcon
+    CheckIcon,
+    LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { Link } from '@inertiajs/react';
+import { useMemo } from 'react';
+import { debounce } from 'lodash';
+import { LinkIcon } from '@heroicons/react/24/solid';
 
-export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus }) {
+export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth }) {
     const [expandedTaskId, setExpandedTaskId] = useState(null);
     const [processingId, setProcessingId] = useState(null);
     const [addingToColumn, setAddingToColumn] = useState(null);
@@ -369,6 +374,94 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus }) {
                                                                     <ChevronRightIcon className="w-3.5 h-3.5 stroke-[3]" />
                                                                 </button>
                                                             </form>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Quick Notes Section */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Notes</h5>
+                                                                {!auth?.user?.is_premium && <LockClosedIcon className="w-2.5 h-2.5 text-amber-500" />}
+                                                            </div>
+                                                            {processingId === `saving-notes-${task.id}` && (
+                                                                <span className="text-[8px] font-bold text-teal-500 animate-pulse">Menyimpan...</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="relative">
+                                                            <textarea
+                                                                defaultValue={task.notes}
+                                                                disabled={!auth?.user?.is_premium}
+                                                                onChange={(e) => {
+                                                                    const value = e.target.value;
+                                                                    const taskId = task.id;
+                                                                    setProcessingId(`saving-notes-${taskId}`);
+                                                                    const save = debounce(() => {
+                                                                        axios.patch(route('api.tasks.update', taskId), {
+                                                                            notes: value
+                                                                        }).finally(() => setProcessingId(null));
+                                                                    }, 1000);
+                                                                    save();
+                                                                }}
+                                                                placeholder={auth?.user?.is_premium ? "Tulis catatan cepat atau ide di sini..." : "Fitur Premium: Simpan catatan penting untuk tugas ini."}
+                                                                className={`w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/10 min-h-[100px] transition-all ${!auth?.user?.is_premium ? 'cursor-not-allowed opacity-60' : ''}`}
+                                                            />
+                                                            {!auth?.user?.is_premium && (
+                                                                <Link
+                                                                    href={route('subscribe.index')}
+                                                                    className="absolute inset-0 flex items-center justify-center bg-slate-900/5 rounded-2xl group-hover:bg-slate-900/10 transition-all"
+                                                                >
+                                                                    <span className="bg-white/90 dark:bg-slate-800/90 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-amber-600 border border-amber-500/20 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        Upgrade Premium
+                                                                    </span>
+                                                                </Link>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Auto-open URL Section */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Launch URL</h5>
+                                                                {!auth?.user?.is_premium && <LockClosedIcon className="w-2.5 h-2.5 text-amber-500" />}
+                                                            </div>
+                                                            {task.auto_open_url && auth?.user?.is_premium && (
+                                                                <a
+                                                                    href={task.auto_open_url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-[9px] font-bold text-teal-600 hover:underline flex items-center gap-1"
+                                                                >
+                                                                    <LinkIcon className="w-2.5 h-2.5" />
+                                                                    Buka Link
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="url"
+                                                                disabled={!auth?.user?.is_premium}
+                                                                defaultValue={task.auto_open_url}
+                                                                onChange={(e) => {
+                                                                    const value = e.target.value;
+                                                                    const taskId = task.id;
+                                                                    setProcessingId(`saving-url-${taskId}`);
+                                                                    const save = debounce(() => {
+                                                                        axios.patch(route('api.tasks.update', taskId), {
+                                                                            auto_open_url: value
+                                                                        }).finally(() => setProcessingId(null));
+                                                                    }, 1000);
+                                                                    save();
+                                                                }}
+                                                                placeholder={auth?.user?.is_premium ? "https://..." : "Luncurkan link otomatis saat bekerja"}
+                                                                className={`w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-2 px-3 text-[10px] font-bold text-teal-600 dark:text-teal-400 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/10 transition-all ${!auth?.user?.is_premium ? 'cursor-not-allowed opacity-60' : ''}`}
+                                                            />
+                                                        </div>
+                                                        {task.auto_open_url && !task.is_completed && auth?.user?.is_premium && (
+                                                            <p className="text-[8px] text-slate-400 italic">
+                                                                * Link ini akan otomatis terbuka saat sesi Fokus dimulai.
+                                                            </p>
                                                         )}
                                                     </div>
                                                 </div>

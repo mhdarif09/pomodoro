@@ -31,10 +31,12 @@ class LearningController extends Controller
         
         // Get Mini Moduls (only published)
         try {
-            $miniModuls = MiniModul::with(['category', 'chapters'])
-                ->where('is_published', true)
-                ->limit(100) // Reasonable limit
-                ->get();
+            $query = MiniModul::with(['category', 'chapters'])->where('is_published', true);
+            
+            // If not premium, we might still want to show all but mark them locked, 
+            // OR just limit to 3. The user said "cuman 3 terbuka".
+            // Let's get all but the frontend will handle the "Locked" UI for index > 2 if not premium.
+            $miniModuls = $query->limit(100)->get();
         } catch (\Exception $e) {
             Log::error("Failed to load mini moduls", [
                 'user_id' => $userId,

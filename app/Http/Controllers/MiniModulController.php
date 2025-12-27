@@ -33,17 +33,25 @@ class MiniModulController extends Controller
         }
 
         $moduls = $query->latest()->paginate(12);
+        
+        $isPremium = auth()->check() && auth()->user()->is_premium;
+
+        $moduls->getCollection()->each(function ($modul, $index) use ($isPremium, $moduls) {
+            // Index starts at 0 for the collection. 
+            // Paginate(12) means for page 1, index 0-11.
+            // Absolute index would be ($moduls->currentPage() - 1) * $moduls->perPage() + $index;
+            $absoluteIndex = ($moduls->currentPage() - 1) * $moduls->perPage() + $index;
+            
+            $modul->is_locked = !$isPremium && $absoluteIndex >= 3;
+            if (auth()->check()) {
+                $modul->progress_percentage = $modul->progress_percentage;
+            }
+        });
+
         $categories = MiniModulCategory::active()
             ->withCount(['publishedModuls'])
             ->ordered()
             ->get();
-
-        if (auth()->check()) {
-            $moduls->getCollection()->transform(function ($modul) {
-                $modul->progress_percentage = $modul->progress_percentage;
-                return $modul;
-            });
-        }
 
         return Inertia::render('MiniModul/Index', [
             'moduls' => $moduls,
@@ -59,6 +67,22 @@ class MiniModulController extends Controller
     {
         if (!$miniModul->is_published) {
             abort(404);
+        }
+
+        // Premium Check: Find the index of this module in the published list
+        if (!auth()->check() || !auth()->user()->is_premium) {
+            $publishedIds = MiniModul::published()->latest()->pluck('id')->toArray();
+            $index = array_search($miniModul->id, $publishedIds);
+            
+            if ($index !== false && $index >= 3) {
+                // We'll pass a 'locked' flag instead of aborting, so the frontend can show the upgrade wall
+                // Alternatively, we can let the frontend handle it if we pass the flag from index.
+                // But for direct URL access, we need to check here.
+                return Inertia::render('MiniModul/Show', [
+                    'modul' => $miniModul,
+                    'isLocked' => true,
+                ]);
+            }
         }
 
         $miniModul->load([
@@ -98,6 +122,19 @@ class MiniModulController extends Controller
         // Pastikan baik modul maupun chapter sudah dipublikasikan sebelum bisa diakses.
         if (!$miniModul->is_published || !$chapter->is_published) {
             abort(404);
+        }
+
+        if (!auth()->check() || !auth()->user()->is_premium) {
+            $publishedIds = MiniModul::published()->latest()->pluck('id')->toArray();
+            $index = array_search($miniModul->id, $publishedIds);
+            
+            if ($index !== false && $index >= 3) {
+                return Inertia::render('MiniModul/Chapter', [
+                    'modul' => $miniModul,
+                    'chapter' => $chapter,
+                    'isLocked' => true,
+                ]);
+            }
         }
 
         // 2. LOGIKA: Eager Loading (Perbaikan Inti)

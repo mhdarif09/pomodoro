@@ -16,12 +16,18 @@ class PomodoroSession extends Model
         'ended_at',
         'blocked_urls',
         'user_id',
-          'manually_stopped', 
+        'task_id',
+        'manually_stopped', 
         'tab_switches',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function task()
+    {
+        return $this->belongsTo(Task::class);
     }
 }

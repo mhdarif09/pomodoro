@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePage, Link } from '@inertiajs/react';
 import {
     SparklesIcon,
     XMarkIcon,
@@ -7,11 +8,15 @@ import {
     ChevronUpIcon,
     Bars3BottomLeftIcon,
     VariableIcon,
-    ForwardIcon
+    ForwardIcon,
+    LockClosedIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
 export default function DynamicChatBar() {
+    const { auth } = usePage().props;
+    const isPremium = auth.user.is_premium;
+
     const [isExpanded, setIsExpanded] = useState(false);
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
@@ -20,10 +25,10 @@ export default function DynamicChatBar() {
     const scrollRef = useRef(null);
 
     useEffect(() => {
-        if (isExpanded && !session) {
+        if (isExpanded && !session && isPremium) {
             initSession();
         }
-    }, [isExpanded]);
+    }, [isExpanded, isPremium]);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -80,7 +85,7 @@ export default function DynamicChatBar() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-teal-400/80 leading-none">Intelligence v2.0</p>
-                                    <p className="text-xs font-bold text-white mt-0.5">GrowthBot Assist • Premium Only</p>
+                                    <p className="text-xs font-bold text-white mt-0.5">GrowthBot Assist</p>
                                 </div>
                             </div>
                             <button
@@ -91,62 +96,82 @@ export default function DynamicChatBar() {
                             </button>
                         </div>
 
-                        {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
-                            {messages.length === 0 && (
-                                <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-500 blur-2xl absolute opacity-20 animate-pulse" />
-                                    <SparklesIcon className="w-8 h-8 text-white mb-4 relative" />
-                                    <p className="text-sm font-bold text-white">Ada yang bisa dibantu, Bos?</p>
-                                    <p className="text-[10px] text-white/40 mt-1 max-w-[200px]">GrowthBot siap jawab pertanyaan kilat seputar tugas atau produktivitas.</p>
+                        {!isPremium ? (
+                            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-white/5 to-transparent">
+                                <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/20 mb-6 transition-transform">
+                                    <LockClosedIcon className="w-12 h-12 text-amber-500 animate-pulse" />
                                 </div>
-                            )}
-                            {messages.map((m, i) => (
-                                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`
-                                        max-w-[85%] px-4 py-3 rounded-[1.5rem] text-[13px] leading-relaxed
-                                        ${m.role === 'user'
-                                            ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
-                                            : 'bg-white/5 border border-white/10 text-white/90'}
-                                    `}>
-                                        {m.content}
-                                    </div>
-                                </div>
-                            ))}
-                            {isLoading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white/5 border border-white/10 rounded-full px-4 py-3 flex gap-1.5 items-center">
-                                        <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                        <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                        <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={scrollRef} />
-                        </div>
-
-                        {/* Input Area */}
-                        <form onSubmit={handleSend} className="p-4 bg-white/5 backdrop-blur-xl">
-                            <div className="relative flex items-center gap-2 px-2">
-                                <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Tulis pesan..."
-                                    className="flex-1 bg-white/5 border-white/10 border rounded-full px-6 py-4 text-xs text-white placeholder-white/20 focus:ring-1 focus:ring-teal-500/50"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={isLoading || !input.trim()}
-                                    className={`
-                                        p-4 rounded-full transition-all
-                                        ${input.trim() ? 'bg-white text-black scale-100 shadow-xl' : 'bg-white/5 text-white/20 scale-90'}
-                                    `}
+                                <h3 className="text-xl font-black text-white mb-2">Akses Eksklusif</h3>
+                                <p className="text-xs text-white/60 mb-8 leading-relaxed max-w-[240px]">
+                                    GrowthBot Intelligence hanya tersedia untuk member <strong>Premium</strong>. Upgrade sekarang untuk mendapatkan asisten AI super cerdas.
+                                </p>
+                                <Link
+                                    href={route('subscribe.index')}
+                                    className="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-2xl shadow-xl shadow-teal-500/20 transition-all active:scale-95"
                                 >
-                                    <PaperAirplaneIcon className="w-4 h-4" />
-                                </button>
+                                    Upgrade ke Premium
+                                </Link>
                             </div>
-                        </form>
+                        ) : (
+                            <>
+                                {/* Messages Area */}
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
+                                    {messages.length === 0 && (
+                                        <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-500 blur-2xl absolute opacity-20 animate-pulse" />
+                                            <SparklesIcon className="w-8 h-8 text-white mb-4 relative" />
+                                            <p className="text-sm font-bold text-white">Ada yang bisa dibantu, Bos?</p>
+                                            <p className="text-[10px] text-white/40 mt-1 max-w-[200px]">GrowthBot siap jawab pertanyaan kilat seputar tugas atau produktivitas.</p>
+                                        </div>
+                                    )}
+                                    {messages.map((m, i) => (
+                                        <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`
+                                                max-w-[85%] px-4 py-3 rounded-[1.5rem] text-[13px] leading-relaxed
+                                                ${m.role === 'user'
+                                                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                                                    : 'bg-white/5 border border-white/10 text-white/90'}
+                                            `}>
+                                                {m.content}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {isLoading && (
+                                        <div className="flex justify-start">
+                                            <div className="bg-white/5 border border-white/10 rounded-full px-4 py-3 flex gap-1.5 items-center">
+                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={scrollRef} />
+                                </div>
+
+                                {/* Input Area */}
+                                <form onSubmit={handleSend} className="p-4 bg-white/5 backdrop-blur-xl">
+                                    <div className="relative flex items-center gap-2 px-2">
+                                        <input
+                                            type="text"
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            placeholder="Tulis pesan..."
+                                            className="flex-1 bg-white/5 border-white/10 border rounded-full px-6 py-4 text-xs text-white placeholder-white/20 focus:ring-1 focus:ring-teal-500/50"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={isLoading || !input.trim()}
+                                            className={`
+                                                p-4 rounded-full transition-all
+                                                ${input.trim() ? 'bg-white text-black scale-100 shadow-xl' : 'bg-white/5 text-white/20 scale-90'}
+                                            `}
+                                        >
+                                            <PaperAirplaneIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -169,6 +194,7 @@ export default function DynamicChatBar() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {!isPremium && <LockClosedIcon className="w-3 h-3 text-amber-500" />}
                         <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
                         <ChevronUpIcon className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
                     </div>

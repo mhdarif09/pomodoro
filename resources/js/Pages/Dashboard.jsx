@@ -97,6 +97,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
                         tasks={allTasks}
                         activeFilter={activeFilter}
                         onStartFocus={onStartFocus}
+                        auth={auth}
                     />
                 </motion.div>
             </div>
@@ -126,7 +127,11 @@ export default function Dashboard(props) {
         setTotalDuration(duration * 60);
         setStartTime(dayjs());
         setIsRunning(true);
-        // Modal is gone, Dynamic Island handles visibility
+
+        // AUTO-OPEN LINK (Premium Only)
+        if (auth.user.is_premium && task.auto_open_url) {
+            window.open(task.auto_open_url, '_blank');
+        }
     };
 
     const stopSession = async (manuallyStopped = true) => {
@@ -238,7 +243,7 @@ export default function Dashboard(props) {
                 )}
             </AnimatePresence>
 
-            {auth.user.is_premium && <DynamicChatBar />}
+            <DynamicChatBar />
         </AuthenticatedLayout>
     );
 }
