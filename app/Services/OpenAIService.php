@@ -15,8 +15,13 @@ class OpenAIService
     private string $apiUrl;
 
 
-     public function determineTaskPriority(string $title, string $description, string $dueDate): string
+    public function determineTaskPriority(?string $title, ?string $description, $dueDate): string
     {
+        $title = $title ?? 'Tugas Tanpa Judul';
+        $description = $description ?? 'Tidak ada deskripsi';
+        $dueDateText = $dueDate ? (is_string($dueDate) ? $dueDate : $dueDate->format('Y-m-d')) : 'Tidak ditentukan';
+        $today = date('Y-m-d');
+
         // Definisikan pilihan prioritas yang valid sesuai dengan enum di database
         $availablePriorities = ['Rendah', 'Sedang', 'Tinggi', 'Mendesak'];
 
@@ -28,7 +33,7 @@ Pilihan prioritas yang tersedia adalah: Rendah, Sedang, Tinggi, Mendesak.
 Analisis informasi berikut:
 Judul Tugas: "{$title}"
 Deskripsi: "{$description}"
-Tenggat Waktu: {$dueDate} (Hari ini adalah: {date('Y-m-d')})
+Tenggat Waktu: {$dueDateText} (Hari ini adalah: {$today})
 
 Pertimbangkan urgensi dalam judul/deskripsi (misalnya kata 'segera', 'bug', 'critical') dan kedekatan tenggat waktu.
 Berikan jawaban HANYA SATU KATA nama prioritasnya dari pilihan yang ada (contoh: 'Tinggi') tanpa penjelasan atau teks tambahan apapun.

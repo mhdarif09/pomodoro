@@ -2,7 +2,9 @@
 // File: app/Http/Controllers/OpenAIController.php
 // Versi: Godfather Edition (Powerful, Smart, Definitive)
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Client\PendingRequest;

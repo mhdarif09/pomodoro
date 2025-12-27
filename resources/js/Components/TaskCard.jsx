@@ -112,6 +112,26 @@ export default function TaskCard({ task, onEdit }) {
                         </p>
                     )}
 
+                    {/* Subtasks and Estimates Info */}
+                    {(task.subtasks?.length > 0 || task.estimated_minutes) && (
+                        <div className="flex items-center gap-3 mb-2 text-xs text-gray-500 dark:text-gray-400">
+                            {task.subtasks?.length > 0 && (
+                                <div className="flex items-center gap-1" title="Subtasks">
+                                    <span className="bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                                        {task.subtasks.filter(t => t.is_completed).length}/{task.subtasks.length}
+                                    </span>
+                                    <span>Subtasks</span>
+                                </div>
+                            )}
+                            {task.estimated_minutes && (
+                                <div className="flex items-center gap-1" title="Estimated Time">
+                                    <ClockIcon className="w-3 h-3" />
+                                    <span>{task.estimated_minutes}m</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Footer */}
                     <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-slate-700">
                         {task.due_date && (
@@ -122,7 +142,7 @@ export default function TaskCard({ task, onEdit }) {
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 ml-auto">
                             <button
                                 onClick={handleEdit}
                                 className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 hover:text-blue-600 transition"

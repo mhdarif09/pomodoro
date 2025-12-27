@@ -7,21 +7,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import OnboardingModal from '@/Components/OnboardingModal';
 import UpgradeModal from '@/Components/UpgradeModal';
 import TodoListCard from '@/Components/TodoList/TodoListCard';
+import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel'; // Imported TaskFocusPanel
 import StatCard from '@/Components/Dashboard/StatCard';
-import { ListBulletIcon, CheckCircleIcon, CalendarDaysIcon, ExclamationTriangleIcon, PencilSquareIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { ListBulletIcon, CheckCircleIcon, CalendarDaysIcon, ExclamationTriangleIcon, PencilSquareIcon, XMarkIcon, CheckIcon, ClockIcon, PlusIcon } from '@heroicons/react/24/solid';
+import dayjs from 'dayjs';
+import axios from 'axios';
+import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
+import DynamicChatBar from '@/Components/Dashboard/DynamicChatBar';
+import Modal from '@/Components/Modal';
 
-const MainDashboard = ({ auth, todaysGoal, onSaveGoal, allTasks, taskStats, filters = {}, isProcessingGoal }) => {
+const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }) => {
     const activeFilter = filters.filter || 'all';
-    const [isEditing, setIsEditing] = useState(false);
-    const [goalInput, setGoalInput] = useState('');
 
-    useEffect(() => {
-        if (todaysGoal?.goal) {
-            setGoalInput(todaysGoal.goal);
-        } else {
-            setIsEditing(true); // Auto-edit if no goal
-        }
-    }, [todaysGoal]);
 
     const handleFilterChange = (newFilter) => {
         router.get(route('dashboard'), { filter: newFilter }, {
@@ -29,21 +26,6 @@ const MainDashboard = ({ auth, todaysGoal, onSaveGoal, allTasks, taskStats, filt
             preserveScroll: true,
             replace: true,
         });
-    };
-
-    const handleSave = () => {
-        if (!goalInput.trim()) return;
-        onSaveGoal(goalInput, () => setIsEditing(false));
-    };
-
-    const handleCancel = () => {
-        if (todaysGoal?.goal) {
-            setGoalInput(todaysGoal.goal);
-            setIsEditing(false);
-        }
-        // If no goal exists, we might want to keep it in edit mode or show a placeholder, 
-        // but for now let's just keep it in edit mode if they cancel without a previous goal? 
-        // Actually, if they cancel and there's no goal, maybe just leave it empty but editable.
     };
 
     const filterCards = [
@@ -56,139 +38,137 @@ const MainDashboard = ({ auth, todaysGoal, onSaveGoal, allTasks, taskStats, filt
     const activeListTitle = filterCards.find(card => card.key === activeFilter)?.title || 'Semua Tugas';
 
     return (
-        <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-white">👋 Hai, {auth.user.name}!</h1>
-                <p className="text-lg text-slate-600 dark:text-slate-300 mt-1">Ini ringkasan produktivitasmu hari ini.</p>
-            </motion.div>
-
+        <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
             <motion.div
-                className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-                initial="hidden" animate="visible"
-                variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10"
             >
-                {filterCards.map(({ key, ...cardProps }) => (
-                    <motion.div key={key} variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}>
-                        <StatCard
-                            {...cardProps}
-                            isActive={activeFilter === key}
+                <div>
+                    <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                        Halo, <span className="text-teal-600 dark:text-teal-400">{auth.user.name.split(' ')[0]}</span>!
+                    </h1>
+                    <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                        Ayo selesaikan tantanganmu hari ini. 🚀
+                    </p>
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-quick-add-task'))}
+                        className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl shadow-lg shadow-teal-500/20 transition-all duration-200 transform hover:scale-105"
+                    >
+                        <PlusIcon className="w-5 h-5" />
+                        Tambah Tugas
+                    </button>
+                </div>
+
+                <div className="flex items-center bg-white dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
+                        <button
+                            key={key}
                             onClick={() => handleFilterChange(key)}
-                        />
-                    </motion.div>
-                ))}
+                            title={title}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 relative overflow-hidden group
+                                ${activeFilter === key
+                                    ? 'text-white shadow-lg scale-105 z-10'
+                                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                        >
+                            {activeFilter === key && (
+                                <motion.div
+                                    layoutId="activeFilterBg"
+                                    className={`absolute inset-0 ${colorClass} -z-10`}
+                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                            <Icon className={`w-4 h-4 transition-transform group-hover:scale-125 ${activeFilter === key ? 'text-white' : 'text-slate-400'}`} />
+                            <span className={activeFilter === key ? 'block' : 'hidden md:block'}>{title}</span>
+                        </button>
+                    ))}
+                </div>
             </motion.div>
 
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <motion.div className="lg:col-span-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-                    <TodoListCard tasks={allTasks} listTitle={activeListTitle} />
+            <div className="space-y-10">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                    <TaskFocusPanel
+                        tasks={allTasks}
+                        activeFilter={activeFilter}
+                        onStartFocus={onStartFocus}
+                    />
                 </motion.div>
-
-                <div className="space-y-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.4 }}
-                    >
-                        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200">
-                            <div className="p-6">
-                                {/* Header */}
-                                <div className="flex items-center gap-3 mb-5">
-                                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-500 text-white">
-                                        <span className="text-xl">🎯</span>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                                            Goal Harian
-                                        </h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Fokus utamamu hari ini
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Content */}
-                                <div className="relative">
-                                    {isEditing ? (
-                                        <div className="space-y-3">
-                                            <input
-                                                type="text"
-                                                value={goalInput}
-                                                onChange={(e) => setGoalInput(e.target.value)}
-                                                placeholder="Contoh: Menyelesaikan laporan project"
-                                                maxLength={200}
-                                                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition text-slate-900 dark:text-white placeholder:text-slate-400 text-sm"
-                                                autoFocus
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') handleSave();
-                                                    if (e.key === 'Escape') handleCancel();
-                                                }}
-                                            />
-                                            <div className="flex items-center justify-between gap-3">
-                                                <span className="text-xs text-slate-400 dark:text-slate-500">
-                                                    Tekan Enter untuk simpan
-                                                </span>
-                                                <div className="flex gap-2">
-                                                    {todaysGoal?.goal && (
-                                                        <button
-                                                            onClick={handleCancel}
-                                                            className="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition text-sm font-medium"
-                                                        >
-                                                            Batal
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={handleSave}
-                                                        disabled={isProcessingGoal || !goalInput.trim()}
-                                                        className="flex items-center gap-1.5 px-4 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                                                    >
-                                                        {isProcessingGoal ? (
-                                                            <>
-                                                                <span className="animate-spin">⏳</span>
-                                                                <span>Menyimpan...</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <CheckIcon className="w-4 h-4" />
-                                                                <span>Simpan</span>
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="group/goal relative">
-                                            <div className="flex items-start justify-between gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-teal-400 dark:hover:border-teal-500 transition-colors">
-                                                <p className="flex-1 text-slate-700 dark:text-slate-200 text-base font-medium leading-relaxed">
-                                                    {todaysGoal?.goal}
-                                                </p>
-                                                <button
-                                                    onClick={() => setIsEditing(true)}
-                                                    className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition opacity-0 group-hover/goal:opacity-100 focus:opacity-100"
-                                                    title="Edit Goal"
-                                                    aria-label="Edit Goal"
-                                                >
-                                                    <PencilSquareIcon className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
             </div>
         </div>
     );
 };
 
 export default function Dashboard(props) {
-    const { auth, tasks, taskStats, filters, plans, showOnboarding, todaysGoal } = props;
+    const { auth, tasks, taskStats, filters, plans, showOnboarding } = props;
     const { flash } = usePage().props;
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+    // --- POMODORO TIMER STATE ---
+    const [activeTask, setActiveTask] = useState(null);
+    const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+    const [isRunning, setIsRunning] = useState(false);
+    const [startTime, setStartTime] = useState(null);
+    // const [showTimerModal, setShowTimerModal] = useState(false); // Removed
+    const [totalDuration, setTotalDuration] = useState(25 * 60);
+
+    const handleStartFocus = (task) => {
+        const duration = task.estimated_minutes || 25;
+        setActiveTask(task);
+        setSecondsLeft(duration * 60);
+        setTotalDuration(duration * 60);
+        setStartTime(dayjs());
+        setIsRunning(true);
+        // Modal is gone, Dynamic Island handles visibility
+    };
+
+    const stopSession = async (manuallyStopped = true) => {
+        if (!isRunning) return;
+        setIsRunning(false);
+
+        // Save session
+        try {
+            await axios.post(route('api.pomodoro.store'), {
+                focus_minutes: Math.ceil(totalDuration / 60),
+                started_at: startTime?.toISOString(),
+                ended_at: dayjs().toISOString(),
+                manually_stopped: manuallyStopped,
+                task_id: activeTask?.id
+            });
+            router.reload({ only: ['tasks', 'taskStats'] });
+        } catch (error) {
+            console.error("Failed to save session:", error);
+        }
+    };
+
+    const handleTimerClose = () => {
+        if (isRunning) {
+            if (confirm('Timer masih berjalan. Berhenti dan simpan progres?')) {
+                stopSession(true);
+                setActiveTask(null);
+            }
+        } else {
+            setActiveTask(null);
+        }
+    };
+
+    useEffect(() => {
+        let timer;
+        if (isRunning && secondsLeft > 0) {
+            timer = setInterval(() => setSecondsLeft(prev => prev - 1), 1000);
+        } else if (secondsLeft === 0 && isRunning) {
+            stopSession(false);
+            alert('Waktu fokus selesai! 🎉');
+        }
+        return () => clearInterval(timer);
+    }, [isRunning, secondsLeft]);
 
     useEffect(() => {
         // Only show upgrade modal if tutorial is already completed
@@ -206,25 +186,6 @@ export default function Dashboard(props) {
     const anyModalActive = shouldShowOnboarding || shouldShowUpgrade;
     const renderMainContent = true;
 
-    const handleOnboardingFinish = (data) => {
-        setIsProcessing(true);
-        const { daily_goal, ...onboarding_data } = data;
-        router.post(route('daily-goal.store'), { goal: daily_goal, onboarding_data }, {
-            preserveState: true,
-            preserveScroll: true,
-            onFinish: () => setIsProcessing(false)
-        });
-    };
-
-    const handleSaveDailyGoal = (goal, onSuccess) => {
-        setIsProcessing(true);
-        router.post(route('daily-goal.store'), { goal }, {
-            onSuccess: () => {
-                if (onSuccess) onSuccess();
-            },
-            onFinish: () => setIsProcessing(false)
-        });
-    };
 
     const handleCloseUpgradeModal = () => {
         setShowUpgradeModal(false);
@@ -237,10 +198,8 @@ export default function Dashboard(props) {
         allTasks: tasks || { data: [], links: [], total: 0 },
         taskStats: taskStats || { total: 0, completed: 0, dueThisWeek: 0, overdue: 0 },
         filters,
-        todaysGoal,
-        onSaveGoal: handleSaveDailyGoal,
-        isProcessingGoal: isProcessing,
         plans,
+        onStartFocus: handleStartFocus,
     };
 
     return (
@@ -253,7 +212,6 @@ export default function Dashboard(props) {
             </div>
             <AnimatePresence>
                 {shouldShowOnboarding && <OnboardingModal onFinish={handleOnboardingFinish} isProcessing={isProcessing} />}
-                {/* DailyGoalModal removed */}
                 {shouldShowUpgrade &&
                     <UpgradeModal
                         show={shouldShowUpgrade} isOpen={shouldShowUpgrade}
@@ -261,6 +219,26 @@ export default function Dashboard(props) {
                     />
                 }
             </AnimatePresence>
+
+            <AnimatePresence>
+                {activeTask && (
+                    <PomodoroIsland
+                        taskTitle={activeTask.title}
+                        secondsLeft={secondsLeft}
+                        isRunning={isRunning}
+                        totalDuration={totalDuration}
+                        onStart={() => setIsRunning(true)}
+                        onStop={() => setIsRunning(false)}
+                        onReset={() => {
+                            setIsRunning(false);
+                            setSecondsLeft(totalDuration);
+                        }}
+                        onClose={handleTimerClose}
+                    />
+                )}
+            </AnimatePresence>
+
+            {auth.user.is_premium && <DynamicChatBar />}
         </AuthenticatedLayout>
     );
 }

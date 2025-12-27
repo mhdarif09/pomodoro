@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use Inertia\Inertia;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PomodoroSession;
 use Carbon\Carbon;
@@ -10,29 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class PomodoroController extends Controller
 {
-    public function index()
-    {
-        $user = auth()->user();
-
-        return Inertia::render('Pomodoro/Index', [
-            'isPremium' => $user->is_premium || $user->role === 'admin',
-            'plans' => \App\Models\Plan::select('id', 'name', 'price', 'duration')->get(),
-        ]);
-    }
-
-    public function custom()
-    {
-        $user = auth()->user();
-
-        // Authorization check
-        if (!($user->is_premium || $user->role === 'admin')) {
-            Log::warning("Unauthorized custom pomodoro access attempt", ['user_id' => $user->id]);
-            abort(403, 'Akses hanya untuk user premium atau admin.');
-        }
-
-        return Inertia::render('Pomodoro/Custom');
-    }
-
     public function store(Request $request)
     {
         $userId = auth()->id();
@@ -43,8 +20,7 @@ class PomodoroController extends Controller
             ->count();
             
         if ($recentSessions >= 5) {
-            Log::warning("Too many pomodoro sessions created", ['user_id' => $userId]);
-            return back()->withErrors(['msg' => 'Terlalu banyak session dibuat. Tunggu sebentar.']);
+            return response()->json(['message' => 'Terlalu banyak session dibuat. Tunggu sebentar.'], 429);
         }
 
         // Comprehensive validation with security limits
@@ -65,11 +41,7 @@ class PomodoroController extends Controller
         $durationHours = $endedAt->diffInHours($startedAt);
         
         if ($durationHours > 24) {
-            Log::warning("Suspicious pomodoro duration", [
-                'user_id' => $userId,
-                'duration_hours' => $durationHours
-            ]);
-            return back()->withErrors(['msg' => 'Durasi session tidak valid (max 24 jam).']);
+            return response()->json(['message' => 'Durasi session tidak valid (max 24 jam).'], 422);
         }
 
         // Sanitize blocked URLs
@@ -84,7 +56,7 @@ class PomodoroController extends Controller
         });
 
         try {
-            PomodoroSession::create([
+            $session = PomodoroSession::create([
                 'user_id'        => $userId,
                 'focus_minutes'  => (int) $validated['focus_minutes'],
                 'break_minutes'  => (int) $validated['break_minutes'],
@@ -95,13 +67,10 @@ class PomodoroController extends Controller
                 'ai_questions_asked' => (int) $validated['ai_questions_asked'],
             ]);
 
-            Log::info("Pomodoro session created", [
-                'user_id' => $userId,
-                'focus_minutes' => $validated['focus_minutes'],
-                'duration_hours' => round($durationHours, 2)
-            ]);
-
-            return redirect()->route('pomodoro.index')->with('success', 'Session saved!');
+            return response()->json([
+                'message' => 'Session saved!',
+                'session' => $session
+            ], 201);
             
         } catch (\Exception $e) {
             Log::error("Failed to create pomodoro session", [
@@ -109,7 +78,7 @@ class PomodoroController extends Controller
                 'error' => $e->getMessage()
             ]);
             
-            return back()->withErrors(['msg' => 'Gagal menyimpan session. Silakan coba lagi.']);
+            return response()->json(['message' => 'Gagal menyimpan session.'], 500);
         }
     }
 }

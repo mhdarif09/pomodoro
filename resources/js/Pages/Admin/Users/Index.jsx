@@ -4,10 +4,10 @@ import { Head, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 import Modal from '@/Components/Modal';
 import { Dialog } from '@headlessui/react';
-import { 
-    CheckCircleIcon as CheckCircleOutline, 
-    ExclamationTriangleIcon, 
-    UserPlusIcon, 
+import {
+    CheckCircleIcon as CheckCircleOutline,
+    ExclamationTriangleIcon,
+    UserPlusIcon,
     MagnifyingGlassIcon,
     ArrowPathIcon,
     ShieldCheckIcon as ShieldCheckOutline,
@@ -56,15 +56,26 @@ const StatusBadge = ({ isPremium, isBanned }) => {
 };
 
 const ActionButton = ({ onClick, className, children, title }) => (
-    <button 
-        type="button" 
-        onClick={onClick} 
+    <button
+        type="button"
+        onClick={onClick}
         className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${className}`}
         title={title}
     >
         {children}
     </button>
 );
+
+const formatTimeSpent = (seconds) => {
+    if (!seconds) return '0m';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (hours > 0) {
+        return `${hours}j ${minutes}m`;
+    }
+    return `${minutes}m`;
+};
 
 export default function UserIndex({ auth, users, plans, filters, flash }) {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
@@ -87,7 +98,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
 
     const handlePromote = (planId) => {
         if (!userToPromote) return;
-        
+
         router.post(
             route('admin.users.promote', userToPromote.id),
             { plan_id: planId },
@@ -134,7 +145,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                         </div>
                     )}
                     {flash.error && (
-                         <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
+                        <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
                             <div className="flex">
                                 <ExclamationTriangleIcon className="h-5 w-5 flex-shrink-0 text-red-400" aria-hidden="true" />
                                 <div className="ml-3"><p className="text-sm font-medium text-red-800 dark:text-red-300">{flash.error}</p></div>
@@ -143,7 +154,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                     )}
 
                     <div className="bg-white dark:bg-gray-800/50 dark:border dark:border-gray-700/50 shadow-sm sm:rounded-2xl">
-                        
+
                         <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700/50">
                             <form onSubmit={handleSearch} className="relative">
                                 <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -156,12 +167,13 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                                 />
                             </form>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <thead className="bg-gray-50 dark:bg-gray-900/20 text-xs text-gray-700 dark:text-gray-300 uppercase">
                                     <tr>
                                         <th scope="col" className="px-4 py-3 sm:px-6">Pengguna</th>
+                                        <th scope="col" className="px-4 py-3 sm:px-6 text-center">Waktu Aktif</th>
                                         <th scope="col" className="px-4 py-3 sm:px-6">Status</th>
                                         <th scope="col" className="hidden sm:table-cell px-4 py-3 sm:px-6">Bergabung</th>
                                         <th scope="col" className="relative px-4 py-3 sm:px-6"><span className="sr-only">Aksi</span></th>
@@ -177,6 +189,12 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                                                         <div className="font-semibold">{user.name}</div>
                                                         <div className="text-xs text-gray-500">{user.email}</div>
                                                     </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4 sm:px-6 text-center">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="font-bold text-slate-700 dark:text-slate-200">{formatTimeSpent(user.total_time_spent)}</span>
+                                                    <span className="text-[10px] text-slate-400 uppercase tracking-tighter">Total Spent</span>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 sm:px-6">
@@ -202,7 +220,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                                                         </ActionButton>
                                                     ) : (
                                                         <ActionButton title="Promosikan ke Premium" onClick={() => openPromoteModal(user)} className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-200 dark:hover:bg-indigo-900/60">
-                                                           <UserPlusIcon className="h-4 w-4" />
+                                                            <UserPlusIcon className="h-4 w-4" />
                                                         </ActionButton>
                                                     )}
                                                     {user.banned_at ? (
@@ -249,7 +267,7 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                             </p>
                         </div>
                     </div>
-                    
+
                     <div className="mt-5 space-y-3">
                         {plans.map((plan) => (
                             <button
@@ -263,13 +281,13 @@ export default function UserIndex({ auth, users, plans, filters, flash }) {
                                 </span>
                             </button>
                         ))}
-                         {plans.length === 0 && (
+                        {plans.length === 0 && (
                             <p className="text-center text-sm text-gray-500 py-4">Tidak ada plan premium yang tersedia untuk ditambahkan.</p>
-                         )}
+                        )}
                     </div>
-                    
+
                     <div className="mt-5 sm:mt-6 text-right">
-                         <button
+                        <button
                             type="button"
                             className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none"
                             onClick={closeModal}

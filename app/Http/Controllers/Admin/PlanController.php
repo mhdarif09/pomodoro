@@ -26,11 +26,13 @@ class PlanController extends Controller
             'description' => 'nullable|string|max:500',
             'features' => 'nullable|array',
             'is_active' => 'boolean',
+            'max_subtasks' => 'nullable|integer|min:0',
         ]);
 
         // Set default values untuk features jika tidak diisi
         $validated['features'] = $validated['features'] ?? $this->getDefaultFeatures($validated['duration']);
         $validated['is_active'] = $validated['is_active'] ?? true;
+        $validated['max_subtasks'] = $validated['max_subtasks'] ?? 3;
 
         Plan::create($validated);
 
@@ -46,6 +48,7 @@ class PlanController extends Controller
             'description' => 'nullable|string|max:500',
             'features' => 'nullable|array',
             'is_active' => 'boolean',
+            'max_subtasks' => 'nullable|integer|min:0',
         ]);
 
         $plan->update($validated);

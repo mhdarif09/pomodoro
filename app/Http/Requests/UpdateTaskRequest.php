@@ -11,7 +11,7 @@ class UpdateTaskRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('update', $this->route('task'));
     }
 
     /**
@@ -21,8 +21,24 @@ class UpdateTaskRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
+         return [
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after_or_equal:start_date',
+            'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:2048',
+            'status' => 'nullable|in:todo,in_progress,done',
+            'estimated_minutes' => 'nullable|integer|min:0',
         ];
+    }
+    
+    protected function prepareForValidation()
+    {
+        if ($this->has('title')) {
+            $this->merge(['title' => strip_tags($this->title)]);
+        }
+        if ($this->has('description')) {
+            $this->merge(['description' => strip_tags($this->description)]);
+        }
     }
 }

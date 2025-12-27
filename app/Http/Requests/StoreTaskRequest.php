@@ -20,6 +20,9 @@ class StoreTaskRequest extends FormRequest
             'due_date' => 'nullable|date|after_or_equal:start_date',
             'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:2048',
             'status' => 'nullable|in:todo,in_progress,done', // Whitelist status values
+            'estimated_minutes' => 'nullable|integer|min:0',
+            'subtasks' => 'nullable|array',
+            'subtasks.*.title' => 'required|string|max:255',
         ];
     }
 

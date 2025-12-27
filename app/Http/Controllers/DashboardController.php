@@ -19,7 +19,6 @@ class DashboardController extends Controller
 
         public function index(Request $request) {
         $user = auth()->user();
-        $user->load('todaysGoal');
         
         // --- Statistik Total dihitung di Backend ---
         $today = Carbon::today();
@@ -34,7 +33,7 @@ class DashboardController extends Controller
         ];
 
         // --- Logika Pengambilan Data dengan Pagination ---
-        $tasksQuery = $user->tasks();
+        $tasksQuery = $user->tasks()->with('subtasks');
         $filter = $request->input('filter', 'all');
 
         switch ($filter) {
@@ -84,8 +83,6 @@ class DashboardController extends Controller
             'filters' => $request->only(['filter']),
             'is_premium' => $isPremium,
             'showOnboarding' => !$user->onboarding_complete,
-            'todaysGoal' => $user->todaysGoal,
-            'hasTodaysGoal' => (bool) $user->todaysGoal,
             'hasReflectedToday' => $user->reflections()->whereDate('reflection_date', today())->exists(),
             'plans' => $plans,
             'snap_token' => $request->query('snap_token'),

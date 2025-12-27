@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState, useRef } from 'react';
+import axios from 'axios';
 import Editor from '@/Components/Docs/Editor';
 import EditorLayout from '@/Layouts/EditorLayout';
 import mammoth from 'mammoth';
@@ -33,15 +34,9 @@ export default function Show({ document, auth }) {
         setTitle(newTitle);
         if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
         titleTimeoutRef.current = setTimeout(() => {
-            const csrfToken = window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const formData = new FormData();
-            formData.append('_method', 'put');
-            formData.append('title', newTitle);
-            fetch(`/docs/${document.id}`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                body: formData,
-            });
+            axios.patch(route('api.documents.update', document.id), {
+                title: newTitle
+            }).catch(err => console.error("Failed to update title", err));
         }, 1500);
     };
 
@@ -52,12 +47,12 @@ export default function Show({ document, auth }) {
         let contentToSave;
         try { contentToSave = JSON.stringify(editorRef.current.document); }
         catch (error) { console.error("Gagal menyimpan konten yang diimpor:", error); return; }
-        const csrfToken = window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const formData = new FormData();
-        formData.append('_method', 'put');
-        formData.append('content', contentToSave);
-        fetch(`/docs/${document.id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }, body: formData, })
-            .then(response => response.ok && console.log("✅ Konten impor berhasil disimpan!"));
+
+        axios.patch(route('api.documents.update', document.id), {
+            content: contentToSave
+        }).then(() => {
+            console.log("✅ Konten impor berhasil disimpan!");
+        }).catch(err => console.error("Gagal menyimpan konten:", err));
     };
 
     const handleFileImport = (event) => {
@@ -85,9 +80,9 @@ export default function Show({ document, auth }) {
         } else {
             alert(`Format file tidak didukung.`);
         }
-        event.target.value = null; 
+        event.target.value = null;
     };
-    
+
     const handleSearch = (direction = 'forward') => {
         if (searchTerm) window.find(searchTerm, false, direction === 'backward', true, false, true, false);
     };
@@ -98,13 +93,13 @@ export default function Show({ document, auth }) {
         <>
             <Head title={title || 'Untitled Document'} />
             <EditorLayout>
-                <CollaborationModal 
-                    show={showShareModal} 
-                    onClose={() => setShowShareModal(false)} 
+                <CollaborationModal
+                    show={showShareModal}
+                    onClose={() => setShowShareModal(false)}
                     document={document}
                     currentUser={auth.user}
                 />
-                <input type="file" ref={fileInputRef} onChange={handleFileImport} style={{ display: 'none' }} accept=".txt,.md,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+                <input type="file" ref={fileInputRef} onChange={handleFileImport} style={{ display: 'none' }} accept=".txt,.md,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
                 <main className="relative flex flex-col h-screen font-sans bg-white dark:bg-slate-900">
                     <div className="absolute top-0 left-0 right-0 z-20 h-20 pointer-events-none">
                         <div className="max-w-4xl mx-auto flex justify-center items-start pt-3">
@@ -128,7 +123,7 @@ export default function Show({ document, auth }) {
                                 </div>
                             ) : (
                                 <div className="pointer-events-auto flex items-center gap-1 p-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg">
-                                    <input type="text" placeholder="Cari dalam dokumen..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} className="h-8 px-2 text-sm bg-transparent outline-none text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-48" autoFocus/>
+                                    <input type="text" placeholder="Cari dalam dokumen..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} className="h-8 px-2 text-sm bg-transparent outline-none text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-48" autoFocus />
                                     <FloatingToolbarButton title="Sebelumnya" onClick={() => handleSearch('backward')}><ChevronUpIcon className="w-5 h-5" /></FloatingToolbarButton>
                                     <FloatingToolbarButton title="Berikutnya" onClick={() => handleSearch('forward')}><ChevronDownIcon className="w-5 h-5" /></FloatingToolbarButton>
                                     <FloatingToolbarButton title="Tutup Pencarian" onClick={() => setIsSearching(false)}><XMarkIcon className="w-5 h-5" /></FloatingToolbarButton>
@@ -142,7 +137,7 @@ export default function Show({ document, auth }) {
                             </button>
                         </div>
                     </div>
-                    
+
                     <div className="flex-1 overflow-y-auto pt-24 pb-16">
                         <div className="w-full max-w-4xl mx-auto px-6 sm:px-12 md:px-16">
                             <div className="mb-10">
@@ -174,18 +169,16 @@ function CollaborationModal({ show, onClose, document: initialDocument, currentU
 
     const handleToggleSharing = () => {
         setIsLoading(true);
-        const csrfToken = window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
-        fetch(route('docs.toggle-sharing', document.id), {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-            setIsPublic(data.is_public);
-            setShareUrl(data.share_url || '');
-        })
-        .finally(() => setIsLoading(false));
+        axios.post(route('api.documents.toggle-sharing', document.id))
+            .then(res => {
+                const data = res.data;
+                setIsPublic(data.is_public);
+                setShareUrl(data.share_url || '');
+            })
+            .catch(err => {
+                console.error("Failed to toggle sharing:", err);
+            })
+            .finally(() => setIsLoading(false));
     };
 
     const handleInvite = (e) => {
@@ -194,27 +187,19 @@ function CollaborationModal({ show, onClose, document: initialDocument, currentU
         setInviteSuccess('');
         setIsLoading(true);
 
-        const csrfToken = window.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        fetch(route('docs.invite', document.id), {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: inviteEmail }),
-        })
-        .then(res => res.json().then(data => ({ status: res.status, body: data })))
-        .then(({ status, body }) => {
-            if (status >= 400) {
-                setInviteError(body.message || 'Gagal mengundang pengguna.');
-            } else {
-                setInviteSuccess(body.message);
+        axios.post(route('api.documents.invite', document.id), { email: inviteEmail })
+            .then(res => {
+                setInviteSuccess(res.data.message);
                 setInviteEmail('');
                 setDocument(prevDoc => ({
                     ...prevDoc,
-                    collaborators: [...prevDoc.collaborators, body.collaborator]
+                    collaborators: [...prevDoc.collaborators, res.data.collaborator]
                 }));
-            }
-        })
-        .finally(() => setIsLoading(false));
+            })
+            .catch(err => {
+                setInviteError(err.response?.data?.message || 'Gagal mengundang pengguna.');
+            })
+            .finally(() => setIsLoading(false));
     };
 
     const copyToClipboard = () => {
@@ -229,18 +214,18 @@ function CollaborationModal({ show, onClose, document: initialDocument, currentU
             <div className="w-full max-w-lg bg-white dark:bg-slate-800 rounded-xl shadow-lg" onClick={e => e.stopPropagation()}>
                 <div className="p-6">
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">Bagikan "{document.title || 'Dokumen'}"</h3>
-                    
+
                     {isOwner && (
                         <form onSubmit={handleInvite} className="mt-4 flex space-x-2">
                             <div className="relative flex-1">
                                 <EnvelopeIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                                <input 
-                                    type="email" 
+                                <input
+                                    type="email"
                                     value={inviteEmail}
                                     onChange={e => setInviteEmail(e.target.value)}
-                                    placeholder="Undang pengguna melalui email..." 
-                                    className="w-full pl-10 pr-4 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
-                                    required 
+                                    placeholder="Undang pengguna melalui email..."
+                                    className="w-full pl-10 pr-4 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                    required
                                 />
                             </div>
                             <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 rounded-md flex items-center justify-center transition-colors disabled:opacity-50">
@@ -252,21 +237,21 @@ function CollaborationModal({ show, onClose, document: initialDocument, currentU
                     {inviteError && <p className="text-xs text-red-500 mt-1">{inviteError}</p>}
                     {inviteSuccess && <p className="text-xs text-green-500 mt-1">{inviteSuccess}</p>}
                 </div>
-                
+
                 <div className="px-6 space-y-3 max-h-48 overflow-y-auto">
-                     <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Orang dengan akses</p>
-                     <div className="flex items-center justify-between">
-                         <div className="flex items-center space-x-3">
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Orang dengan akses</p>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-sm font-semibold">{document.user.name.charAt(0)}</span>
                             <div>
                                 <p className="text-sm font-medium text-slate-900 dark:text-white">{document.user.name}</p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">{document.user.email}</p>
                             </div>
-                         </div>
-                         <p className="text-sm text-slate-500 dark:text-slate-400">Pemilik</p>
-                     </div>
-                     {document.collaborators.map(user => (
-                         <div key={user.id} className="flex items-center justify-between">
+                        </div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Pemilik</p>
+                    </div>
+                    {document.collaborators.map(user => (
+                        <div key={user.id} className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-sm font-semibold">{user.name.charAt(0)}</span>
                                 <div>
@@ -275,27 +260,27 @@ function CollaborationModal({ show, onClose, document: initialDocument, currentU
                                 </div>
                             </div>
                             <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">{user.pivot.role}</p>
-                         </div>
-                     ))}
+                        </div>
+                    ))}
                 </div>
 
                 <div className="p-6 border-t border-slate-200 dark:border-slate-700 mt-4">
-                     <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                         <div>
-                             <h4 className="font-medium text-slate-800 dark:text-slate-200">Akses Umum</h4>
-                             <p className="text-sm text-slate-500 dark:text-slate-400">{isPublic ? "Siapa saja dengan link dapat melihat" : "Dibatasi"}</p>
+                            <h4 className="font-medium text-slate-800 dark:text-slate-200">Akses Umum</h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{isPublic ? "Siapa saja dengan link dapat melihat" : "Dibatasi"}</p>
                         </div>
                         <button onClick={handleToggleSharing} disabled={isLoading} className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${isPublic ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-600'}`}>
                             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isPublic ? 'translate-x-5' : 'translate-x-0'}`}></span>
                         </button>
-                     </div>
+                    </div>
 
                     {isPublic && (
                         <div className="mt-4 flex space-x-2">
-                             <input type="text" readOnly value={shareUrl} className="w-full flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-300"/>
-                             <button onClick={copyToClipboard} className="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20 rounded-md flex items-center justify-center transition-colors w-28">
-                                 {justCopied ? (<><CheckCircleIcon className="w-4 h-4 mr-2" />Copied</>) : "Copy Link"}
-                             </button>
+                            <input type="text" readOnly value={shareUrl} className="w-full flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-300" />
+                            <button onClick={copyToClipboard} className="px-4 py-2 text-sm font-semibold text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20 rounded-md flex items-center justify-center transition-colors w-28">
+                                {justCopied ? (<><CheckCircleIcon className="w-4 h-4 mr-2" />Copied</>) : "Copy Link"}
+                            </button>
                         </div>
                     )}
                 </div>

@@ -78,7 +78,7 @@ function DroppableColumn({ id, children, color, title, count, onAddTask, isSubmi
                         <span className="text-sm font-medium">Add Task</span>
                     </button>
                 ) : (
-                    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-lg p-4 border-2 border-emerald-500 shadow-lg space-y-3">
+                    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-lg p-4 border-2 border-emerald-500 shadow-lg space-y-3 max-h-[80vh] overflow-y-auto">
                         {/* Title */}
                         <div>
                             <label className={labelStyle}>Task Title *</label>
@@ -107,7 +107,7 @@ function DroppableColumn({ id, children, color, title, count, onAddTask, isSubmi
                             />
                         </div>
 
-                        {/* Dates */}
+                        {/* Dates & Estimate */}
                         <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <label className={labelStyle}>Start Date</label>
@@ -129,6 +129,63 @@ function DroppableColumn({ id, children, color, title, count, onAddTask, isSubmi
                                     className={inputStyle}
                                 />
                             </div>
+                            <div className="col-span-2">
+                                <label className={labelStyle}>Estimated Time (Minutes)</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        disabled={isSubmitting}
+                                        value={taskData.estimated_minutes || ''}
+                                        onChange={(e) => setTaskData({ ...taskData, estimated_minutes: e.target.value })}
+                                        placeholder="e.g. 60"
+                                        className={inputStyle}
+                                    />
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400 text-xs">
+                                        mins
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Subtasks */}
+                        <div>
+                            <label className={labelStyle}>Subtasks</label>
+                            <div className="space-y-2 mb-2">
+                                {(taskData.subtasks || []).map((subtask, index) => (
+                                    <div key={index} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={subtask.title}
+                                            onChange={(e) => {
+                                                const newSubtasks = [...(taskData.subtasks || [])];
+                                                newSubtasks[index].title = e.target.value;
+                                                setTaskData({ ...taskData, subtasks: newSubtasks });
+                                            }}
+                                            placeholder="Subtask title..."
+                                            className={`${inputStyle} text-xs py-1`}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newSubtasks = [...(taskData.subtasks || [])];
+                                                newSubtasks.splice(index, 1);
+                                                setTaskData({ ...taskData, subtasks: newSubtasks });
+                                            }}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setTaskData({ ...taskData, subtasks: [...(taskData.subtasks || []), { title: '' }] })}
+                                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                            >
+                                <PlusIcon className="w-3 h-3" /> Add Subtask
+                            </button>
                         </div>
 
                         {/* Buttons */}
@@ -187,7 +244,7 @@ export default function KanbanBoard({ initialTasks }) {
         { id: 'done', title: '✅ Done', color: 'border-emerald-500' },
     ];
 
-    const handleAddTask = (taskData, onSuccessCallback) => {
+    const handleAddTask = async (taskData, onSuccessCallback) => {
         setIsSubmitting(true);
 
         // Optimistically add task to UI
@@ -205,32 +262,31 @@ export default function KanbanBoard({ initialTasks }) {
             [taskData.status]: [optimisticTask, ...(prev[taskData.status] || [])]
         }));
 
-        router.post(route('tasks.store'), taskData, {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Call the callback to reset form
-                if (onSuccessCallback) onSuccessCallback();
+        try {
+            const response = await axios.post(route('api.tasks.store'), taskData);
+            const newTask = response.data.task;
 
-                // Reload real data from server
-                router.reload({
-                    only: ['kanbanTasks'],
-                    preserveState: true,
-                    preserveScroll: true
-                });
-            },
-            onError: (errors) => {
-                console.error('Failed to create task:', errors);
-                // Revert optimistic update
-                setTasks(prev => ({
-                    ...prev,
-                    [taskData.status]: (prev[taskData.status] || []).filter(t => t.id !== tempId)
-                }));
-                alert('Failed to create task. Please try again.');
-            },
-            onFinish: () => {
-                setIsSubmitting(false);
-            }
-        });
+            // Update optimistic task with real data
+            setTasks(prev => {
+                const updatedList = (prev[taskData.status] || []).map(t =>
+                    t.id === tempId ? newTask : t
+                );
+                return { ...prev, [taskData.status]: updatedList };
+            });
+
+            if (onSuccessCallback) onSuccessCallback();
+
+        } catch (error) {
+            console.error('Failed to create task:', error);
+            // Revert optimistic update
+            setTasks(prev => ({
+                ...prev,
+                [taskData.status]: (prev[taskData.status] || []).filter(t => t.id !== tempId)
+            }));
+            alert('Failed to create task. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleDragStart = (event) => {
@@ -268,10 +324,10 @@ export default function KanbanBoard({ initialTasks }) {
             });
 
             // Update task status in backend
-            axios.patch(route('kanban.update-status', activeTask.id), {
+            axios.patch(route('api.tasks.update', activeTask.id), {
                 status: overColumn
             }).catch(error => {
-                console.error('Failed to  update task status:', error);
+                console.error('Failed to update task status:', error);
                 // Revert on error
                 setTasks(initialTasks);
             });

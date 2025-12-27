@@ -13,20 +13,32 @@ class Task extends Model
     protected $fillable = [
         'title',
         'description',
-        'start_date',
-        'due_date',
-        'priority',
-        'document_path',
-        'user_id', 
         'is_completed',
         'status',
+        'priority',
+        'due_date',
+        'start_date',
+        'user_id',
+        'document_path',
+        'estimated_minutes',
+    ];
+
+    protected $casts = [
+        'is_completed' => 'boolean',
+        'due_date' => 'date',
+        'start_date' => 'date',
     ];
 
     /**
      * Mendefinisikan bahwa sebuah Task dimiliki oleh seorang User.
      */
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    
+    public function subtasks()
+    {
+        return $this->hasMany(Subtask::class);
     }
 }

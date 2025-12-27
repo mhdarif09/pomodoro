@@ -1,5 +1,7 @@
 
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import axios from 'axios';
 import GuestLayout from '@/Layouts/GuestLayout';
 import ApplicationLogo from '@/Components/ApplicationLogo'; // optional
 
@@ -44,6 +46,37 @@ const GoogleLoginButton = ({ href }) => (
 );
 
 export default function Login({ status }) {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [showPasswordLogin, setShowPasswordLogin] = useState(false);
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setErrors({});
+
+        try {
+            const response = await axios.post(route('api.login'), {
+                email,
+                password
+            });
+
+            if (response.data.redirect_url) {
+                window.location.href = response.data.redirect_url;
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            if (error.response && error.response.data.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+                setErrors({ general: 'Login failed. Please check your credentials.' });
+            }
+            setIsLoading(false);
+        }
+    };
+
     return (
         <GuestLayout>
             <Head title="Log in / Sign up" />
@@ -55,7 +88,7 @@ export default function Login({ status }) {
                 </h1>
 
                 <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
-                    Sign in with Google to continue. No password needed.
+                    Sign in to continue to your dashboard.
                 </p>
 
                 {status && (
@@ -67,6 +100,65 @@ export default function Login({ status }) {
                 <div className="mt-8">
                     <GoogleLoginButton href={route('login.google.redirect')} />
                 </div>
+
+                <div className="relative mt-8">
+                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                        <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm font-medium leading-6">
+                        <span className="bg-white px-6 text-gray-900 dark:bg-gray-900 dark:text-gray-100">Or continue with</span>
+                    </div>
+                </div>
+
+                {/* Toggle Password Login */}
+                {!showPasswordLogin ? (
+                    <div className="mt-6">
+                        <button
+                            onClick={() => setShowPasswordLogin(true)}
+                            className="text-sm font-semibold text-emerald-600 hover:text-emerald-500"
+                        >
+                            Log in with Email & Password
+                        </button>
+                    </div>
+                ) : (
+                    <form onSubmit={handleLogin} className="mt-6 space-y-4 text-left">
+                        {errors.general && (
+                            <div className="text-red-500 text-sm text-center mb-2">{errors.general}</div>
+                        )}
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                            <input
+                                id="email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                            />
+                            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                            <input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                            />
+                            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoading ? 'Signing in...' : 'Sign in'}
+                        </button>
+                    </form>
+                )}
 
                 <div className="mt-8">
                     <p className="px-8 text-center text-sm text-gray-500 dark:text-gray-400">

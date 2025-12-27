@@ -16,13 +16,15 @@ class Plan extends Model
         'duration',
         'description',
         'features',
-        'is_active'
+        'is_active',
+        'max_subtasks'
     ];
 
     protected $casts = [
         'price' => 'integer',
         'features' => 'array',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'max_subtasks' => 'integer'
     ];
 
     protected $attributes = [

@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\OpenAIController;
+use App\Http\Controllers\Api\OpenAIController;
 
 // ==========================
 // ROUTE UNTUK AI ASSISTANT
@@ -19,4 +19,4 @@ Route::post('/ask-academic-writer', [OpenAIController::class, 'askAcademicWriter
 
 // 📚 Analisis dari file PDF / Excel (fitur unggah)
 Route::post('/ask-from-pdf', [OpenAIController::class, 'askFromPdf'])->name('ai.askFromPdf');
-Route::post('/ask-from-excel', [OpenAIController::class, 'askFromExcel'])->name('ai.askFromExcel');
+Route::post('/ask-from-sheet', [OpenAIController::class, 'askFromSheet'])->name('ai.askFromSheet');

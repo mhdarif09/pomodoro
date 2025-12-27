@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AdminLayout';
-import { 
-    PlusIcon, 
-    CheckIcon, 
-    XMarkIcon, 
-    PencilSquareIcon, 
+import {
+    PlusIcon,
+    CheckIcon,
+    XMarkIcon,
+    PencilSquareIcon,
     TrashIcon,
     CircleStackIcon,
     EyeIcon,
@@ -99,7 +99,7 @@ const FeaturesInput = ({ features = [], onChange }) => {
                     <PlusIcon className="h-4 w-4" />
                 </Button>
             </div>
-            
+
             {features.length > 0 && (
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -126,7 +126,7 @@ const FeaturesInput = ({ features = [], onChange }) => {
 // --- Plan Item Component ---
 const PlanItem = ({ plan }) => {
     const [isEditing, setIsEditing] = useState(false);
-    
+
     const { data, setData, put, patch, delete: destroy, processing, errors, reset } = useForm({
         name: plan.name || '',
         price: plan.price || '',
@@ -134,6 +134,7 @@ const PlanItem = ({ plan }) => {
         description: plan.description || '',
         features: plan.features || [],
         is_active: plan.is_active ?? true,
+        max_subtasks: plan.max_subtasks || 3,
     });
 
     const handleUpdate = (e) => {
@@ -158,7 +159,7 @@ const PlanItem = ({ plan }) => {
             preserveScroll: true,
         });
     };
-    
+
     const handleCancel = () => {
         reset();
         setIsEditing(false);
@@ -175,17 +176,17 @@ const PlanItem = ({ plan }) => {
                     {/* Basic Info */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Informasi Dasar</h3>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Nama Plan *
                             </label>
-                            <Input 
-                                type="text" 
-                                value={data.name} 
-                                onChange={e => setData('name', e.target.value)} 
-                                placeholder="Contoh: Premium Monthly" 
-                                required 
+                            <Input
+                                type="text"
+                                value={data.name}
+                                onChange={e => setData('name', e.target.value)}
+                                placeholder="Contoh: Premium Monthly"
+                                required
                             />
                             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                         </div>
@@ -194,13 +195,13 @@ const PlanItem = ({ plan }) => {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Harga (Rp) *
                             </label>
-                            <Input 
-                                type="number" 
-                                value={data.price} 
-                                onChange={e => setData('price', e.target.value)} 
-                                placeholder="Contoh: 99000" 
+                            <Input
+                                type="number"
+                                value={data.price}
+                                onChange={e => setData('price', e.target.value)}
+                                placeholder="Contoh: 99000"
                                 min="1000"
-                                required 
+                                required
                             />
                             {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
                         </div>
@@ -228,12 +229,27 @@ const PlanItem = ({ plan }) => {
                                 Plan Aktif
                             </label>
                         </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Max Subtasks *
+                            </label>
+                            <Input
+                                type="number"
+                                value={data.max_subtasks}
+                                onChange={e => setData('max_subtasks', e.target.value)}
+                                placeholder="Contoh: 10"
+                                min="0"
+                                required
+                            />
+                            {errors.max_subtasks && <p className="text-red-500 text-xs mt-1">{errors.max_subtasks}</p>}
+                        </div>
                     </div>
 
                     {/* Description & Features */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Detail & Fitur</h3>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Deskripsi
@@ -251,9 +267,9 @@ const PlanItem = ({ plan }) => {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Fitur Plan
                             </label>
-                            <FeaturesInput 
-                                features={data.features} 
-                                onChange={handleFeaturesChange} 
+                            <FeaturesInput
+                                features={data.features}
+                                onChange={handleFeaturesChange}
                             />
                             {errors.features && <p className="text-red-500 text-xs mt-1">{errors.features}</p>}
                         </div>
@@ -261,16 +277,16 @@ const PlanItem = ({ plan }) => {
                 </div>
 
                 <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Button 
-                        type="button" 
-                        onClick={handleCancel} 
+                    <Button
+                        type="button"
+                        onClick={handleCancel}
                         className="bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 focus-visible:outline-gray-400"
                     >
                         <XMarkIcon className="h-5 w-5" /> Batal
                     </Button>
-                    <Button 
-                        type="submit" 
-                        disabled={processing} 
+                    <Button
+                        type="submit"
+                        disabled={processing}
                         className="bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-blue-600"
                     >
                         <CheckIcon className="h-5 w-5" /> {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
@@ -279,21 +295,20 @@ const PlanItem = ({ plan }) => {
             </form>
         );
     }
-    
+
     return (
         <div className="flex items-center justify-between p-6 rounded-lg bg-white dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150 shadow-sm ring-1 ring-gray-900/5 dark:ring-white/10">
             <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                     <p className="font-semibold text-gray-900 dark:text-white">{plan.name}</p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        plan.is_active 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${plan.is_active
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                    }`}>
+                        }`}>
                         {plan.is_active ? 'Aktif' : 'Nonaktif'}
                     </span>
                 </div>
-                
+
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     Rp {plan.price?.toLocaleString('id-ID')} / {plan.duration === 'monthly' ? 'bulan' : 'tahun'}
                 </p>
@@ -305,7 +320,7 @@ const PlanItem = ({ plan }) => {
                 {plan.features && plan.features.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                         {plan.features.slice(0, 3).map((feature, index) => (
-                            <span 
+                            <span
                                 key={index}
                                 className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                             >
@@ -317,29 +332,32 @@ const PlanItem = ({ plan }) => {
                                 +{plan.features.length - 3} lebih
                             </span>
                         )}
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                            Limit: {plan.max_subtasks} Subtasks
+                        </span>
                     </div>
                 )}
             </div>
-            
+
             <div className="flex items-center gap-1">
-                <IconButton 
-                    onClick={handleToggleStatus} 
+                <IconButton
+                    onClick={handleToggleStatus}
                     disabled={processing}
                     className={plan.is_active ? 'hover:text-orange-600 dark:hover:text-orange-400' : 'hover:text-green-600 dark:hover:text-green-400'}
                     title={plan.is_active ? 'Nonaktifkan plan' : 'Aktifkan plan'}
                 >
                     {plan.is_active ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                 </IconButton>
-                <IconButton 
-                    onClick={() => setIsEditing(true)} 
+                <IconButton
+                    onClick={() => setIsEditing(true)}
                     className="hover:text-blue-600 dark:hover:text-blue-400"
                     title="Edit plan"
                 >
                     <PencilSquareIcon className="h-5 w-5" />
                 </IconButton>
-                <IconButton 
-                    onClick={handleDelete} 
-                    disabled={processing} 
+                <IconButton
+                    onClick={handleDelete}
+                    disabled={processing}
                     className="hover:text-red-600 dark:hover:text-red-400"
                     title="Hapus plan"
                 >
@@ -359,6 +377,7 @@ export default function Index({ auth, plans }) {
         description: '',
         features: [],
         is_active: true,
+        max_subtasks: 3,
     });
 
     const handleFeaturesChange = (newFeatures) => {
@@ -398,18 +417,18 @@ export default function Index({ auth, plans }) {
                                 {/* Basic Info */}
                                 <div className="space-y-4">
                                     <h3 className="text-md font-medium text-gray-900 dark:text-white">Informasi Dasar</h3>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Nama Plan *
                                         </label>
-                                        <Input 
-                                            id="name" 
-                                            type="text" 
-                                            value={data.name} 
-                                            onChange={(e) => setData('name', e.target.value)} 
-                                            placeholder="Contoh: Premium Monthly" 
-                                            required 
+                                        <Input
+                                            id="name"
+                                            type="text"
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            placeholder="Contoh: Premium Monthly"
+                                            required
                                         />
                                         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                                     </div>
@@ -418,14 +437,14 @@ export default function Index({ auth, plans }) {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Harga (Rp) *
                                         </label>
-                                        <Input 
-                                            id="price" 
-                                            type="number" 
-                                            value={data.price} 
-                                            onChange={(e) => setData('price', e.target.value)} 
-                                            placeholder="Contoh: 99000" 
+                                        <Input
+                                            id="price"
+                                            type="number"
+                                            value={data.price}
+                                            onChange={(e) => setData('price', e.target.value)}
+                                            placeholder="Contoh: 99000"
                                             min="1000"
-                                            required 
+                                            required
                                         />
                                         {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
                                     </div>
@@ -434,9 +453,9 @@ export default function Index({ auth, plans }) {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Durasi *
                                         </label>
-                                        <Select 
-                                            id="duration" 
-                                            value={data.duration} 
+                                        <Select
+                                            id="duration"
+                                            value={data.duration}
                                             onChange={(e) => setData('duration', e.target.value)}
                                         >
                                             <option value="monthly">Bulanan</option>
@@ -457,12 +476,28 @@ export default function Index({ auth, plans }) {
                                             Aktifkan plan langsung
                                         </label>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Max Subtasks *
+                                        </label>
+                                        <Input
+                                            id="max_subtasks"
+                                            type="number"
+                                            value={data.max_subtasks}
+                                            onChange={(e) => setData('max_subtasks', e.target.value)}
+                                            placeholder="Contoh: 10"
+                                            min="0"
+                                            required
+                                        />
+                                        {errors.max_subtasks && <p className="text-red-500 text-xs mt-1">{errors.max_subtasks}</p>}
+                                    </div>
                                 </div>
 
                                 {/* Description & Features */}
                                 <div className="space-y-4">
                                     <h3 className="text-md font-medium text-gray-900 dark:text-white">Detail & Fitur</h3>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Deskripsi
@@ -480,9 +515,9 @@ export default function Index({ auth, plans }) {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Fitur Plan
                                         </label>
-                                        <FeaturesInput 
-                                            features={data.features} 
-                                            onChange={handleFeaturesChange} 
+                                        <FeaturesInput
+                                            features={data.features}
+                                            onChange={handleFeaturesChange}
                                         />
                                         {errors.features && <p className="text-red-500 text-xs mt-1">{errors.features}</p>}
                                     </div>
@@ -490,12 +525,12 @@ export default function Index({ auth, plans }) {
                             </div>
 
                             <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <Button 
-                                    type="submit" 
-                                    disabled={processing} 
+                                <Button
+                                    type="submit"
+                                    disabled={processing}
                                     className="bg-blue-600 text-white hover:bg-blue-500 focus-visible:outline-blue-600"
                                 >
-                                    <PlusIcon className="h-5 w-5" /> 
+                                    <PlusIcon className="h-5 w-5" />
                                     {processing ? 'Menambahkan...' : 'Tambah Plan'}
                                 </Button>
                             </div>

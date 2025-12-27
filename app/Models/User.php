@@ -27,6 +27,11 @@ class User extends Authenticatable
         'personality_summary',
     ];
 
+    protected $appends = [
+        'is_premium',
+        'is_banned',
+    ];
+
     protected $hidden = [
         'password',
         'remember_token',
@@ -48,6 +53,11 @@ class User extends Authenticatable
     // Accessor untuk mengetahui apakah user premium
     public function getIsPremiumAttribute(): bool
     {
+        // Admin or staff might have full access
+        if ($this->role === 'admin') {
+            return true;
+        }
+
         return $this->subscription &&
                $this->subscription->status === 'paid' &&
                $this->subscription->expired_at &&
@@ -65,16 +75,6 @@ class User extends Authenticatable
         return $this->hasMany(PomodoroSession::class);
     }
 
-    public function todaysGoal()
-    {
-        return $this->hasOne(DailyGoal::class)->whereDate('goal_date', today());
-    }
-
-    public function dailyGoals()
-    {
-        return $this->hasMany(DailyGoal::class);
-    }
-
     public function tasks()
     {
         return $this->hasMany(Task::class);
@@ -88,6 +88,11 @@ class User extends Authenticatable
     public function documents()
     {
         return $this->hasMany(Document::class);
+    }
+
+    public function chatSessions()
+    {
+        return $this->hasMany(ChatSession::class);
     }
 
       public function sharedDocuments()
