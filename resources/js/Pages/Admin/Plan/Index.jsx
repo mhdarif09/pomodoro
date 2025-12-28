@@ -142,6 +142,24 @@ const PlanItem = ({ plan }) => {
         has_quick_notes: plan.has_quick_notes ?? false,
     });
 
+    // Update form data when plan prop changes (e.g. after toggle status)
+    React.useEffect(() => {
+        setData({
+            name: plan.name || '',
+            price: plan.price || '',
+            duration: plan.duration || 'monthly',
+            description: plan.description || '',
+            features: plan.features || [],
+            is_active: plan.is_active ?? true,
+            max_subtasks: plan.max_subtasks || 3,
+            has_ai_assistant: plan.has_ai_assistant ?? false,
+            ai_chat_limit: plan.ai_chat_limit ?? 0,
+            has_productivity_report: plan.has_productivity_report ?? false,
+            has_auto_open_url: plan.has_auto_open_url ?? false,
+            has_quick_notes: plan.has_quick_notes ?? false,
+        });
+    }, [plan]);
+
     const handleUpdate = (e) => {
         e.preventDefault();
         put(route('admin.plans.update', plan.id), {

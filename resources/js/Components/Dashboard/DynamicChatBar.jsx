@@ -6,20 +6,19 @@ import {
     XMarkIcon,
     PaperAirplaneIcon,
     ChevronUpIcon,
-    LockClosedIcon
+    LockClosedIcon,
+    ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
 // Terima prop 'user' disini
 export default function DynamicChatBar({ user }) {
     const { auth } = usePage().props;
-    
+
     // Prioritaskan user dari prop, kalau tidak ada ambil dari global auth
     const currentUser = user || auth.user;
 
-    // --- BAGIAN INI YANG MENYEBABKAN ERROR, KITA FIX ---
-    // Gunakan tanda tanya (?) agar tidak crash jika premium_features kosong
-    const hasAiAssistant = currentUser?.premium_features?.ai_assistant || false; 
+    const hasAiAssistant = currentUser?.premium_features?.ai_assistant || false;
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [input, setInput] = useState('');
@@ -71,15 +70,15 @@ export default function DynamicChatBar({ user }) {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none pb-6">
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-none">
             <AnimatePresence>
                 {isExpanded && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ height: 480, opacity: 1, scale: 1, y: 0 }}
-                        exit={{ height: 0, opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.8, y: 20, originX: 1, originY: 1 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="w-[95%] max-w-lg bg-black/80 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden mb-4 pointer-events-auto flex flex-col"
+                        className="w-[90vw] sm:w-[400px] h-[500px] bg-black/80 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden mb-4 pointer-events-auto flex flex-col"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
@@ -180,28 +179,24 @@ export default function DynamicChatBar({ user }) {
                 )}
             </AnimatePresence>
 
-            {/* Dynamic Bar Handle */}
+            {/* Dynamic FAB Handle */}
             {!isExpanded && (
                 <motion.button
-                    layoutId="dynamic-bar"
+                    layoutId="dynamic-chat-fab"
                     onClick={() => setIsExpanded(true)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-[90%] max-w-sm h-14 bg-black/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl pointer-events-auto flex items-center justify-between px-6 group"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-14 h-14 bg-black/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl pointer-events-auto flex items-center justify-center group relative overflow-hidden"
                 >
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <SparklesIcon className="w-5 h-5 text-teal-400 group-hover:animate-spin-slow" />
-                            <div className="absolute inset-0 bg-teal-500/50 blur-lg scale-150 animate-pulse" />
-                        </div>
-                        <span className="text-xs font-black text-white/80 uppercase tracking-widest">GrowthBot Intelligence</span>
-                    </div>
+                    <div className="absolute inset-0 bg-teal-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                    <div className="flex items-center gap-2">
-                        {!hasAiAssistant && <LockClosedIcon className="w-3 h-3 text-amber-500" />}
-                        <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-                        <ChevronUpIcon className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
-                    </div>
+                    {!hasAiAssistant && (
+                        <div className="absolute top-0 right-0 p-1">
+                            <LockClosedIcon className="w-3 h-3 text-amber-500" />
+                        </div>
+                    )}
+
+                    <SparklesIcon className="w-6 h-6 text-teal-400 group-hover:rotate-12 transition-transform" />
                 </motion.button>
             )}
         </div>

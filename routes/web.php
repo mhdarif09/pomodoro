@@ -21,6 +21,7 @@ use App\Http\Controllers\MiniModulController;
 use App\Http\Controllers\Api\MiniModulAiController;
 use App\Http\Controllers\DocumentPageController;
 use App\Http\Controllers\LearningController;
+use App\Http\Controllers\GamificationController;
 use Inertia\Inertia;
 
 /*
@@ -36,6 +37,8 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        // Inject plans for pricing section
+        'plans' => \App\Models\Plan::where('is_active', true)->orderBy('price')->get(),
     ]);
 });
 
@@ -154,6 +157,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         
     });
+
+    // --- GAMIFICATION ROUTES ---
+    Route::prefix('gamification')->name('gamification.')->group(function () {
+        Route::get('/dashboard', [GamificationController::class, 'dashboard'])->name('dashboard');
+        Route::get('/challenges', [GamificationController::class, 'challenges'])->name('challenges');
+        Route::get('/achievements', [GamificationController::class, 'achievements'])->name('achievements');
+        Route::get('/leaderboard', [GamificationController::class, 'leaderboard'])->name('leaderboard');
+    });
+
+    // --- MEDIA API ---
+    Route::get('/api/media/search', [\App\Http\Controllers\Api\MediaController::class, 'search'])->name('api.media.search');
+
+    // --- SPOTIFY AUTH ---
+    Route::get('/auth/spotify/redirect', [\App\Http\Controllers\Auth\SpotifyAuthController::class, 'redirect'])->name('spotify.redirect');
+    Route::get('/auth/spotify/callback', [\App\Http\Controllers\Auth\SpotifyAuthController::class, 'callback'])->name('spotify.callback');
 
     // Premium Routes moved or integrated
     Route::middleware(['premium'])->group(function () {

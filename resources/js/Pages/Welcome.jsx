@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Head } from '@inertiajs/react';
@@ -7,8 +7,9 @@ import clsx from 'clsx';
 import {
   RocketLaunchIcon, CheckIcon, ArrowRightIcon, StarIcon,
   ChatBubbleLeftRightIcon, UserGroupIcon, DocumentTextIcon, SparklesIcon,
-  ClockIcon, PresentationChartLineIcon, ChevronDownIcon
+  ClockIcon, PresentationChartLineIcon, ChevronDownIcon, HeartIcon, GlobeAltIcon
 } from '@heroicons/react/24/outline';
+import { useLanguage, LanguageProvider } from '@/Contexts/LanguageContext';
 
 // --- Komponen Ikon Media Sosial ---
 const FaTwitter = () => <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>;
@@ -29,26 +30,22 @@ const AnimatedSection = ({ children, className = '', id = '' }) => {
   );
 };
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 40, scale: 0.98 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
+const featureFadeInUp = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.2, 0.65, 0.3, 0.9] } }
 };
 
 const FeatureCard = ({ feature }) => {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], ['-5%', '5%']);
-
   return (
-    <motion.div ref={ref} variants={fadeInUp} className="group relative p-8 rounded-3xl border border-gray-100 bg-white shadow-xl shadow-emerald-100/50 hover:shadow-2xl hover:shadow-emerald-200/50 transition-all duration-500 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      <motion.div className="relative z-10" style={{ y }}>
-        <div className="text-emerald-600 mb-6">
-          {feature.icon && <div className="w-14 h-14 p-3 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>}
+    <motion.div variants={featureFadeInUp} className="group relative p-8 rounded-[2.5rem] bg-white/60 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-200/40 hover:scale-[1.02] transition-all duration-300">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-[2.5rem] pointer-events-none"></div>
+      <div className="relative z-10">
+        <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-white flex items-center justify-center text-emerald-600 shadow-inner border border-white/60 group-hover:scale-110 transition-transform duration-500">
+          {feature.icon}
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors">{feature.title}</h3>
-        <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-      </motion.div>
+        <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+        <p className="text-slate-500 text-[15px] leading-relaxed font-medium">{feature.description}</p>
+      </div>
     </motion.div>
   );
 };
@@ -56,21 +53,21 @@ const FeatureCard = ({ feature }) => {
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <motion.div variants={fadeInUp} className="border-b border-gray-100">
+    <motion.div variants={featureFadeInUp} className="border-b border-slate-200/60 last:border-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center py-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg"
+        className="w-full flex justify-between items-start py-6 text-left focus:outline-none"
         aria-expanded={isOpen}
       >
-        <span className="text-lg font-semibold text-gray-900">{question}</span>
-        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
-          <ChevronDownIcon className="w-5 h-5 text-emerald-500" />
+        <span className="text-lg font-bold text-slate-800 pr-8">{question}</span>
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} className="flex-shrink-0 mt-1">
+          <ChevronDownIcon className="w-5 h-5 text-slate-400" />
         </motion.div>
       </button>
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }} className="overflow-hidden">
-            <p className="pb-6 text-gray-600 leading-relaxed">{answer}</p>
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+            <p className="pb-6 text-slate-500 leading-relaxed max-w-2xl">{answer}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -88,8 +85,8 @@ const Marquee = ({ children, direction = 'left' }) => (
 );
 
 
-export default function OdysseyLandingPage() {
-  const [billingCycle, setBillingCycle] = useState('monthly');
+function OdysseyLandingPageContent({ plans = [] }) {
+  const { t, language, toggleLanguage } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -99,136 +96,123 @@ export default function OdysseyLandingPage() {
   }, []);
 
   useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+    document.body.style.overflow = isMenuOpen ? 'hidden' : 'auto';
   }, [isMenuOpen]);
 
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-
   const heroTextY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
+  // --- Dynamic Data using Translation Keys ---
   const features = [
-    { icon: <ClockIcon className="w-full h-full" />, title: 'Timer Pomodoro', description: 'Kuasai fokus Anda dengan timer cerdas yang dirancang untuk sesi kerja mendalam dan istirahat yang efektif.' },
-    { icon: <SparklesIcon className="w-full h-full" />, title: 'Wawasan Pertumbuhan AI', description: 'Terima wawasan dan saran yang dipersonalisasi berdasarkan kemajuan Anda untuk mempercepat pertumbuhan.' },
-    { icon: <PresentationChartLineIcon className="w-full h-full" />, title: 'Analitik Belajar', description: 'Visualisasikan pola kerja Anda, lacak produktivitas, dan identifikasi area untuk perbaikan.' },
-    { icon: <UserGroupIcon className="w-full h-full" />, title: 'Komunitas', description: 'Bergabung dengan para pencapai ambisius lainnya. Berbagi strategi, merayakan kemenangan, dan tumbuh bersama.' },
-    { icon: <ChatBubbleLeftRightIcon className="w-full h-full" />, title: 'Asisten Chat AI', description: 'Rekan AI pribadi Anda untuk bertukar pikiran, mengatasi kebuntuan, dan tetap termotivasi.' },
-    { icon: <DocumentTextIcon className="w-full h-full" />, title: 'Chat dengan PDF', description: 'Ajukan pertanyaan pada dokumen Anda. Dapatkan ringkasan dan jawaban instan dari PDF apa pun.' }
+    { icon: <ClockIcon className="w-8 h-8" />, title: t('feat_focus_title'), description: t('feat_focus_desc') },
+    { icon: <SparklesIcon className="w-8 h-8" />, title: t('feat_ai_title'), description: t('feat_ai_desc') },
+    { icon: <PresentationChartLineIcon className="w-8 h-8" />, title: t('feat_visual_title'), description: t('feat_visual_desc') },
+    { icon: <UserGroupIcon className="w-8 h-8" />, title: t('feat_comm_title'), description: t('feat_comm_desc') },
+    { icon: <ChatBubbleLeftRightIcon className="w-8 h-8" />, title: t('feat_partner_title'), description: t('feat_partner_desc') },
+    { icon: <DocumentTextIcon className="w-8 h-8" />, title: t('feat_doc_title'), description: t('feat_doc_desc') }
   ];
 
   const topics = [
-    { name: 'Kiat Produktivitas' }, { name: 'Pengembangan Diri' }, { name: 'AI & Masa Depan' },
-    { name: 'Pengembangan Karir' }, { name: 'Kesehatan Mental' }, { name: 'Filsafat Stoik' }
+    { name: 'Mindfulness' }, { name: 'Deep Work' }, { name: 'Stoisisme Modern' },
+    { name: 'Sistem Mental' }, { name: 'Kesehatan Kognitif' }, { name: 'Fisika Kehidupan' }
   ];
 
   const testimonials = [
-    { quote: "Platform ini benar-benar mengubah cara saya meraih tujuan. Fitur AI-nya seperti memiliki pelatih pribadi 24/7.", name: "Sarah Chen", role: "Product Designer", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&q=80&fit=crop" },
-    { quote: "Timer Pomodoro cerdasnya membantu saya menyelesaikan tesis 2 minggu lebih cepat. Saya jadi lebih fokus dari sebelumnya!", name: "Marcus Johnson", role: "Kandidat PhD", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&q=80&fit=crop" },
-    { quote: "Akhirnya, sebuah aplikasi produktivitas yang benar-benar mengerti saya. Dukungan komunitasnya luar biasa.", name: "Priya Sharma", role: "Wirausahawan", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&q=80&fit=crop" },
-    { quote: "Analitik dari Sarang Tumbuh mengubah segalanya. Saya menemukan jam produktif puncak saya dan berhasil melipatgandakan hasil kerja.", name: "David Lee", role: "Software Engineer", avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&q=80&fit=crop" },
-    { quote: "Bisa 'chatting' dengan PDF itu luar biasa. Riset yang biasanya butuh berhari-hari kini selesai dalam hitungan menit. Sangat direkomendasikan!", name: "Dr. Emily Carter", role: "Peneliti", avatar: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&h=100&q=80&fit=crop" },
-    { quote: "Wawasan pertumbuhan dari AI-nya sangat akurat. Seolah-olah aplikasi ini tahu apa yang perlu saya perbaiki sebelum saya sadar.", name: "Alex Rivera", role: "Pendiri Startup", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&q=80&fit=crop" },
+    { quote: "Ini bukan sekadar to-do list. Ini adalah ruang berpikir yang membuat saya merasa tenang namun sangat produktif.", name: "Sarah Chen", role: "Product Designer", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&q=80&fit=crop" },
+    { quote: "Saya menemukan kembali kemampuan saya untuk fokus selama berjam-jam. Rasanya seperti memiliki kekuatan super.", name: "Marcus Johnson", role: "PhD Researcher", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&q=80&fit=crop" },
+    { quote: "Desainnya sangat indah. Menggunakannya setiap pagi memberikan saya kejelasan untuk sepanjang hari.", name: "Priya Sharma", role: "Founder", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&q=80&fit=crop" },
+    { quote: "Fitur 'Mitra Berpikir' AI-nya menyelamatkan proyek saya berkali-kali. Seperti punya co-founder jenius.", name: "David Lee", role: "Architect", avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&q=80&fit=crop" },
+    { quote: "Akhirnya ada platform yang menghargai perhatian kita, bukan mencurinya. Sangat direkomendasikan.", name: "Dr. Emily Carter", role: "Neuroscientist", avatar: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&h=100&q=80&fit=crop" },
+    { quote: "Investasi terbaik untuk pengembangan diri saya tahun ini.", name: "Alex Rivera", role: "Writer", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&q=80&fit=crop" },
   ];
 
   const faqData = [
-    { question: "Siapa yang cocok menggunakan Sarang Tumbuh?", answer: "Sarang Tumbuh dirancang untuk pelajar, profesional, peneliti, dan siapa saja yang ambisius dan ingin memaksimalkan potensi diri. Jika Anda ingin lebih teratur, fokus, dan produktif, Sarang Tumbuh adalah untuk Anda." },
-    { question: "Apakah data saya aman?", answer: "Tentu saja. Keamanan dan privasi data adalah prioritas utama kami. Semua data Anda dienkripsi baik saat transit maupun saat disimpan. Kami tidak akan pernah membagikan data Anda dengan pihak ketiga." },
-    { question: "Bagaimana cara kerja fitur AI?", answer: "Kami menggunakan model bahasa canggih (Large Language Models) yang telah dilatih khusus untuk tugas-tugas produktivitas dan sintesis pengetahuan. AI ini beroperasi di dalam lingkungan aman kami untuk menganalisis data Anda dan memberikan wawasan yang relevan." },
-    { question: "Bisakah saya membatalkan langganan kapan saja?", answer: "Ya. Anda bisa membatalkan langganan paket berbayar Anda kapan saja tanpa denda. Anda akan tetap memiliki akses ke fitur premium hingga akhir siklus penagihan Anda." }
+    { question: t('faq_1_q'), answer: t('faq_1_a') },
+    { question: t('faq_2_q'), answer: t('faq_2_a') },
+    { question: t('faq_3_q'), answer: t('faq_3_a') },
+    { question: t('faq_4_q'), answer: t('faq_4_a') }
   ];
 
-
-  const pricingPlans = [
-    { plan: 'Penjelajah', price: { monthly: 'Gratis', yearly: 'Gratis' }, features: ['Jurnal AI (10/bulan)', 'Timer Pomodoro Dasar', 'Peta Tujuan (3 tujuan)', 'Akses Komunitas'] },
-    { plan: 'Navigator', price: { monthly: 20000, yearly: 16000 }, features: ['Jurnal AI Tanpa Batas', 'Pomodoro Cerdas', 'Tujuan Tanpa Batas', 'Kecerdasan PDF (50/bulan)', 'Dukungan Prioritas'], highlighted: true },
-    { plan: 'Kapten', price: { monthly: 29000, yearly: 23200 }, features: ['Semua di Navigator', 'Kolaborasi Tim (5 anggota)', 'Proses PDF Tanpa Batas', 'API Wawasan AI Lanjutan'], comingSoon: true }
-  ];
-
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Sarang Tumbuh",
-    "applicationCategory": "ProductivityApplication",
-    "operatingSystem": "Web",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "IDR"
-    },
-    "description": "Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil.",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "1250"
+  // Derive Pricing Plans from DB Props
+  const pricingPlans = useMemo(() => {
+    if (!plans || plans.length === 0) {
+      return [
+        { plan: 'Penjelajah', price: { monthly: 'Gratis' }, features: ['Jurnal AI (10/bulan)', 'Timer Pomodoro Dasar', 'Peta Tujuan (3 tujuan)', 'Akses Komunitas'] },
+        { plan: 'Navigator', price: { monthly: 20000 }, features: ['Jurnal AI Tanpa Batas', 'Pomodoro Cerdas', 'Tujuan Tanpa Batas', 'Kecerdasan PDF (50/bulan)', 'Dukungan Prioritas'], highlighted: true }
+      ];
     }
-  };
+    return plans.map(p => ({
+      plan: p.name,
+      price: { monthly: p.price },
+      features: p.features || [],
+      highlighted: p.name.toLowerCase().includes('navigator') || p.name.toLowerCase().includes('premium'),
+      comingSoon: false,
+      id: p.id
+    }));
+  }, [plans]);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans antialiased overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900">
-      <Head>
-        <title>Sarang Tumbuh - Ekosistem Produktivitas & Fokus AI</title>
-        <meta name="description" content="Tingkatkan produktivitas Anda dengan Sarang Tumbuh. Gabungan Timer Pomodoro cerdas, Jurnal AI, dan manajemen tugas untuk mencapai performa puncak." />
-        <meta name="keywords" content="pomodoro timer, produktivitas, jurnal AI, manajemen waktu, fokus kerja, pengembangan diri, aplikasi produktivitas indonesia" />
-        <meta name="author" content="Sarang Tumbuh Team" />
-        <meta name="robots" content="index, follow" />
-        <meta name="theme-color" content="#ffffff" />
-
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://sarangtumbuh.com/" />
-        <meta property="og:title" content="Sarang Tumbuh - Ekosistem Produktivitas & Fokus AI" />
-        <meta property="og:description" content="Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil." />
-        <meta property="og:image" content="https://sarangtumbuh.com/og-image.jpg" />
-
-        {/* Twitter */}
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content="https://sarangtumbuh.com/" />
-        <meta property="twitter:title" content="Sarang Tumbuh - Ekosistem Produktivitas & Fokus AI" />
-        <meta property="twitter:description" content="Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil." />
-        <meta property="twitter:image" content="https://sarangtumbuh.com/og-image.jpg" />
-
-        {/* Google Verification */}
-        <meta name="google-site-verification" content="u153xvZqM7m1ry4NjOFKMbh2m--NBaDgYwIlqwuMqzs" />
-
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      </Head>
+    <div className="min-h-screen bg-[#F5F5F7] text-slate-900 font-sans antialiased overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900">
+      <Head title="Sarang Tumbuh - Suaka Ambisi & Fokus" />
 
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-100/40 via-white to-white"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] opacity-[0.03]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-100/40 via-[#F5F5F7] to-[#F5F5F7]"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] opacity-[0.02]"></div>
       </div>
 
-      <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.5, ease: 'easeOut' }} className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/70 border-b border-gray-100 supports-[backdrop-filter]:bg-white/60">
-        <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent tracking-tighter">Sarang Tumbuh</div>
-
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-            <a href="#features" className="hover:text-emerald-600 transition-colors">Fitur</a>
-            <a href="#topics" className="hover:text-emerald-600 transition-colors">Topik</a>
-            <a href="#testimonials" className="hover:text-emerald-600 transition-colors">Testimoni</a>
-            <a href="#pricing" className="hover:text-emerald-600 transition-colors">Harga</a>
-            <a href="/about" className="hover:text-emerald-600 transition-colors">Tentang Kami</a>
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/60 border-b border-white/20"
+      >
+        <nav className="container mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <span className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white text-lg">S</span>
+            Sarang Tumbuh
           </div>
 
-          <div className="hidden md:block">
-            <motion.a href="/login" whileHover={{ scale: 1.05, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.2)' }} whileTap={{ scale: 0.95 }} className="px-6 py-2.5 rounded-full font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
-              Mulai Petualangan
+          <div className="hidden md:flex items-center gap-8 text-[15px] font-medium text-slate-500">
+            <a href="#features" className="hover:text-slate-900 transition-colors">{t('features_title') || 'Fitur'}</a>
+            <a href="#topics" className="hover:text-slate-900 transition-colors">Eksplorasi</a>
+            <a href="#gamification" className="hover:text-slate-900 transition-colors">{t('nav_gamification') || 'Gamifikasi'}</a>
+            <a href="#pricing" className="hover:text-slate-900 transition-colors">{t('pricing_title') || 'Harga'}</a>
+          </div>
+
+          <div className="hidden md:flex items-center gap-4">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 transition-all text-xs font-bold uppercase tracking-wider"
+            >
+              <GlobeAltIcon className="w-4 h-4" />
+              {language === 'id' ? 'ID' : 'EN'}
+            </button>
+            <motion.a
+              href="/login"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-6 py-2.5 rounded-full font-semibold text-[15px] bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20"
+            >
+              {t('cta_login') || 'Masuk'}
             </motion.a>
           </div>
 
-          <div className="md:hidden">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="z-50 relative w-8 h-8 text-gray-800" aria-label="Menu">
-              <motion.span animate={{ rotate: isMenuOpen ? 45 : 0, y: isMenuOpen ? 0 : -6 }} style={{ transformOrigin: 'center' }} className="absolute block h-0.5 w-full bg-current transform transition duration-300 ease-in-out"></motion.span>
-              <motion.span animate={{ opacity: isMenuOpen ? 0 : 1 }} className="absolute block h-0.5 w-full bg-current transform transition duration-300 ease-in-out" style={{ top: '50%', transform: 'translateY(-50%)' }}></motion.span>
-              <motion.span animate={{ rotate: isMenuOpen ? -45 : 0, y: isMenuOpen ? 0 : 6 }} style={{ transformOrigin: 'center' }} className="absolute block h-0.5 w-full bg-current transform transition duration-300 ease-in-out"></motion.span>
+          {/* Mobile Menu */}
+          <div className="md:hidden flex items-center gap-4">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-1 px-2 py-1 rounded-full border border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 text-xs font-bold uppercase"
+            >
+              {language === 'id' ? 'ID' : 'EN'}
+            </button>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="z-50 relative p-2">
+              <div className="flex flex-col gap-1.5">
+                <motion.span animate={{ rotate: isMenuOpen ? 45 : 0, y: isMenuOpen ? 6 : 0 }} className="w-6 h-0.5 bg-slate-900 block rounded-full transition-all"></motion.span>
+                <motion.span animate={{ opacity: isMenuOpen ? 0 : 1 }} className="w-6 h-0.5 bg-slate-900 block rounded-full transition-all"></motion.span>
+                <motion.span animate={{ rotate: isMenuOpen ? -45 : 0, y: isMenuOpen ? -6 : 0 }} className="w-6 h-0.5 bg-slate-900 block rounded-full transition-all"></motion.span>
+              </div>
             </button>
           </div>
         </nav>
@@ -236,125 +220,115 @@ export default function OdysseyLandingPage() {
 
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="fixed inset-0 z-40 bg-white/95 backdrop-blur-xl md:hidden"
-          >
-            <motion.div
-              initial={{ y: "-100%" }}
-              animate={{ y: "0%" }}
-              exit={{ y: "-100%" }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="container mx-auto h-full flex flex-col items-center justify-center gap-8 text-center"
-            >
-              <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-800 hover:text-emerald-600">Fitur</a>
-              <a href="#topics" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-800 hover:text-emerald-600">Topik</a>
-              <a href="#testimonials" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-800 hover:text-emerald-600">Testimoni</a>
-              <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-gray-800 hover:text-emerald-600">Harga</a>
-              <motion.a href="/login" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mt-4 px-8 py-3 rounded-full font-semibold text-lg bg-emerald-600 text-white shadow-xl shadow-emerald-200">
-                Mulai Gratis
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-white/95 backdrop-blur-2xl md:hidden flex items-center justify-center">
+            <div className="flex flex-col items-center gap-8 text-center p-6">
+              <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-slate-900">{t('features_title') || 'Fitur'}</a>
+              <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-3xl font-bold text-slate-900">{t('pricing_title') || 'Harga'}</a>
+              <motion.a href="/login" className="mt-4 px-8 py-4 rounded-full font-bold text-xl bg-emerald-500 text-white shadow-xl shadow-emerald-500/20">
+                {t('cta_start') || 'Mulai Sekarang'}
               </motion.a>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <main className="relative z-10">
-        <section ref={heroRef} className="min-h-screen flex items-center justify-center relative pt-20 pb-20 overflow-hidden">
+        <section ref={heroRef} className="min-h-screen flex items-center justify-center relative pt-32 pb-20 overflow-hidden">
           <div className="container mx-auto px-6 text-center relative z-10">
             <motion.div style={{ y: heroTextY, opacity: heroOpacity }}>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="inline-block mb-6 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-semibold tracking-wide uppercase">
-                ✨ Revolusi Produktivitas Anda
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 mb-8 px-5 py-2 rounded-full bg-white/50 border border-white/60 backdrop-blur-md text-slate-500 text-sm font-semibold tracking-wide shadow-sm">
+                <SparklesIcon className="w-4 h-4 text-amber-400" />
+                <span>{t('welcome_subtitle') ? 'Productivity Ecosystem' : 'Ekosistem Produktivitas Generasi Baru'}</span>
               </motion.div>
-              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight mb-8 text-gray-900 leading-[1.1]">
-                Rancang Sarang Anda.
-                <br />
-                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
-                  Kuasai Potensi Diri.
-                </span>
+
+              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-[800] tracking-tighter mb-8 text-slate-900 leading-[1.05]">
+                {t('welcome_title') || 'Fokus Lebih Baik.'}
               </h1>
-              <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
-                Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil.
+
+              <p className="text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
+                {t('welcome_subtitle') || 'Sarang Tumbuh adalah ruang tenang di tengah bisingnya dunia.'}
               </p>
+
               <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <motion.a href="/login" whileHover={{ scale: 1.05, boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)' }} whileTap={{ scale: 0.95 }} className="group px-8 py-4 bg-emerald-600 hover:bg-emerald-700 rounded-full font-bold text-lg text-white transition-all duration-300 shadow-xl shadow-emerald-200">
-                  <span className="flex items-center gap-2">Mulai Gratis <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></span>
+                <motion.a href="/login" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-10 py-5 bg-emerald-600 hover:bg-emerald-700 rounded-full font-bold text-lg text-white transition-all shadow-xl shadow-emerald-500/30">
+                  {t('cta_start') || 'Mulai Petualangan'}
                 </motion.a>
-                <motion.a href="#features" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-4 bg-white hover:bg-gray-50 rounded-full font-bold text-lg text-gray-700 border border-gray-200 transition-all duration-300 shadow-sm">
+                <motion.a href="#features" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-10 py-5 bg-white hover:bg-slate-50 rounded-full font-bold text-lg text-slate-900 transition-all shadow-lg shadow-slate-200/50">
                   Pelajari Lebih Lanjut
                 </motion.a>
               </motion.div>
             </motion.div>
           </div>
-
-          {/* Decorative Elements */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-200/20 rounded-full blur-3xl -z-10 animate-pulse-slow"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-300/20 rounded-full blur-[120px] -z-10 animate-pulse-slow"></div>
         </section>
 
-        <AnimatedSection id="features" className="py-24 px-6 bg-gray-50/50">
+        <AnimatedSection id="features" className="py-32 px-6">
           <div className="container mx-auto max-w-7xl">
-            <div className="text-center mb-20">
-              <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-black tracking-tight mb-6 text-gray-900">Perangkat Lengkap untuk <span className="text-emerald-600">Performa Puncak</span></motion.h2>
-              <motion.p variants={fadeInUp} className="text-lg text-gray-600 max-w-3xl mx-auto">Dari ide acak menjadi kesuksesan terstruktur. Kami siapkan alatnya, Anda ciptakan masa depan.</motion.p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, i) => <FeatureCard key={i} feature={feature} />)}
+            <div className="text-center mb-24">
+              <motion.h2 variants={featureFadeInUp} className="text-4xl md:text-5xl font-[900] tracking-tighter mb-6 text-slate-900">
+                {t('features_title') || 'Alat Pencapai Mimpi'}
+              </motion.h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+                {features.map((feature, i) => <FeatureCard key={i} feature={feature} />)}
+              </div>
             </div>
           </div>
         </AnimatedSection>
 
-        <AnimatedSection id="topics" className="py-24 overflow-hidden">
+        <AnimatedSection id="topics" className="py-24 overflow-hidden bg-white/40 backdrop-blur-3xl border-y border-white/20">
           <div className="container mx-auto">
-            <motion.div variants={fadeInUp} className="text-center mb-16 px-6">
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 text-gray-900">
-                Jelajahi <span className="text-emerald-600">Konstelasi Ide</span>
+            <motion.div variants={featureFadeInUp} className="text-center mb-16 px-6">
+              <h2 className="text-3xl md:text-4xl font-[900] tracking-tighter mb-4 text-slate-900">
+                Eksplorasi Wawasan
               </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Terhubung dengan para pembelajar dan pencapai yang penuh semangat.
+              <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+                Selami topik-topik yang memperkaya jiwa dan mempertajam akal.
               </p>
             </motion.div>
-            <motion.div variants={fadeInUp}>
+            <motion.div variants={featureFadeInUp}>
               <Marquee>
                 {topics.map((topic) => (
-                  <div key={topic.name} className="px-8 py-4 border border-gray-200 rounded-full bg-white shadow-sm text-lg font-semibold text-gray-700 whitespace-nowrap hover:border-emerald-300 hover:text-emerald-700 transition-colors">
+                  <div key={topic.name} className="px-8 py-3 rounded-full bg-white/80 border border-slate-200/60 shadow-sm text-lg font-bold text-slate-600 whitespace-nowrap backdrop-blur-md">
                     {topic.name}
                   </div>
                 ))}
               </Marquee>
             </motion.div>
           </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-sky-200/20 rounded-full blur-[100px] -z-10"></div>
         </AnimatedSection>
 
-        <AnimatedSection id="testimonials" className="py-24 bg-emerald-50/30">
+        <AnimatedSection id="testimonials" className="py-32">
           <div className="container mx-auto">
-            <motion.div variants={fadeInUp} className="text-center mb-20 px-6">
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 text-gray-900">Dicintai Para Pencapai</h2>
-              <motion.p variants={fadeInUp} className="text-lg text-gray-600">Dengarkan apa kata mereka yang telah bertransformasi.</motion.p>
+            <motion.div variants={featureFadeInUp} className="text-center mb-24 px-6">
+              <h2 className="text-4xl md:text-5xl font-[900] tracking-tighter mb-6 text-slate-900">
+                Cerita Pertumbuhan
+              </h2>
+              <motion.p variants={featureFadeInUp} className="text-xl text-slate-500">
+                Mereka yang telah menemukan ritme terbaiknya.
+              </motion.p>
             </motion.div>
-            <motion.div variants={fadeInUp} className="space-y-10">
+            <motion.div variants={featureFadeInUp} className="space-y-12">
               <Marquee>
                 {testimonials.slice(0, 3).map((t) => (
-                  <div key={t.name} className="w-[400px] flex-shrink-0 p-8 rounded-3xl bg-white border border-gray-100 shadow-xl shadow-gray-100/50 flex flex-col h-full mx-4">
-                    <div className="flex gap-1 mb-6">{[...Array(5)].map((_, i) => <StarIcon key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}</div>
-                    <p className="text-gray-700 mb-8 italic flex-grow text-lg leading-relaxed">"{t.quote}"</p>
-                    <div className="flex items-center gap-4 border-t border-gray-100 pt-6 mt-auto">
-                      <img src={t.avatar} alt={t.name} width="48" height="48" loading="lazy" className="w-12 h-12 rounded-full object-cover border-2 border-emerald-100" />
-                      <div><div className="font-bold text-gray-900">{t.name}</div><div className="text-sm text-gray-500">{t.role}</div></div>
+                  <div key={t.name} className="w-[400px] flex-shrink-0 p-8 rounded-[2rem] bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-200/50 flex flex-col h-full mx-6 hover:scale-[1.02] transition-transform duration-300">
+                    <div className="flex gap-1 mb-6">{[...Array(5)].map((_, i) => <StarIcon key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />)}</div>
+                    <p className="text-slate-700 mb-8 italic flex-grow text-lg leading-relaxed font-serif">"{t.quote}"</p>
+                    <div className="flex items-center gap-4 border-t border-slate-100 pt-6 mt-auto">
+                      <img src={t.avatar} alt={t.name} width="48" height="48" loading="lazy" className="w-12 h-12 rounded-full object-cover ring-4 ring-white shadow-lg" />
+                      <div><div className="font-bold text-slate-900">{t.name}</div><div className="text-sm text-slate-500 font-medium">{t.role}</div></div>
                     </div>
                   </div>
                 ))}
               </Marquee>
               <Marquee direction="right">
                 {testimonials.slice(3, 6).map((t) => (
-                  <div key={t.name} className="w-[400px] flex-shrink-0 p-8 rounded-3xl bg-white border border-gray-100 shadow-xl shadow-gray-100/50 flex flex-col h-full mx-4">
-                    <div className="flex gap-1 mb-6">{[...Array(5)].map((_, i) => <StarIcon key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}</div>
-                    <p className="text-gray-700 mb-8 italic flex-grow text-lg leading-relaxed">"{t.quote}"</p>
-                    <div className="flex items-center gap-4 border-t border-gray-100 pt-6 mt-auto">
-                      <img src={t.avatar} alt={t.name} width="48" height="48" loading="lazy" className="w-12 h-12 rounded-full object-cover border-2 border-emerald-100" />
-                      <div><div className="font-bold text-gray-900">{t.name}</div><div className="text-sm text-gray-500">{t.role}</div></div>
+                  <div key={t.name} className="w-[400px] flex-shrink-0 p-8 rounded-[2rem] bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-200/50 flex flex-col h-full mx-6 hover:scale-[1.02] transition-transform duration-300">
+                    <div className="flex gap-1 mb-6">{[...Array(5)].map((_, i) => <StarIcon key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />)}</div>
+                    <p className="text-slate-700 mb-8 italic flex-grow text-lg leading-relaxed font-serif">"{t.quote}"</p>
+                    <div className="flex items-center gap-4 border-t border-slate-100 pt-6 mt-auto">
+                      <img src={t.avatar} alt={t.name} width="48" height="48" loading="lazy" className="w-12 h-12 rounded-full object-cover ring-4 ring-white shadow-lg" />
+                      <div><div className="font-bold text-slate-900">{t.name}</div><div className="text-sm text-slate-500 font-medium">{t.role}</div></div>
                     </div>
                   </div>
                 ))}
@@ -363,149 +337,205 @@ export default function OdysseyLandingPage() {
           </div>
         </AnimatedSection>
 
-        <AnimatedSection id="pricing" className="py-24 px-6">
-          <div className="container mx-auto max-w-6xl">
-            <div className="text-center mb-16">
-              <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-black tracking-tight mb-6 text-gray-900">Temukan Paket Sempurna Anda</motion.h2>
-              <motion.p variants={fadeInUp} className="text-lg text-gray-600">Mulai gratis, tingkatkan saat ambisi Anda melampaui batas.</motion.p>
+        {/* Gamification Section RESTORED and LOCALIZED */}
+        <AnimatedSection id="gamification" className="py-32 relative overflow-hidden">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-20 max-w-3xl mx-auto">
+              <motion.h2 variants={featureFadeInUp} className="text-4xl md:text-5xl font-[900] tracking-tighter mb-6 text-slate-900">
+                {t('game_title') || 'Produktivitas Jadi Lebih Seru'}
+              </motion.h2>
+              <motion.p variants={featureFadeInUp} className="text-xl text-slate-500 font-medium">
+                {t('game_subtitle') || 'Level up, unlock achievements, dan compete dengan ribuan pengguna lain.'}
+              </motion.p>
             </div>
-            <motion.div variants={fadeInUp} className="flex justify-center items-center gap-4 mb-16">
-              <span className={clsx("font-semibold", billingCycle === 'monthly' ? 'text-gray-900' : 'text-gray-500')}>Bulanan</span>
-              <div onClick={() => setBillingCycle(c => c === 'monthly' ? 'yearly' : 'monthly')} className="w-14 h-8 flex items-center bg-gray-200 rounded-full p-1 cursor-pointer transition-colors hover:bg-gray-300">
-                <motion.div layout transition={{ type: 'spring', stiffness: 700, damping: 30 }} className="w-6 h-6 bg-white rounded-full shadow-sm" style={{ marginLeft: billingCycle === 'yearly' ? 'auto' : '0' }} />
-              </div>
-              <span className={clsx("font-semibold", billingCycle === 'yearly' ? 'text-gray-900' : 'text-gray-500')}>Tahunan</span>
-              <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">Hemat 20%</span>
-            </motion.div>
-            <div className="grid lg:grid-cols-3 gap-8 items-stretch">
-              {pricingPlans.map((plan) => (
-                <motion.div key={plan.plan} variants={fadeInUp} className={clsx('relative p-8 rounded-3xl flex flex-col border transition-all duration-300', plan.highlighted ? 'border-emerald-500 bg-white shadow-2xl shadow-emerald-100/50 scale-105 z-10' : 'border-gray-100 bg-white shadow-lg hover:shadow-xl')}>
-                  {plan.highlighted && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">Paling Populer</div>}
-                  <h3 className="text-2xl font-bold text-gray-900">{plan.plan}</h3>
-                  <div className="mt-4 flex items-baseline min-h-[64px] text-gray-900">
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={billingCycle}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-5xl font-extrabold tracking-tight"
-                      >
-                        {typeof plan.price[billingCycle] === 'number'
-                          ? `Rp${plan.price[billingCycle].toLocaleString('id-ID')}`
-                          : plan.price[billingCycle]}
-                      </motion.span>
-                    </AnimatePresence>
-                    {plan.price.monthly !== 'Gratis' && <span className="ml-2 text-gray-500">/bulan</span>}
+
+            <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto mb-20">
+              <motion.div variants={featureFadeInUp} className="order-last lg:order-first">
+                <div className="relative p-10 rounded-[2.5rem] bg-gradient-to-br from-emerald-500 to-teal-500 overflow-hidden shadow-2xl shadow-emerald-500/30">
+                  <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
+                  <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-white/10 rounded-full blur-[100px]"></div>
+
+                  <div className="relative z-10 text-white">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl font-black border border-white/30">
+                        42
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold uppercase tracking-wider text-emerald-100">{t('game_level_label') || 'Level'}</div>
+                        <div className="text-2xl font-[900]">{t('game_level_val') || 'Focus Master'}</div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <div className="flex justify-between text-sm font-bold mb-2">
+                        <span>8,420 XP</span>
+                        <span>12,000 XP</span>
+                      </div>
+                      <div className="h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: "70%" }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                          className="h-full bg-white rounded-full shadow-lg"
+                        ></motion.div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+                        <div className="text-2xl font-black">247</div>
+                        <div className="text-xs text-emerald-100">{t('game_stat_tasks') || 'Tasks'}</div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+                        <div className="text-2xl font-black">🔥 14</div>
+                        <div className="text-xs text-emerald-100">{t('game_stat_streak') || 'Streak'}</div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+                        <div className="text-2xl font-black">#328</div>
+                        <div className="text-xs text-emerald-100">{t('game_stat_rank') || 'Rank'}</div>
+                      </div>
+                    </div>
                   </div>
-                  <ul className="mt-8 space-y-4 flex-grow text-gray-600">{plan.features.map((f, i) => (<li key={i} className="flex items-start gap-3"><CheckIcon className="h-6 w-6 flex-shrink-0 text-emerald-500" /><span>{f}</span></li>))}</ul>
+                </div>
+              </motion.div>
 
-                  {plan.comingSoon ? (
-                    <button disabled className="mt-10 w-full rounded-xl py-4 font-bold text-lg transition-all duration-300 bg-gray-100 text-gray-400 cursor-not-allowed text-center">
-                      Segera Hadir
-                    </button>
-                  ) : (
-                    <motion.a
-                      href={`/login?plan=${plan.plan.toLowerCase()}`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={clsx('block text-center mt-10 w-full rounded-xl py-4 font-bold text-lg transition-all duration-300 shadow-lg', plan.highlighted ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200' : 'bg-white text-emerald-600 border-2 border-emerald-100 hover:border-emerald-200 hover:bg-emerald-50')}>
-                      Pilih Paket
-                    </motion.a>
-                  )}
-                </motion.div>
-              ))}
+              <motion.div variants={featureFadeInUp} className="space-y-6">
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-2xl flex-shrink-0">🏆</div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('game_card_level_title')}</h3>
+                    <p className="text-slate-600 text-sm">{t('game_card_level_desc')}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-2xl flex-shrink-0">🎯</div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('game_card_daily_title')}</h3>
+                    <p className="text-slate-600 text-sm">{t('game_card_daily_desc')}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-2xl flex-shrink-0">👥</div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('game_card_rank_title')}</h3>
+                    <p className="text-slate-600 text-sm">{t('game_card_rank_desc')}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-2xl flex-shrink-0">🏅</div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('game_card_badge_title')}</h3>
+                    <p className="text-slate-600 text-sm">{t('game_card_badge_desc')}</p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        </AnimatedSection>
-
-        <AnimatedSection id="faq" className="py-24 px-6 bg-gray-50/50">
-          <div className="container mx-auto max-w-4xl">
-            <motion.div variants={fadeInUp} className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 text-gray-900">
-                Pertanyaan Umum
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Punya pertanyaan? Kami punya jawabannya.
-              </p>
-            </motion.div>
-            <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 shadow-xl shadow-gray-100/50 border border-gray-100">
-              {faqData.map((faq, i) => (
-                <FAQItem key={i} question={faq.question} answer={faq.answer} />
-              ))}
-            </div>
-          </div>
-        </AnimatedSection>
-
-        <AnimatedSection className="py-24 px-6">
-          <div className="container mx-auto max-w-5xl text-center">
-            <motion.div variants={fadeInUp} className="relative p-12 md:p-20 rounded-[3rem] bg-emerald-900 overflow-hidden text-white shadow-2xl shadow-emerald-900/30">
-              <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-500/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-
-              <div className="relative z-10">
-                <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tight">Siap Memulai Sarang Anda?</h2>
-                <p className="text-xl text-emerald-100 mb-12 max-w-2xl mx-auto">Perjalanan Anda menuju performa puncak dimulai sekarang. Tidak perlu kartu kredit.</p>
-                <motion.a href="/login" whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(255,255,255,0.2)' }} whileTap={{ scale: 0.95 }} className="group inline-block px-10 py-5 bg-white text-emerald-900 rounded-full font-bold text-xl transition-shadow">
-                  <span className="flex items-center gap-3">Klaim Akun Gratis Anda <RocketLaunchIcon className="h-6 w-6 group-hover:rotate-12 transition-transform text-emerald-600" /></span>
-                </motion.a>
+            {/* Stats Showcase (Numbers remain same, text slightly hardcoded but clear) */}
+            <motion.div variants={featureFadeInUp} className="max-w-4xl mx-auto">
+              <div className="p-8 md:p-12 rounded-[2.5rem] bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                  <div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">10K+</div>
+                    <div className="text-sm text-slate-600 font-semibold">{language === 'id' ? 'Pengguna Aktif' : 'Active Users'}</div>
+                  </div>
+                  <div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">50+</div>
+                    <div className="text-sm text-slate-600 font-semibold">Achievements</div>
+                  </div>
+                  <div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">500K+</div>
+                    <div className="text-sm text-slate-600 font-semibold">{language === 'id' ? 'Tugas Selesai' : 'Tasks Done'}</div>
+                  </div>
+                  <div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">24/7</div>
+                    <div className="text-sm text-slate-600 font-semibold">{language === 'id' ? 'Kompetisi' : 'Competition'}</div>
+                  </div>
+                </div>
               </div>
             </motion.div>
+
+          </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-amber-200/20 rounded-full blur-[100px] -z-10"></div>
+        </AnimatedSection>
+
+        <AnimatedSection id="pricing" className="py-32 px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black mb-4">{t('pricing_title') || 'Harga'}</h2>
+            <p className="text-slate-500">{t('pricing_subtitle') || 'Pilih paket Anda.'}</p>
+          </div>
+          <div className="container mx-auto max-w-6xl grid lg:grid-cols-3 gap-8">
+            {pricingPlans.map((plan) => (
+              <div key={plan.plan} className={`p-8 rounded-[2.5rem] bg-white/60 border ${plan.highlighted ? 'border-emerald-500 shadow-xl' : 'border-white/60'}`}>
+                <h3 className="text-2xl font-bold">{plan.plan}</h3>
+                <div className="text-4xl font-black mt-4">{typeof plan.price.monthly === 'number' ? `Rp${(plan.price.monthly / 1000).toLocaleString('id')}k` : plan.price.monthly}</div>
+                <ul className="mt-8 space-y-3">
+                  {plan.features.map(f => <li key={f} className="flex gap-2"><CheckIcon className="w-5 h-5 text-emerald-500" /> {f}</li>)}
+                </ul>
+                <a href="/login" className="block mt-8 py-3 px-6 bg-emerald-600 text-white rounded-xl text-center font-bold">{t('cta_start') || 'Pilih'}</a>
+              </div>
+            ))}
           </div>
         </AnimatedSection>
-      </main>
 
-      <footer className="border-t border-gray-100 bg-gray-50 pt-20 pb-10">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left mb-16">
+        <AnimatedSection id="faq" className="py-32 px-6">
+          <div className="container mx-auto max-w-4xl text-center">
+            <h2 className="text-4xl font-black mb-12">{t('faq_title') || 'FAQ'}</h2>
+            <div className="text-left space-y-4">
+              {faqData.map((faq, i) => <FAQItem key={i} question={faq.question} answer={faq.answer} />)}
+            </div>
+          </div>
+        </AnimatedSection>
+
+        {/* Footer */}
+        <footer className="py-12 border-t border-slate-200/60 bg-white/30 backdrop-blur-xl">
+          <div className="container mx-auto px-6 grid md:grid-cols-4 gap-8 mb-8 text-left">
             <div className="md:col-span-2">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent tracking-tighter mb-6">Sarang Tumbuh</h3>
-              <p className="text-gray-500 max-w-sm mx-auto md:mx-0 mb-8 leading-relaxed">
-                Ekosistem cerdas untuk menata pikiran, mempertajam fokus, dan mencapai hal yang dulu tampak mustahil.
-              </p>
-              <div className="flex justify-center md:justify-start gap-6">
-                <a href="#" className="text-gray-400 hover:text-emerald-600 transition-colors" aria-label="Twitter"><FaTwitter /></a>
-                <a href="#" className="text-gray-400 hover:text-emerald-600 transition-colors" aria-label="LinkedIn"><FaLinkedin /></a>
-                <a href="#" className="text-gray-400 hover:text-emerald-600 transition-colors" aria-label="Instagram"><FaInstagram /></a>
+              <h3 className="text-2xl font-bold mb-4">Sarang Tumbuh</h3>
+              <p className="text-slate-500">{t('welcome_subtitle')}</p>
+              <div className="flex gap-4 mt-4 text-slate-400">
+                <FaTwitter /> <FaLinkedin /> <FaInstagram />
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 mb-6">Produk</h4>
-              <ul className="space-y-4 text-gray-600">
-                <li><a href="#features" className="hover:text-emerald-600 transition-colors">Fitur</a></li>
-                <li><a href="#pricing" className="hover:text-emerald-600 transition-colors">Harga</a></li>
-                <li><a href="#" className="hover:text-emerald-600 transition-colors">Integrasi</a></li>
-                <li><a href="#" className="hover:text-emerald-600 transition-colors">Keamanan</a></li>
+              <h4 className="font-bold mb-4">{t('features_title')}</h4>
+              <ul className="space-y-2 text-slate-500">
+                <li>Timer</li>
+                <li>Gamification</li>
+                <li>AI Genius</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 mb-6">Perusahaan</h4>
-              <ul className="space-y-4 text-gray-600">
-                <li><a href="/about" className="hover:text-emerald-600 transition-colors">Tentang Kami</a></li>
-                <li><a href="#" className="hover:text-emerald-600 transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-emerald-600 transition-colors">Karir</a></li>
-                <li><a href="#" className="hover:text-emerald-600 transition-colors">Hubungi Kami</a></li>
+              <h4 className="font-bold mb-4">{t('pricing_title')}</h4>
+              <ul className="space-y-2 text-slate-500">
+                <li>Explorer</li>
+                <li>Navigator</li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-200 pt-8 text-center text-gray-500 text-sm">
-            <p>&copy; {new Date().getFullYear()} Sarang Tumbuh. Hak Cipta Dilindungi.</p>
+          <div className="text-center text-slate-400 text-sm">
+            &copy; {new Date().getFullYear()} Sarang Tumbuh. {t('footer_rights')}
           </div>
-        </div>
-      </footer>
+        </footer>
+      </main>
       <style jsx global>{`
         .animate-pulse-slow { animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse-slow {
           0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
           50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
         }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f9fafb; }
-        ::-webkit-scrollbar-thumb { background: #d1fae5; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
       `}</style>
     </div>
+  );
+}
+
+// Wrap with LanguageProvider
+export default function OdysseyLandingPage(props) {
+  return (
+    <LanguageProvider>
+      <OdysseyLandingPageContent {...props} />
+    </LanguageProvider>
   );
 }

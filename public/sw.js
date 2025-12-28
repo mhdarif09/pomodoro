@@ -1,9 +1,7 @@
-const CACHE_NAME = 'sarang-tumbuh-v1';
+const CACHE_NAME = 'sarang-tumbuh-v2';
 const urlsToCache = [
     '/',
-    '/offline',
-    '/favicon.ico',
-    '/stars.png'
+    '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {

@@ -140,10 +140,55 @@ class User extends Authenticatable
         return $this->hasMany(ChatSession::class);
     }
 
-      public function sharedDocuments()
+    public function sharedDocuments()
     {
         return $this->belongsToMany(Document::class, 'document_user')
                     ->withPivot('role')
                     ->withTimestamps();
     }
+
+    // --- Gamification Relationships ---
+    
+    public function challenges()
+    {
+        return $this->belongsToMany(Challenge::class, 'user_challenges')
+                    ->withPivot('progress', 'completed', 'completed_at')
+                    ->withTimestamps();
+    }
+
+    public function achievements()
+    {
+        return $this->belongsToMany(Achievement::class, 'user_achievements')
+                    ->withPivot('unlocked_at')
+                    ->withTimestamps();
+    }
+
+    public function xpTransactions()
+    {
+        return $this->hasMany(XpTransaction::class);
+    }
+
+    /**
+     * Get XP required for next level
+     */
+    public function getXpForNextLevel(): int
+    {
+        return (int) (100 * $this->level * 1.5);
+    }
+
+    /**
+     * Get level title based on current level
+     */
+    public function getLevelTitleAttribute(): string
+    {
+        return match(true) {
+            $this->level >= 50 => 'Legenda',
+            $this->level >= 40 => 'Fokus Master',
+            $this->level >= 30 => 'Penakluk Produktif',
+            $this->level >= 20 => 'Navigator Ahli',
+            $this->level >= 10 => 'Penjelajah Berpengalaman',
+            default => 'Pemula'
+        };
+    }
 }
+

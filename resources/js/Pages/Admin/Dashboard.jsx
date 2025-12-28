@@ -1,10 +1,10 @@
 import React from 'react';
-import AdminLayout from '@/Layouts/AdminLayout'; 
+import AdminLayout from '@/Layouts/AdminLayout';
 import { Head } from '@inertiajs/react';
 
-import StatCard from '@/Components/StatCard'; 
-import UserGrowthChart from '@/Components/UserGrowthChart'; 
-import SubscriptionPlanChart from '@/Components/SubscriptionPlanChart'; 
+import StatCard from '@/Components/StatCard';
+import UserGrowthChart from '@/Components/UserGrowthChart';
+import SubscriptionPlanChart from '@/Components/SubscriptionPlanChart';
 
 import { UsersIcon, ShoppingCartIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 
@@ -14,17 +14,17 @@ const formatRupiah = (number) => {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
-        minimumFractionDigits: 0, 
+        minimumFractionDigits: 0,
     }).format(number);
 };
 
 export default function Dashboard({ auth, totalUsers, payingCustomers, totalRevenue, userGrowthData, subscriptionPlanData }) {
-    
+
 
     const statCards = [
         {
             title: "Total Pengguna",
-            value: totalUsers.toLocaleString('id-ID'), 
+            value: totalUsers.toLocaleString('id-ID'),
             icon: UsersIcon,
             color: "bg-blue-500",
         },
@@ -56,7 +56,7 @@ export default function Dashboard({ auth, totalUsers, payingCustomers, totalReve
                 {/* Grid untuk Stat Cards */}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
                     {statCards.map((card, index) => (
-                        <StatCard 
+                        <StatCard
                             key={index}
                             title={card.title}
                             value={card.value}
@@ -65,17 +65,19 @@ export default function Dashboard({ auth, totalUsers, payingCustomers, totalReve
                         />
                     ))}
                 </div>
-                
+
                 {/* Grid untuk Grafik */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     {/* Grafik Pertumbuhan User mengambil porsi lebih besar */}
-                    <div className="lg:col-span-3 bg-white dark:bg-slate-800 p-6 shadow-sm sm:rounded-lg">
-                       <UserGrowthChart data={userGrowthData} />
+                    <div className="lg:col-span-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-[2.5rem] border border-white/20 dark:border-white/5">
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">Pertumbuhan Pengguna</h3>
+                        <UserGrowthChart data={userGrowthData} />
                     </div>
-                    
+
                     {/* Grafik Distribusi Paket mengambil porsi lebih kecil */}
-                    <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 shadow-sm sm:rounded-lg">
-                       <SubscriptionPlanChart data={subscriptionPlanData} />
+                    <div className="lg:col-span-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-[2.5rem] border border-white/20 dark:border-white/5">
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">Distribusi Paket</h3>
+                        <SubscriptionPlanChart data={subscriptionPlanData} />
                     </div>
                 </div>
 
