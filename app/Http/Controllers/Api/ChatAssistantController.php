@@ -47,6 +47,42 @@ class ChatAssistantController extends Controller
     public function sendMessage(Request $request, ChatSession $session)
     {
         $this->authorize('update', $session);
+
+        $user = $request->user();
+
+        // Admin bypass
+        if (strtolower($user->role) === 'admin') {
+            // Admin has no limit
+        } else {
+            // 1. Check if user has AI access in their plan
+            if (!$user->canAccessFeature('ai_assistant')) {
+                return response()->json([
+                    'error' => 'Fitur AI Assistant tidak tersedia di paket Anda. Silakan upgrade plan Anda.',
+                    'needs_upgrade' => true
+                ], 403);
+            }
+
+            // 2. Check Daily Limit
+            $plan = $user->subscription->planDetail;
+            $limit = $plan ? $plan->ai_chat_limit : 0;
+
+            if ($limit !== -1) { // -1 means unlimited
+                $todayCount = ChatMessage::whereHas('session', function($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    })
+                    ->where('role', 'user')
+                    ->whereDate('created_at', today())
+                    ->count();
+
+                if ($todayCount >= $limit) {
+                    return response()->json([
+                        'error' => "Anda telah mencapai limit chat harian ({$limit} chat). Silakan upgrade plan untuk limit lebih tinggi.",
+                        'needs_upgrade' => true,
+                        'limit_reached' => true
+                    ], 429);
+                }
+            }
+        }
         
         $validated = $request->validate([
             'message' => 'required|string|max:10000',

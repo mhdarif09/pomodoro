@@ -159,7 +159,7 @@ export default function AIAssistantIndex() {
                     <div className="p-6">
                         <button
                             onClick={createNewSession}
-                            disabled={!auth.user.is_premium}
+                            disabled={!auth.user.premium_features.ai_assistant}
                             className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
                         >
                             <PlusIcon className="w-4 h-4" />
@@ -171,13 +171,13 @@ export default function AIAssistantIndex() {
                         {sessions.map(s => (
                             <div
                                 key={s.id}
-                                onClick={() => auth.user.is_premium && setActiveSession(s)}
+                                onClick={() => auth.user.premium_features.ai_assistant && setActiveSession(s)}
                                 className={`
                                     group relative p-3.5 rounded-2xl cursor-pointer transition-all
                                     ${activeSession?.id === s.id
                                         ? 'bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700'
                                         : 'hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-500 dark:text-slate-400'}
-                                    ${!auth.user.is_premium ? 'opacity-50 grayscale cursor-not-allowed' : ''}
+                                    ${!auth.user.premium_features.ai_assistant ? 'opacity-50 grayscale cursor-not-allowed' : ''}
                                 `}
                             >
                                 <div className="flex items-center gap-3">
@@ -237,21 +237,30 @@ export default function AIAssistantIndex() {
                         )}
                     </div>
 
-                    {/* Input Area (Visible but disabled) */}
+                    {/* Input Area */}
                     <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                        <div className="max-w-4xl mx-auto relative group">
+                        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative group">
                             <input
                                 type="text"
-                                disabled
-                                placeholder="Upgrade ke Premium untuk mulai mengobrol..."
-                                className="w-full pl-6 pr-16 py-5 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none text-sm shadow-inner transition-all opacity-50 cursor-not-allowed"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                disabled={isLoading || !auth.user.premium_features.ai_assistant}
+                                placeholder={auth.user.premium_features.ai_assistant ? "Tanyakan sesuatu ke GrowthBot..." : "Upgrade ke Premium untuk mulai mengobrol..."}
+                                className="w-full pl-6 pr-16 py-5 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none text-sm shadow-inner transition-all focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
                             />
-                        </div>
+                            <button
+                                type="submit"
+                                disabled={!input.trim() || isLoading || !auth.user.premium_features.ai_assistant}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl shadow-lg shadow-teal-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+                            >
+                                <PaperAirplaneIcon className={`w-5 h-5 ${isLoading ? 'animate-pulse' : ''}`} />
+                            </button>
+                        </form>
                     </div>
                 </div>
 
                 {/* PREMIUM LOCK OVERLAY */}
-                {!auth.user.is_premium && (
+                {!auth.user.premium_features.ai_assistant && (
                     <div className="absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6">
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}

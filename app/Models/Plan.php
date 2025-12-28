@@ -17,14 +17,24 @@ class Plan extends Model
         'description',
         'features',
         'is_active',
-        'max_subtasks'
+        'max_subtasks',
+        'has_ai_assistant',
+        'ai_chat_limit',
+        'has_productivity_report',
+        'has_auto_open_url',
+        'has_quick_notes'
     ];
 
     protected $casts = [
         'price' => 'integer',
         'features' => 'array',
         'is_active' => 'boolean',
-        'max_subtasks' => 'integer'
+        'max_subtasks' => 'integer',
+        'has_ai_assistant' => 'boolean',
+        'ai_chat_limit' => 'integer',
+        'has_productivity_report' => 'boolean',
+        'has_auto_open_url' => 'boolean',
+        'has_quick_notes' => 'boolean'
     ];
 
     protected $attributes = [

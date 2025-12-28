@@ -382,7 +382,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Quick Notes</h5>
-                                                                {!auth?.user?.is_premium && <LockClosedIcon className="w-2.5 h-2.5 text-amber-500" />}
+                                                                {!auth?.user?.premium_features?.quick_notes && <LockClosedIcon className="w-2.5 h-2.5 text-amber-500" />}
                                                             </div>
                                                             {processingId === `saving-notes-${task.id}` && (
                                                                 <span className="text-[8px] font-bold text-teal-500 animate-pulse">Menyimpan...</span>
@@ -391,7 +391,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                                         <div className="relative">
                                                             <textarea
                                                                 defaultValue={task.notes}
-                                                                disabled={!auth?.user?.is_premium}
+                                                                disabled={!auth?.user?.premium_features?.quick_notes}
                                                                 onChange={(e) => {
                                                                     const value = e.target.value;
                                                                     const taskId = task.id;
@@ -403,10 +403,10 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                                                     }, 1000);
                                                                     save();
                                                                 }}
-                                                                placeholder={auth?.user?.is_premium ? "Tulis catatan cepat atau ide di sini..." : "Fitur Premium: Simpan catatan penting untuk tugas ini."}
-                                                                className={`w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/10 min-h-[100px] transition-all ${!auth?.user?.is_premium ? 'cursor-not-allowed opacity-60' : ''}`}
+                                                                placeholder={auth?.user?.premium_features?.quick_notes ? "Tulis catatan cepat atau ide di sini..." : "Fitur Premium: Simpan catatan penting untuk tugas ini."}
+                                                                className={`w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/10 min-h-[100px] transition-all ${!auth?.user?.premium_features?.quick_notes ? 'cursor-not-allowed opacity-60' : ''}`}
                                                             />
-                                                            {!auth?.user?.is_premium && (
+                                                            {!auth?.user?.premium_features?.quick_notes && (
                                                                 <Link
                                                                     href={route('subscribe.index')}
                                                                     className="absolute inset-0 flex items-center justify-center bg-slate-900/5 rounded-2xl group-hover:bg-slate-900/10 transition-all"
@@ -424,9 +424,9 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Launch URL</h5>
-                                                                {!auth?.user?.is_premium && <LockClosedIcon className="w-2.5 h-2.5 text-amber-500" />}
+                                                                {!auth?.user?.premium_features?.auto_open_url && <LockClosedIcon className="w-2.5 h-2.5 text-amber-500" />}
                                                             </div>
-                                                            {task.auto_open_url && auth?.user?.is_premium && (
+                                                            {task.auto_open_url && auth?.user?.premium_features?.auto_open_url && (
                                                                 <a
                                                                     href={task.auto_open_url}
                                                                     target="_blank"
@@ -441,7 +441,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                                         <div className="relative">
                                                             <input
                                                                 type="url"
-                                                                disabled={!auth?.user?.is_premium}
+                                                                disabled={!auth?.user?.premium_features?.auto_open_url}
                                                                 defaultValue={task.auto_open_url}
                                                                 onChange={(e) => {
                                                                     const value = e.target.value;
@@ -454,11 +454,11 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                                                     }, 1000);
                                                                     save();
                                                                 }}
-                                                                placeholder={auth?.user?.is_premium ? "https://..." : "Luncurkan link otomatis saat bekerja"}
-                                                                className={`w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-2 px-3 text-[10px] font-bold text-teal-600 dark:text-teal-400 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/10 transition-all ${!auth?.user?.is_premium ? 'cursor-not-allowed opacity-60' : ''}`}
+                                                                placeholder={auth?.user?.premium_features?.auto_open_url ? "https://..." : "Luncurkan link otomatis saat bekerja"}
+                                                                className={`w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-2 px-3 text-[10px] font-bold text-teal-600 dark:text-teal-400 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/10 transition-all ${!auth?.user?.premium_features?.auto_open_url ? 'cursor-not-allowed opacity-60' : ''}`}
                                                             />
                                                         </div>
-                                                        {task.auto_open_url && !task.is_completed && auth?.user?.is_premium && (
+                                                        {task.auto_open_url && !task.is_completed && auth?.user?.premium_features?.auto_open_url && (
                                                             <p className="text-[8px] text-slate-400 italic">
                                                                 * Link ini akan otomatis terbuka saat sesi Fokus dimulai.
                                                             </p>

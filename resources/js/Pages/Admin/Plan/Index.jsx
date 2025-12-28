@@ -135,6 +135,11 @@ const PlanItem = ({ plan }) => {
         features: plan.features || [],
         is_active: plan.is_active ?? true,
         max_subtasks: plan.max_subtasks || 3,
+        has_ai_assistant: plan.has_ai_assistant ?? false,
+        ai_chat_limit: plan.ai_chat_limit ?? 0,
+        has_productivity_report: plan.has_productivity_report ?? false,
+        has_auto_open_url: plan.has_auto_open_url ?? false,
+        has_quick_notes: plan.has_quick_notes ?? false,
     });
 
     const handleUpdate = (e) => {
@@ -246,26 +251,70 @@ const PlanItem = ({ plan }) => {
                         </div>
                     </div>
 
-                    {/* Description & Features */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Detail & Fitur</h3>
+                    {/* Premium Features */}
+                    <div className="space-y-4 pt-4 lg:pt-0">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Premium Features</h3>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Deskripsi
-                            </label>
-                            <Textarea
-                                value={data.description}
-                                onChange={e => setData('description', e.target.value)}
-                                placeholder="Deskripsi plan untuk ditampilkan ke user..."
-                                rows={3}
-                            />
-                            {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+                        <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg ring-1 ring-inset ring-gray-200 dark:ring-white/10">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Assistant</label>
+                                <input
+                                    type="checkbox"
+                                    checked={data.has_ai_assistant}
+                                    onChange={e => setData('has_ai_assistant', e.target.checked)}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                />
+                            </div>
+
+                            {data.has_ai_assistant && (
+                                <div className="pl-4 pt-2 border-l-2 border-blue-500/30">
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                        Limit Chat Harian (-1: Unlimited)
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        value={data.ai_chat_limit}
+                                        onChange={e => setData('ai_chat_limit', e.target.value)}
+                                        className="h-8 text-xs"
+                                        min="-1"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Productivity Report</label>
+                                <input
+                                    type="checkbox"
+                                    checked={data.has_productivity_report}
+                                    onChange={e => setData('has_productivity_report', e.target.checked)}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-open URL</label>
+                                <input
+                                    type="checkbox"
+                                    checked={data.has_auto_open_url}
+                                    onChange={e => setData('has_auto_open_url', e.target.checked)}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Notes</label>
+                                <input
+                                    type="checkbox"
+                                    checked={data.has_quick_notes}
+                                    onChange={e => setData('has_quick_notes', e.target.checked)}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                />
+                            </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Fitur Plan
+                                Fitur Plan (Text List)
                             </label>
                             <FeaturesInput
                                 features={data.features}
@@ -302,8 +351,8 @@ const PlanItem = ({ plan }) => {
                 <div className="flex items-center gap-3 mb-2">
                     <p className="font-semibold text-gray-900 dark:text-white">{plan.name}</p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${plan.is_active
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                         }`}>
                         {plan.is_active ? 'Aktif' : 'Nonaktif'}
                     </span>
@@ -378,6 +427,11 @@ export default function Index({ auth, plans }) {
         features: [],
         is_active: true,
         max_subtasks: 3,
+        has_ai_assistant: false,
+        ai_chat_limit: 0,
+        has_productivity_report: false,
+        has_auto_open_url: false,
+        has_quick_notes: false,
     });
 
     const handleFeaturesChange = (newFeatures) => {
@@ -494,26 +548,70 @@ export default function Index({ auth, plans }) {
                                     </div>
                                 </div>
 
-                                {/* Description & Features */}
-                                <div className="space-y-4">
-                                    <h3 className="text-md font-medium text-gray-900 dark:text-white">Detail & Fitur</h3>
+                                {/* Premium Features */}
+                                <div className="space-y-4 pt-4 lg:pt-0">
+                                    <h3 className="text-md font-medium text-gray-900 dark:text-white">Premium Features</h3>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Deskripsi
-                                        </label>
-                                        <Textarea
-                                            value={data.description}
-                                            onChange={(e) => setData('description', e.target.value)}
-                                            placeholder="Deskripsi plan untuk ditampilkan ke user..."
-                                            rows={3}
-                                        />
-                                        {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+                                    <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg ring-1 ring-inset ring-gray-200 dark:ring-white/10">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Assistant</label>
+                                            <input
+                                                type="checkbox"
+                                                checked={data.has_ai_assistant}
+                                                onChange={e => setData('has_ai_assistant', e.target.checked)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                            />
+                                        </div>
+
+                                        {data.has_ai_assistant && (
+                                            <div className="pl-4 pt-2 border-l-2 border-blue-500/30">
+                                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                                    Limit Chat Harian (-1: Unlimited)
+                                                </label>
+                                                <Input
+                                                    type="number"
+                                                    value={data.ai_chat_limit}
+                                                    onChange={e => setData('ai_chat_limit', e.target.value)}
+                                                    className="h-8 text-xs"
+                                                    min="-1"
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Productivity Report</label>
+                                            <input
+                                                type="checkbox"
+                                                checked={data.has_productivity_report}
+                                                onChange={e => setData('has_productivity_report', e.target.checked)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-open URL</label>
+                                            <input
+                                                type="checkbox"
+                                                checked={data.has_auto_open_url}
+                                                onChange={e => setData('has_auto_open_url', e.target.checked)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Notes</label>
+                                            <input
+                                                type="checkbox"
+                                                checked={data.has_quick_notes}
+                                                onChange={e => setData('has_quick_notes', e.target.checked)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Fitur Plan
+                                            Fitur Plan (Text List)
                                         </label>
                                         <FeaturesInput
                                             features={data.features}

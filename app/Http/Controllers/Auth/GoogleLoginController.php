@@ -54,7 +54,7 @@ class GoogleLoginController extends Controller
         // Redirect berdasarkan role
         $role = $user->role;
         return redirect()->intended(
-            $role === 'admin' ? '/admin' : RouteServiceProvider::HOME
+            strtolower($role) === 'admin' ? '/admin' : RouteServiceProvider::HOME
         );
     }
 }

@@ -12,7 +12,7 @@ class EnsureUserIsPremium
         $user = $request->user();
 
         // Admin bisa akses langsung
-        if ($user && $user->role === 'admin') {
+        if ($user && strtolower($user->role) === 'admin') {
             return $next($request);
         }
 

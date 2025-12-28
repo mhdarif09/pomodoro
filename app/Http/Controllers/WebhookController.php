@@ -24,11 +24,11 @@ class WebhookController extends Controller
         }
 
         // Jika pembayaran sukses
-        if ($transactionStatus === 'settlement') {
+        if ($transactionStatus === 'settlement' || $transactionStatus === 'capture') {
             // Hitung expired_at sesuai durasi plan
-            $expiredAt = match ($subscription->duration) {
-                'monthly' => now()->addMonth(),
-                'yearly' => now()->addYear(),
+            $expiredAt = match ($subscription->plan) {
+                'annual', 'yearly' => now()->addYear(),
+                'pro', 'monthly' => now()->addMonth(),
                 default => now()->addMonth(),
             };
 
@@ -40,30 +40,14 @@ class WebhookController extends Controller
                 'expired_at' => $expiredAt,
             ]);
 
-            // Update user premium_until jika kamu gunakan kolom itu
-            if ($subscription->user && $subscription->user->premium_until !== null) {
-                $subscription->user->update(['premium_until' => $expiredAt]);
-            }
-
-            // Optional: Auto-renew
-            if ($subscription->auto_renew && in_array($subscription->payment_type, ['credit_card', 'debit'])) {
-                $newExpiredAt = match ($subscription->duration) {
-                    'monthly' => now()->addMonth(),
-                    'yearly' => now()->addYear(),
-                    default => now()->addMonth(),
-                };
-
-                $newSub = Subscription::create([
-                    'user_id'    => $subscription->user_id,
-                    'plan'       => $subscription->plan,
-                    'duration'   => $subscription->duration,
-                    'status'     => 'unpaid',
-                    'expired_at' => $newExpiredAt,
-                    'auto_renew' => true,
-                ]);
-
-                app(\App\Services\MidtransService::class)->createTransaction($newSub);
-            }
+            Log::info('Subscription payment successful for order: ' . $orderId);
+        } elseif (in_array($transactionStatus, ['expire', 'cancel', 'deny'])) {
+            $subscription->update([
+                'status' => 'failed',
+                'midtrans_transaction_id' => $transactionId,
+                'payment_type' => $payload['payment_type'] ?? null,
+            ]);
+            Log::info('Subscription payment failed for order: ' . $orderId);
         }
 
         return response()->json(['message' => 'Webhook received']);

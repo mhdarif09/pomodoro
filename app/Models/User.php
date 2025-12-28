@@ -30,6 +30,7 @@ class User extends Authenticatable
     protected $appends = [
         'is_premium',
         'is_banned',
+        'premium_features',
     ];
 
     protected $hidden = [
@@ -54,14 +55,58 @@ class User extends Authenticatable
     public function getIsPremiumAttribute(): bool
     {
         // Admin or staff might have full access
-        if ($this->role === 'admin') {
+        if (strtolower($this->role) === 'admin') {
             return true;
         }
 
-        return $this->subscription &&
-               $this->subscription->status === 'paid' &&
-               $this->subscription->expired_at &&
-               $this->subscription->expired_at->isFuture();
+        $subscription = $this->subscription;
+
+        return $subscription &&
+               $subscription->status === 'paid' &&
+               $subscription->expired_at &&
+               $subscription->expired_at->isFuture();
+    }
+
+    /**
+     * Check if user can access a specific premium feature
+     */
+    public function canAccessFeature(string $feature): bool
+    {
+        if (strtolower($this->role) === 'admin') {
+            return true;
+        }
+
+        if (!$this->is_premium) {
+            return false;
+        }
+
+        $plan = $this->subscription->planDetail;
+        if (!$plan) {
+            // If no plan detail found but user is premium, allow base features
+            // but for safety, return false if a specific toggle is requested
+            return true; 
+        }
+
+        return match ($feature) {
+            'ai_assistant' => (bool) $plan->has_ai_assistant,
+            'productivity_report' => (bool) $plan->has_productivity_report,
+            'auto_open_url' => (bool) $plan->has_auto_open_url,
+            'quick_notes' => (bool) $plan->has_quick_notes,
+            default => true,
+        };
+    }
+
+    /**
+     * Get all premium features as an array
+     */
+    public function getPremiumFeaturesAttribute(): array
+    {
+        return [
+            'ai_assistant' => $this->canAccessFeature('ai_assistant'),
+            'productivity_report' => $this->canAccessFeature('productivity_report'),
+            'auto_open_url' => $this->canAccessFeature('auto_open_url'),
+            'quick_notes' => $this->canAccessFeature('quick_notes'),
+        ];
     }
 
     // Accessor untuk mengetahui apakah user dibanned

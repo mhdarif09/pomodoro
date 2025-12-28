@@ -27,12 +27,22 @@ class PlanController extends Controller
             'features' => 'nullable|array',
             'is_active' => 'boolean',
             'max_subtasks' => 'nullable|integer|min:0',
+            'has_ai_assistant' => 'boolean',
+            'ai_chat_limit' => 'nullable|integer|min:-1',
+            'has_productivity_report' => 'boolean',
+            'has_auto_open_url' => 'boolean',
+            'has_quick_notes' => 'boolean',
         ]);
 
         // Set default values untuk features jika tidak diisi
         $validated['features'] = $validated['features'] ?? $this->getDefaultFeatures($validated['duration']);
         $validated['is_active'] = $validated['is_active'] ?? true;
         $validated['max_subtasks'] = $validated['max_subtasks'] ?? 3;
+        $validated['has_ai_assistant'] = $request->has('has_ai_assistant') ? $request->boolean('has_ai_assistant') : false;
+        $validated['ai_chat_limit'] = $validated['ai_chat_limit'] ?? 0;
+        $validated['has_productivity_report'] = $request->has('has_productivity_report') ? $request->boolean('has_productivity_report') : false;
+        $validated['has_auto_open_url'] = $request->has('has_auto_open_url') ? $request->boolean('has_auto_open_url') : false;
+        $validated['has_quick_notes'] = $request->has('has_quick_notes') ? $request->boolean('has_quick_notes') : false;
 
         Plan::create($validated);
 
@@ -49,7 +59,18 @@ class PlanController extends Controller
             'features' => 'nullable|array',
             'is_active' => 'boolean',
             'max_subtasks' => 'nullable|integer|min:0',
+            'has_ai_assistant' => 'boolean',
+            'ai_chat_limit' => 'nullable|integer|min:-1',
+            'has_productivity_report' => 'boolean',
+            'has_auto_open_url' => 'boolean',
+            'has_quick_notes' => 'boolean',
         ]);
+
+        $validated['has_ai_assistant'] = $request->boolean('has_ai_assistant');
+        $validated['has_productivity_report'] = $request->boolean('has_productivity_report');
+        $validated['has_auto_open_url'] = $request->boolean('has_auto_open_url');
+        $validated['has_quick_notes'] = $request->boolean('has_quick_notes');
+        $validated['is_active'] = $request->boolean('is_active');
 
         $plan->update($validated);
 

@@ -55,19 +55,11 @@ class DashboardController extends Controller
         
         // --- Sisa Logika Controller Anda (Tidak Diubah) ---
         $plans = Plan::all();
-        $activeSubscription = Subscription::where('user_id', $user->id)
-            ->where('status', 'paid')
-            ->where('expired_at', '>=', now())
-            ->latest('expired_at')
-            ->first();
-            
         $usageCount = $user->reflections()->whereNotNull('user_answer')->count();
         $remainingQuota = self::FREE_REFLECTION_LIMIT - $usageCount;
         
         $showUpgradeModal = !$request->session()->get('dismissed_upgrade_modal', false) &&
-            (!$activeSubscription || ($activeSubscription && $activeSubscription->expired_at->diffInDays(now()) <= 7));
-
-        $isPremium = $activeSubscription && $activeSubscription->expired_at >= now();
+            (!$user->is_premium);
           return Inertia::render('Dashboard', [
             'auth' => [
                 'user' => [
@@ -75,13 +67,13 @@ class DashboardController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'onboarding_complete' => $user->onboarding_complete,
-                    'is_premium' => $isPremium,
+                    'is_premium' => $user->is_premium,
                 ],
             ],
             'tasks' => $tasks,
             'taskStats' => $taskStats,
             'filters' => $request->only(['filter']),
-            'is_premium' => $isPremium,
+            'is_premium' => $user->is_premium,
             'showOnboarding' => !$user->onboarding_complete,
             'hasReflectedToday' => $user->reflections()->whereDate('reflection_date', today())->exists(),
             'plans' => $plans,

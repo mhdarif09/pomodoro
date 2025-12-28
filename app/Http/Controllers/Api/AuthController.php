@@ -25,7 +25,7 @@ class AuthController extends Controller
 
         $user = auth()->user();
         $role = $user->role;
-        $redirectUrl = $role === 'admin' ? '/admin' : RouteServiceProvider::HOME;
+        $redirectUrl = strtolower($role) === 'admin' ? '/admin' : RouteServiceProvider::HOME;
 
         return response()->json([
             'message' => 'Login successful',

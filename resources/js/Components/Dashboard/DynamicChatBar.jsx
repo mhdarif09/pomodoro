@@ -15,7 +15,7 @@ import axios from 'axios';
 
 export default function DynamicChatBar() {
     const { auth } = usePage().props;
-    const isPremium = auth.user.is_premium;
+    const hasAiAssistant = auth.user.premium_features.ai_assistant;
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [input, setInput] = useState('');
@@ -25,10 +25,10 @@ export default function DynamicChatBar() {
     const scrollRef = useRef(null);
 
     useEffect(() => {
-        if (isExpanded && !session && isPremium) {
+        if (isExpanded && !session && hasAiAssistant) {
             initSession();
         }
-    }, [isExpanded, isPremium]);
+    }, [isExpanded, hasAiAssistant]);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -96,7 +96,7 @@ export default function DynamicChatBar() {
                             </button>
                         </div>
 
-                        {!isPremium ? (
+                        {!hasAiAssistant ? (
                             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-white/5 to-transparent">
                                 <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/20 mb-6 transition-transform">
                                     <LockClosedIcon className="w-12 h-12 text-amber-500 animate-pulse" />
@@ -194,7 +194,7 @@ export default function DynamicChatBar() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {!isPremium && <LockClosedIcon className="w-3 h-3 text-amber-500" />}
+                        {!hasAiAssistant && <LockClosedIcon className="w-3 h-3 text-amber-500" />}
                         <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
                         <ChevronUpIcon className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
                     </div>

@@ -63,7 +63,40 @@ export default function Index({ auth, stats }) {
         >
             <Head title="Productivity Report" />
 
-            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 relative">
+                {/* PREMIUM LOCK OVERLAY */}
+                {!auth.user.premium_features.productivity_report && (
+                    <div className="absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6 rounded-[3rem]">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-white dark:bg-slate-800 rounded-[3rem] p-10 max-w-lg w-full text-center shadow-2xl border border-white/10"
+                        >
+                            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
+                                <LockClosedIcon className="w-10 h-10 text-amber-500" />
+                            </div>
+                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Fitur Terkunci</h3>
+                            <p className="text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
+                                Productivity Report adalah fitur premium yang memberikan wawasan mendalam tentang kemajuan dan efisiensi kerja Anda.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link
+                                    href={route('subscribe.index')}
+                                    className="px-8 py-4 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-2xl shadow-xl shadow-teal-500/20 transition-all active:scale-95"
+                                >
+                                    Upgrade Sekarang
+                                </Link>
+                                <Link
+                                    href={route('dashboard')}
+                                    className="px-8 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold rounded-2xl hover:bg-slate-200 transition-all"
+                                >
+                                    Kembali ke Dashboard
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
