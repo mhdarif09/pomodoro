@@ -1,11 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-// Impor ikon dari Heroicons
+import { motion } from 'framer-motion'; // Pastikan motion diimport
 import { ClockIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 
-// Komponen untuk Badge Status yang lebih modern dan mendukung Dark/Light mode
+// Komponen untuk Badge Status
 const StatusBadge = ({ status }) => {
-    // Konfigurasi style untuk setiap status (Apple Style)
     const statusConfig = {
         paid: {
             label: 'Berhasil',
@@ -45,7 +44,7 @@ export default function History({ auth, subscriptions }) {
         });
     };
 
-    // Tampilan jika tidak ada data, kini dengan ikon
+    // Tampilan jika tidak ada data
     const EmptyState = () => (
         <div className="text-center py-24 apple-glass rounded-[3rem] border-white/5 shadow-2xl relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
@@ -145,7 +144,6 @@ export default function History({ auth, subscriptions }) {
                     </div>
                 )}
             </div>
-        </div>
-        </AuthenticatedLayout >
+        </AuthenticatedLayout>
     );
 }
