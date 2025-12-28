@@ -1,34 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { MagnifyingGlassIcon, BookOpenIcon } from '@heroicons/react/24/outline';
-import ModulCard from './Partials/ModulCard'; // Import komponen card
+import ModulCard from './Partials/ModulCard';
+import { motion } from 'framer-motion';
 
 export default function Index({ auth, moduls, categories, filters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [categoryFilter, setCategoryFilter] = useState(filters.category_id || '');
-    const [difficultyFilter, setDifficultyFilter] = useState(filters.difficulty || '');
     const [isFiltering, setIsFiltering] = useState(false);
 
-    // Efek ini akan berjalan setiap kali filter berubah
     useEffect(() => {
-        // Jangan jalankan saat pertama kali render
         if (isFiltering) {
             const delayDebounceFn = setTimeout(() => {
                 applyFilters();
-            }, 300); // Debounce untuk mencegah request berlebihan saat mengetik
-
+            }, 300);
             return () => clearTimeout(delayDebounceFn);
         } else {
             setIsFiltering(true);
         }
-    }, [search, categoryFilter, difficultyFilter]);
+    }, [search, categoryFilter]);
 
     const applyFilters = () => {
         router.get(route('mini-moduls.index'), {
             search,
-            category_id: categoryFilter,
-            difficulty: difficultyFilter
+            category_id: categoryFilter
         }, {
             preserveState: true,
             replace: true
@@ -36,36 +32,56 @@ export default function Index({ auth, moduls, categories, filters }) {
     };
 
     const handleCategoryClick = (categoryId) => {
-        // Jika mengklik kategori yang sama, batalkan filter. Jika beda, set filter baru.
         setCategoryFilter(prevFilter => prevFilter == categoryId ? '' : categoryId);
     };
 
     return (
         <AuthenticatedLayout user={auth.user}>
-            <Head title="Mini Modul Pembelajaran" />
+            <Head title="Learning Library" />
 
-            <div className="bg-gray-50 dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-                    {/* Header */}
-                    <header className="text-center mb-12">
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-3">
-                            Jelajahi Modul Pembelajaran
+            <div className="pb-24 pt-6 px-4 sm:px-8 max-w-[1600px] mx-auto min-h-screen">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }} 
+                        animate={{ opacity: 1, y: 0 }}
+                    >
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Learning Hub</p>
+                        <h1 className="text-4xl md:text-5xl font-[900] text-slate-900 dark:text-white tracking-tighter leading-tight">
+                            Jelajahi <span className="text-teal-500">Modul.</span>
                         </h1>
-                        <p className="max-w-2xl mx-auto text-lg text-gray-500 dark:text-gray-400">
-                            Tingkatkan pengetahuan Anda dengan koleksi modul interaktif kami.
-                        </p>
-                    </header>
+                    </motion.div>
+                </div>
 
-                    {/* Filter Kategori */}
-                    <nav className="flex justify-center flex-wrap gap-2 md:gap-3 mb-10">
+                {/* Sticky Search & Filter */}
+                <div className="sticky top-4 z-30 space-y-4 mb-10">
+                    {/* Search Bar */}
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }} 
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="relative group max-w-2xl"
+                    >
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <MagnifyingGlassIcon className="h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Cari materi, topik, atau skill..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="block w-full pl-11 pr-4 py-3.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-none ring-1 ring-slate-200 dark:ring-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-teal-500 shadow-lg shadow-slate-200/20 dark:shadow-black/20 transition-all"
+                        />
+                    </motion.div>
+
+                    {/* Categories Pills */}
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         <button
                             onClick={() => handleCategoryClick('')}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200
+                            className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border
                                 ${!categoryFilter
-                                    ? 'bg-green-500 text-white shadow'
-                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                }
-                            `}
+                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-transparent shadow-md scale-105'
+                                    : 'bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700'
+                                }`}
                         >
                             Semua
                         </button>
@@ -73,56 +89,45 @@ export default function Index({ auth, moduls, categories, filters }) {
                             <button
                                 key={category.id}
                                 onClick={() => handleCategoryClick(category.id)}
-                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2
+                                className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border flex items-center gap-2
                                     ${categoryFilter == category.id
-                                        ? 'bg-green-500 text-white shadow'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                    }
-                                `}
+                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-transparent shadow-md scale-105'
+                                        : 'bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700'
+                                    }`}
                             >
-                                {category.icon && <span>{category.icon}</span>}
                                 <span>{category.name}</span>
                             </button>
                         ))}
-                    </nav>
-
-                    {/* Search & Filter Lanjutan */}
-                    <div className="max-w-2xl mx-auto mb-12">
-                        <div className="relative">
-                            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            <input
-                                type="text"
-                                placeholder="Cari berdasarkan judul atau deskripsi..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Moduls Grid */}
-                    {moduls.data.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {moduls.data.map((modul) => (
-                                <ModulCard key={modul.id} modul={modul} auth={auth} />
-                            ))}
-                        </div>
-                    ) : (
-                        // Empty State
-                        <div className="text-center py-16">
-                            <BookOpenIcon className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Modul Tidak Ditemukan</h3>
-                            <p className="text-gray-500 dark:text-gray-400">
-                                Coba ubah kata kunci pencarian atau filter kategori Anda.
-                            </p>
-                        </div>
-                    )}
-                    
-                    {/* Pagination (jika diperlukan) */}
-                    <div className="mt-12">
-                        {/* Tambahkan komponen pagination di sini jika Anda membuatnya */}
                     </div>
                 </div>
+
+                {/* Moduls Grid */}
+                {moduls.data.length > 0 ? (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    >
+                        {moduls.data.map((modul, i) => (
+                            <motion.div
+                                key={modul.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 30 }}
+                            >
+                                <ModulCard modul={modul} auth={auth} />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-24 bg-white/50 dark:bg-slate-800/50 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700">
+                        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-6">
+                            <BookOpenIcon className="w-10 h-10 text-slate-400" />
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Tidak Ditemukan</h3>
+                        <p className="text-slate-500 dark:text-slate-400">Coba kata kunci lain atau ganti kategori.</p>
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );

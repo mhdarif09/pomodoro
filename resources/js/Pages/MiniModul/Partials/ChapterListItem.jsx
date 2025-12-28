@@ -1,53 +1,43 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { PlayCircleIcon } from '@heroicons/react/24/solid';
-import { CheckCircleIcon as CheckSolidIcon } from '@heroicons/react/24/solid';
-import { LockClosedIcon } from '@heroicons/react/24/outline'; // Jika ada fitur chapter terkunci
+import { PlayCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 
 export default function ChapterListItem({ modulSlug, chapter, index, isCompleted, isNextUp }) {
     return (
         <Link
             href={route('mini-moduls.chapter', { miniModul: modulSlug, chapter: chapter.slug })}
             className={`
-                group relative flex items-center w-full p-4 rounded-lg text-left transition-all duration-300
-                ${isCompleted
-                    ? 'bg-green-50 dark:bg-green-900/40'
-                    : 'bg-white dark:bg-gray-800'
-                }
+                group relative flex items-center w-full p-4 rounded-3xl transition-all duration-300 border
                 ${isNextUp
-                    ? 'ring-2 ring-green-500 shadow-lg'
-                    : 'border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600 hover:shadow-md'
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-black border-transparent shadow-xl scale-[1.02] z-10'
+                    : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-teal-500/30 hover:shadow-lg'
                 }
             `}
         >
-            <div className="flex-shrink-0 mr-4">
-                {isCompleted ? (
-                    <CheckSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
-                ) : (
-                    <div className={`
-                        w-6 h-6 flex items-center justify-center rounded-full font-bold text-xs
-                        ${isNextUp
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                        }
-                    `}>
-                        {index + 1}
-                    </div>
-                )}
+            <div className={`
+                flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mr-4 transition-colors
+                ${isCompleted 
+                    ? 'bg-green-500 text-white' 
+                    : isNextUp 
+                        ? 'bg-white/20 text-white dark:text-black dark:bg-black/10' 
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-500'
+                }
+            `}>
+                {isCompleted ? <CheckCircleIcon className="w-6 h-6" /> : index + 1}
             </div>
 
-            <div className="flex-1">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-100 line-clamp-1">
+            <div className="flex-1 min-w-0">
+                <h4 className={`font-bold text-base sm:text-lg truncate ${isNextUp ? 'text-white dark:text-black' : 'text-slate-900 dark:text-white'}`}>
                     {chapter.title}
                 </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {chapter.estimated_duration} menit
+                <p className={`text-xs font-medium mt-0.5 ${isNextUp ? 'text-white/60 dark:text-black/60' : 'text-slate-400'}`}>
+                    {chapter.estimated_duration} Menit Estimasi
                 </p>
             </div>
 
-            <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <PlayCircleIcon className={`w-6 h-6 ${isNextUp ? 'text-green-500' : 'text-gray-400 dark:text-gray-500'}`} />
-            </div>
+            <PlayCircleIcon className={`w-10 h-10 transition-transform duration-300 group-hover:scale-110 
+                ${isNextUp ? 'text-teal-400 dark:text-teal-600' : 'text-slate-200 dark:text-slate-600 group-hover:text-teal-500'}`} 
+            />
         </Link>
     );
 }

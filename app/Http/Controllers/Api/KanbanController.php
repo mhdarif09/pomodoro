@@ -5,11 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreTaskRequest;
-use App\Http\Requests\UpdateTaskRequest;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\DetermineTaskPriority;
-use App\Jobs\SendTaskDeadlineReminders;
 use Illuminate\Support\Facades\DB;
 
 class KanbanController extends Controller
@@ -17,14 +14,13 @@ class KanbanController extends Controller
     public function index(Request $request)
     {
         $tasks = $request->user()->tasks()
-            ->with('subtasks') // Eager load subtasks
+            ->with('subtasks')
             ->when($request->status, function ($query, $status) {
                 return $query->where('status', $status);
             })
             ->latest()
             ->get();
 
-        // Group tasks by status for Kanban
         $kanbanTasks = [
             'todo' => $tasks->where('status', 'todo')->values(),
             'in_progress' => $tasks->where('status', 'in_progress')->values(),
@@ -36,43 +32,47 @@ class KanbanController extends Controller
         ]);
     }
 
-    /**
-     * Menyimpan tugas baru yang dibuat oleh user yang terotentikasi.
-     */
-    public function store(StoreTaskRequest $request)
+    public function store(Request $request)
     {
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date',
+            'priority' => 'nullable|string',
+            'status' => 'nullable|string|in:todo,in_progress,done',
+            'estimated_minutes' => 'nullable|integer',
+            'document' => 'nullable|file|max:10240'
+        ]);
         
-        // Add estimated_minutes to validation in StoreTaskRequest or check here if manual
-        // Assuming StoreTaskRequest will be updated or we handle extra fields if not strictly striping
-        $estimatedMinutes = $request->input('estimated_minutes');
+        $estimatedMinutes = $request->input('estimated_minutes', 25);
 
         $documentPath = null;
         if ($request->hasFile('document')) {
             $documentPath = $request->file('document')->store('documents', 'public');
         }
 
-        // Otomatis mengisi `user_id` dari user yang sedang login
         $task = $request->user()->tasks()->create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'start_date' => $validated['start_date'] ?? null,
+            'start_date' => $validated['start_date'] ?? now(),
             'due_date' => $validated['due_date'] ?? null,
             'document_path' => $documentPath,
-            'priority' => 'Sedang', 
+            'priority' => $validated['priority'] ?? 'Sedang', 
             'estimated_minutes' => $estimatedMinutes,
             'status' => $validated['status'] ?? 'todo'
         ]);
 
-        if ($request->has('subtasks')) {
+        if ($request->has('subtasks') && is_array($request->subtasks)) {
             foreach ($request->subtasks as $subtaskData) {
-                $task->subtasks()->create(['title' => $subtaskData['title']]);
+                if (!empty($subtaskData['title'])) {
+                    $task->subtasks()->create(['title' => $subtaskData['title']]);
+                }
             }
         }
 
         DetermineTaskPriority::dispatch($task);
 
-        // Send instant WhatsApp notification if deadline is tomorrow
         $user = $request->user();
         $userTimezone = $this->getTimezoneString($user->timezone ?? 'WIB');
         $tomorrow = now($userTimezone)->addDay()->toDateString();
@@ -87,16 +87,23 @@ class KanbanController extends Controller
         ], 201);
     }
 
-    /**
-     * Memperbarui tugas yang ada.
-     */
-    public function update(UpdateTaskRequest $request, Task $task)
+    public function update(Request $request, Task $task)
     {
-        // Otorisasi dengan Policy untuk keamanan
         $this->authorize('update', $task);
         
-        $validated = $request->validated();
-        $estimatedMinutes = $request->input('estimated_minutes');
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'due_date' => 'nullable|date',
+            'priority' => 'nullable|string',
+            'status' => 'nullable|string',
+            'estimated_minutes' => 'nullable|integer',
+            'notes' => 'nullable|string',
+            'auto_open_url' => 'nullable|url',
+            'document' => 'nullable|file|max:10240'
+        ]);
+
+        $estimatedMinutes = $request->input('estimated_minutes', $task->estimated_minutes);
 
         DB::transaction(function () use ($request, $validated, $task, $estimatedMinutes) {
             if ($request->hasFile('document')) {
@@ -152,15 +159,12 @@ class KanbanController extends Controller
         ]);
     }
 
-    /**
-     * Get PHP timezone string from Indonesian timezone code
-     */
     private function getTimezoneString($timezone)
     {
         $timezones = [
-            'WIB' => 'Asia/Jakarta',      // UTC+7
-            'WITA' => 'Asia/Makassar',    // UTC+8
-            'WIT' => 'Asia/Jayapura',     // UTC+9
+            'WIB' => 'Asia/Jakarta',
+            'WITA' => 'Asia/Makassar',
+            'WIT' => 'Asia/Jayapura',
         ];
 
         return $timezones[$timezone] ?? 'Asia/Jakarta';

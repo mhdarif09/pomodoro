@@ -21,33 +21,36 @@ const MessageBubble = ({ message }) => {
     const isBot = message.role === 'assistant';
     return (
         <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-6`}
+            initial={{ opacity: 0, y: 15, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-10`}
         >
             <div className={`
-                max-w-[85%] sm:max-w-[75%] rounded-3xl p-4 shadow-sm
+                max-w-[85%] sm:max-w-[80%] rounded-[2rem] p-6 shadow-xl
                 ${isBot
-                    ? 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200'
-                    : 'bg-teal-500 text-white shadow-teal-500/20'}
+                    ? 'apple-glass border-white/10 text-slate-800 dark:text-slate-200'
+                    : 'bg-teal-500 text-white shadow-teal-500/25'}
             `}>
                 {isBot && (
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <SparklesIcon className="w-3.5 h-3.5 text-teal-500" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">GrowthBot</span>
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded-lg bg-teal-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
+                            <SparklesIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-[11px] font-extrabold uppercase tracking-tight text-slate-500">GrowthBot</span>
                     </div>
                 )}
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                <p className="text-[15px] leading-[1.6] font-medium tracking-tight whitespace-pre-wrap">{message.content}</p>
                 {message.metadata?.sources?.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Sumber Informasi</p>
+                    <div className="mt-6 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tight mb-3">Referensi Terkait</p>
                         <div className="flex flex-wrap gap-2">
                             {message.metadata.sources.map((source, idx) => (
                                 <a
                                     key={idx}
                                     href={source.url}
                                     target="_blank"
-                                    className="px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 text-[10px] text-teal-600 dark:text-teal-400 hover:underline max-w-[150px] truncate"
+                                    className="px-3 py-1.5 rounded-full apple-glass border-none text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:bg-white/40 max-w-[180px] truncate transition-all"
                                 >
                                     {source.title}
                                 </a>
@@ -153,17 +156,17 @@ export default function AIAssistantIndex() {
         <AuthenticatedLayout>
             <Head title="AI Assistant" />
 
-            <div className="relative flex h-[calc(100vh-140px)] bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-2xl">
+            <div className="relative flex h-[calc(100vh-160px)] apple-glass rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl">
                 {/* Sidebar History */}
-                <div className="hidden lg:flex flex-col w-72 border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="hidden lg:flex flex-col w-72 border-r border-slate-200/30 dark:border-slate-800/50 bg-white/40 dark:bg-black/20">
                     <div className="p-6">
                         <button
                             onClick={createNewSession}
                             disabled={!auth.user.premium_features.ai_assistant}
-                            className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+                            className="apple-button w-full bg-slate-900 dark:bg-teal-500 text-white flex items-center justify-center gap-2 shadow-xl disabled:opacity-50"
                         >
-                            <PlusIcon className="w-4 h-4" />
-                            Chat Baru
+                            <PlusIcon className="w-5 h-5 stroke-2" />
+                            Diskusi Baru
                         </button>
                     </div>
 
@@ -173,23 +176,23 @@ export default function AIAssistantIndex() {
                                 key={s.id}
                                 onClick={() => auth.user.premium_features.ai_assistant && setActiveSession(s)}
                                 className={`
-                                    group relative p-3.5 rounded-2xl cursor-pointer transition-all
+                                    group relative p-4 rounded-[1.5rem] cursor-pointer transition-all duration-300
                                     ${activeSession?.id === s.id
-                                        ? 'bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700'
-                                        : 'hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-500 dark:text-slate-400'}
+                                        ? 'apple-glass bg-white dark:bg-slate-800 shadow-lg border-white/20'
+                                        : 'hover:bg-white/40 dark:hover:bg-white/5 text-slate-500'}
                                     ${!auth.user.premium_features.ai_assistant ? 'opacity-50 grayscale cursor-not-allowed' : ''}
                                 `}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-xl ${activeSession?.id === s.id ? 'bg-teal-500 text-white' : 'bg-slate-200 dark:bg-slate-700'}`}>
-                                        <SparklesIcon className="w-4 h-4" />
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeSession?.id === s.id ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20 scale-110' : 'bg-slate-200/50 dark:bg-slate-700/50'}`}>
+                                        <SparklesIcon className="w-5 h-5" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className={`text-xs font-bold truncate ${activeSession?.id === s.id ? 'text-slate-900 dark:text-white' : ''}`}>
+                                        <p className={`text-[13px] font-extrabold truncate tracking-tight ${activeSession?.id === s.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                                             {s.title}
                                         </p>
-                                        <p className="text-[10px] mt-0.5 opacity-60">
-                                            {new Date(s.updated_at).toLocaleDateString()}
+                                        <p className="text-[10px] font-bold opacity-60 tracking-tight">
+                                            {s.updated_at === s.created_at ? 'Baru saja' : new Date(s.updated_at).toLocaleDateString()}
                                         </p>
                                     </div>
                                 </div>
@@ -199,61 +202,67 @@ export default function AIAssistantIndex() {
                 </div>
 
                 {/* Main Chat Area */}
-                <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900 relative">
+                <div className="flex-1 flex flex-col min-w-0 relative">
                     {/* Header */}
-                    <div className="h-20 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 sticky top-0">
+                    <div className="h-20 border-b border-slate-200/30 dark:border-slate-800/50 flex items-center justify-between px-8 backdrop-blur-3xl z-10 sticky top-0">
                         <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
+                                <CpuChipIcon className="w-6 h-6 text-white" />
+                            </div>
                             <div>
-                                <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                                    <CpuChipIcon className="w-5 h-5 text-teal-500" />
-                                    {activeSession?.title || 'GrowthBot Assistant'}
+                                <h2 className="text-xl font-[900] text-slate-900 dark:text-white tracking-tight leading-none">
+                                    {activeSession?.title || 'GrowthBot Intelligence'}
                                 </h2>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 italic">
-                                    GrowthBot Engine v2.0 • Premium Access Only
+                                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight mt-1.5 opacity-60">
+                                    Engine v2.0 • Real-time Intelligence
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto px-6 py-8 scroll-smooth">
+                    <div className="flex-1 overflow-y-auto px-8 py-12 scroll-smooth">
                         {messages.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
-                                <div className="w-20 h-20 rounded-3xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center mb-6">
-                                    <SparklesIcon className="w-10 h-10 text-teal-500" />
-                                </div>
-                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Pusat Intelijen Sarang Tumbuh</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                                    Tanyakan apa pun, mulai dari analisis laporan, riset pasar, hingga strategi pertumbuhan pribadi Anda.
+                                <motion.div
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="w-24 h-24 rounded-[2rem] apple-glass flex items-center justify-center mb-8 shadow-2xl"
+                                >
+                                    <SparklesIcon className="w-12 h-12 text-teal-500" />
+                                </motion.div>
+                                <h3 className="text-3xl font-[900] text-slate-900 dark:text-white mb-4 tracking-tight">GrowthBot Intel</h3>
+                                <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed tracking-tight">
+                                    Tanyakan strategi, analisis laporan, atau rencanakan langkah produktifmu selanjutnya.
                                 </p>
                             </div>
                         ) : (
-                            <>
+                            <div className="max-w-4xl mx-auto w-full">
                                 {messages.map((m, idx) => (
                                     <MessageBubble key={idx} message={m} />
                                 ))}
                                 <div ref={messagesEndRef} />
-                            </>
+                            </div>
                         )}
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                    <div className="p-8 backdrop-blur-3xl">
                         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative group">
                             <input
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 disabled={isLoading || !auth.user.premium_features.ai_assistant}
-                                placeholder={auth.user.premium_features.ai_assistant ? "Tanyakan sesuatu ke GrowthBot..." : "Upgrade ke Premium untuk mulai mengobrol..."}
-                                className="w-full pl-6 pr-16 py-5 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-none text-sm shadow-inner transition-all focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
+                                placeholder={auth.user.premium_features.ai_assistant ? "Tanyakan sesuatu..." : "Upgrade ke Premium untuk bertanya"}
+                                className="w-full pl-8 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
                             />
                             <button
                                 type="submit"
                                 disabled={!input.trim() || isLoading || !auth.user.premium_features.ai_assistant}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl shadow-lg shadow-teal-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
                             >
-                                <PaperAirplaneIcon className={`w-5 h-5 ${isLoading ? 'animate-pulse' : ''}`} />
+                                <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />
                             </button>
                         </form>
                     </div>
@@ -261,29 +270,29 @@ export default function AIAssistantIndex() {
 
                 {/* PREMIUM LOCK OVERLAY */}
                 {!auth.user.premium_features.ai_assistant && (
-                    <div className="absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6">
+                    <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-6">
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-white dark:bg-slate-800 rounded-[3rem] p-10 max-w-lg w-full text-center shadow-2xl border border-white/10"
+                            initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            className="apple-glass rounded-[4rem] p-12 max-w-lg w-full text-center shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border-white/10"
                         >
-                            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
-                                <LockClosedIcon className="w-10 h-10 text-amber-500" />
+                            <div className="w-24 h-24 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-8">
+                                <LockClosedIcon className="w-12 h-12 text-amber-500" />
                             </div>
-                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Fitur Terkunci</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
-                                GrowthBot Intelligence adalah fitur premium yang dirancang untuk mempercepat pertumbuhan Anda dengan AI canggih.
+                            <h3 className="text-4xl font-[900] text-slate-900 dark:text-white mb-4 tracking-tight">Kekuatan Terkunci</h3>
+                            <p className="text-[17px] font-medium text-slate-500 dark:text-slate-400 mb-12 leading-relaxed tracking-tight">
+                                GrowthBot Intelligence eksklusif untuk member Premium. Tingkatkan produktivitasmu dengan AI hari ini.
                             </p>
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <div className="flex flex-col gap-4">
                                 <Link
                                     href={route('subscribe.index')}
-                                    className="px-8 py-4 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-2xl shadow-xl shadow-teal-500/20 transition-all active:scale-95"
+                                    className="apple-button h-16 text-lg bg-teal-500 text-white shadow-2xl shadow-teal-500/20"
                                 >
-                                    Upgrade Sekarang
+                                    Buka Akses Sekarang
                                 </Link>
                                 <Link
                                     href={route('dashboard')}
-                                    className="px-8 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold rounded-2xl hover:bg-slate-200 transition-all"
+                                    className="text-sm font-extrabold text-slate-400 hover:text-slate-600 py-2 transition-colors"
                                 >
                                     Kembali ke Dashboard
                                 </Link>

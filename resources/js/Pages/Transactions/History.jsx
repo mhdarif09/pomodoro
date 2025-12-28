@@ -5,34 +5,30 @@ import { ClockIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outlin
 
 // Komponen untuk Badge Status yang lebih modern dan mendukung Dark/Light mode
 const StatusBadge = ({ status }) => {
-    // Konfigurasi style untuk setiap status (Light & Dark mode)
+    // Konfigurasi style untuk setiap status (Apple Style)
     const statusConfig = {
         paid: {
-            label: 'Paid',
-            className: 'bg-green-100 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20',
+            label: 'Berhasil',
+            className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
         },
         pending: {
-            label: 'Pending',
-            className: 'bg-yellow-100 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-500/10 dark:text-yellow-400 dark:ring-yellow-500/20',
+            label: 'Menunggu',
+            className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
         },
         failed: {
-            label: 'Failed',
-            className: 'bg-red-100 text-red-700 ring-red-600/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20',
+            label: 'Gagal',
+            className: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
         },
         cancel: {
-            label: 'Cancelled',
-            className: 'bg-red-100 text-red-700 ring-red-600/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20',
-        },
-        default: {
-            label: status,
-            className: 'bg-gray-100 text-gray-600 ring-gray-500/20 dark:bg-gray-400/10 dark:text-gray-300 dark:ring-gray-400/20',
-        },
+            label: 'Dibatalkan',
+            className: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+        }
     };
 
-    const config = statusConfig[status] || statusConfig.default;
+    const config = statusConfig[status] || { label: status, className: 'bg-slate-500/10 text-slate-600' };
 
     return (
-        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium capitalize ${config.className}`}>
+        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-tight ${config.className}`}>
             {config.label}
         </span>
     );
@@ -51,10 +47,19 @@ export default function History({ auth, subscriptions }) {
 
     // Tampilan jika tidak ada data, kini dengan ikon
     const EmptyState = () => (
-        <div className="text-center py-16 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-            <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Belum Ada Transaksi</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Riwayat langganan Anda akan muncul di sini.</p>
+        <div className="text-center py-24 apple-glass rounded-[3rem] border-white/5 shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex items-center justify-center w-24 h-24 mx-auto mb-8 rounded-[2rem] apple-glass border-none shadow-2xl"
+            >
+                <ClipboardDocumentListIcon className="w-12 h-12 text-blue-500" />
+            </motion.div>
+            <h3 className="text-3xl font-[900] text-slate-900 dark:text-white mb-4 tracking-tight">Belum Ada Transaksi</h3>
+            <p className="text-lg font-semibold text-slate-500 dark:text-slate-400 mb-0 max-w-md mx-auto leading-relaxed tracking-tight">
+                Riwayat langganan Anda akan muncul di sini segera setelah Anda melakukan transaksi.
+            </p>
         </div>
     );
 
@@ -62,69 +67,85 @@ export default function History({ auth, subscriptions }) {
         <AuthenticatedLayout user={auth.user}>
             <Head title="Riwayat Transaksi" />
 
-            <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
-                <div className="max-w-7xl mx-auto">
-                    <header className="mb-8">
-                        <div className="flex items-center gap-x-3">
-                            <ClockIcon className="h-8 w-8 text-blue-500" aria-hidden="true" />
-                            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Riwayat Transaksi</h1>
-                        </div>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Lihat semua histori langganan Anda di satu tempat.</p>
-                    </header>
+            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+                <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl font-[900] text-slate-900 dark:text-white tracking-tight leading-none">Riwayat Transaksi</h1>
+                        <p className="text-slate-500 dark:text-slate-400 mt-3 font-semibold text-lg tracking-tight">Daftar histori aktivasi fitur dan langganan paket.</p>
+                    </div>
+                    <div className="flex items-center gap-3 apple-glass px-5 py-3 rounded-2xl border-white/10 shadow-lg">
+                        <ClockIcon className="w-6 h-6 text-blue-500 stroke-2" />
+                        <span className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">Last Update 24h</span>
+                    </div>
+                </header>
 
-                    {subscriptions.length === 0 ? (
-                        <EmptyState />
-                    ) : (
-                        <div>
-                            {/* Tampilan Kartu untuk Mobile */}
-                            <div className="md:hidden space-y-4">
-                                {subscriptions.map((sub) => (
-                                    <div key={sub.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                        <div className="flex justify-between items-start">
-                                            <span className="font-bold text-lg capitalize text-gray-900 dark:text-white">{sub.plan}</span>
-                                            <StatusBadge status={sub.status} />
-                                        </div>
-                                        <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm border-t border-gray-200 dark:border-gray-700 pt-4">
-                                            <div className="text-gray-500 dark:text-gray-400">Expired</div>
-                                            <div className="text-right text-gray-700 dark:text-gray-200 font-medium">{formatDate(sub.expired_at)}</div>
-                                            <div className="text-gray-500 dark:text-gray-400">Paid at</div>
-                                            <div className="text-right text-gray-700 dark:text-gray-200 font-medium">{formatDate(sub.paid_at)}</div>
-                                            <div className="text-gray-500 dark:text-gray-400">Payment</div>
-                                            <div className="text-right text-gray-700 dark:text-gray-200 font-medium">{sub.payment_type ?? '-'}</div>
-                                        </div>
+                {subscriptions.length === 0 ? (
+                    <EmptyState />
+                ) : (
+                    <div>
+                        {/* Tampilan Kartu untuk Mobile */}
+                        <div className="md:hidden space-y-6">
+                            {subscriptions.map((sub, idx) => (
+                                <motion.div
+                                    key={sub.id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="apple-glass rounded-3xl p-6 shadow-xl border-white/10"
+                                >
+                                    <div className="flex justify-between items-center mb-6">
+                                        <span className="font-extrabold text-xl capitalize text-slate-900 dark:text-white tracking-tight">{sub.plan}</span>
+                                        <StatusBadge status={sub.status} />
                                     </div>
-                                ))}
-                            </div>
-
-                            {/* Tampilan Tabel untuk Desktop */}
-                            <div className="hidden md:block overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
-                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                    <thead className="bg-gray-50 dark:bg-gray-800/50">
-                                        <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Plan</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expired</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Paid At</th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payment</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                        {subscriptions.map((sub) => (
-                                            <tr key={sub.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white capitalize">{sub.plan}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm"><StatusBadge status={sub.status} /></td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{formatDate(sub.expired_at)}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{formatDate(sub.paid_at)}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{sub.payment_type ?? '-'}</td>
-                                            </tr>
+                                    <div className="space-y-4">
+                                        {[
+                                            { label: 'Kedaluwarsa', value: formatDate(sub.expired_at) },
+                                            { label: 'Dibayar Pada', value: formatDate(sub.paid_at) },
+                                            { label: 'Metode', value: sub.payment_type ?? '-' }
+                                        ].map((item, i) => (
+                                            <div key={i} className="flex justify-between items-center text-sm font-bold tracking-tight">
+                                                <span className="text-slate-400 uppercase text-[10px] tracking-widest">{item.label}</span>
+                                                <span className="text-slate-700 dark:text-slate-300">{item.value}</span>
+                                            </div>
                                         ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
-                    )}
-                </div>
+
+                        {/* Tampilan Tabel untuk Desktop */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="hidden md:block overflow-hidden apple-glass rounded-[3rem] shadow-2xl border-white/5"
+                        >
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className="border-b border-slate-200/30 dark:border-slate-800/50">
+                                        <th className="px-10 py-6 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Paket</th>
+                                        <th className="px-10 py-6 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                                        <th className="px-10 py-6 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Kedaluwarsa</th>
+                                        <th className="px-10 py-6 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Dibayar Pada</th>
+                                        <th className="px-10 py-6 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Pembayaran</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200/30 dark:divide-slate-800/50">
+                                    {subscriptions.map((sub) => (
+                                        <tr key={sub.id} className="hover:bg-white/40 dark:hover:bg-white/5 transition-colors duration-300">
+                                            <td className="px-10 py-6 text-[15px] font-extrabold text-slate-900 dark:text-white capitalize tracking-tight">{sub.plan}</td>
+                                            <td className="px-10 py-6"><StatusBadge status={sub.status} /></td>
+                                            <td className="px-10 py-6 text-[14px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">{formatDate(sub.expired_at)}</td>
+                                            <td className="px-10 py-6 text-[14px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">{formatDate(sub.paid_at)}</td>
+                                            <td className="px-10 py-6 text-[14px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">{sub.payment_type ?? '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </motion.div>
+                    </div>
+                )}
             </div>
-        </AuthenticatedLayout>
+        </div>
+        </AuthenticatedLayout >
     );
 }

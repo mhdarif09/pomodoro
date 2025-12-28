@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { ChatBubbleLeftRightIcon, CheckCircleIcon, LockClosedIcon } from '@heroicons/react/24/solid';
+import { ChatBubbleLeftRightIcon, CheckCircleIcon, LockClosedIcon, ListBulletIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import ChapterHeader from './Partials/ChapterHeader';
 import ChapterSidebar from './Partials/ChapterSidebar';
 import AiDiscussionPanel from './Partials/AiDiscussionPanel';
-import { Transition } from '@headlessui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from '@inertiajs/react';
 
 export default function Chapter({ auth, modul, chapter, userProgress, navigation, allChapters, isLocked }) {
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isCompleted, setIsCompleted] = useState(userProgress?.is_completed || false);
     const [showAiDiscussion, setShowAiDiscussion] = useState(false);
     const [discussions, setDiscussions] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [selectedRole, setSelectedRole] = useState('teacher');
-    const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     useEffect(() => {
         if (showAiDiscussion && discussions.length === 0) loadDiscussions();
@@ -24,291 +22,215 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
 
     const loadDiscussions = async () => {
         try {
-            const response = await fetch(route('mini-moduls.ai.discussions', {
-                miniModul: modul.id,
-                chapter: chapter.id
-            }));
+            const response = await fetch(route('mini-moduls.ai.discussions', { miniModul: modul.id, chapter: chapter.id }));
             const data = await response.json();
             setDiscussions(data.discussions || []);
-        } catch (error) {
-            console.error('Error loading discussions:', error);
-        }
+        } catch (error) { console.error(error); }
     };
 
     const handleCompleteChapter = async () => {
         try {
-            const response = await fetch(route('mini-moduls.complete-chapter', {
-                miniModul: modul.id,
-                chapter: chapter.id
-            }), {
+            const response = await fetch(route('mini-moduls.complete-chapter', { miniModul: modul.id, chapter: chapter.id }), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
             });
             if (response.ok) setIsCompleted(true);
-        } catch (error) {
-            console.error('Error completing chapter:', error);
-        }
+        } catch (error) { console.error(error); }
     };
 
     const sendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim() || isLoading) return;
-
         setIsLoading(true);
         try {
-            const response = await fetch(route('mini-moduls.ai.discuss', {
-                miniModul: modul.id,
-                chapter: chapter.id
-            }), {
+            const response = await fetch(route('mini-moduls.ai.discuss', { miniModul: modul.id, chapter: chapter.id }), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
                 body: JSON.stringify({ message: newMessage })
             });
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-
             if (data.success) {
                 setDiscussions(prev => [...prev, data.discussion]);
                 setNewMessage('');
-            } else throw new Error(data.message || 'Unknown error');
-
-        } catch (error) {
-            console.error('Error sending message:', error);
-            alert(`Gagal mengirim pesan: ${error.message}`);
-        } finally {
-            setIsLoading(false);
-        }
+            }
+        } catch (error) { console.error(error); } finally { setIsLoading(false); }
     };
 
     const startRolePlay = async (scenario) => {
         if (!scenario.trim() || isLoading) return;
-
         setIsLoading(true);
-        const tempUserMessage = {
-            id: Date.now() + '_user',
-            timestamp: new Date().toISOString(),
-            user_message: `[Memulai Simulasi - ${selectedRole}] ${scenario}`,
-            ai_response: 'Sedang berpikir...',
-            context: { type: 'placeholder' }
-        };
-        setDiscussions(prev => [...prev, tempUserMessage]);
-
+        const tempId = Date.now();
+        setDiscussions(prev => [...prev, { id: tempId, user_message: `[Simulasi: ${selectedRole}] ${scenario}`, ai_response: '...' }]);
+        
         try {
-            const response = await fetch(route('mini-moduls.ai.role-play', {
-                miniModul: modul.id,
-                chapter: chapter.id
-            }), {
+            const response = await fetch(route('mini-moduls.ai.role-play', { miniModul: modul.id, chapter: chapter.id }), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
                 body: JSON.stringify({ role: selectedRole, scenario })
             });
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-
-            setDiscussions(prev => prev.map(d =>
-                d.id === tempUserMessage.id
-                    ? {
-                        ...d,
-                        id: Date.now(),
-                        ai_response: data.success ? data.role_response : "Gagal mendapatkan respons.",
-                        context: data.success ? { type: 'roleplay', role: selectedRole } : { type: 'error' }
-                    }
-                    : d
-            ));
-
-        } catch (error) {
-            console.error('Error in role play:', error);
-            setDiscussions(prev => prev.map(d =>
-                d.id === tempUserMessage.id
-                    ? { ...d, ai_response: `Terjadi kesalahan: ${error.message}` }
-                    : d
-            ));
-        } finally {
-            setIsLoading(false);
-        }
+            setDiscussions(prev => prev.map(d => d.id === tempId ? { ...d, ai_response: data.role_response } : d));
+        } catch (error) { console.error(error); } finally { setIsLoading(false); }
     };
 
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title={`${chapter.title} - ${modul.title}`} />
 
-            <div className="bg-gray-50 dark:bg-gray-900 min-h-screen relative">
-                {/* PREMIUM LOCK OVERLAY */}
-                {isLocked && (
-                    <div className="absolute inset-0 z-50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-6">
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-white dark:bg-slate-800 rounded-[3rem] p-10 max-w-lg w-full text-center shadow-2xl border border-slate-100 dark:border-slate-700"
-                        >
-                            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
-                                <LockClosedIcon className="w-10 h-10 text-amber-500" />
+            {/* Container UTAMA: Menggunakan min-h-screen agar bisa scroll sebanyak kontennya */}
+            <div className="w-full min-h-screen bg-[#F2F2F7] dark:bg-[#000000] relative">
+                
+                {/* 1. Sticky Header Navigation */}
+                <div className="sticky top-6 z-40 px-4 max-w-4xl mx-auto mb-8 pointer-events-none">
+                     <div className="pointer-events-auto">
+                        <ChapterHeader modul={modul} navigation={navigation} />
+                     </div>
+                </div>
+
+                {/* 2. Main Scrollable Content Area */}
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pb-32 flex justify-center">
+                    
+                    <motion.main 
+                        initial={{ opacity: 0, y: 20 }} 
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-4xl"
+                    >
+                         {isLocked ? (
+                            <div className="bg-white dark:bg-[#1C1C1E] rounded-[3rem] p-16 text-center shadow-2xl mt-10">
+                                <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <LockClosedIcon className="w-10 h-10 text-amber-500"/>
+                                </div>
+                                <h2 className="text-3xl font-black mb-4 dark:text-white">Konten Terkunci</h2>
+                                <p className="mb-8 text-slate-500">Hanya untuk member Premium.</p>
+                                <Link href={route('subscribe.index')} className="bg-slate-900 text-white px-8 py-4 rounded-full font-bold">Upgrade Sekarang</Link>
                             </div>
-                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Materi Premium</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
-                                Upgrade ke **Premium** untuk membuka akses ke seluruh materi pembelajaran dan fitur diskusi AI yang mendalam.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <Link
-                                    href={route('subscribe.index')}
-                                    className="px-8 py-4 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-2xl shadow-xl shadow-teal-500/20 transition-all active:scale-95"
-                                >
-                                    Upgrade Sekarang
-                                </Link>
-                                <Link
-                                    href={route('mini-moduls.index')}
-                                    className="px-8 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold rounded-2xl hover:bg-slate-200 transition-all"
-                                >
-                                    Kembali ke Modul
-                                </Link>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-
-                <div className={`max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 ${isLocked ? 'grayscale' : ''}`}>
-
-                    <ChapterHeader modul={modul} navigation={navigation} />
-
-                    <div className="lg:grid lg:grid-cols-4 lg:gap-8">
-                        {/* Konten Utama */}
-                        <main className="lg:col-span-3">
-                            <article className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 lg:p-10 text-base sm:text-lg leading-relaxed">
-                                <header className="mb-8">
-                                    <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">{modul.category?.name}</p>
-                                    <h1 className="text-3xl md:text-4xl font-extrabold leading-tight text-gray-900 dark:text-white tracking-tight">{chapter.title}</h1>
-                                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{chapter.estimated_duration} menit perkiraan waktu baca</p>
+                         ) : (
+                            <article className="bg-white dark:bg-[#1C1C1E] rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none p-8 sm:p-12 lg:p-16 border border-slate-100 dark:border-slate-800">
+                                <header className="mb-10 pb-8 border-b border-slate-100 dark:border-slate-800">
+                                    <span className="text-teal-600 dark:text-teal-400 font-bold uppercase tracking-widest text-xs mb-3 block">
+                                        {modul.category?.name}
+                                    </span>
+                                    <h1 className="text-3xl sm:text-5xl font-[900] tracking-tighter text-slate-900 dark:text-white leading-[1.1] mb-4">
+                                        {chapter.title}
+                                    </h1>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-500">
+                                        ⏱ {chapter.estimated_duration} Menit Baca
+                                    </div>
                                 </header>
 
-                                {/* Konten dengan list, code, gambar responsif */}
-                                <div
-                                    className="prose prose-lg dark:prose-invert max-w-none
-             prose-img:rounded-lg prose-img:mx-auto prose-img:max-h-[400px] prose-img:w-full prose-img:object-contain
-             prose-a:text-green-600 dark:prose-a:text-green-400
-             prose-strong:text-gray-800 dark:prose-strong:text-gray-200
-             prose-ol:list-decimal prose-ul:list-disc prose-li:my-2
-             prose-p:my-4
-             prose-h2:mt-8 prose-h2:mb-4 prose-h3:mt-6 prose-h3:mb-3
-             prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-pre:p-4 prose-pre:rounded-md prose-pre:overflow-x-auto
-             prose-blockquote:border-l-4 prose-blockquote:border-green-300 dark:prose-blockquote:border-green-600 prose-blockquote:pl-4 prose-blockquote:italic"
-                                    dangerouslySetInnerHTML={{ __html: chapter.content }}
-                                />
+                                {/* CONTENT AREA: Tidak ada max-height, konten akan memanjang ke bawah */}
+                                <div className="prose prose-lg prose-slate dark:prose-invert max-w-none 
+                                    prose-headings:font-black prose-headings:tracking-tight 
+                                    prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300
+                                    prose-a:text-teal-500 prose-a:no-underline hover:prose-a:underline
+                                    prose-img:rounded-[2rem] prose-img:shadow-lg prose-img:my-8
+                                    prose-pre:bg-slate-900 prose-pre:rounded-[1.5rem] prose-pre:shadow-xl
+                                    prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:p-6 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic
+                                ">
+                                    <div dangerouslySetInnerHTML={{ __html: chapter.content }} />
+                                </div>
 
-
-                                <footer className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                {/* Footer Buttons */}
+                                <div className="mt-16 pt-10 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4">
                                     <button
                                         onClick={() => setShowAiDiscussion(!showAiDiscussion)}
-                                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border-2 border-green-200 dark:border-green-800 text-sm font-bold rounded-md text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-900/40 hover:bg-green-100 dark:hover:bg-green-900/60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors"
+                                        className={`flex-1 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all border-2
+                                            ${showAiDiscussion 
+                                                ? 'bg-slate-100 dark:bg-slate-800 border-transparent text-slate-900 dark:text-white' 
+                                                : 'bg-white dark:bg-transparent border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-500 hover:text-teal-500'
+                                            }`}
                                     >
                                         <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                                        <span>Diskusi AI</span>
+                                        <span>Tanya AI</span>
                                     </button>
 
                                     {!isCompleted ? (
-                                        <button
-                                            onClick={handleCompleteChapter}
-                                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-bold rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transition-colors"
+                                        <button 
+                                            onClick={handleCompleteChapter} 
+                                            className="flex-1 py-4 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
                                         >
-                                            <CheckCircleIcon className="w-5 h-5" />
-                                            <span>Tandai Selesai</span>
+                                            <CheckCircleIcon className="w-5 h-5" /> Selesaikan Bab Ini
                                         </button>
                                     ) : (
-                                        <div className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/50 rounded-md">
-                                            <CheckCircleIcon className="w-5 h-5" />
-                                            <span>Selesai</span>
+                                        <div className="flex-1 py-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-2xl font-bold flex items-center justify-center gap-2 cursor-default">
+                                            <CheckCircleIcon className="w-5 h-5" /> Sudah Selesai
                                         </div>
                                     )}
-                                </footer>
+                                </div>
 
-                                <Transition
-                                    show={showAiDiscussion}
-                                    enter="transition-all duration-300 ease-out"
-                                    enterFrom="opacity-0 -translate-y-4"
-                                    enterTo="opacity-100 translate-y-0"
-                                    leave="transition-all duration-150 ease-in"
-                                    leaveFrom="opacity-100 translate-y-0"
-                                    leaveTo="opacity-0 -translate-y-4"
-                                >
-                                    <AiDiscussionPanel
-                                        discussions={discussions}
-                                        newMessage={newMessage}
-                                        setNewMessage={setNewMessage}
-                                        sendMessage={sendMessage}
-                                        startRolePlay={startRolePlay}
-                                        isLoading={isLoading}
-                                        selectedRole={selectedRole}
-                                        setSelectedRole={setSelectedRole}
-                                    />
-                                </Transition>
+                                {/* AI Panel - Akan mendorong konten ke bawah saat dibuka */}
+                                <AnimatePresence>
+                                    {showAiDiscussion && (
+                                        <motion.div 
+                                            initial={{ height: 0, opacity: 0 }} 
+                                            animate={{ height: 'auto', opacity: 1 }} 
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <AiDiscussionPanel 
+                                                discussions={discussions} 
+                                                newMessage={newMessage} setNewMessage={setNewMessage} 
+                                                sendMessage={sendMessage} startRolePlay={startRolePlay} 
+                                                isLoading={isLoading} selectedRole={selectedRole} setSelectedRole={setSelectedRole} 
+                                            />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </article>
-                        </main>
-
-                        {/* Sidebar Desktop */}
-                        <aside className="hidden lg:block lg:col-span-1">
-                            <div className="sticky top-24">
-                                <ChapterSidebar
-                                    modul={modul}
-                                    allChapters={allChapters}
-                                    currentChapterId={chapter.id}
-                                    userProgress={userProgress}
-                                />
-                            </div>
-                        </aside>
-                    </div>
+                         )}
+                    </motion.main>
                 </div>
 
-                {/* Tombol Sidebar Mobile */}
-                <div className="lg:hidden fixed bottom-4 right-4 z-20">
-                    <button
-                        onClick={() => setSidebarVisible(!isSidebarVisible)}
-                        className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-lg text-gray-800 dark:text-gray-200 ring-1 ring-black ring-opacity-5"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
+                {/* 3. Floating Action Button for Sidebar */}
+                <button 
+                    onClick={() => setSidebarOpen(true)}
+                    className="fixed bottom-8 right-8 z-50 bg-slate-900 dark:bg-white text-white dark:text-black p-4 rounded-full shadow-2xl shadow-slate-900/40 hover:scale-110 transition-transform flex items-center gap-2 group"
+                >
+                    <ListBulletIcon className="w-6 h-6" />
+                    <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap font-bold text-sm">
+                        Daftar Isi
+                    </span>
+                </button>
 
-                {/* Panel Sidebar Mobile */}
-                <Transition show={isSidebarVisible} as={React.Fragment}>
-                    <div className="lg:hidden fixed inset-0 z-30" onClick={() => setSidebarVisible(false)}>
-                        <Transition.Child
-                            as={React.Fragment}
-                            enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
-                            leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0"
-                        >
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-                        </Transition.Child>
+                {/* 4. Sidebar Drawer (Off-Canvas / Overlay) */}
+                <AnimatePresence>
+                    {isSidebarOpen && (
+                        <>
+                            {/* Backdrop */}
+                            <motion.div 
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                onClick={() => setSidebarOpen(false)}
+                                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+                            />
+                            
+                            {/* Sidebar Panel - Fixed Height but Scrollable Inside */}
+                            <motion.div
+                                initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                                className="fixed inset-y-0 right-0 z-[70] w-80 sm:w-96 bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-xl shadow-2xl border-l border-white/20 flex flex-col h-full"
+                            >
+                                <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+                                    <h3 className="text-2xl font-black dark:text-white">Kurikulum</h3>
+                                    <button onClick={() => setSidebarOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                        <XMarkIcon className="w-6 h-6 text-slate-500" />
+                                    </button>
+                                </div>
+                                
+                                {/* Area Scroll untuk Sidebar */}
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    <ChapterSidebar 
+                                        modul={modul} 
+                                        allChapters={allChapters} 
+                                        currentChapterId={chapter.id} 
+                                        userProgress={userProgress} 
+                                    />
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
 
-                        <Transition.Child
-                            as="div"
-                            className="absolute inset-y-0 left-0 w-4/5 max-w-sm"
-                            enter="transition ease-in-out duration-500 transform" enterFrom="-translate-x-full" enterTo="translate-x-0"
-                            leave="transition ease-in-out duration-500 transform" leaveFrom="translate-x-0" leaveTo="-translate-x-full"
-                        >
-                            <div className="h-full p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
-                                <ChapterSidebar
-                                    modul={modul}
-                                    allChapters={allChapters}
-                                    currentChapterId={chapter.id}
-                                    userProgress={userProgress}
-                                />
-                            </div>
-                        </Transition.Child>
-                    </div>
-                </Transition>
             </div>
-        </AuthenticatedLayout >
+        </AuthenticatedLayout>
     );
 }

@@ -6,16 +6,20 @@ import {
     XMarkIcon,
     PaperAirplaneIcon,
     ChevronUpIcon,
-    Bars3BottomLeftIcon,
-    VariableIcon,
-    ForwardIcon,
     LockClosedIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
-export default function DynamicChatBar() {
+// Terima prop 'user' disini
+export default function DynamicChatBar({ user }) {
     const { auth } = usePage().props;
-    const hasAiAssistant = auth.user.premium_features.ai_assistant;
+    
+    // Prioritaskan user dari prop, kalau tidak ada ambil dari global auth
+    const currentUser = user || auth.user;
+
+    // --- BAGIAN INI YANG MENYEBABKAN ERROR, KITA FIX ---
+    // Gunakan tanda tanya (?) agar tidak crash jika premium_features kosong
+    const hasAiAssistant = currentUser?.premium_features?.ai_assistant || false; 
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [input, setInput] = useState('');
