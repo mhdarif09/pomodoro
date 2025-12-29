@@ -1,0 +1,5 @@
+provider: spaces
+name: ''
+region: ''
+path: null
+updaterCacheDirName: laravel-updater

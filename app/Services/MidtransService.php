@@ -22,7 +22,7 @@ class MidtransService
         $subscription->load('user');
 
         // Validate price
-        $price = $this->getValidatedPlanPrice($subscription->plan);
+        $price = $subscription->final_price ?? $subscription->price ?? $this->getValidatedPlanPrice($subscription->plan);
         if ($price <= 0) {
             Log::error("Invalid price for plan: " . $subscription->plan);
             throw new \Exception("Invalid price");
@@ -50,7 +50,7 @@ class MidtransService
                     'id' => 'PLAN-' . strtoupper($subscription->plan),
                     'price' => (int) $price,
                     'quantity' => 1,
-                    'name' => 'Premium Subscription - ' . ucfirst($subscription->plan),
+                    'name' => 'Premium Subscription - ' . ucfirst($subscription->plan) . ($subscription->promo_code ? ' (Promo applied)' : ''),
                 ]
             ],
             // Add extra security

@@ -1,0 +1,102 @@
+// File: resources/js/Components/TodoList/TaskItem.jsx (Final - With Priority Color Bar)
+
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PencilIcon, TrashIcon, ChevronDownIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { CalendarDaysIcon as CalendarOutline } from '@heroicons/react/24/outline';
+import { router } from '@inertiajs/react';
+
+export default function TaskItem({ task, onEditClick, onDeleteClick }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    
+    // --- KODE BARU: Mendefinisikan warna border untuk setiap prioritas ---
+    const priorityBorderStyles = {
+        'Rendah': 'border-l-sky-500',
+        'Sedang': 'border-l-yellow-500',
+        'Tinggi': 'border-l-orange-500',
+        'Mendesak': 'border-l-rose-500',
+    };
+    // -----------------------------------------------------------------
+
+    const handleToggleComplete = (e) => {
+        e.stopPropagation();
+        router.patch(route('tasks.toggle-complete', task.id), {
+            preserveScroll: true,
+        });
+    };
+
+    const handleDelete = () => {
+        if (window.confirm('Apakah Anda yakin ingin menghapus tugas ini?')) {
+            onDeleteClick(task.id);
+        }
+    };
+    
+    const baseUrl = window.location.origin;
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: task.is_completed ? 0.5 : 1, y: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3 }}
+            // --- KODE DIMODIFIKASI: Menambahkan kelas untuk border berwarna ---
+            className={`
+                flex flex-col text-sm bg-white dark:bg-slate-800 
+                border-b border-slate-200 dark:border-slate-700
+                border-l-4 transition-colors duration-300
+                ${priorityBorderStyles[task.priority] || 'border-l-transparent'}
+            `}
+            // ----------------------------------------------------------------
+        >
+            <div className="p-4 flex items-center gap-4">
+                <div 
+                    onClick={handleToggleComplete}
+                    className={`flex-shrink-0 w-6 h-6 rounded-full border-2 cursor-pointer flex items-center justify-center transition-all duration-200 ${
+                        task.is_completed 
+                            ? 'bg-green-500 border-green-500' 
+                            : 'border-slate-300 dark:border-slate-600 hover:border-green-400'
+                    }`}
+                >
+                    {task.is_completed && <CheckIcon className="w-4 h-4 text-white" />}
+                </div>
+
+                <div className="flex-grow cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+                    <p className={`font-medium text-slate-800 dark:text-slate-100 transition-colors ${task.is_completed ? 'line-through text-slate-500 dark:text-slate-400' : ''}`}>
+                        {task.title}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center mt-0.5">
+                        <CalendarOutline className="w-3 h-3 mr-1.5" />
+                        Tenggat: {new Date(task.due_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </p>
+                </div>
+
+                <div className="flex-shrink-0 flex items-center gap-2">
+                    <button onClick={() => onEditClick(task)} className="p-1 text-slate-400 hover:text-blue-500 transition"><PencilIcon className="w-4 h-4" /></button>
+                    <button onClick={handleDelete} className="p-1 text-slate-400 hover:text-rose-500 transition"><TrashIcon className="w-4 h-4" /></button>
+                    <button onClick={() => setIsExpanded(!isExpanded)} className="p-1 text-slate-400 hover:text-slate-600 transition">
+                       <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+                </div>
+            </div>
+
+            <AnimatePresence>
+                {isExpanded && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="px-4 pb-4 pl-14 text-slate-600 dark:text-slate-300 text-xs space-y-2 overflow-hidden"
+                    >
+                       <p className='whitespace-pre-wrap'>{task.description || "Tidak ada deskripsi."}</p>
+                       {task.document_path && (
+                            <a href={`${baseUrl}/storage/${task.document_path}`} target="_blank" rel="noopener noreferrer" className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
+                                Lihat Dokumen Terlampir
+                            </a>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+}

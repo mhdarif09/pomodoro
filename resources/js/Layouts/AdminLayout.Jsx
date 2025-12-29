@@ -8,7 +8,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Impor ikon-ikon baru yang keren
 import {
-    Bars3Icon, XMarkIcon, HomeIcon, UserGroupIcon, DocumentTextIcon, CreditCardIcon, ChartBarIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon
+    Bars3Icon, XMarkIcon, HomeIcon, UserGroupIcon, DocumentTextIcon, CreditCardIcon, ChartBarIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, TicketIcon
 } from '@heroicons/react/24/outline';
 
 const UserAvatar = ({ user }) => {
@@ -51,7 +51,8 @@ export default function Authenticated({ children, header }) {
         { routeName: 'admin.dashboard', label: 'Dashboard Admin', icon: ChartBarIcon, for: 'admin' },
         { routeName: 'admin.users.index', label: 'Manajemen User', icon: UserGroupIcon, for: 'admin' },
         { routeName: 'admin.mini-moduls.index', label: 'Manajemen Modul', icon: DocumentTextIcon, for: 'admin' },
-        { routeName: 'admin.plans.index', label: 'Manajemen Plan', icon: CreditCardIcon, for: 'admin' }
+        { routeName: 'admin.plans.index', label: 'Manajemen Plan', icon: CreditCardIcon, for: 'admin' },
+        { routeName: 'admin.promos.index', label: 'Manajemen Promo', icon: TicketIcon, for: 'admin' }
     ];
 
     // Cek apakah user adalah admin

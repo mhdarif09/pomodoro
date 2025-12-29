@@ -25,6 +25,9 @@ class User extends Authenticatable
         'personal_motivation',
         'onboarding_complete',
         'personality_summary',
+        'affiliate_code',
+        'referred_by_id',
+        'affiliate_balance',
     ];
 
     protected $appends = [
@@ -189,6 +192,38 @@ class User extends Authenticatable
             $this->level >= 10 => 'Penjelajah Berpengalaman',
             default => 'Pemula'
         };
+    }
+
+    // --- Affiliate Relationships ---
+
+    public function referredBy()
+    {
+        return $this->belongsTo(User::class, 'referred_by_id');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class, 'affiliate_id');
+    }
+
+    public function invitedUsers()
+    {
+        return $this->hasMany(User::class, 'referred_by_id');
+    }
+
+    /**
+     * Generate unique affiliate code
+     */
+    public static function generateAffiliateCode($name)
+    {
+        $base = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 4));
+        $code = $base . rand(1000, 9999);
+        
+        while (self::where('affiliate_code', $code)->exists()) {
+            $code = $base . rand(1000, 9999);
+        }
+        
+        return $code;
     }
 }
 

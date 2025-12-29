@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AdminLayout';
 import {
     PlusIcon,
@@ -126,6 +126,7 @@ const FeaturesInput = ({ features = [], onChange }) => {
 // --- Plan Item Component ---
 const PlanItem = ({ plan }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { data, setData, put, patch, delete: destroy, processing, errors, reset } = useForm({
         name: plan.name || '',
@@ -170,17 +171,27 @@ const PlanItem = ({ plan }) => {
 
     const handleDelete = () => {
         if (confirm(`Yakin ingin menghapus plan "${plan.name}"?`)) {
-            destroy(route('admin.plans.destroy', plan.id), {
+            setIsLoading(true);
+            router.delete(route('admin.plans.destroy', plan.id), {
                 preserveScroll: true,
+                onFinish: () => setIsLoading(false),
+                onError: (errors) => {
+                    console.error('Delete error:', errors);
+                    setIsLoading(false);
+                }
             });
         }
     };
 
     const handleToggleStatus = () => {
-        // GUNAKAN PATCH bukan put
-        patch(route('admin.plans.toggle-status', plan.id), {
-            preserveScroll: true,
-        });
+        const action = plan.is_active ? 'menonaktifkan' : 'mengaktifkan';
+        if (confirm(`Yakin ingin ${action} plan "${plan.name}"?`)) {
+            setIsLoading(true);
+            router.patch(route('admin.plans.toggle-status', plan.id), {}, {
+                preserveScroll: true,
+                onFinish: () => setIsLoading(false),
+            });
+        }
     };
 
     const handleCancel = () => {
@@ -409,7 +420,7 @@ const PlanItem = ({ plan }) => {
             <div className="flex items-center gap-1">
                 <IconButton
                     onClick={handleToggleStatus}
-                    disabled={processing}
+                    disabled={isLoading}
                     className={plan.is_active ? 'hover:text-orange-600 dark:hover:text-orange-400' : 'hover:text-green-600 dark:hover:text-green-400'}
                     title={plan.is_active ? 'Nonaktifkan plan' : 'Aktifkan plan'}
                 >
@@ -417,6 +428,7 @@ const PlanItem = ({ plan }) => {
                 </IconButton>
                 <IconButton
                     onClick={() => setIsEditing(true)}
+                    disabled={isLoading}
                     className="hover:text-blue-600 dark:hover:text-blue-400"
                     title="Edit plan"
                 >
@@ -424,7 +436,7 @@ const PlanItem = ({ plan }) => {
                 </IconButton>
                 <IconButton
                     onClick={handleDelete}
-                    disabled={processing}
+                    disabled={isLoading}
                     className="hover:text-red-600 dark:hover:text-red-400"
                     title="Hapus plan"
                 >

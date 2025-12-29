@@ -10,11 +10,17 @@ class Subscription extends Model
         'user_id', 
         'plan', 
         'status', 
-        'expired_at',    // TAMBAHKAN INI (karena ada di database)
+        'price',
+        'duration',
+        'promo_code',
+        'discount_amount',
+        'final_price',
+        'expired_at',
         'paid_at',
-        'payment_type',  // TAMBAHKAN INI jika ada di database
+        'payment_type',
         'midtrans_order_id', 
-        'midtrans_transaction_id'
+        'midtrans_transaction_id',
+        'snap_token'
     ];
 
     // TAMBAHKAN CAST UNTUK TANGGAL

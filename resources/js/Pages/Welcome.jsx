@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import Lenis from '@studio-freight/lenis';
 import clsx from 'clsx';
 import {
@@ -179,6 +179,10 @@ function OdysseyLandingPageContent({ plans = [] }) {
             <a href="#topics" className="hover:text-slate-900 transition-colors">Eksplorasi</a>
             <a href="#gamification" className="hover:text-slate-900 transition-colors">{t('nav_gamification') || 'Gamifikasi'}</a>
             <a href="#pricing" className="hover:text-slate-900 transition-colors">{t('pricing_title') || 'Harga'}</a>
+            <Link href={route('download.windows')} className="px-4 py-1.5 rounded-full border border-emerald-500 text-emerald-600 font-bold hover:bg-emerald-50 transition-all flex items-center gap-1 text-xs">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1V11.55H0V3.449zm0 8.851h9.75v9.45L0 20.401V12.3zm10.75-10.45l13.25-1.85V11.55h-13.25V1.85zM24 12.3v10.15l-13.25-1.85V12.3H24z" /></svg>
+              Install App
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
@@ -253,9 +257,16 @@ function OdysseyLandingPageContent({ plans = [] }) {
                 <motion.a href="/login" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-10 py-5 bg-emerald-600 hover:bg-emerald-700 rounded-full font-bold text-lg text-white transition-all shadow-xl shadow-emerald-500/30">
                   {t('cta_start') || 'Mulai Petualangan'}
                 </motion.a>
-                <motion.a href="#features" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-10 py-5 bg-white hover:bg-slate-50 rounded-full font-bold text-lg text-slate-900 transition-all shadow-lg shadow-slate-200/50">
-                  Pelajari Lebih Lanjut
-                </motion.a>
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href={route('download.windows')}
+                    className="px-8 py-5 bg-white border-2 border-emerald-500 hover:bg-slate-50 rounded-full font-bold text-lg text-emerald-600 transition-all shadow-lg shadow-slate-200/50 flex items-center gap-2"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1V11.55H0V3.449zm0 8.851h9.75v9.45L0 20.401V12.3zm10.75-10.45l13.25-1.85V11.55h-13.25V1.85zM24 12.3v10.15l-13.25-1.85V12.3H24z" /></svg>
+                    Download Windows
+                  </Link>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t('download_req')}</span>
+                </div>
               </motion.div>
             </motion.div>
           </div>

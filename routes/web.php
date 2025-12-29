@@ -9,6 +9,8 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\VoiceController;
+use App\Http\Controllers\Admin\PromoController;
+use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\OnboardingController;
 
 use App\Http\Controllers\ReflectionController;
@@ -166,6 +168,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/leaderboard', [GamificationController::class, 'leaderboard'])->name('leaderboard');
     });
 
+    // --- AFFILIATE DASHBOARD ---
+    Route::get('/affiliate', [AffiliateController::class, 'dashboard'])->name('affiliate.dashboard');
+    Route::post('/affiliate/generate-code', [AffiliateController::class, 'generateCode'])->name('affiliate.generate-code');
+
     // --- MEDIA API ---
     Route::get('/api/media/search', [\App\Http\Controllers\Api\MediaController::class, 'search'])->name('api.media.search');
 
@@ -196,10 +202,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{user}/make-admin', [AdminUserController::class, 'makeAdmin'])->name('users.make-admin');
     Route::post('/users/{user}/revoke-admin', [AdminUserController::class, 'revokeAdmin'])->name('users.revoke-admin');
 
-    // Admin Plans Management
     Route::resource('plans', PlanController::class)->except(['create', 'edit', 'show']);
     Route::post('/plans/bulk-update', [PlanController::class, 'bulkUpdate'])->name('plans.bulk-update');
     Route::patch('/plans/{plan}/toggle-status', [PlanController::class, 'toggleStatus'])->name('plans.toggle-status');
+    
+    // Admin Promos Management
+    Route::resource('promos', PromoController::class)->except(['create', 'edit', 'show']);
+    Route::patch('/promos/{promo}/toggle-status', [PromoController::class, 'toggleStatus'])->name('promos.toggle-status');
     
     // Admin Mini Moduls Management
     Route::resource('mini-modul-categories', MiniModulCategoryController::class);
@@ -224,6 +233,17 @@ Route::middleware(['auth', 'verified', 'premium'])->prefix('dashboard')->group(f
 
     // --- AI Assistant View ---
     Route::get('/ai-assistant', [\App\Http\Controllers\AIAssistantPageController::class, 'index'])->name('ai-assistant.index');
+});
+
+// --- DESKTOP UTILITIES ---
+Route::get('/desktop/open-external', [\App\Http\Controllers\DesktopController::class, 'openExternal'])->name('desktop.open-external');
+Route::get('/download/windows', [\App\Http\Controllers\DesktopController::class, 'showDownloadPage'])->name('download.windows');
+Route::get('/desktop/login-with-token', [\App\Http\Controllers\DesktopController::class, 'loginWithToken'])->name('desktop.login-with-token');
+
+// --- SUBSCRIPTION UPGRADE & PROMO ---
+Route::middleware(['auth'])->group(function() {
+    Route::post('/subscription/apply-promo', [SubscriptionController::class, 'applyPromo'])->name('subscription.apply-promo');
+    Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgradePlan'])->name('subscription.upgrade');
 });
 
 require __DIR__.'/auth.php';

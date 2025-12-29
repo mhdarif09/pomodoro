@@ -70,6 +70,21 @@ export const translations = {
         faq_title: 'Pertanyaan Umum',
         footer_rights: 'Hak Cipta Dilindungi.',
 
+        // --- DOWNLOAD PAGE ---
+        download_title: 'Sarang Tumbuh untuk Windows',
+        download_subtitle: 'Fokus lebih dalam, tanpa distraksi tab browser. Alami ekosistem produktivitas yang meluncur langsung dari desktop Anda.',
+        download_btn: 'Download untuk Windows',
+        download_step_1: 'Download Installer',
+        download_step_1_desc: 'Klik tombol di atas untuk mendapatkan file .exe versi terbaru.',
+        download_step_2: 'Instalasi Cepat',
+        download_step_2_desc: 'Buka file yang diunduh dan ikuti langkah instalasi sederhana.',
+        download_step_3: 'Mulai Fokus',
+        download_step_3_desc: 'Login sekali dan nikmati fitur eksklusif desktop.',
+        download_req: 'Kompatibel dengan Windows 10 & 11',
+        download_feature_1: 'Performa lebih cepat & stabil',
+        download_feature_2: 'Integrasi Global Shortcuts',
+        download_feature_3: 'Notifikasi Native yang elegan',
+
         // Landing Page - Features
         feat_focus_title: 'Fokus Mendalam',
         feat_focus_desc: 'Timer cerdas yang beradaptasi dengan ritme biologis Anda.',
@@ -185,6 +200,21 @@ export const translations = {
         pricing_subtitle: 'Choose the plan that fits your workflow.',
         faq_title: 'Common Questions',
         footer_rights: 'All Rights Reserved.',
+
+        // --- DOWNLOAD PAGE ---
+        download_title: 'Sarang Tumbuh for Windows',
+        download_subtitle: 'Focus deeper, without browser tab distractions. Experience the productivity ecosystem launching directly from your desktop.',
+        download_btn: 'Download for Windows',
+        download_step_1: 'Download Installer',
+        download_step_1_desc: 'Click the button above to get the latest .exe file.',
+        download_step_2: 'Quick Install',
+        download_step_2_desc: 'Open the downloaded file and follow the simple setup steps.',
+        download_step_3: 'Start Focusing',
+        download_step_3_desc: 'Login once and enjoy exclusive desktop features.',
+        download_req: 'Compatible with Windows 10 & 11',
+        download_feature_1: 'Faster & more stable performance',
+        download_feature_2: 'Global Shortcuts integration',
+        download_feature_3: 'Elegant Native notifications',
 
         // Landing Page - Features
         feat_focus_title: 'Deep Focus',

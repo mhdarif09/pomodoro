@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\User;
+use App\Models\Promo;
 use App\Services\MidtransService;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Carbon\Carbon;
 
 class SubscriptionController extends Controller
 {
@@ -456,5 +458,94 @@ class SubscriptionController extends Controller
             'reflections' => $reflectionCount,
             'goalsAchieved' => $goalsAchievedCount,
         ];
+    }
+
+    /**
+     * Apply promo code and return discount info
+     */
+    public function applyPromo(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'plan_id' => 'required|exists:plans,id',
+        ]);
+
+        $promo = Promo::where('code', $request->code)->first();
+        $plan = Plan::find($request->plan_id);
+
+        if (!$promo || !$promo->isValid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode promo tidak valid atau sudah kadaluarsa.'
+            ], 422);
+        }
+
+        $discount = $promo->calculateDiscount($plan->price);
+        $finalPrice = $plan->price - $discount;
+
+        return response()->json([
+            'success' => true,
+            'discount_amount' => (int) $discount,
+            'final_price' => (int) $finalPrice,
+            'promo_code' => $promo->code,
+            'message' => 'Kode promo berhasil digunakan!'
+        ]);
+    }
+
+    /**
+     * Handle upgrade for existing premium users
+     */
+    public function upgradePlan(Request $request, MidtransService $midtrans)
+    {
+        $request->validate([
+            'plan_id' => 'required|exists:plans,id',
+            'promo_code' => 'nullable|string',
+        ]);
+
+        $user = auth()->user();
+        $plan = Plan::find($request->plan_id);
+
+        // Calculate price and discount
+        $price = $plan->price;
+        $discountAmount = 0;
+        $promoCode = null;
+
+        if ($request->promo_code) {
+            $promo = Promo::where('code', $request->promo_code)->first();
+            if ($promo && $promo->isValid()) {
+                $discountAmount = $promo->calculateDiscount($price);
+                $promoCode = $promo->code;
+            }
+        }
+
+        $finalPrice = $price - $discountAmount;
+
+        // Create new subscription for upgrade
+        $subscription = Subscription::create([
+            'user_id' => $user->id,
+            'plan' => $plan->name,
+            'status' => 'unpaid',
+            'price' => $price,
+            'duration' => $plan->duration ?? 'monthly',
+            'promo_code' => $promoCode,
+            'discount_amount' => $discountAmount,
+            'final_price' => $finalPrice,
+        ]);
+
+        try {
+            $snap = $midtrans->createTransaction($subscription);
+            
+            return response()->json([
+                'success' => true,
+                'snap_token' => $snap->token,
+                'subscription_id' => $subscription->id,
+            ]);
+        } catch (\Exception $e) {
+            $subscription->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat transaksi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

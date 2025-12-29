@@ -5,13 +5,14 @@ import {
     Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, CreditCardIcon,
     DocumentTextIcon, UserIcon, ChevronLeftIcon, ChevronRightIcon,
     SparklesIcon, LockClosedIcon, ChartBarIcon, TrophyIcon,
-    ArrowRightOnRectangleIcon, LanguageIcon, QuestionMarkCircleIcon
+    ArrowRightOnRectangleIcon, LanguageIcon, QuestionMarkCircleIcon, TicketIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import WhatsAppWarningModal from '@/Components/WhatsAppWarningModal';
 import TutorialGuide from '@/Components/TutorialGuide';
 import ShortcutsHelpModal from '@/Components/ShortcutsHelpModal';
+import UpgradeModal from '@/Components/UpgradeModal';
 import { useLanguage } from '@/Contexts/LanguageContext';
 import useKeyboardShortcuts from '@/Hooks/useKeyboardShortcuts';
 
@@ -32,6 +33,7 @@ export default function Authenticated({ children, header }) {
         return false;
     });
     const [showShortcuts, setShowShortcuts] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const { auth } = usePage().props;
     const user = auth.user;
@@ -85,6 +87,7 @@ export default function Authenticated({ children, header }) {
         { routeName: 'ai-assistant.index', label: t('nav_ai_genius'), icon: <SparklesIcon className="h-5 w-5" /> },
         { routeName: 'learning.index', label: t('nav_learning'), icon: <BookOpenIcon className="h-5 w-5" /> },
         { routeName: 'reports.index', label: t('nav_reports'), icon: <ChartBarIcon className="h-5 w-5" /> },
+        { routeName: 'affiliate.dashboard', label: 'Affiliate', icon: <TicketIcon className="h-5 w-5" /> },
         { routeName: 'transactions.history', label: t('nav_wallet'), icon: <CreditCardIcon className="h-5 w-5" /> },
         { routeName: 'docs.index', label: t('nav_docs'), icon: <DocumentTextIcon className="h-5 w-5" /> },
     ];
@@ -94,6 +97,11 @@ export default function Authenticated({ children, header }) {
             <WhatsAppWarningModal />
             <TutorialGuide setSidebarOpen={setSidebarOpen} />
             <ShortcutsHelpModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                plans={usePage().props.plans || []}
+            />
 
             {/* Desktop Sidebar */}
             <motion.aside
@@ -116,6 +124,18 @@ export default function Authenticated({ children, header }) {
                         <ApplicationLogo className="h-8 w-auto text-teal-500 fill-current" />
                     )}
                 </div>
+
+                {!user.is_premium && !isCollapsed && (
+                    <div className="px-4 mb-4">
+                        <button
+                            onClick={() => setShowUpgradeModal(true)}
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                        >
+                            <SparklesIcon className="h-4 w-4" />
+                            Upgrade Premium
+                        </button>
+                    </div>
+                )}
 
                 {/* Navigation Pills */}
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto scrollbar-hide py-2">
