@@ -72,15 +72,7 @@ export default function Authenticated({ children, header }) {
     // I'll update the hook in a subsequent step to support modifiers.
     // For now, I will map the intent.
 
-    useEffect(() => {
-        if (!user) return;
-        const sendHeartbeat = () => {
-            if (document.visibilityState === 'visible') axios.post(route('api.heartbeat')).catch(console.error);
-        };
-        sendHeartbeat();
-        const interval = setInterval(sendHeartbeat, 60000);
-        return () => clearInterval(interval);
-    }, [user]);
+    // Heartbeat removed - route doesn't exist and was causing network errors
 
     const navLinks = [
         { routeName: 'dashboard', label: t('nav_dashboard'), icon: <HomeIcon className="h-5 w-5" /> },
@@ -268,7 +260,7 @@ export default function Authenticated({ children, header }) {
                                         {link.icon} {link.label}
                                     </Link>
                                 ))}
-                                <Link href={route('logout')} method="post" className="flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-bold text-red-500 mt-8">
+                                <Link href={route('logout')} method="post" as="button" className="flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-bold text-red-500 mt-8">
                                     <ArrowRightOnRectangleIcon className="w-6 h-6" /> {t('logout')}
                                 </Link>
                             </nav>
