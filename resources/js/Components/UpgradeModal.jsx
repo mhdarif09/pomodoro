@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import AdaptiveModal from './AdaptiveModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import {

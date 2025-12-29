@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -27,6 +27,8 @@ const UserAvatar = ({ user }) => {
 };
 
 export default function Authenticated({ children, header }) {
+    const { props } = usePage();
+    const { auth, plans } = props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(() => {
         if (typeof window !== 'undefined') return localStorage.getItem('sidebar_collapsed') === 'true';
@@ -35,7 +37,6 @@ export default function Authenticated({ children, header }) {
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-    const { auth } = usePage().props;
     const user = auth.user;
     const { t, toggleLanguage, language } = useLanguage();
 
