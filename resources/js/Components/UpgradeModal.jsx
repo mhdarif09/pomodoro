@@ -126,12 +126,17 @@ const UpgradeModal = ({ isOpen, onClose, plans }) => {
                 {/* Features List */}
                 <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 space-y-3">
                     <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Fitur Premium</h5>
-                    {selectedPlan.features && JSON.parse(selectedPlan.features).map((feature, i) => (
+                    {Array.isArray(selectedPlan.features) ? selectedPlan.features.map((feature, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                             <SparklesIcon className="h-4 w-4 text-emerald-500 shrink-0" />
                             <span>{feature}</span>
                         </div>
-                    ))}
+                    )) : (typeof selectedPlan.features === 'string' && selectedPlan.features.startsWith('[') ? JSON.parse(selectedPlan.features).map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                            <SparklesIcon className="h-4 w-4 text-emerald-500 shrink-0" />
+                            <span>{feature}</span>
+                        </div>
+                    )) : null)}
                 </div>
 
                 {/* Promo Code */}
