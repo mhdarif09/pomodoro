@@ -83,7 +83,9 @@ export default function Login({ status }) {
     const handleGoogleLogin = (e) => {
         if (isDesktop) {
             e.preventDefault();
-            const googleUrl = route('login.google.redirect');
+            // Kita arahkan ke URL produksi agar flow redirect sarangtumbuh:// bekerja dengan benar
+            const googleUrl = 'https://sarangtumbuh.site/login/google';
+
             // Open in system browser via our bridge route
             axios.get(route('desktop.open-external', { url: googleUrl }))
                 .catch(err => console.error("Failed to open external browser", err));

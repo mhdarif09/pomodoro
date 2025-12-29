@@ -17,6 +17,10 @@ class GoogleLoginController extends Controller
      */
     public function redirectToGoogle()
     {
+        if (request()->has('origin')) {
+            session(['login_origin' => request('origin')]);
+        }
+        
         return Socialite::driver('google')->redirect();
     }
 
