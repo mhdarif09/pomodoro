@@ -9,7 +9,9 @@ import {
     TrashIcon,
     CircleStackIcon,
     EyeIcon,
-    EyeSlashIcon
+    EyeSlashIcon,
+    SparklesIcon,
+    ChartBarIcon
 } from '@heroicons/react/24/solid';
 
 // --- Helper UI Components ---
@@ -81,45 +83,45 @@ const FeaturesInput = ({ features = [], onChange }) => {
     };
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             <div className="flex gap-2">
-                <Input
-                    type="text"
-                    value={newFeature}
-                    onChange={(e) => setNewFeature(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Tambah fitur..."
-                    className="flex-1"
-                />
+                <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <Input
+                        type="text"
+                        value={newFeature}
+                        onChange={(e) => setNewFeature(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Contoh: Akses Video Eksklusif"
+                        className="pl-9"
+                    />
+                </div>
                 <Button
                     type="button"
                     onClick={addFeature}
-                    className="bg-green-600 text-white hover:bg-green-500"
+                    className="bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/20"
                 >
                     <PlusIcon className="h-4 w-4" />
                 </Button>
             </div>
 
-            {features.length > 0 && (
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Fitur yang ditambahkan:
-                    </label>
-                    <div className="space-y-2">
-                        {features.map((feature, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-md">
-                                <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
-                                <IconButton
-                                    onClick={() => removeFeature(index)}
-                                    className="hover:text-red-600 dark:hover:text-red-400"
-                                >
-                                    <XMarkIcon className="h-4 w-4" />
-                                </IconButton>
-                            </div>
-                        ))}
+            <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                {features.length === 0 && <p className="text-xs text-slate-400 italic mx-auto">Belum ada fitur marketing yang ditambahkan.</p>}
+                {features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm animate-in fade-in zoom-in-95">
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{feature}</span>
+                        <button
+                            type="button"
+                            onClick={() => removeFeature(index)}
+                            className="text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                            <XMarkIcon className="h-3 w-3" />
+                        </button>
                     </div>
-                </div>
-            )}
+                ))}
+            </div>
         </div>
     );
 };
@@ -205,170 +207,184 @@ const PlanItem = ({ plan }) => {
 
     if (isEditing) {
         return (
-            <form onSubmit={handleUpdate} className="bg-white dark:bg-gray-800/50 p-6 rounded-lg space-y-6 shadow-sm ring-1 ring-gray-900/5 dark:ring-white/10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <form onSubmit={handleUpdate} className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] space-y-8 shadow-2xl border border-blue-500/20 animate-in fade-in slide-in-from-top-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Basic Info */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Informasi Dasar</h3>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Nama Plan *
-                            </label>
-                            <Input
-                                type="text"
-                                value={data.name}
-                                onChange={e => setData('name', e.target.value)}
-                                placeholder="Contoh: Premium Monthly"
-                                required
-                            />
-                            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Data Utama</h3>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Harga (Rp) *
-                            </label>
-                            <Input
-                                type="number"
-                                value={data.price}
-                                onChange={e => setData('price', e.target.value)}
-                                placeholder="Contoh: 99000"
-                                min="1000"
-                                required
-                            />
-                            {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    Identitas Plan
+                                </label>
+                                <Input
+                                    type="text"
+                                    value={data.name}
+                                    onChange={e => setData('name', e.target.value)}
+                                    placeholder="Contoh: Premium Monthly"
+                                    className="rounded-xl"
+                                    required
+                                />
+                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Durasi *
-                            </label>
-                            <Select value={data.duration} onChange={e => setData('duration', e.target.value)}>
-                                <option value="monthly">Bulanan</option>
-                                <option value="yearly">Tahunan</option>
-                            </Select>
-                            {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
-                        </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                        Harga (IDR)
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        value={data.price}
+                                        onChange={e => setData('price', e.target.value)}
+                                        placeholder="Contoh: 99000"
+                                        className="rounded-xl"
+                                        min="0"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                        Siklus Tagihan
+                                    </label>
+                                    <Select value={data.duration} onChange={e => setData('duration', e.target.value)} className="rounded-xl">
+                                        <option value="monthly">Bulanan</option>
+                                        <option value="yearly">Tahunan</option>
+                                    </Select>
+                                </div>
+                            </div>
 
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id={`active-${plan.id}`}
-                                checked={data.is_active}
-                                onChange={e => setData('is_active', e.target.checked)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                            />
-                            <label htmlFor={`active-${plan.id}`} className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Plan Aktif
-                            </label>
-                        </div>
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">Status Aktif</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setData('is_active', !data.is_active)}
+                                    className={clsx(
+                                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ring-offset-2 ring-2 ring-transparent",
+                                        data.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                                    )}
+                                >
+                                    <span className={clsx(
+                                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                                        data.is_active ? 'translate-x-5' : 'translate-x-0'
+                                    )} />
+                                </button>
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Max Subtasks *
-                            </label>
-                            <Input
-                                type="number"
-                                value={data.max_subtasks}
-                                onChange={e => setData('max_subtasks', e.target.value)}
-                                placeholder="Contoh: 10"
-                                min="0"
-                                required
-                            />
-                            {errors.max_subtasks && <p className="text-red-500 text-xs mt-1">{errors.max_subtasks}</p>}
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    Limit Subtasks per Tugas
+                                </label>
+                                <Input
+                                    type="number"
+                                    value={data.max_subtasks}
+                                    onChange={e => setData('max_subtasks', e.target.value)}
+                                    className="rounded-xl"
+                                    min="0"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Premium Features */}
-                    <div className="space-y-4 pt-4 lg:pt-0">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Premium Features</h3>
+                    {/* Premium Features Checklist */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Hak Akses Premium</h3>
+                        </div>
 
-                        <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg ring-1 ring-inset ring-gray-200 dark:ring-white/10">
-                            <div className="flex items-center justify-between">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Assistant</label>
-                                <input
-                                    type="checkbox"
-                                    checked={data.has_ai_assistant}
-                                    onChange={e => setData('has_ai_assistant', e.target.checked)}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                />
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 gap-3">
+                                {[
+                                    { key: 'has_ai_assistant', label: 'AI Assistant', icon: SparklesIcon, desc: 'Akses ke chat AI cerdas' },
+                                    { key: 'has_productivity_report', label: 'Productivity Report', icon: ChartBarIcon, desc: 'Laporan perkembangan mingguan' },
+                                    { key: 'has_auto_open_url', label: 'Auto-open URL', icon: EyeIcon, desc: 'Otomatis buka link saat fokus' },
+                                    { key: 'has_quick_notes', label: 'Quick Notes', icon: PencilSquareIcon, desc: 'Catatan cepat di panel fokus' },
+                                ].map((feat) => (
+                                    <div
+                                        key={feat.key}
+                                        onClick={() => setData(feat.key, !data[feat.key])}
+                                        className={clsx(
+                                            "flex items-start gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                                            data[feat.key]
+                                                ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20"
+                                                : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                        )}
+                                    >
+                                        <div className={clsx(
+                                            "p-2 rounded-xl shrink-0",
+                                            data[feat.key] ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-400"
+                                        )}>
+                                            <feat.icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between">
+                                                <span className="font-bold text-slate-900 dark:text-white">{feat.label}</span>
+                                                {data[feat.key] && <CheckIcon className="h-5 w-5 text-emerald-500" />}
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-0.5">{feat.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
 
                             {data.has_ai_assistant && (
-                                <div className="pl-4 pt-2 border-l-2 border-blue-500/30">
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                        Limit Chat Harian (-1: Unlimited)
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800">
+                                    <label className="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1.5 ml-1">
+                                        Kuota Chat Harian (-1: Unlimited)
                                     </label>
                                     <Input
                                         type="number"
                                         value={data.ai_chat_limit}
                                         onChange={e => setData('ai_chat_limit', e.target.value)}
-                                        className="h-8 text-xs"
+                                        className="h-9 text-sm rounded-xl"
                                         min="-1"
                                     />
-                                </div>
+                                </motion.div>
                             )}
-
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Productivity Report</label>
-                                <input
-                                    type="checkbox"
-                                    checked={data.has_productivity_report}
-                                    onChange={e => setData('has_productivity_report', e.target.checked)}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-open URL</label>
-                                <input
-                                    type="checkbox"
-                                    checked={data.has_auto_open_url}
-                                    onChange={e => setData('has_auto_open_url', e.target.checked)}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Notes</label>
-                                <input
-                                    type="checkbox"
-                                    checked={data.has_quick_notes}
-                                    onChange={e => setData('has_quick_notes', e.target.checked)}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                />
-                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Fitur Plan (Text List)
+                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
+                                Marketing Features (Informasi List)
                             </label>
                             <FeaturesInput
                                 features={data.features}
                                 onChange={handleFeaturesChange}
                             />
-                            {errors.features && <p className="text-red-500 text-xs mt-1">{errors.features}</p>}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Button
+                <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-8 border-t border-slate-100 dark:border-slate-800">
+                    <button
                         type="button"
-                        onClick={handleCancel}
-                        className="bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 focus-visible:outline-gray-400"
+                        onClick={handleDelete}
+                        disabled={processing || isLoading}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 text-red-600 font-bold hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all"
                     >
-                        <XMarkIcon className="h-5 w-5" /> Batal
-                    </Button>
-                    <Button
-                        type="submit"
-                        disabled={processing}
-                        className="bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline-blue-600"
-                    >
-                        <CheckIcon className="h-5 w-5" /> {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
-                    </Button>
+                        <TrashIcon className="h-5 w-5" /> Hapus Plan Selamanya
+                    </button>
+                    <div className="flex w-full sm:w-auto gap-3">
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="flex-1 sm:flex-none px-8 py-3 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-2xl font-bold active:scale-95 transition-all"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="flex-1 sm:flex-none px-12 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
+                        >
+                            {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                        </button>
+                    </div>
                 </div>
             </form>
         );
@@ -494,175 +510,181 @@ export default function Index({ auth, plans }) {
                     </header>
 
                     {/* Create Form */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8 ring-1 ring-gray-900/5 dark:ring-white/10">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Tambah Plan Baru</h2>
-                        <form onSubmit={handleCreate} className="space-y-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Basic Info */}
-                                <div className="space-y-4">
-                                    <h3 className="text-md font-medium text-gray-900 dark:text-white">Informasi Dasar</h3>
+                    <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl p-10 mb-12 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-5">
+                            <PlusIcon className="h-32 w-32 text-blue-500" />
+                        </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Nama Plan *
-                                        </label>
-                                        <Input
-                                            id="name"
-                                            type="text"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            placeholder="Contoh: Premium Monthly"
-                                            required
-                                        />
-                                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-                                    </div>
+                        <div className="relative">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Tambah Plan Baru</h2>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">Definisikan paket premium baru untuk ekosistem Sarang Tumbuh.</p>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Harga (Rp) *
-                                        </label>
-                                        <Input
-                                            id="price"
-                                            type="number"
-                                            value={data.price}
-                                            onChange={(e) => setData('price', e.target.value)}
-                                            placeholder="Contoh: 99000"
-                                            min="1000"
-                                            required
-                                        />
-                                        {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Durasi *
-                                        </label>
-                                        <Select
-                                            id="duration"
-                                            value={data.duration}
-                                            onChange={(e) => setData('duration', e.target.value)}
-                                        >
-                                            <option value="monthly">Bulanan</option>
-                                            <option value="yearly">Tahunan</option>
-                                        </Select>
-                                        {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            id="is_active"
-                                            checked={data.is_active}
-                                            onChange={(e) => setData('is_active', e.target.checked)}
-                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                        />
-                                        <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Aktifkan plan langsung
-                                        </label>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Max Subtasks *
-                                        </label>
-                                        <Input
-                                            id="max_subtasks"
-                                            type="number"
-                                            value={data.max_subtasks}
-                                            onChange={(e) => setData('max_subtasks', e.target.value)}
-                                            placeholder="Contoh: 10"
-                                            min="0"
-                                            required
-                                        />
-                                        {errors.max_subtasks && <p className="text-red-500 text-xs mt-1">{errors.max_subtasks}</p>}
-                                    </div>
-                                </div>
-
-                                {/* Premium Features */}
-                                <div className="space-y-4 pt-4 lg:pt-0">
-                                    <h3 className="text-md font-medium text-gray-900 dark:text-white">Premium Features</h3>
-
-                                    <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg ring-1 ring-inset ring-gray-200 dark:ring-white/10">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">AI Assistant</label>
-                                            <input
-                                                type="checkbox"
-                                                checked={data.has_ai_assistant}
-                                                onChange={e => setData('has_ai_assistant', e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                            />
+                            <form onSubmit={handleCreate} className="space-y-10">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                                    {/* Basic Info */}
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Data Utama</h3>
                                         </div>
 
-                                        {data.has_ai_assistant && (
-                                            <div className="pl-4 pt-2 border-l-2 border-blue-500/30">
-                                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                    Limit Chat Harian (-1: Unlimited)
-                                                </label>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nama Plan *</label>
                                                 <Input
-                                                    type="number"
-                                                    value={data.ai_chat_limit}
-                                                    onChange={e => setData('ai_chat_limit', e.target.value)}
-                                                    className="h-8 text-xs"
-                                                    min="-1"
+                                                    id="name"
+                                                    type="text"
+                                                    value={data.name}
+                                                    onChange={(e) => setData('name', e.target.value)}
+                                                    placeholder="Contoh: Premium Monthly"
+                                                    className="rounded-xl"
+                                                    required
                                                 />
+                                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                                             </div>
-                                        )}
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Productivity Report</label>
-                                            <input
-                                                type="checkbox"
-                                                checked={data.has_productivity_report}
-                                                onChange={e => setData('has_productivity_report', e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                            />
-                                        </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Harga (IDR) *</label>
+                                                    <Input
+                                                        id="price"
+                                                        type="number"
+                                                        value={data.price}
+                                                        onChange={(e) => setData('price', e.target.value)}
+                                                        placeholder="Contoh: 99000"
+                                                        className="rounded-xl"
+                                                        min="0"
+                                                        required
+                                                    />
+                                                    {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
+                                                </div>
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-open URL</label>
-                                            <input
-                                                type="checkbox"
-                                                checked={data.has_auto_open_url}
-                                                onChange={e => setData('has_auto_open_url', e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                            />
-                                        </div>
+                                                <div>
+                                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Siklus *</label>
+                                                    <Select
+                                                        id="duration"
+                                                        value={data.duration}
+                                                        onChange={(e) => setData('duration', e.target.value)}
+                                                        className="rounded-xl"
+                                                    >
+                                                        <option value="monthly">Bulanan</option>
+                                                        <option value="yearly">Tahunan</option>
+                                                    </Select>
+                                                </div>
+                                            </div>
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quick Notes</label>
-                                            <input
-                                                type="checkbox"
-                                                checked={data.has_quick_notes}
-                                                onChange={e => setData('has_quick_notes', e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                                            />
+                                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">Aktifkan Sekarang</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setData('is_active', !data.is_active)}
+                                                    className={clsx(
+                                                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ring-offset-2 ring-2 ring-transparent",
+                                                        data.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                                                    )}
+                                                >
+                                                    <span className={clsx(
+                                                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                                                        data.is_active ? 'translate-x-5' : 'translate-x-0'
+                                                    )} />
+                                                </button>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Limit Subtasks *</label>
+                                                <Input
+                                                    id="max_subtasks"
+                                                    type="number"
+                                                    value={data.max_subtasks}
+                                                    onChange={(e) => setData('max_subtasks', e.target.value)}
+                                                    placeholder="Contoh: 10"
+                                                    className="rounded-xl"
+                                                    min="0"
+                                                    required
+                                                />
+                                                {errors.max_subtasks && <p className="text-red-500 text-xs mt-1">{errors.max_subtasks}</p>}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Fitur Plan (Text List)
-                                        </label>
-                                        <FeaturesInput
-                                            features={data.features}
-                                            onChange={handleFeaturesChange}
-                                        />
-                                        {errors.features && <p className="text-red-500 text-xs mt-1">{errors.features}</p>}
+                                    {/* Premium Features */}
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Hak Akses Premium</h3>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-1 gap-3">
+                                                {[
+                                                    { key: 'has_ai_assistant', label: 'AI Assistant', icon: SparklesIcon, desc: 'Akses ke chat AI cerdas' },
+                                                    { key: 'has_productivity_report', label: 'Productivity Report', icon: ChartBarIcon, desc: 'Laporan perkembangan mingguan' },
+                                                    { key: 'has_auto_open_url', label: 'Auto-open URL', icon: EyeIcon, desc: 'Otomatis buka link saat fokus' },
+                                                    { key: 'has_quick_notes', label: 'Quick Notes', icon: PencilSquareIcon, desc: 'Catatan cepat di panel fokus' },
+                                                ].map((feat) => (
+                                                    <div
+                                                        key={feat.key}
+                                                        onClick={() => setData(feat.key, !data[feat.key])}
+                                                        className={clsx(
+                                                            "flex items-start gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                                                            data[feat.key]
+                                                                ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20"
+                                                                : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                                        )}
+                                                    >
+                                                        <div className={clsx(
+                                                            "p-2 rounded-xl shrink-0",
+                                                            data[feat.key] ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-400"
+                                                        )}>
+                                                            <feat.icon className="h-5 w-5" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex justify-between">
+                                                                <span className="font-bold text-slate-900 dark:text-white">{feat.label}</span>
+                                                                {data[feat.key] && <CheckIcon className="h-5 w-5 text-emerald-500" />}
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 mt-0.5">{feat.desc}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {data.has_ai_assistant && (
+                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800">
+                                                    <label className="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1.5 ml-1">Kuota Chat Harian (-1: Unlimited)</label>
+                                                    <Input
+                                                        type="number"
+                                                        value={data.ai_chat_limit}
+                                                        onChange={e => setData('ai_chat_limit', e.target.value)}
+                                                        className="h-9 text-sm rounded-xl"
+                                                        min="-1"
+                                                    />
+                                                </motion.div>
+                                            )}
+                                        </div>
+
+                                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Marketing Features (Informasi List)</label>
+                                            <FeaturesInput
+                                                features={data.features}
+                                                onChange={handleFeaturesChange}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <Button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="bg-blue-600 text-white hover:bg-blue-500 focus-visible:outline-blue-600"
-                                >
-                                    <PlusIcon className="h-5 w-5" />
-                                    {processing ? 'Menambahkan...' : 'Tambah Plan'}
-                                </Button>
-                            </div>
-                        </form>
+                                <div className="flex justify-end pt-8 border-t border-slate-100 dark:border-slate-800">
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="w-full sm:w-auto px-12 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black shadow-2xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <PlusIcon className="h-6 w-6" />
+                                        {processing ? 'Menambahkan...' : 'Simpan Plan Premium'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
 
                     {/* Plans List */}

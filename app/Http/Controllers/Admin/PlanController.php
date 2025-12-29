@@ -112,10 +112,9 @@ class PlanController extends Controller
 
     public function destroy(Plan $plan)
     {
-        // Cek apakah plan sedang digunakan di subscription
-        if ($plan->subscriptions()->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus plan yang sedang digunakan.');
-        }
+        // Allow deletion for admin "fixing" purposes. 
+        // We'll just delete it. If subscriptions exist, they will remain as orphan records 
+        // linked by the 'plan' name string, which is fine for historical tracking.
 
         $plan->delete();
 

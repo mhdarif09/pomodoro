@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AdminLayout';
 import {
     PlusIcon,
@@ -71,15 +71,15 @@ const PromoIndex = ({ promos }) => {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-semibold text-xl text-slate-800 dark:text-neutral-200 leading-tight">Kelola Promo</h2>}
+            header={<h2 className="font-bold text-xl text-slate-800 dark:text-neutral-200 leading-tight">💎 Dashboard Elit Admin</h2>}
         >
             <Head title="Admin - Kelola Promo" />
 
-            <div className="py-6">
-                <div className="flex justify-between items-center mb-6">
+            <div className="py-8 max-w-7xl mx-auto space-y-10">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-700">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Daftar Promo</h1>
-                        <p className="text-slate-500 dark:text-slate-400">Buat dan kelola kode diskon untuk user.</p>
+                        <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Pusat Kupon & Promo</h1>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Buat momen spesial dengan kode diskon eksklusif untuk para fokus-mania.</p>
                     </div>
                     <button
                         onClick={() => {
@@ -87,180 +87,201 @@ const PromoIndex = ({ promos }) => {
                             setEditingPromo(null);
                             reset();
                         }}
-                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-all shadow-lg active:scale-95"
+                        className="flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-emerald-500/20 active:scale-95 group"
                     >
-                        <PlusIcon className="h-5 w-5" />
-                        {isAdding ? 'Batal' : 'Tambah Promo'}
+                        <PlusIcon className="h-6 w-6 group-hover:rotate-90 transition-transform" />
+                        {isAdding ? 'Batalkan Aksi' : 'Ciptakan Promo Baru'}
                     </button>
                 </div>
 
                 {/* Form Tambah/Edit */}
-                {isAdding && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 mb-8"
-                    >
-                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Kode Promo</label>
-                                <input
-                                    type="text"
-                                    value={data.code}
-                                    onChange={e => setData('code', e.target.value.toUpperCase())}
-                                    placeholder="CONTOH: PROMO10"
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
-                                />
-                                {errors.code && <p className="text-xs text-red-500">{errors.code}</p>}
-                            </div>
+                <AnimatePresence>
+                    {isAdding && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                            className="bg-white dark:bg-slate-800 rounded-[3rem] shadow-2xl border-4 border-emerald-500/20 p-10 relative overflow-hidden"
+                        >
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl" />
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tipe Diskon</label>
-                                <select
-                                    value={data.discount_type}
-                                    onChange={e => setData('discount_type', e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl"
-                                >
-                                    <option value="percentage">Persentase (%)</option>
-                                    <option value="fixed">Nominal Tetap (Rp)</option>
-                                </select>
-                            </div>
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase mb-8 flex items-center gap-3">
+                                <TicketIcon className="h-6 w-6 text-emerald-500" />
+                                {editingPromo ? 'Modifikasi Promo' : 'Konfigurasi Promo Baru'}
+                            </h2>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nilai Diskon</label>
-                                <input
-                                    type="number"
-                                    value={data.discount_value}
-                                    onChange={e => setData('discount_value', e.target.value)}
-                                    placeholder={data.discount_type === 'percentage' ? "10 (%)" : "50000 (Rp)"}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl"
-                                />
-                                {errors.discount_value && <p className="text-xs text-red-500">{errors.discount_value}</p>}
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Batas Penggunaan</label>
-                                <input
-                                    type="number"
-                                    value={data.usage_limit}
-                                    onChange={e => setData('usage_limit', e.target.value)}
-                                    placeholder="Kosongkan jika tidak terbatas"
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal Kadaluarsa</label>
-                                <input
-                                    type="date"
-                                    value={data.expires_at}
-                                    onChange={e => setData('expires_at', e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl"
-                                />
-                            </div>
-
-                            <div className="flex items-end pb-1">
-                                <label className="relative inline-flex items-center cursor-pointer">
+                            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Kode Identitas</label>
                                     <input
-                                        type="checkbox"
-                                        checked={data.is_active}
-                                        onChange={e => setData('is_active', e.target.checked)}
-                                        className="sr-only peer"
+                                        type="text"
+                                        value={data.code}
+                                        onChange={e => setData('code', e.target.value.toUpperCase())}
+                                        placeholder="CONTOH: FOKUS10"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-4 font-mono font-bold text-lg focus:border-emerald-500 outline-none transition-all placeholder:opacity-30"
                                     />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:width-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-600"></div>
-                                    <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">Aktif</span>
-                                </label>
-                            </div>
+                                    {errors.code && <p className="text-xs text-red-500 ml-1 font-bold">{errors.code}</p>}
+                                </div>
 
-                            <div className="md:col-span-2 flex justify-end gap-3 mt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => { setIsAdding(false); setEditingPromo(null); reset(); }}
-                                    className="px-6 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="px-8 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-lg shadow-emerald-600/20"
-                                >
-                                    {editingPromo ? 'Simpan Perubahan' : 'Simpan Promo'}
-                                </button>
-                            </div>
-                        </form>
-                    </motion.div>
-                )}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Arsitektur Diskon</label>
+                                    <select
+                                        value={data.discount_type}
+                                        onChange={e => setData('discount_type', e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-4 font-bold focus:border-emerald-500 outline-none transition-all"
+                                    >
+                                        <option value="percentage">Persentase Potongan (%)</option>
+                                        <option value="fixed">Nominal Harga Mati (IDR)</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nilai Keuntungan</label>
+                                    <input
+                                        type="number"
+                                        value={data.discount_value}
+                                        onChange={e => setData('discount_value', e.target.value)}
+                                        placeholder={data.discount_type === 'percentage' ? "0 - 100" : "Format: 50000"}
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-4 font-bold focus:border-emerald-500 outline-none transition-all"
+                                    />
+                                    {errors.discount_value && <p className="text-xs text-red-500 ml-1 font-bold">{errors.discount_value}</p>}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Limitasi Penggunaan</label>
+                                    <input
+                                        type="number"
+                                        value={data.usage_limit}
+                                        onChange={e => setData('usage_limit', e.target.value)}
+                                        placeholder="Tanpa Batas"
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-4 font-bold focus:border-emerald-500 outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Masa Aktif</label>
+                                    <input
+                                        type="date"
+                                        value={data.expires_at}
+                                        onChange={e => setData('expires_at', e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-4 font-bold focus:border-emerald-500 outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div className="flex items-end pb-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setData('is_active', !data.is_active)}
+                                        className={clsx(
+                                            "flex items-center gap-3 w-full p-4 rounded-2xl border-2 transition-all font-bold",
+                                            data.is_active ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-400"
+                                        )}
+                                    >
+                                        <div className={clsx("w-5 h-5 rounded-full border-4 transition-all", data.is_active ? "border-emerald-500 bg-emerald-500" : "border-slate-300")} />
+                                        Status: {data.is_active ? 'PUBLIKASI' : 'DRAFT'}
+                                    </button>
+                                </div>
+
+                                <div className="md:col-span-2 lg:col-span-3 flex justify-end gap-4 mt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsAdding(false); setEditingPromo(null); reset(); }}
+                                        className="px-10 py-4 font-bold text-slate-500 hover:text-slate-900 transition-colors"
+                                    >
+                                        Abaikan
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="px-12 py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-2xl shadow-emerald-600/30 hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        {processing ? 'Menyinkronkan...' : (editingPromo ? 'Perbarui Promo' : 'Ledakkan Promo!')}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Grid List Promo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {promos.map(promo => (
-                        <div key={promo.id} className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all group">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600 outline outline-4 outline-emerald-50/50 dark:outline-emerald-900/10 transition-all group-hover:outline-emerald-500/10">
-                                    <TicketIcon className="h-6 w-6" />
+                        <div key={promo.id} className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                                <TicketIcon className="h-24 w-24 text-emerald-500" />
+                            </div>
+
+                            <div className="flex justify-between items-start mb-6 relative">
+                                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600 shadow-inner">
+                                    <TicketIcon className="h-8 w-8" />
                                 </div>
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                                     <button
                                         onClick={() => handleToggle(promo)}
                                         className={clsx(
-                                            "p-2 rounded-lg transition-colors",
-                                            promo.is_active ? "text-orange-500 hover:bg-orange-50" : "text-emerald-500 hover:bg-emerald-50"
+                                            "p-3 rounded-xl transition-all shadow-sm",
+                                            promo.is_active ? "bg-orange-50 text-orange-600 hover:bg-orange-100" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                                         )}
-                                        title={promo.is_active ? "Nonaktifkan" : "Aktifkan"}
+                                        title={promo.is_active ? "Jeda Promo" : "Aktifkan"}
                                     >
-                                        {promo.is_active ? <XCircleIcon className="h-5 w-5" /> : <CheckCircleIcon className="h-5 w-5" />}
+                                        {promo.is_active ? <XCircleIcon className="h-6 w-6" /> : <CheckCircleIcon className="h-6 w-6" />}
                                     </button>
                                     <button
                                         onClick={() => handleEdit(promo)}
-                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                                        title="Edit"
+                                        className="p-3 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-all shadow-sm"
+                                        title="Modifikasi"
                                     >
-                                        <PencilSquareIcon className="h-5 w-5" />
+                                        <PencilSquareIcon className="h-6 w-6" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(promo)}
-                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Hapus"
+                                        className="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all shadow-sm"
+                                        title="Eliminasi"
                                     >
-                                        <TrashIcon className="h-5 w-5" />
+                                        <TrashIcon className="h-6 w-6" />
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-6 relative">
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 tracking-wider uppercase font-mono">
+                                    <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1 tracking-widest uppercase font-mono">
                                         {promo.code}
                                     </h3>
-                                    <p className="text-2xl font-black text-emerald-600">
-                                        {promo.discount_type === 'percentage' ? `${promo.discount_value}% OFF` : `Rp ${promo.discount_value.toLocaleString()} OFF`}
+                                    <p className="text-3xl font-black text-emerald-600">
+                                        {promo.discount_type === 'percentage' ? `${promo.discount_value}% OFF` : `IDR ${promo.discount_value.toLocaleString()} OFF`}
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                    <div className="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
-                                        <UserGroupIcon className="h-4 w-4" />
-                                        <span>{promo.usage_count} / {promo.usage_limit || '∞'}</span>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Penggunaan</p>
+                                        <div className="flex items-center gap-2">
+                                            <UserGroupIcon className="h-4 w-4 text-blue-500" />
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{promo.usage_count} / {promo.usage_limit || '∞'}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
-                                        <CalendarIcon className="h-4 w-4" />
-                                        <span>{promo.expires_at ? new Date(promo.expires_at).toLocaleDateString() : 'No Limit'}</span>
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Masa Berlaku</p>
+                                        <div className="flex items-center gap-2">
+                                            <CalendarIcon className="h-4 w-4 text-purple-500" />
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{promo.expires_at ? new Date(promo.expires_at).toLocaleDateString() : 'Abadi'}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                     <span className={clsx(
-                                        "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                                        "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm",
                                         promo.is_active
-                                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                                            : "bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-400"
+                                            ? "bg-emerald-500 text-white"
+                                            : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
                                     )}>
-                                        {promo.is_active ? 'Status: Active' : 'Status: Paused'}
+                                        {promo.is_active ? 'Status: Operasional' : 'Status: Terhenti'}
                                     </span>
                                     {promo.expires_at && new Date(promo.expires_at) < new Date() && (
-                                        <span className="px-2.5 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                                            Expired
+                                        <span className="px-4 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm animate-pulse">
+                                            Kadaluarsa
                                         </span>
                                     )}
                                 </div>
