@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pomodoro-cache-v5';
+const CACHE_NAME = 'pomodoro-cache-v6';
 const ASSETS_TO_CACHE = [
     '/',
     '/manifest.json',
@@ -22,11 +22,16 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    // Only handle GET requests
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     const isHtml = event.request.mode === 'navigate' ||
         event.request.headers.get('X-Inertia') === 'true';
 
-    // Only cache GET requests for HTML/Inertia
-    if (isHtml && event.request.method === 'GET') {
+    // Strategy: Network First for HTML/Inertia
+    if (isHtml) {
         event.respondWith(
             fetch(event.request)
                 .then((response) => {
@@ -37,16 +42,23 @@ self.addEventListener('fetch', (event) => {
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
                     return response;
                 })
-                .catch(() => caches.match(event.request))
+                .catch(async () => {
+                    const cached = await caches.match(event.request);
+                    if (cached) return cached;
+
+                    // If no cache and no network, we must return something valid or let it fail naturally.
+                    // But since we are in respondWith, we should probably throw or return a response.
+                    // Throwing in the catch will result in a generic network error, which is better than a TypeError.
+                    throw new Error('Offline and no cache available');
+                })
         );
         return;
     }
 
     // Assets: Cache-First strategy
-    if (event.request.method === 'GET' && (
-        event.request.destination === 'style' ||
+    if (event.request.destination === 'style' ||
         event.request.destination === 'script' ||
-        event.request.destination === 'image')) {
+        event.request.destination === 'image') {
         event.respondWith(
             caches.match(event.request).then((cached) => {
                 if (cached) return cached;
@@ -62,7 +74,4 @@ self.addEventListener('fetch', (event) => {
         );
         return;
     }
-
-    // Non-GET or other requests: Network-Only
-    event.respondWith(fetch(event.request));
 });
