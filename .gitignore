@@ -17,8 +17,13 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-
-dist/
-dist/*
-win-unpacked/
+# NativePHP / Electron Build Artifacts
+/dist/
+/out/
+/win-unpacked/
 *.exe
+*.msi
+*.dmg
+*.blockmap
+builder-debug.yml
+builder-effective-config.yaml
