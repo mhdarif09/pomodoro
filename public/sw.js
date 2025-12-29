@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pomodoro-cache-v6';
+const CACHE_NAME = 'pomodoro-cache-v7';
 const ASSETS_TO_CACHE = [
     '/',
     '/manifest.json',
@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Only handle GET requests
+    // We only care about GET requests for now
     if (event.request.method !== 'GET') {
         return;
     }
@@ -30,48 +30,53 @@ self.addEventListener('fetch', (event) => {
     const isHtml = event.request.mode === 'navigate' ||
         event.request.headers.get('X-Inertia') === 'true';
 
-    // Strategy: Network First for HTML/Inertia
     if (isHtml) {
         event.respondWith(
             fetch(event.request)
                 .then((response) => {
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
+                    // Cache successful same-origin responses
+                    if (response && response.status === 200 && response.type === 'basic') {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                     }
-                    const clonedResponse = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
                     return response;
                 })
                 .catch(async () => {
                     const cached = await caches.match(event.request);
                     if (cached) return cached;
 
-                    // If no cache and no network, we must return something valid or let it fail naturally.
-                    // But since we are in respondWith, we should probably throw or return a response.
-                    // Throwing in the catch will result in a generic network error, which is better than a TypeError.
-                    throw new Error('Offline and no cache available');
+                    // Return a valid Response object instead of throwing/returning undefined
+                    return new Response('Network error occurred. Please refresh the page.', {
+                        status: 503,
+                        statusText: 'Service Unavailable',
+                        headers: new Headers({ 'Content-Type': 'text/plain' })
+                    });
                 })
         );
         return;
     }
 
-    // Assets: Cache-First strategy
-    if (event.request.destination === 'style' ||
+    // Assets strategy: Cache-first, then network
+    const isAsset = event.request.destination === 'style' ||
         event.request.destination === 'script' ||
-        event.request.destination === 'image') {
+        event.request.destination === 'image';
+
+    if (isAsset) {
         event.respondWith(
             caches.match(event.request).then((cached) => {
                 if (cached) return cached;
+
                 return fetch(event.request).then((response) => {
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
+                    if (response && response.status === 200 && response.type === 'basic') {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                     }
-                    const clonedResponse = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
                     return response;
+                }).catch(() => {
+                    // Minimal valid response for assets
+                    return new Response('', { status: 404 });
                 });
             })
         );
-        return;
     }
 });

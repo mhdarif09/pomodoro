@@ -1,8 +1,0 @@
-import{j as t,x as o}from"./app-CnDpD4d4.js";import{F as i}from"./CheckCircleIcon-Ccrz2ba_.js";import{F as d}from"./PlayCircleIcon-DY4BpIuw.js";function h({modulSlug:s,chapter:a,index:l,isCompleted:r,isNextUp:e}){return t.jsxs(o,{href:route("mini-moduls.chapter",{miniModul:s,chapter:a.slug}),className:`
-                group relative flex items-center w-full p-4 rounded-3xl transition-all duration-300 border
-                ${e?"bg-slate-900 dark:bg-white text-white dark:text-black border-transparent shadow-xl scale-[1.02] z-10":"bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-teal-500/30 hover:shadow-lg"}
-            `,children:[t.jsx("div",{className:`
-                flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mr-4 transition-colors
-                ${r?"bg-green-500 text-white":e?"bg-white/20 text-white dark:text-black dark:bg-black/10":"bg-slate-100 dark:bg-slate-700 text-slate-500"}
-            `,children:r?t.jsx(i,{className:"w-6 h-6"}):l+1}),t.jsxs("div",{className:"flex-1 min-w-0",children:[t.jsx("h4",{className:`font-bold text-base sm:text-lg truncate ${e?"text-white dark:text-black":"text-slate-900 dark:text-white"}`,children:a.title}),t.jsxs("p",{className:`text-xs font-medium mt-0.5 ${e?"text-white/60 dark:text-black/60":"text-slate-400"}`,children:[a.estimated_duration," Menit Estimasi"]})]}),t.jsx(d,{className:`w-10 h-10 transition-transform duration-300 group-hover:scale-110 
-                ${e?"text-teal-400 dark:text-teal-600":"text-slate-200 dark:text-slate-600 group-hover:text-teal-500"}`})]})}export{h as default};
