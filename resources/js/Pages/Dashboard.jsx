@@ -2,7 +2,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import OnboardingModal from '@/Components/OnboardingModal';
 import UpgradeModal from '@/Components/UpgradeModal';
 import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel';
 import { ListBulletIcon, CheckCircleIcon, CalendarDaysIcon, ExclamationTriangleIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/solid';
@@ -46,7 +45,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
         <AnimatePresence>
             {isOpen && (
                 <>
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         onClick={onClose}
                         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
@@ -61,13 +60,13 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                             <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200">
                                 <XMarkIcon className="w-5 h-5 text-slate-500" />
                             </button>
-                            
+
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6">Tugas Baru</h2>
-                            
+
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="Apa yang mau dikerjakan?"
@@ -77,7 +76,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                     />
                                 </div>
                                 <div>
-                                    <textarea 
+                                    <textarea
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder="Catatan tambahan (opsional)..."
@@ -86,18 +85,18 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                         disabled={loading}
                                     />
                                 </div>
-                                
+
                                 <div className="flex justify-end gap-3 pt-2">
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         onClick={onClose}
                                         disabled={loading}
                                         className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                     >
                                         Batal
                                     </button>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         disabled={loading || !title}
                                         className="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-bold shadow-lg shadow-teal-500/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                                     >
@@ -151,7 +150,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
             >
                 <div>
                     <h1 className="text-4xl sm:text-6xl font-[900] text-slate-900 dark:text-white tracking-tight leading-tight">
-                        Halo, <span className="text-teal-500">{auth.user.name.split(' ')[0]}</span>
+                        Halo, <span className="text-teal-500">{auth?.user?.name?.split(' ')[0] || 'Teman'}</span>
                     </h1>
                     <p className="text-xl text-slate-500 dark:text-slate-400 mt-3 font-semibold tracking-tight">
                         Waktunya tumbuh dan lebih produktif hari ini. 🚀
@@ -217,12 +216,12 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
 };
 
 export default function Dashboard(props) {
-    const { auth, tasks, taskStats, filters, plans, showOnboarding } = props;
+    const { auth, tasks, taskStats, filters, plans } = props;
     const { flash } = usePage().props;
 
-    const [localTasks, setLocalTasks] = useState(tasks);
-    const [localStats, setLocalStats] = useState(taskStats);
-    
+    const [localTasks, setLocalTasks] = useState(tasks || { data: [], total: 0 });
+    const [localStats, setLocalStats] = useState(taskStats || { total: 0, completed: 0, dueThisWeek: 0, overdue: 0 });
+
     useEffect(() => {
         setLocalTasks(tasks);
         setLocalStats(taskStats);
@@ -247,14 +246,14 @@ export default function Dashboard(props) {
     const handleTaskAdded = (newTask) => {
         setLocalTasks(prevTasks => ({
             ...prevTasks,
-            data: [newTask, ...prevTasks.data],
-            total: prevTasks.total + 1
+            data: [newTask, ...(prevTasks?.data || [])],
+            total: (prevTasks?.total || 0) + 1
         }));
 
         setLocalStats(prevStats => ({
             ...prevStats,
-            total: prevStats.total + 1,
-            dueThisWeek: prevStats.dueThisWeek + 1 
+            total: (prevStats?.total || 0) + 1,
+            dueThisWeek: (prevStats?.dueThisWeek || 0) + 1
         }));
     };
 
@@ -300,14 +299,7 @@ export default function Dashboard(props) {
         }
     };
 
-    const handleOnboardingFinish = () => {
-        setIsProcessing(true);
-        router.post(route('dashboard.tutorial-complete'), {}, {
-            preserveScroll: true,
-            onSuccess: () => setIsProcessing(false),
-            onFinish: () => setIsProcessing(false)
-        });
-    };
+    // Onboarding handlers removed
 
     useEffect(() => {
         let timer;
@@ -329,9 +321,8 @@ export default function Dashboard(props) {
         }
     }, [flash, auth.user.has_seen_tutorial]);
 
-    const shouldShowOnboarding = showOnboarding; 
-    const shouldShowUpgrade = !shouldShowOnboarding && showUpgradeModal;
-    const anyModalActive = shouldShowOnboarding || shouldShowUpgrade;
+    const shouldShowUpgrade = showUpgradeModal;
+    const anyModalActive = shouldShowUpgrade;
 
     const handleCloseUpgradeModal = () => {
         setShowUpgradeModal(false);
@@ -341,7 +332,7 @@ export default function Dashboard(props) {
 
     const mainDashboardProps = {
         auth,
-        allTasks: localTasks, 
+        allTasks: localTasks,
         taskStats: localStats,
         filters,
         plans,
@@ -356,22 +347,17 @@ export default function Dashboard(props) {
             <div className={`transition-all duration-500 ${anyModalActive ? 'blur-md' : ''}`}>
                 <MainDashboard {...mainDashboardProps} />
             </div>
-            
+
             <AnimatePresence>
                 {isQuickAddOpen && (
-                    <QuickAddTaskModal 
-                        isOpen={isQuickAddOpen} 
+                    <QuickAddTaskModal
+                        isOpen={isQuickAddOpen}
                         onClose={() => setIsQuickAddOpen(false)}
                         onTaskAdded={handleTaskAdded}
                     />
                 )}
 
-                {shouldShowOnboarding && (
-                    <OnboardingModal 
-                        onFinish={handleOnboardingFinish} 
-                        isProcessing={isProcessing} 
-                    />
-                )}
+                {/* Onboarding Modal Removed */}
                 {shouldShowUpgrade &&
                     <UpgradeModal
                         show={shouldShowUpgrade} isOpen={shouldShowUpgrade}
@@ -398,7 +384,7 @@ export default function Dashboard(props) {
                 )}
             </AnimatePresence>
 
-            <DynamicChatBar user={auth.user} /> 
+            <DynamicChatBar user={auth.user} />
         </AuthenticatedLayout>
     );
 }
