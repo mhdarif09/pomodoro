@@ -1,62 +1,68 @@
-const CACHE_NAME = 'sarang-tumbuh-v4'; // Bumped version
-const urlsToCache = [
+const CACHE_NAME = 'pomodoro-cache-v5';
+const ASSETS_TO_CACHE = [
     '/',
-    '/favicon.ico'
+    '/manifest.json',
+    '/sw.js'
 ];
 
 self.addEventListener('install', (event) => {
-    self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                return cache.addAll(urlsToCache);
-            })
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
     );
+    self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        }).then(() => self.clients.claim())
+        caches.keys().then((keys) => Promise.all(
+            keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        ))
     );
+    self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-    const isNavigation = event.request.mode === 'navigate';
-    const isInertia = event.request.headers.get('X-Inertia');
+    const isHtml = event.request.mode === 'navigate' ||
+        event.request.headers.get('X-Inertia') === 'true';
 
-    // Strategy: Network First for HTML/navigation and Inertia XHR, Cache First for others
-    if (isNavigation || isInertia) {
+    // Only cache GET requests for HTML/Inertia
+    if (isHtml && event.request.method === 'GET') {
         event.respondWith(
             fetch(event.request)
                 .then((response) => {
-                    // Update cache with new version if successful
-                    const responseClone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseClone);
-                    });
-                    return response;
-                })
-                .catch(() => {
-                    return caches.match(event.request);
-                })
-        );
-    } else {
-        event.respondWith(
-            caches.match(event.request)
-                .then((response) => {
-                    if (response) {
+                    if (!response || response.status !== 200 || response.type !== 'basic') {
                         return response;
                     }
-                    return fetch(event.request);
+                    const clonedResponse = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
+                    return response;
                 })
+                .catch(() => caches.match(event.request))
         );
+        return;
     }
+
+    // Assets: Cache-First strategy
+    if (event.request.method === 'GET' && (
+        event.request.destination === 'style' ||
+        event.request.destination === 'script' ||
+        event.request.destination === 'image')) {
+        event.respondWith(
+            caches.match(event.request).then((cached) => {
+                if (cached) return cached;
+                return fetch(event.request).then((response) => {
+                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                        return response;
+                    }
+                    const clonedResponse = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clonedResponse));
+                    return response;
+                });
+            })
+        );
+        return;
+    }
+
+    // Non-GET or other requests: Network-Only
+    event.respondWith(fetch(event.request));
 });

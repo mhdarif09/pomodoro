@@ -27,6 +27,9 @@ class GamificationController extends Controller
         // Update streak on dashboard visit
         $this->gamificationService->updateStreak($user);
 
+        // Get active challenges
+        $activeChallenges = Challenge::where('is_active', true)->get();
+
         // Get user with relations
         $user->load(['challenges' => function($q) {
             $q->wherePivot('completed', false);
@@ -66,7 +69,7 @@ class GamificationController extends Controller
 
         // Get all achievements with unlock status
         $userAchievementIds = $user->achievements->pluck('id')->toArray();
-        $allAchievements = Achievement::all()->map(function ($achievement) use ($userAchievementIds) {
+        $allAchievements = Achievement::all()->map(function ($achievement) use ($userAchievementIds, $user) {
             $unlocked = in_array($achievement->id, $userAchievementIds);
             return [
                 'id' => $achievement->id,
