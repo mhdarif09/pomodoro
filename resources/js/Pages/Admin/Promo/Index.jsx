@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AdminLayout';
