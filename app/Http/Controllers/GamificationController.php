@@ -29,13 +29,22 @@ class GamificationController extends Controller
 
         // Auto-assign active challenges to user if not already assigned
         $activeChallenges = Challenge::where('is_active', true)->get();
+        $assignedChallengeIds = $user->challenges()->pluck('challenge_id')->toArray();
+        $newChallengesToAttach = [];
+
         foreach ($activeChallenges as $challenge) {
-            if (!$user->challenges()->where('challenge_id', $challenge->id)->exists()) {
-                $user->challenges()->attach($challenge->id, [
+            if (!in_array($challenge->id, $assignedChallengeIds)) {
+                $newChallengesToAttach[$challenge->id] = [
                     'progress' => 0,
                     'completed' => false,
-                ]);
+                ];
             }
+        }
+
+        if (!empty($newChallengesToAttach)) {
+            DB::transaction(function () use ($user, $newChallengesToAttach) {
+                $user->challenges()->attach($newChallengesToAttach);
+            });
         }
 
         // Get user's active challenges
@@ -55,8 +64,9 @@ class GamificationController extends Controller
             });
 
         // Get all achievements with unlock status
-        $allAchievements = Achievement::all()->map(function ($achievement) use ($user) {
-            $unlocked = $user->achievements()->where('achievement_id', $achievement->id)->first();
+        $userAchievementPivot = $user->achievements()->get()->keyBy('id');
+        $allAchievements = Achievement::all()->map(function ($achievement) use ($userAchievementPivot) {
+            $unlocked = $userAchievementPivot->get($achievement->id);
             return [
                 'id' => $achievement->id,
                 'name' => $achievement->name,

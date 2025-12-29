@@ -47,21 +47,26 @@ class UserController extends Controller
 
     $plan = Plan::find($validated['plan_id']);
 
-    Subscription::updateOrCreate(
-        ['user_id' => $user->id],
-        [
-            'plan'         => $plan->name,
-            'status'       => 'paid',
-            'expired_at'   => Carbon::now()->addMonth(), // 1 bulan dari sekarang
-            'paid_at'      => Carbon::now(),
-            'payment_type' => 'gopay',
-            // TAMBAHKAN INI - isi dengan nilai dummy untuk admin promote
-            'midtrans_order_id' => 'MID_ORDER' . time(),
-            'midtrans_transaction_id' => 'MID_TRANS' . time(),
-        ]
-    );
+    return DB::transaction(function () use ($user, $plan) {
+        Subscription::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'plan'         => $plan->name,
+                'status'       => 'paid',
+                'expired_at'   => Carbon::now()->addMonth(), // 1 bulan dari sekarang
+                'paid_at'      => Carbon::now(),
+                'payment_type' => 'manual',
+                // TAMBAHKAN INI - isi dengan nilai dummy untuk admin promote
+                'midtrans_order_id' => 'ADMIN_PROMOTION_' . time() . '_' . $user->id,
+                'midtrans_transaction_id' => 'ADMIN_TRANS_' . time(),
+            ]
+        );
 
-    return back()->with('success', "Pengguna {$user->name} berhasil di-promote ke paket {$plan->name}.");
+        // Explicitly update user premium status if needed (Model accessor handles it, but good to be sure if there's a flag)
+        $user->update(['is_premium' => true]);
+
+        return back()->with('success', "Pengguna {$user->name} berhasil di-promote ke paket {$plan->name}.");
+    });
 }
 
     // Metode lain (demote, ban, unban) tidak perlu diubah.

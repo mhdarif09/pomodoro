@@ -34,6 +34,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'midtrans' => [
+                'client_key' => config('services.midtrans.client_key'),
+                'is_production' => config('services.midtrans.is_production'),
+            ],
         ];
     }
 }

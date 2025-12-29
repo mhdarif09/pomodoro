@@ -16,43 +16,45 @@ class GamificationService
      */
     public function awardXP(User $user, int $amount, string $reason, $source = null): array
     {
-        // Create XP transaction
-        XpTransaction::create([
-            'user_id' => $user->id,
-            'amount' => $amount,
-            'reason' => $reason,
-            'source_type' => $source ? get_class($source) : null,
-            'source_id' => $source ? $source->id : null,
-        ]);
+        return DB::transaction(function () use ($user, $amount, $reason, $source) {
+            // Create XP transaction
+            XpTransaction::create([
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'reason' => $reason,
+                'source_type' => $source ? get_class($source) : null,
+                'source_id' => $source ? $source->id : null,
+            ]);
 
-        // Update user XP
-        $user->xp += $amount;
-        $user->total_xp += $amount;
+            // Update user XP
+            $user->xp += $amount;
+            $user->total_xp += $amount;
 
-        $leveledUp = false;
-        $newLevel = $user->level;
-
-        // Check for level up
-        while ($user->xp >= $user->getXpForNextLevel()) {
-            $user->xp -= $user->getXpForNextLevel();
-            $user->level += 1;
-            $leveledUp = true;
+            $leveledUp = false;
             $newLevel = $user->level;
-        }
 
-        $user->save();
+            // Check for level up
+            while ($user->xp >= $user->getXpForNextLevel()) {
+                $user->xp -= $user->getXpForNextLevel();
+                $user->level += 1;
+                $leveledUp = true;
+                $newLevel = $user->level;
+            }
 
-        // Check for achievements after XP award
-        $newAchievements = $this->checkAchievements($user);
+            $user->save();
 
-        return [
-            'xp_awarded' => $amount,
-            'leveled_up' => $leveledUp,
-            'new_level' => $newLevel,
-            'current_xp' => $user->xp,
-            'xp_for_next_level' => $user->getXpForNextLevel(),
-            'new_achievements' => $newAchievements,
-        ];
+            // Check for achievements after XP award
+            $newAchievements = $this->checkAchievements($user);
+
+            return [
+                'xp_awarded' => $amount,
+                'leveled_up' => $leveledUp,
+                'new_level' => $newLevel,
+                'current_xp' => $user->xp,
+                'xp_for_next_level' => $user->getXpForNextLevel(),
+                'new_achievements' => $newAchievements,
+            ];
+        });
     }
 
     /**
@@ -61,43 +63,43 @@ class GamificationService
     public function updateStreak(User $user): array
     {
         $today = Carbon::today();
-        $lastActive = $user->last_active_date ? Carbon::parse($user->last_active_date) : null;
+        return DB::transaction(function () use ($user, $today) {
+            if (!$user->last_active_date) {
+                // First activity
+                $user->current_streak = 1;
+                $user->longest_streak = 1;
+                $user->last_active_date = $today;
+            } elseif (Carbon::parse($user->last_active_date)->isSameDay($today)) {
+                // Already active today, no change
+                return [
+                    'streak_updated' => false,
+                    'current_streak' => $user->current_streak,
+                ];
+            } elseif (Carbon::parse($user->last_active_date)->isYesterday()) {
+                // Consecutive day - increase streak
+                $user->current_streak += 1;
+                if ($user->current_streak > $user->longest_streak) {
+                    $user->longest_streak = $user->current_streak;
+                }
+                $user->last_active_date = $today;
 
-        if (!$lastActive) {
-            // First activity
-            $user->current_streak = 1;
-            $user->longest_streak = 1;
-            $user->last_active_date = $today;
-        } elseif ($lastActive->isSameDay($today)) {
-            // Already active today, no change
-            return [
-                'streak_updated' => false,
-                'current_streak' => $user->current_streak,
-            ];
-        } elseif ($lastActive->isYesterday()) {
-            // Consecutive day - increase streak
-            $user->current_streak += 1;
-            if ($user->current_streak > $user->longest_streak) {
-                $user->longest_streak = $user->current_streak;
+                // Award streak bonus XP
+                $bonusXP = 5 * $user->current_streak; // Bonus increases with streak
+                $this->awardXP($user, $bonusXP, 'streak_bonus');
+            } else {
+                // Streak broken
+                $user->current_streak = 1;
+                $user->last_active_date = $today;
             }
-            $user->last_active_date = $today;
 
-            // Award streak bonus XP
-            $bonusXP = 5 * $user->current_streak; // Bonus increases with streak
-            $this->awardXP($user, $bonusXP, 'streak_bonus');
-        } else {
-            // Streak broken
-            $user->current_streak = 1;
-            $user->last_active_date = $today;
-        }
+            $user->save();
 
-        $user->save();
-
-        return [
-            'streak_updated' => true,
-            'current_streak' => $user->current_streak,
-            'longest_streak' => $user->longest_streak,
-        ];
+            return [
+                'streak_updated' => true,
+                'current_streak' => $user->current_streak,
+                'longest_streak' => $user->longest_streak,
+            ];
+        });
     }
 
     /**
@@ -107,27 +109,30 @@ class GamificationService
     {
         $newAchievements = [];
         $allAchievements = Achievement::all();
+        $existingAchievementIds = $user->achievements()->pluck('achievement_id')->toArray();
 
-        foreach ($allAchievements as $achievement) {
-            // Skip if already unlocked
-            if ($user->achievements()->where('achievement_id', $achievement->id)->exists()) {
-                continue;
-            }
-
-            // Check if criteria is met
-            if ($this->criteriaMetForAchievement($user, $achievement)) {
-                $user->achievements()->attach($achievement->id, [
-                    'unlocked_at' => now(),
-                ]);
-
-                // Award achievement XP
-                if ($achievement->xp_reward > 0) {
-                    $this->awardXP($user, $achievement->xp_reward, 'achievement_unlocked', $achievement);
+        DB::transaction(function () use ($user, $allAchievements, $existingAchievementIds, &$newAchievements) {
+            foreach ($allAchievements as $achievement) {
+                // Skip if already unlocked
+                if (in_array($achievement->id, $existingAchievementIds)) {
+                    continue;
                 }
 
-                $newAchievements[] = $achievement;
+                // Check if criteria is met
+                if ($this->criteriaMetForAchievement($user, $achievement)) {
+                    $user->achievements()->attach($achievement->id, [
+                        'unlocked_at' => now(),
+                    ]);
+
+                    // Award achievement XP
+                    if ($achievement->xp_reward > 0) {
+                        $this->awardXP($user, $achievement->xp_reward, 'achievement_unlocked', $achievement);
+                    }
+
+                    $newAchievements[] = $achievement;
+                }
             }
-        }
+        });
 
         return $newAchievements;
     }

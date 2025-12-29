@@ -1,9 +1,14 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { Link, useForm, usePage } from '@inertiajs/react';
-import { Transition } from '@headlessui/react';
+import { useForm, usePage } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    UserIcon,
+    EnvelopeIcon,
+    ChatBubbleLeftRightIcon,
+    ClockIcon,
+    CheckIcon
+} from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 
 export default function UpdateProfileInformation({ mustVerifyEmail, status, className = '' }) {
     const user = usePage().props.auth.user;
@@ -17,128 +22,124 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
 
     const submit = (e) => {
         e.preventDefault();
-
-        patch(route('profile.update'));
+        patch(route('profile.update'), {
+            preserveScroll: true
+        });
     };
+
+    const InputGroup = ({ label, icon: Icon, children, error, description }) => (
+        <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-4">
+                {label}
+            </label>
+            <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                    <Icon className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                </div>
+                {children}
+            </div>
+            {description && (
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 ml-4 font-medium leading-relaxed">
+                    {description}
+                </p>
+            )}
+            <InputError message={error} className="mt-1 ml-4" />
+        </div>
+    );
+
+    const inputClasses = "w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-black/20 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 font-semibold text-slate-700 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700 transition-all";
 
     return (
         <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Profile Information</h2>
-
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Update your account's profile information and email address.
-                </p>
-            </header>
-
-            <form onSubmit={submit} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
-
-                    <TextInput
-                        id="name"
-                        className="mt-1 block w-full"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                        isFocused
-                        autoComplete="name"
-                    />
-
-                    <InputError className="mt-2" message={errors.name} />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
-                    />
-
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="phone" value="WhatsApp Number" />
-
-                    <TextInput
-                        id="phone"
-                        type="text"
-                        className="mt-1 block w-full"
-                        value={data.phone || ''}
-                        onChange={(e) => setData('phone', e.target.value)}
-                        placeholder="628123456789 (format internasional)"
-                        autoComplete="tel"
-                    />
-
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Format: 628123456789 (tanpa tanda + atau 0 di depan). Digunakan untuk notifikasi WhatsApp reminder task.
-                    </p>
-
-                    <InputError className="mt-2" message={errors.phone} />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="timezone" value="Timezone" />
-
-                    <select
-                        id="timezone"
-                        className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                        value={data.timezone || 'WIB'}
-                        onChange={(e) => setData('timezone', e.target.value)}
+            <form onSubmit={submit} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <InputGroup
+                        label="Nama Lengkap"
+                        icon={UserIcon}
+                        error={errors.name}
                     >
-                        <option value="WIB">WIB - Waktu Indonesia Barat (Jakarta, Jawa, Sumatra)</option>
-                        <option value="WITA">WITA - Waktu Indonesia Tengah (Bali, Kalimantan, Sulawesi)</option>
-                        <option value="WIT">WIT - Waktu Indonesia Timur (Papua, Maluku)</option>
-                    </select>
+                        <input
+                            type="text"
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            className={inputClasses}
+                            placeholder="Contoh: John Doe"
+                            required
+                        />
+                    </InputGroup>
 
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Pilih timezone sesuai lokasi Anda. Digunakan untuk menentukan waktu pengiriman reminder WhatsApp (23:00 waktu lokal).
-                    </p>
+                    <InputGroup
+                        label="Alamat Email"
+                        icon={EnvelopeIcon}
+                        error={errors.email}
+                    >
+                        <input
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className={inputClasses}
+                            placeholder="john@example.com"
+                            required
+                        />
+                    </InputGroup>
 
-                    <InputError className="mt-2" message={errors.timezone} />
+                    <InputGroup
+                        label="Nomor WhatsApp"
+                        icon={ChatBubbleLeftRightIcon}
+                        error={errors.phone}
+                        description="Wajib unik. Gunakan kode negara (misal: 628123...). Digunakan untuk notifikasi pengingat tugas."
+                    >
+                        <input
+                            type="text"
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
+                            className={clsx(inputClasses, "font-mono")}
+                            placeholder="628XXXXXXXXX"
+                        />
+                    </InputGroup>
+
+                    <InputGroup
+                        label="Zona Waktu"
+                        icon={ClockIcon}
+                        error={errors.timezone}
+                        description="Menentukan kapan notifikasi harian Anda dikirimkan."
+                    >
+                        <select
+                            value={data.timezone}
+                            onChange={(e) => setData('timezone', e.target.value)}
+                            className={clsx(inputClasses, "appearance-none")}
+                        >
+                            <option value="WIB">WIB (Jakarta / Sumatra)</option>
+                            <option value="WITA">WITA (Bali / Makassar)</option>
+                            <option value="WIT">WIT (Papua / Maluku)</option>
+                        </select>
+                    </InputGroup>
                 </div>
 
-                {mustVerifyEmail && user.email_verified_at === null && (
-                    <div>
-                        <p className="text-sm mt-2 text-gray-800 dark:text-gray-200">
-                            Your email address is unverified.
-                            <Link
-                                href={route('verification.send')}
-                                method="post"
-                                as="button"
-                                className="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                <div className="flex items-center gap-6 pt-4">
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-xl"
+                    >
+                        {processing ? 'Menyimpan...' : 'Perbarui Profil'}
+                    </button>
+
+                    <AnimatePresence>
+                        {recentlySuccessful && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="flex items-center gap-2 text-emerald-500 font-bold"
                             >
-                                Click here to re-send the verification email.
-                            </Link>
-                        </p>
-
-                        {status === 'verification-link-sent' && (
-                            <div className="mt-2 font-medium text-sm text-green-600 dark:text-green-400">
-                                A new verification link has been sent to your email address.
-                            </div>
+                                <div className="p-1 rounded-full bg-emerald-500/10">
+                                    <CheckIcon className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm">Tersimpan</span>
+                            </motion.div>
                         )}
-                    </div>
-                )}
-
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
-
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Saved.</p>
-                    </Transition>
+                    </AnimatePresence>
                 </div>
             </form>
         </section>

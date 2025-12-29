@@ -150,23 +150,26 @@ class KanbanController extends Controller
         $this->authorize('update', $task);
 
         $wasCompleted = $task->is_completed;
-        $task->is_completed = !$task->is_completed;
-        $task->status = $task->is_completed ? 'done' : 'todo';
-        $task->save();
+        
+        DB::transaction(function () use ($task, $wasCompleted) {
+            $task->is_completed = !$task->is_completed;
+            $task->status = $task->is_completed ? 'done' : 'todo';
+            $task->save();
 
-        // Award XP for completing task
-        if ($task->is_completed && !$wasCompleted) {
-            $gamificationService = app(\App\Services\GamificationService::class);
-            $xpAmount = match ($task->priority) {
-                'Tinggi', 'High' => 50,
-                'Sedang', 'Medium' => 30,
-                'Rendah', 'Low' => 20,
-                default => 25,
-            };
-            $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task);
-            $gamificationService->updateStreak($task->user);
-            $gamificationService->checkAchievements($task->user);
-        }
+            // Award XP for completing task
+            if ($task->is_completed && !$wasCompleted) {
+                $gamificationService = app(\App\Services\GamificationService::class);
+                $xpAmount = match ($task->priority) {
+                    'Tinggi', 'High' => 50,
+                    'Sedang', 'Medium' => 30,
+                    'Rendah', 'Low' => 20,
+                    default => 25,
+                };
+                $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task);
+                $gamificationService->updateStreak($task->user);
+                $gamificationService->checkAchievements($task->user);
+            }
+        });
 
         return response()->json([
             'message' => 'Task status toggled',

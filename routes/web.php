@@ -52,7 +52,7 @@ Route::get('/login/google/redirect', [GoogleLoginController::class, 'redirectToG
 Route::get('/login/google/callback', [GoogleLoginController::class, 'handleGoogleCallback'])->name('login.google.callback');
 
 Route::get('/pricing', [SubscriptionController::class, 'index'])->name('subscribe.index');
-Route::post('/webhook/midtrans', [WebhookController::class, 'handle'])->name('midtrans.webhook');
+Route::post('/webhook/midtrans', [SubscriptionController::class, 'webhookHandler'])->name('midtrans.webhook');
 
 // --- AUTHENTICATED ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {

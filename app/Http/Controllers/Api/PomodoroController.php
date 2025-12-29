@@ -57,22 +57,35 @@ class PomodoroController extends Controller
         });
 
         try {
-            $session = PomodoroSession::create([
-                'user_id'        => $userId,
-                'focus_minutes'  => (int) $validated['focus_minutes'],
-                'break_minutes'  => (int) $validated['break_minutes'],
-                'started_at'     => $startedAt->format('Y-m-d H:i:s'),
-                'ended_at'       => $endedAt->format('Y-m-d H:i:s'),
-                'blocked_urls'   => json_encode(array_values($sanitizedUrls)),
-                'tab_switches'   => (int) $validated['tab_switches'],
-                'ai_questions_asked' => (int) $validated['ai_questions_asked'],
-                'task_id'        => $validated['task_id'] ?? null,
-            ]);
+            return DB::transaction(function () use ($userId, $validated, $startedAt, $endedAt, $sanitizedUrls) {
+                $session = PomodoroSession::create([
+                    'user_id'        => $userId,
+                    'focus_minutes'  => (int) $validated['focus_minutes'],
+                    'break_minutes'  => (int) $validated['break_minutes'],
+                    'started_at'     => $startedAt->format('Y-m-d H:i:s'),
+                    'ended_at'       => $endedAt->format('Y-m-d H:i:s'),
+                    'blocked_urls'   => json_encode(array_values($sanitizedUrls)),
+                    'tab_switches'   => (int) $validated['tab_switches'],
+                    'ai_questions_asked' => (int) $validated['ai_questions_asked'],
+                    'task_id'        => $validated['task_id'] ?? null,
+                ]);
 
-            return response()->json([
-                'message' => 'Session saved!',
-                'session' => $session
-            ], 201);
+                // Award XP for focus time (approx 10 XP per 25 mins)
+                $gamificationService = app(\App\Services\GamificationService::class);
+                $focusMinutes = (int) $validated['focus_minutes'];
+                $xpAmount = max(1, floor($focusMinutes / 2.5));
+                
+                $user = auth()->user();
+                $gamificationService->awardXP($user, $xpAmount, 'pomodoro_focus', $session);
+                $gamificationService->updateStreak($user);
+                $gamificationService->checkAchievements($user);
+
+                return response()->json([
+                    'message' => 'Session saved!',
+                    'session' => $session,
+                    'xp_awarded' => $xpAmount
+                ], 201);
+            });
             
         } catch (\Exception $e) {
             Log::error("Failed to create pomodoro session", [

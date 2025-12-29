@@ -92,9 +92,13 @@ class DocumentController extends Controller
 
     public function toggleSharing(Request $request, Document $document)
     {
+        if (auth()->user()->id !== $document->user_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $document->is_public = !$document->is_public;
         if ($document->is_public && !$document->share_token) {
-            $document->share_token = Str::uuid();
+            $document->share_token = (string) Str::uuid();
         }
         $document->save();
         

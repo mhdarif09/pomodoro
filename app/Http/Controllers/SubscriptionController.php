@@ -118,28 +118,32 @@ class SubscriptionController extends Controller
         Log::info("Created new subscription", ['user_id' => $userId, 'subscription_id' => $subscription->id]);
 
         // Buat transaksi Midtrans dengan error handling
-        try {
-            $snap = $midtrans->createTransaction($subscription);
-            $snapToken = $snap->token;
-            
-            $subscription->update(['snap_token' => $snapToken]);
-            Log::info("Created snap token", ['user_id' => $userId, 'subscription_id' => $subscription->id]);
-            
-        } catch (\Exception $e) {
-            Log::error('Midtrans error', [
-                'user_id' => $userId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            // Delete failed subscription
-            $subscription->delete();
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membuat transaksi pembayaran. Silakan coba lagi.'
-            ], 500);
-        }
+        return DB::transaction(function () use ($midtrans, $subscription, $userId) {
+            try {
+                $snap = $midtrans->createTransaction($subscription);
+                $snapToken = $snap->token;
+                
+                $subscription->update(['snap_token' => $snapToken]);
+                Log::info("Created snap token", ['user_id' => $userId, 'subscription_id' => $subscription->id]);
+                
+                return response()->json([
+                    'success' => true,
+                    'snap_token' => $snapToken,
+                    'subscription_id' => $subscription->id,
+                    'message' => 'Transaksi berhasil dibuat'
+                ]);
+                
+            } catch (\Exception $e) {
+                Log::error('Midtrans error', [
+                    'user_id' => $userId,
+                    'error' => $e->getMessage(),
+                ]);
+                
+                // Transaction rollback will handle the rest if we throws, 
+                // but since we are inside a transaction closure, we should let it bubble or delete manually if we handle it
+                throw $e;
+            }
+        });
     }
 
     return response()->json([
@@ -297,35 +301,42 @@ class SubscriptionController extends Controller
             
             Log::info("Midtrans webhook received: order_id={$orderId}, status={$transactionStatus}, fraud={$fraudStatus}");
             
-            // Cari subscription berdasarkan order_id
-            $subscription = Subscription::where('id', $orderId)->first();
+            // Cari subscription berdasarkan midtrans_order_id
+            $subscription = Subscription::where('midtrans_order_id', $orderId)->first();
             
             if (!$subscription) {
                 Log::error("Subscription not found for order_id: {$orderId}");
                 return response()->json(['error' => 'Subscription not found'], 404);
             }
             
-            // Handle status transaksi
-            if ($transactionStatus == 'capture') {
-                if ($fraudStatus == 'accept') {
+            return DB::transaction(function () use ($notification, $subscription) {
+                $transactionStatus = $notification->transaction_status;
+                $fraudStatus = $notification->fraud_status;
+
+                // Handle status transaksi
+                if ($transactionStatus == 'capture') {
+                    if ($fraudStatus == 'accept') {
+                        $this->handleSuccessfulPayment($subscription);
+                        Log::info("Payment captured and accepted for subscription: {$subscription->id}");
+                    }
+                } else if ($transactionStatus == 'settlement') {
                     $this->handleSuccessfulPayment($subscription);
-                    Log::info("Payment captured and accepted for subscription: {$subscription->id}");
+                    Log::info("Payment settled for subscription: {$subscription->id}");
+                } else if ($transactionStatus == 'pending') {
+                    $subscription->update(['status' => 'pending']);
+                    Log::info("Payment pending for subscription: {$subscription->id}");
+                } else if ($transactionStatus == 'deny' || $transactionStatus == 'cancel' || $transactionStatus == 'expire') {
+                    $subscription->update(['status' => 'failed']);
+                    $this->handleRevokePremium($subscription);
+                    Log::info("Payment failed for subscription: {$subscription->id}, status: {$transactionStatus}");
+                } else if ($transactionStatus == 'refund' || $transactionStatus == 'partial_refund') {
+                    $subscription->update(['status' => 'refunded']);
+                    $this->handleRevokePremium($subscription);
+                    Log::info("Payment refunded for subscription: {$subscription->id}");
                 }
-            } else if ($transactionStatus == 'settlement') {
-                $this->handleSuccessfulPayment($subscription);
-                Log::info("Payment settled for subscription: {$subscription->id}");
-            } else if ($transactionStatus == 'pending') {
-                $subscription->update(['status' => 'pending']);
-                Log::info("Payment pending for subscription: {$subscription->id}");
-            } else if ($transactionStatus == 'deny' || $transactionStatus == 'cancel' || $transactionStatus == 'expire') {
-                $subscription->update(['status' => 'failed']);
-                Log::info("Payment failed for subscription: {$subscription->id}, status: {$transactionStatus}");
-            } else if ($transactionStatus == 'refund' || $transactionStatus == 'partial_refund') {
-                $subscription->update(['status' => 'refunded']);
-                Log::info("Payment refunded for subscription: {$subscription->id}");
-            }
-            
-            return response()->json(['message' => 'Webhook processed successfully']);
+
+                return response()->json(['message' => 'Webhook processed successfully']);
+            });
             
         } catch (\Exception $e) {
             Log::error('Webhook processing error: ' . $e->getMessage());
@@ -333,23 +344,44 @@ class SubscriptionController extends Controller
         }
     }
 
-    /**
-     * Handle successful payment
-     */
     private function handleSuccessfulPayment(Subscription $subscription)
     {
-        $expiredAt = $this->calculateExpiryDate($subscription->duration);
-        
-        $subscription->update([
-            'status' => 'paid',
-            'expired_at' => $expiredAt
-        ]);
+        DB::transaction(function () use ($subscription) {
+            $expiredAt = $this->calculateExpiryDate($subscription->duration);
+            
+            $subscription->update([
+                'status' => 'paid',
+                'expired_at' => $expiredAt
+            ]);
 
-        // Update user premium status
-        $user = User::find($subscription->user_id);
-        if ($user) {
-            $user->update(['is_premium' => true]);
-        }
+            // Update user premium status
+            $user = User::find($subscription->user_id);
+            if ($user) {
+                $user->update(['is_premium' => true]);
+            }
+        });
+    }
+
+    /**
+     * Handle revoking premium status
+     */
+    private function handleRevokePremium(Subscription $subscription)
+    {
+        DB::transaction(function () use ($subscription) {
+            // Check if user has other active subscriptions before revoking
+            $hasOtherActive = Subscription::where('user_id', $subscription->user_id)
+                ->where('id', '!=', $subscription->id)
+                ->where('status', 'paid')
+                ->where('expired_at', '>', now())
+                ->exists();
+
+            if (!$hasOtherActive) {
+                $user = User::find($subscription->user_id);
+                if ($user) {
+                    $user->update(['is_premium' => false]);
+                }
+            }
+        });
     }
 
     /**

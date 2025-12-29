@@ -13,9 +13,8 @@ import {
 } from '@heroicons/react/24/solid';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { Remarkable } from 'remarkable';
-
-const md = new Remarkable({ html: true, breaks: true, linkify: true });
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const sizeOptions = {
   default: 'sm:max-w-md',
@@ -27,14 +26,14 @@ const messageVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
-const renderMarkdown = (content) => ({ __html: md.render(content) });
+// Markdown rendering helper removed in favor of <Markdown> component
 
 const LoadingBubble = () => (
-    <div className="flex items-center space-x-1.5">
-        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-    </div>
+  <div className="flex items-center space-x-1.5">
+    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+  </div>
 );
 
 
@@ -83,7 +82,7 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
   const addMessageToHistory = (message) => {
     setAiChatHistory(prev => [...prev, message]);
   };
-  
+
   const handleClearChat = () => {
     setAiChatHistory([]);
     sessionStorage.removeItem('aiChatHistory');
@@ -248,29 +247,37 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
                   </Panel>
                   <PanelResizeHandle className="h-2 w-full sm:h-full sm:w-2 bg-slate-300 dark:bg-slate-700 hover:bg-teal-500 transition-colors" />
                   <Panel defaultSize={45} minSize={20} className="flex flex-col bg-slate-100/50 dark:bg-slate-900/50">
-                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {aiChatHistory.map((msg, index) => (
-                          <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                             <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${ msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
-                               {msg.isLoading ? <LoadingBubble /> : <div dangerouslySetInnerHTML={renderMarkdown(msg.content)} />}
-                             </div>
-                           </motion.div>
-                         ))}
-                         <div ref={chatEndRef} />
-                       </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {aiChatHistory.map((msg, index) => (
+                        <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
+                            {msg.isLoading ? <LoadingBubble /> : (
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                      <div ref={chatEndRef} />
+                    </div>
                   </Panel>
                 </PanelGroup>
               ) : (
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {aiChatHistory.length === 0 ? <EmptyState onAttachmentClick={handleAttachmentClick} />
                     : aiChatHistory.map((msg, index) => (
-                        <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${ msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
-                           {msg.isLoading ? <LoadingBubble /> : <div dangerouslySetInnerHTML={renderMarkdown(msg.content)} />}
-                          </div>
-                        </motion.div>
-                      ))}
-                    <div ref={chatEndRef} />
+                      <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
+                          {msg.isLoading ? <LoadingBubble /> : (
+                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                              <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  <div ref={chatEndRef} />
                 </div>
               )}
             </div>
@@ -280,7 +287,7 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
               <form onSubmit={(e) => { e.preventDefault(); handleAIQuery(); }}>
                 <div className="flex items-end bg-slate-200 dark:bg-slate-700/50 rounded-lg overflow-hidden ring-2 ring-transparent focus-within:ring-teal-500 transition-shadow">
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.xlsx,.xls,.csv" className="hidden" />
-                  <button type="button" onClick={() => setIsWebSearchEnabled(prev => !prev)} disabled={!!uploadedFile} title={isWebSearchEnabled ? "Pencarian Web Aktif" : "Aktifkan Pencarian Web"} className={`p-3 transition-colors ${ isWebSearchEnabled ? 'text-teal-500' : 'text-slate-500 hover:text-teal-500'} disabled:text-slate-400 disabled:hover:text-slate-400`}>
+                  <button type="button" onClick={() => setIsWebSearchEnabled(prev => !prev)} disabled={!!uploadedFile} title={isWebSearchEnabled ? "Pencarian Web Aktif" : "Aktifkan Pencarian Web"} className={`p-3 transition-colors ${isWebSearchEnabled ? 'text-teal-500' : 'text-slate-500 hover:text-teal-500'} disabled:text-slate-400 disabled:hover:text-slate-400`}>
                     <GlobeAltIcon className="h-5 w-5" />
                   </button>
                   <button type="button" onClick={handleAttachmentClick} title="Unggah Dokumen" className="p-3 text-slate-500 hover:text-teal-500 transition-colors"><DocumentArrowUpIcon className="h-5 w-5" /></button>

@@ -69,6 +69,10 @@ class MiniModulChapterController extends Controller
 
     public function show(MiniModul $miniModul, MiniModulChapter $chapter)
     {
+        if ($chapter->mini_modul_id !== $miniModul->id) {
+            abort(404);
+        }
+
         return Inertia::render('Admin/MiniModul/Chapters/Show', [
             'modul' => $miniModul->load('category'),
             'chapter' => $chapter
@@ -77,6 +81,10 @@ class MiniModulChapterController extends Controller
 
     public function edit(MiniModul $miniModul, MiniModulChapter $chapter)
     {
+        if ($chapter->mini_modul_id !== $miniModul->id) {
+            abort(404);
+        }
+
         return Inertia::render('Admin/MiniModul/Chapters/Edit', [
             'modul' => $miniModul->load('category'),
             'chapter' => $chapter
@@ -85,6 +93,10 @@ class MiniModulChapterController extends Controller
 
     public function update(Request $request, MiniModul $miniModul, MiniModulChapter $chapter)
     {
+        if ($chapter->mini_modul_id !== $miniModul->id) {
+            abort(404);
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -128,6 +140,10 @@ class MiniModulChapterController extends Controller
 
     public function destroy(MiniModul $miniModul, MiniModulChapter $chapter)
     {
+        if ($chapter->mini_modul_id !== $miniModul->id) {
+            abort(404);
+        }
+
         // Hapus media files
         if ($chapter->media_files) {
             foreach ($chapter->media_files as $file) {
