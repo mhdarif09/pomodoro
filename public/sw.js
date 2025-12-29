@@ -1,11 +1,11 @@
-const CACHE_NAME = 'sarang-tumbuh-v3'; // Bumped version
+const CACHE_NAME = 'sarang-tumbuh-v4'; // Bumped version
 const urlsToCache = [
     '/',
     '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
-    self.skipWaiting(); // Force activate immediate
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
@@ -29,8 +29,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Strategy: Network First for HTML/navigation, Cache First for others
-    if (event.request.mode === 'navigate') {
+    const isNavigation = event.request.mode === 'navigate';
+    const isInertia = event.request.headers.get('X-Inertia');
+
+    // Strategy: Network First for HTML/navigation and Inertia XHR, Cache First for others
+    if (isNavigation || isInertia) {
         event.respondWith(
             fetch(event.request)
                 .then((response) => {

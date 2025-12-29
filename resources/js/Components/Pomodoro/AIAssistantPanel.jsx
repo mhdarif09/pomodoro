@@ -27,6 +27,13 @@ const messageVariants = {
 };
 
 // Markdown rendering helper removed in favor of <Markdown> component
+const sanitizeHtml = (html) => {
+  if (!html) return '';
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/on\w+='[^']*'/gi, '');
+};
 
 const LoadingBubble = () => (
   <div className="flex items-center space-x-1.5">
@@ -242,7 +249,7 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
                   <Panel defaultSize={55} minSize={20}>
                     <div className="w-full h-full bg-slate-100 dark:bg-slate-800 overflow-auto">
                       {fileType === 'pdf' && filePreviewUrl && <iframe src={filePreviewUrl} title="Preview PDF" className="w-full h-full border-none" />}
-                      {fileType === 'excel' && tableHtml && (<div className="p-4 overflow-auto h-full"><div dangerouslySetInnerHTML={{ __html: tableHtml }} className="prose dark:prose-invert" /></div>)}
+                      {fileType === 'excel' && tableHtml && (<div className="p-4 overflow-auto h-full"><div dangerouslySetInnerHTML={{ __html: sanitizeHtml(tableHtml) }} className="prose dark:prose-invert" /></div>)}
                     </div>
                   </Panel>
                   <PanelResizeHandle className="h-2 w-full sm:h-full sm:w-2 bg-slate-300 dark:bg-slate-700 hover:bg-teal-500 transition-colors" />

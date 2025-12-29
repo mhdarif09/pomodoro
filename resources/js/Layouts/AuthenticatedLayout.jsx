@@ -101,7 +101,7 @@ export default function Authenticated({ children, header }) {
             <UpgradeModal
                 isOpen={showUpgradeModal}
                 onClose={() => setShowUpgradeModal(false)}
-                plans={usePage().props.plans || []}
+                plans={plans || []}
             />
 
             {/* Desktop Sidebar */}

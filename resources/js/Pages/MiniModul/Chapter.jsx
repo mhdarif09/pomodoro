@@ -7,6 +7,14 @@ import ChapterSidebar from './Partials/ChapterSidebar';
 import AiDiscussionPanel from './Partials/AiDiscussionPanel';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const sanitizeHtml = (html) => {
+    if (!html) return '';
+    return html
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/on\w+="[^"]*"/gi, '')
+        .replace(/on\w+='[^']*'/gi, '');
+};
+
 export default function Chapter({ auth, modul, chapter, userProgress, navigation, allChapters, isLocked }) {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isCompleted, setIsCompleted] = useState(userProgress?.is_completed || false);
@@ -134,7 +142,7 @@ export default function Chapter({ auth, modul, chapter, userProgress, navigation
                                     prose-pre:bg-slate-900 prose-pre:rounded-[1.5rem] prose-pre:shadow-xl prose-pre:overflow-x-auto
                                     prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:p-6 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic
                                 ">
-                                        <div dangerouslySetInnerHTML={{ __html: chapter.content }} />
+                                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(chapter.content) }} />
                                     </div>
 
                                     {/* Footer Buttons */}

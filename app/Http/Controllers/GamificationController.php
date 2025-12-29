@@ -27,9 +27,12 @@ class GamificationController extends Controller
         // Update streak on dashboard visit
         $this->gamificationService->updateStreak($user);
 
-        // Auto-assign active challenges to user if not already assigned
-        $activeChallenges = Challenge::where('is_active', true)->get();
-        $assignedChallengeIds = $user->challenges()->pluck('challenge_id')->toArray();
+        // Get user with relations
+        $user->load(['challenges' => function($q) {
+            $q->wherePivot('completed', false);
+        }, 'achievements']);
+
+        $assignedChallengeIds = $user->challenges->pluck('id')->toArray();
         $newChallengesToAttach = [];
 
         foreach ($activeChallenges as $challenge) {
@@ -42,31 +45,29 @@ class GamificationController extends Controller
         }
 
         if (!empty($newChallengesToAttach)) {
-            DB::transaction(function () use ($user, $newChallengesToAttach) {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($user, $newChallengesToAttach) {
                 $user->challenges()->attach($newChallengesToAttach);
             });
+            $user->load('challenges'); // Refresh
         }
 
         // Get user's active challenges
-        $userChallenges = $user->challenges()
-            ->wherePivot('completed', false)
-            ->get()
-            ->map(function ($challenge) {
-                return [
-                    'id' => $challenge->id,
-                    'title' => $challenge->title,
-                    'description' => $challenge->description,
-                    'type' => $challenge->type,
-                    'xp_reward' => $challenge->xp_reward,
-                    'progress' => $challenge->pivot->progress,
-                    'completed' => $challenge->pivot->completed,
-                ];
-            });
+        $userChallenges = $user->challenges->map(function ($challenge) {
+            return [
+                'id' => $challenge->id,
+                'title' => $challenge->title,
+                'description' => $challenge->description,
+                'type' => $challenge->type,
+                'xp_reward' => $challenge->xp_reward,
+                'progress' => $challenge->pivot->progress,
+                'completed' => $challenge->pivot->completed,
+            ];
+        });
 
         // Get all achievements with unlock status
-        $userAchievementPivot = $user->achievements()->get()->keyBy('id');
-        $allAchievements = Achievement::all()->map(function ($achievement) use ($userAchievementPivot) {
-            $unlocked = $userAchievementPivot->get($achievement->id);
+        $userAchievementIds = $user->achievements->pluck('id')->toArray();
+        $allAchievements = Achievement::all()->map(function ($achievement) use ($userAchievementIds) {
+            $unlocked = in_array($achievement->id, $userAchievementIds);
             return [
                 'id' => $achievement->id,
                 'name' => $achievement->name,
@@ -75,8 +76,8 @@ class GamificationController extends Controller
                 'icon' => $achievement->icon,
                 'rarity' => $achievement->rarity,
                 'xp_reward' => $achievement->xp_reward,
-                'unlocked' => $unlocked ? true : false,
-                'unlocked_at' => $unlocked ? $unlocked->pivot->unlocked_at : null,
+                'unlocked' => $unlocked,
+                'unlocked_at' => $unlocked ? $user->achievements->find($achievement->id)->pivot->unlocked_at : null,
             ];
         });
 

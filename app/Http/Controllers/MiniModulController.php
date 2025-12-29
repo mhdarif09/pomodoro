@@ -196,6 +196,11 @@ class MiniModulController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Verify chapter belongs to the module
+        if ($chapter->mini_modul_id !== $miniModul->id) {
+            return response()->json(['error' => 'Invalid chapter for this module'], 400);
+        }
+
         $progress = UserModulProgress::firstOrCreate(
             [
                 'user_id' => auth()->id(),
