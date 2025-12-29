@@ -273,17 +273,129 @@ function OdysseyLandingPageContent({ plans = [] }) {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-300/20 rounded-full blur-[120px] -z-10 animate-pulse-slow"></div>
         </section>
 
-        <AnimatedSection id="features" className="py-32 px-6">
-          <div className="container mx-auto max-w-7xl">
-            <div className="text-center mb-24">
+        <AnimatedSection id="features" className="py-32 px-6 relative overflow-hidden">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-20">
               <motion.h2 variants={featureFadeInUp} className="text-4xl md:text-5xl font-[900] tracking-tighter mb-6 text-slate-900">
-                {t('features_title') || 'Alat Pencapai Mimpi'}
+                {t('features_title') || 'Senjata Rahasia Produktivitasmu'}
               </motion.h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
-                {features.map((feature, i) => <FeatureCard key={i} feature={feature} />)}
-              </div>
+              <motion.p variants={featureFadeInUp} className="text-xl text-slate-500 font-medium max-w-2xl mx-auto">
+                Raih target dengan tools yang dirancang untuk mengubah cara kamu bekerja dan belajar.
+              </motion.p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left: Visual Mockup */}
+              <motion.div variants={featureFadeInUp} className="order-last lg:order-first">
+                <div className="relative p-10 rounded-[2.5rem] bg-gradient-to-br from-blue-500 to-cyan-500 overflow-hidden shadow-2xl shadow-blue-500/30">
+                  <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
+                  <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-white/10 rounded-full blur-[100px]"></div>
+
+                  <div className="relative z-10 text-white">
+                    {/* Mock Dashboard UI */}
+                    <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 border border-white/30 mb-4">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center">
+                          <ClockIcon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="h-3 bg-white/40 rounded-full w-24 mb-2"></div>
+                          <div className="h-2 bg-white/30 rounded-full w-32"></div>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-white/20 rounded-full mb-2">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: "65%" }}
+                          transition={{ duration: 1.5, delay: 0.5 }}
+                          className="h-full bg-white rounded-full"
+                        ></motion.div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      {[SparklesIcon, DocumentTextIcon, PresentationChartLineIcon].map((Icon, i) => (
+                        <div key={i} className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+                          <Icon className="h-8 w-8 mx-auto mb-2" />
+                          <div className="h-2 bg-white/30 rounded-full w-12 mx-auto"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Right: Feature Cards */}
+              <motion.div variants={featureFadeInUp} className="space-y-4">
+                {/* Focus Timer */}
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <ClockIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('feat_focus_title') || 'Pomodoro Timer'}</h3>
+                    <p className="text-slate-600 text-sm">{t('feat_focus_desc') || 'Tingkatkan fokus dengan teknik Pomodoro yang terbukti efektif'}</p>
+                  </div>
+                </div>
+
+                {/* AI Genius */}
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <SparklesIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('feat_ai_title') || 'AI Genius'}</h3>
+                    <p className="text-slate-600 text-sm">{t('feat_ai_desc') || 'Asisten AI yang membantu menjawab pertanyaan dan solve problem'}</p>
+                  </div>
+                </div>
+
+                {/* Visual Reports */}
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <PresentationChartLineIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('feat_visual_title') || 'Laporan Visual'}</h3>
+                    <p className="text-slate-600 text-sm">{t('feat_visual_desc') || 'Track progress dengan visualisasi data yang indah dan insightful'}</p>
+                  </div>
+                </div>
+
+                {/* Community */}
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-400 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <UserGroupIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('feat_comm_title') || 'Komunitas Produktif'}</h3>
+                    <p className="text-slate-600 text-sm">{t('feat_comm_desc') || 'Bergabung dengan ribuan pengguna yang saling support'}</p>
+                  </div>
+                </div>
+
+                {/* Collaboration */}
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-teal-400 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <ChatBubbleLeftRightIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('feat_partner_title') || 'Kolaborasi Real-time'}</h3>
+                    <p className="text-slate-600 text-sm">{t('feat_partner_desc') || 'Bekerja bersama tim dengan fitur sharing dan real-time sync'}</p>
+                  </div>
+                </div>
+
+                {/* Docs */}
+                <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-400 to-blue-400 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <DocumentTextIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{t('feat_doc_title') || 'Smart Documents'}</h3>
+                    <p className="text-slate-600 text-sm">{t('feat_doc_desc') || 'Buat dan kelola dokumen dengan editor yang powerful'}</p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-200/20 rounded-full blur-[100px] -z-10"></div>
         </AnimatedSection>
 
         <AnimatedSection id="topics" className="py-24 overflow-hidden bg-white/40 backdrop-blur-3xl border-y border-white/20">
