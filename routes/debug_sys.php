@@ -7,6 +7,11 @@ use App\Models\AiSubtaskUsage;
 use App\Services\TaskAIService;
 
 Route::get('/debug-sys', function () {
+    // Force display errors for debug
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
     $checks = [];
 
     // 1. Check Config
@@ -17,29 +22,32 @@ Route::get('/debug-sys', function () {
     try {
         $count = AiSubtaskUsage::count();
         $checks['db_table_ai_usage'] = "OK (Count: $count)";
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         $checks['db_table_ai_usage'] = "ERROR: " . $e->getMessage();
     }
 
     // 3. Check Service Logic (Real Call)
     try {
         $service = app(TaskAIService::class);
-        $task = new \App\Models\Task([
-            'title' => 'Test AI Debug Task',
-            'description' => 'Ini adalah task percobaan untuk debug sistem AI.',
-            'estimated_minutes' => 60
-        ]);
-        // Mock ID for logging purposes in service
-        $task->id = 999999; 
         
-        $result = $service->suggestSubtasks($task);
+        // Use REAL task if available, or create minimal dummy safely
+        $task = \App\Models\Task::latest()->first();
+        
+        if (!$task) {
+             $checks['info'] = "No tasks found in DB, skipping full test";
+             $result = "Skipped";
+        } else {
+             $result = $service->suggestSubtasks($task);
+        }
         
         $checks['full_ai_test'] = $result;
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         $checks['full_ai_test'] = [
             'success' => false,
             'exception' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => substr($e->getTraceAsString(), 0, 500) // Truncate trace
         ];
     }
     
