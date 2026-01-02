@@ -31,7 +31,7 @@ class OpenAIController extends Controller
     public function __construct()
     {
         $this->apiBaseUrl = "https://api.openai.com/v1/chat/completions";
-        $apiKey = env('OPENAI_API_KEY');
+        $apiKey = config('services.openai.api_key');
         $this->serperApiKey = env('SERPER_API_KEY');
 
         if (empty($apiKey)) {

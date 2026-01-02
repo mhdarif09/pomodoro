@@ -64,7 +64,7 @@ PROMPT;
     
     public function __construct()
     {
-        $this->apiKey = env('OPENAI_API_KEY');
+        $this->apiKey = config('services.openai.api_key');
         $this->apiUrl = 'https://api.openai.com/v1/chat/completions';
     }
 
