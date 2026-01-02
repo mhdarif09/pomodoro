@@ -225,8 +225,8 @@ class KanbanController extends Controller
             $result = $taskAIService->suggestSubtasks($task);
 
             if ($result['success']) {
-                // Increment usage counter
-                $usage->increment(count($result['subtasks']));
+                // Increment usage counter using Eloquent's built-in increment
+                $usage->increment('count', count($result['subtasks']));
                 
                 return response()->json([
                     'success' => true,

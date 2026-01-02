@@ -38,14 +38,4 @@ class AiSubtaskUsage extends Model
             ['count' => 0]
         );
     }
-
-    /**
-     * Increment usage count
-     */
-    public function increment($amount = 1)
-    {
-        $this->count += $amount;
-        $this->save();
-        return $this;
-    }
 }
