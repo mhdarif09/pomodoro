@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Models\AiSubtaskUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\DetermineTaskPriority;
@@ -207,7 +208,7 @@ class KanbanController extends Controller
         
         // Check current usage for this month
         $currentMonth = now()->format('Y-m');
-        $usage = \App\Models\AiSubtaskUsage::getUsageForMonth($user->id, $currentMonth);
+        $usage = AiSubtaskUsage::getUsageForMonth($user->id, $currentMonth);
         
         if ($usage->count >= $maxSubtasks) {
             return response()->json([
