@@ -14,6 +14,9 @@ class TaskAIService
     public function __construct()
     {
         $this->openaiApiKey = config('services.openai.api_key');
+        if (empty($this->openaiApiKey)) {
+            Log::critical("TaskAIService: OPENAI_API_KEY is missing in config!");
+        }
     }
 
     /**

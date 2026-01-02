@@ -143,7 +143,7 @@ class MiniModulAiController extends Controller
      */
     private function generateAiResponseWithMemory(MiniModulChapter $chapter, string $userMessage, array $history): string
     {
-        if (empty(env('OPENAI_API_KEY'))) {
+        if (empty(config('services.openai.api_key'))) {
             Log::warning('OpenAI API Key is not set.');
             return "Maaf, fitur AI belum dikonfigurasi oleh administrator.";
         }
@@ -180,7 +180,7 @@ Konteks materi: '{$chapter->title}'. Isi materi: " . strip_tags($chapter->conten
      */
     private function generateRoleBasedResponseWithMemory(MiniModulChapter $chapter, string $scenario, string $role, array $history): string
     {
-        if (empty(env('OPENAI_API_KEY'))) {
+        if (empty(config('services.openai.api_key'))) {
             return "Fitur AI belum dikonfigurasi.";
         }
 
