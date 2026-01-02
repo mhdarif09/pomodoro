@@ -233,8 +233,8 @@ class TaskAIService
     private function parseSubtasksFromResponse(string $response): array
     {
         // Remove common prefixes and clean up
-        $response = preg_replace('/^\d+[\.\)]\s*/', '', $response, -1, $count, PREG_MULTILINE);
-        $response = preg_replace('/^[-*•]\s*/', '', $response, -1, $count, PREG_MULTILINE);
+        $response = preg_replace('/^\d+[\.\)]\s*/m', '', $response);
+        $response = preg_replace('/^[-*•]\s*/m', '', $response);
         
         // Split by newlines
         $lines = explode("\n", $response);
