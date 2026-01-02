@@ -21,12 +21,26 @@ Route::get('/debug-sys', function () {
         $checks['db_table_ai_usage'] = "ERROR: " . $e->getMessage();
     }
 
-    // 3. Check Service Instantiation
+    // 3. Check Service Logic (Real Call)
     try {
         $service = app(TaskAIService::class);
-        $checks['task_ai_service'] = "Instantiated OK";
+        $task = new \App\Models\Task([
+            'title' => 'Test AI Debug Task',
+            'description' => 'Ini adalah task percobaan untuk debug sistem AI.',
+            'estimated_minutes' => 60
+        ]);
+        // Mock ID for logging purposes in service
+        $task->id = 999999; 
+        
+        $result = $service->suggestSubtasks($task);
+        
+        $checks['full_ai_test'] = $result;
     } catch (\Exception $e) {
-        $checks['task_ai_service'] = "ERROR: " . $e->getMessage();
+        $checks['full_ai_test'] = [
+            'success' => false,
+            'exception' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ];
     }
     
     // 4. Check Environment
