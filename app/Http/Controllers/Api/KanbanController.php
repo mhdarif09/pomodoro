@@ -193,58 +193,74 @@ class KanbanController extends Controller
 
     public function suggestBreakdown(Task $task, TaskAIService $taskAIService)
     {
-        $this->authorize('update', $task);
+        try {
+            $this->authorize('update', $task);
 
-        $user = $task->user;
-        
-        // Get user's plan limit (default 20 for free users)
-        $maxSubtasks = 20; // Default for non-premium
-        if ($user->is_premium && $user->subscription) {
-            $plan = $user->subscription->planDetail;
-            if ($plan) {
-                $maxSubtasks = $plan->max_subtasks ?? 20;
+            $user = $task->user;
+            
+            // Get user's plan limit (default 20 for free users)
+            $maxSubtasks = 20; // Default for non-premium
+            if ($user->is_premium && $user->subscription) {
+                $plan = $user->subscription->planDetail;
+                if ($plan) {
+                    $maxSubtasks = $plan->max_subtasks ?? 20;
+                }
             }
-        }
-        
-        // Check current usage for this month
-        $currentMonth = now()->format('Y-m');
-        $usage = AiSubtaskUsage::getUsageForMonth($user->id, $currentMonth);
-        
-        if ($usage->count >= $maxSubtasks) {
+            
+            // Check current usage for this month
+            $currentMonth = now()->format('Y-m');
+            $usage = AiSubtaskUsage::getUsageForMonth($user->id, $currentMonth);
+            
+            if ($usage->count >= $maxSubtasks) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Limit AI Subtask tercapai! Kamu sudah generate {$maxSubtasks} subtask bulan ini. Upgrade untuk limit lebih tinggi!",
+                    'limit_reached' => true,
+                    'current_usage' => $usage->count,
+                    'max_limit' => $maxSubtasks
+                ], 403);
+            }
+
+            // Call AI service
+            $result = $taskAIService->suggestSubtasks($task);
+
+            if ($result['success']) {
+                // Increment usage counter
+                $usage->increment(count($result['subtasks']));
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'AI berhasil generate subtask suggestions',
+                    'subtasks' => $result['subtasks'],
+                    'count' => count($result['subtasks']),
+                    'usage' => [
+                        'used' => $usage->count,
+                        'limit' => $maxSubtasks,
+                        'remaining' => max(0, $maxSubtasks - $usage->count)
+                    ]
+                ]);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => "Limit AI Subtask tercapai! Kamu sudah generate {$maxSubtasks} subtask bulan ini. Upgrade untuk limit lebih tinggi!",
-                'limit_reached' => true,
-                'current_usage' => $usage->count,
-                'max_limit' => $maxSubtasks
-            ], 403);
-        }
-
-        // Call AI service
-        $result = $taskAIService->suggestSubtasks($task);
-
-        if ($result['success']) {
-            // Increment usage counter
-            $usage->increment(count($result['subtasks']));
+                'message' => 'Gagal generate AI suggestions. Silakan coba lagi.',
+                'error' => $result['error'] ?? 'Unknown error'
+            ], 500);
+            
+        } catch (\Exception $e) {
+            \Log::error('AI Suggest Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             return response()->json([
-                'success' => true,
-                'message' => 'AI berhasil generate subtask suggestions',
-                'subtasks' => $result['subtasks'],
-                'count' => count($result['subtasks']),
-                'usage' => [
-                    'used' => $usage->count,
-                    'limit' => $maxSubtasks,
-                    'remaining' => max(0, $maxSubtasks - $usage->count)
-                ]
-            ]);
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal generate AI suggestions. Silakan coba lagi.',
-            'error' => $result['error'] ?? 'Unknown error'
-        ], 500);
     }
 
     /**
