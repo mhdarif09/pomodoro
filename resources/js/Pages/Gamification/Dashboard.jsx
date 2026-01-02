@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -7,20 +7,48 @@ import LevelBadge from '@/Components/Gamification/LevelBadge';
 import ChallengeCard from '@/Components/Gamification/ChallengeCard';
 import AchievementBadge from '@/Components/Gamification/AchievementBadge';
 import LeaderboardTable from '@/Components/Gamification/LeaderboardTable';
-import { TrophyIcon, FireIcon, StarIcon } from '@heroicons/react/24/solid';
+import CashbackRedemptionModal from '@/Components/Gamification/CashbackRedemptionModal';
+import { TrophyIcon, FireIcon, StarIcon, TicketIcon } from '@heroicons/react/24/solid';
 
-export default function Dashboard({ auth, challenges, achievements, leaderboard, userRank }) {
+export default function Dashboard({ auth, challenges, achievements, leaderboard, userRank, pointsBalance }) {
     const user = auth.user;
+    const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
+    const [currentPoints, setCurrentPoints] = useState(pointsBalance || 0);
 
     const stats = [
         { label: 'Total XP', value: user.total_xp.toLocaleString(), icon: <StarIcon className="w-5 h-5 sm:w-6 sm:h-6" />, color: 'from-amber-400 to-orange-400' },
         { label: 'Current Streak', value: `${user.current_streak} days`, icon: <FireIcon className="w-5 h-5 sm:w-6 sm:h-6" />, color: 'from-red-400 to-orange-500' },
         { label: 'Global Rank', value: `#${userRank}`, icon: <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6" />, color: 'from-emerald-500 to-teal-500' },
+        {
+            label: 'Poin Tersedia',
+            value: currentPoints.toLocaleString(),
+            icon: <TicketIcon className="w-5 h-5 sm:w-6 sm:h-6" />,
+            color: 'from-blue-400 to-indigo-500',
+            action: (
+                <button
+                    onClick={() => setIsRedeemModalOpen(true)}
+                    className="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded-md transition-colors mt-1 font-bold"
+                >
+                    Tukar
+                </button>
+            )
+        },
     ];
+
+    const handleRedeemSuccess = (remainingPoints) => {
+        setCurrentPoints(remainingPoints);
+    };
 
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Gamifikasi" />
+
+            <CashbackRedemptionModal
+                isOpen={isRedeemModalOpen}
+                onClose={() => setIsRedeemModalOpen(false)}
+                pointsBalance={currentPoints}
+                onRedeemSuccess={handleRedeemSuccess}
+            />
 
             {/* Scrollable Container - Same as Chapter Reading */}
             <div className="h-full overflow-y-auto scrollbar-hide">
@@ -48,22 +76,23 @@ export default function Dashboard({ auth, challenges, achievements, leaderboard,
                         </div>
 
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
                             {stats.map((stat, index) => (
                                 <motion.div
                                     key={index}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.1 }}
-                                    className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow"
+                                    className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden"
                                 >
-                                    <div className="flex items-center gap-3 sm:gap-4">
-                                        <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white shadow-lg`}>
+                                    <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                                        <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white shadow-lg shrink-0`}>
                                             {stat.icon}
                                         </div>
                                         <div>
                                             <div className="text-xl sm:text-2xl font-black text-slate-900">{stat.value}</div>
                                             <div className="text-xs sm:text-sm text-slate-600 font-semibold">{stat.label}</div>
+                                            {stat.action}
                                         </div>
                                     </div>
                                 </motion.div>

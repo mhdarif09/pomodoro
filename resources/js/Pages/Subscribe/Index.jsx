@@ -1,8 +1,7 @@
 // File: resources/js/Pages/Subscribe/Index.jsx
 import { Head, usePage } from '@inertiajs/react';
-import axios from 'axios';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
     CheckIcon,
     SparklesIcon,
@@ -10,54 +9,29 @@ import {
     ShieldCheckIcon,
     ArrowLeftIcon
 } from '@heroicons/react/24/outline';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
+import UpgradeModal from '@/Components/UpgradeModal';
 
 export default function SubscribeIndex() {
-    const { message, plans, auth, midtrans } = usePage().props;
-    const [isLoading, setIsLoading] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState(null);
+    const { message, plans } = usePage().props;
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [targetPlan, setTargetPlan] = useState(null);
 
-    useEffect(() => {
-        if (!window.snap) {
-            const isProduction = midtrans?.is_production ?? true;
-            const snapUrl = isProduction ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js';
-            const clientKey = midtrans?.client_key || import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
-            const script = document.createElement('script');
-            script.src = snapUrl;
-            script.setAttribute('data-client-key', clientKey);
-            document.body.appendChild(script);
-        }
-    }, []);
-
-    const handleSubscribe = async (planName) => {
-        setIsLoading(true);
-        setSelectedPlan(planName);
-        try {
-            const response = await axios.post(route('subscribe.checkout'), { plan: planName });
-            if (response.data.success && response.data.snap_token) {
-                window.snap.pay(response.data.snap_token, {
-                    onSuccess: () => window.location.href = route('subscription.payment.success'),
-                    onPending: () => { setIsLoading(false); setSelectedPlan(null); },
-                    onError: () => { setIsLoading(false); setSelectedPlan(null); alert("Pembayaran gagal!"); },
-                    onClose: () => { setIsLoading(false); setSelectedPlan(null); }
-                });
-            } else {
-                alert(response.data.message || "Gagal membuat transaksi.");
-                setIsLoading(false);
-                setSelectedPlan(null);
-            }
-        } catch (error) {
-            console.error('Checkout error:', error);
-            alert(error.response?.data?.message || "Terjadi kesalahan sistem.");
-            setIsLoading(false);
-            setSelectedPlan(null);
-        }
+    const handleSubscribe = (plan) => {
+        setTargetPlan(plan);
+        setShowUpgradeModal(true);
     };
 
     return (
         <div className="min-h-screen bg-[#F5F5F7] dark:bg-[#000000] selection:bg-blue-500/30 font-sans antialiased overflow-x-hidden">
             <Head title="Premium - Sarang Tumbuh" />
+
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                plans={plans}
+                initialPlan={targetPlan}
+            />
 
             {/* Background Decorative Elements */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -137,8 +111,7 @@ export default function SubscribeIndex() {
                                 </div>
 
                                 <button
-                                    onClick={() => handleSubscribe(plan.name)}
-                                    disabled={isLoading}
+                                    onClick={() => handleSubscribe(plan)}
                                     className={clsx(
                                         "w-full py-5 rounded-[1.5rem] font-black text-lg transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden group",
                                         plan.name.toLowerCase().includes('pro')
@@ -147,7 +120,7 @@ export default function SubscribeIndex() {
                                     )}
                                 >
                                     <span className="relative z-10">
-                                        {isLoading && selectedPlan === plan.name ? 'Memproses...' : 'Dapatkan Sekarang'}
+                                        Dapatkan Sekarang
                                     </span>
                                     {plan.name.toLowerCase().includes('pro') && (
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />

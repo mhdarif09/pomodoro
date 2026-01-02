@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\DetermineTaskPriority;
 use Illuminate\Support\Facades\DB;
+use App\Services\TaskAIService;
+use Carbon\Carbon;
 
 class KanbanController extends Controller
 {
@@ -186,5 +188,98 @@ class KanbanController extends Controller
         ];
 
         return $timezones[$timezone] ?? 'Asia/Jakarta';
+    }
+
+    public function suggestBreakdown(Task $task, TaskAIService $taskAIService)
+    {
+        $this->authorize('update', $task);
+
+        $user = $task->user;
+        
+        // Get user's plan limit (default 20 for free users)
+        $maxSubtasks = 20; // Default for non-premium
+        if ($user->is_premium && $user->subscription) {
+            $plan = $user->subscription->planDetail;
+            if ($plan) {
+                $maxSubtasks = $plan->max_subtasks ?? 20;
+            }
+        }
+        
+        // Check current usage for this month
+        $currentMonth = now()->format('Y-m');
+        $usage = \App\Models\AiSubtaskUsage::getUsageForMonth($user->id, $currentMonth);
+        
+        if ($usage->count >= $maxSubtasks) {
+            return response()->json([
+                'success' => false,
+                'message' => "Limit AI Subtask tercapai! Kamu sudah generate {$maxSubtasks} subtask bulan ini. Upgrade untuk limit lebih tinggi!",
+                'limit_reached' => true,
+                'current_usage' => $usage->count,
+                'max_limit' => $maxSubtasks
+            ], 403);
+        }
+
+        // Call AI service
+        $result = $taskAIService->suggestSubtasks($task);
+
+        if ($result['success']) {
+            // Increment usage counter
+            $usage->increment(count($result['subtasks']));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'AI berhasil generate subtask suggestions',
+                'subtasks' => $result['subtasks'],
+                'count' => count($result['subtasks']),
+                'usage' => [
+                    'used' => $usage->count,
+                    'limit' => $maxSubtasks,
+                    'remaining' => max(0, $maxSubtasks - $usage->count)
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal generate AI suggestions. Silakan coba lagi.',
+            'error' => $result['error'] ?? 'Unknown error'
+        ], 500);
+    }
+
+    /**
+     * Reschedule failed tasks to tomorrow
+     */
+    public function rescheduleFailedTasks(Request $request)
+    {
+        $today = Carbon::today()->format('Y-m-d');
+        
+        // Find all tasks with due_date today and not completed
+        $failedTasks = Task::where('user_id', $request->user()->id)
+            ->whereDate('due_date', $today)
+            ->where('is_completed', false)
+            ->get();
+
+        $rescheduledCount = 0;
+        $tomorrow = Carbon::tomorrow();
+
+        foreach ($failedTasks as $task) {
+            $task->update([
+                'due_date' => $tomorrow,
+                'auto_rescheduled_count' => $task->auto_rescheduled_count + 1
+            ]);
+            $rescheduledCount++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Berhasil reschedule {$rescheduledCount} task ke besok",
+            'rescheduled_count' => $rescheduledCount,
+            'tasks' => $failedTasks->map(fn($t) => [
+                'id' => $t->id,
+                'title' => $t->title,
+                'new_due_date' => $tomorrow->format('Y-m-d'),
+                'reschedule_count' => $t->auto_rescheduled_count
+            ])
+        ]);
     }
 }

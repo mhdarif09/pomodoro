@@ -14,6 +14,7 @@ class Challenge extends Model
         'description',
         'type',
         'xp_reward',
+        'points_reward',
         'requirements',
         'is_active',
         'starts_at',

@@ -35,6 +35,7 @@ class SubscriptionController extends Controller
     // Validate and sanitize input
     $validated = $request->validate([
         'plan' => 'required|string|max:50|alpha_dash', // Only alphanumeric and dashes
+        'promo_code' => 'nullable|string|max:20',
     ]);
 
     $userId = auth()->id();
@@ -114,6 +115,23 @@ class SubscriptionController extends Controller
             'duration' => $plan->duration ?? 'monthly',
         ];
 
+        if (!empty($validated['promo_code'])) {
+            $promo = Promo::where('code', $validated['promo_code'])->first();
+            if ($promo && $promo->isValid()) {
+                $discount = $promo->calculateDiscount($plan->price);
+                $subscriptionData['promo_code'] = $promo->code;
+                $subscriptionData['discount_amount'] = $discount;
+                $subscriptionData['price'] = max(0, $plan->price - $discount); // Adjusted price
+                
+                // Track usage
+                $promo->increment('usage_count');
+                if ($promo->is_cashback_promo && $promo->cashback_redemption_id) {
+                    \App\Models\CashbackRedemption::where('id', $promo->cashback_redemption_id)
+                        ->update(['is_used' => true, 'used_at' => now()]);
+                }
+            }
+        }
+
         $subscription = Subscription::create($subscriptionData);
         Log::info("Created new subscription", ['user_id' => $userId, 'subscription_id' => $subscription->id]);
 
@@ -158,6 +176,7 @@ class SubscriptionController extends Controller
     {
         $request->validate([
             'plan_id' => 'required|exists:plans,id',
+            'promo_code' => 'nullable|string|max:20',
         ]);
 
         $userId = auth()->id();
@@ -199,6 +218,23 @@ class SubscriptionController extends Controller
             
             if (isset($plan->duration)) {
                 $subscriptionData['duration'] = $plan->duration;
+            }
+
+            if ($request->promo_code) {
+                $promo = Promo::where('code', $request->promo_code)->first();
+                if ($promo && $promo->isValid()) {
+                    $discount = $promo->calculateDiscount($plan->price);
+                    $subscriptionData['promo_code'] = $promo->code;
+                    $subscriptionData['discount_amount'] = $discount;
+                    $subscriptionData['price'] = max(0, $plan->price - $discount);
+                    
+                    $promo->increment('usage_count');
+                    
+                    if ($promo->is_cashback_promo && $promo->cashback_redemption_id) {
+                        \App\Models\CashbackRedemption::where('id', $promo->cashback_redemption_id)
+                            ->update(['is_used' => true, 'used_at' => now()]);
+                    }
+                }
             }
 
             $subscription = Subscription::create($subscriptionData);

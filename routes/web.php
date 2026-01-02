@@ -101,6 +101,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/tasks/{task}', [\App\Http\Controllers\Api\KanbanController::class, 'destroy'])->name('tasks.destroy');
         Route::patch('/tasks/{task}/toggle-complete', [\App\Http\Controllers\Api\KanbanController::class, 'toggleComplete'])->name('tasks.toggle-complete');
         
+        // AI Task Features
+        Route::post('/tasks/{task}/suggest-breakdown', [\App\Http\Controllers\Api\KanbanController::class, 'suggestBreakdown'])->name('tasks.suggest-breakdown');
+        Route::post('/tasks/reschedule-failed', [\App\Http\Controllers\Api\KanbanController::class, 'rescheduleFailedTasks'])->name('tasks.reschedule-failed');
+        
         // Subtasks
         Route::post('/tasks/{task}/subtasks', [\App\Http\Controllers\Api\SubtaskController::class, 'store'])->name('subtasks.store');
         Route::patch('/subtasks/{subtask}', [\App\Http\Controllers\Api\SubtaskController::class, 'update'])->name('subtasks.update');
@@ -117,9 +121,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Pomodoro
         Route::post('/pomodoro', [\App\Http\Controllers\Api\PomodoroController::class, 'store'])->name('pomodoro.store');
+        Route::post('/pomodoro/start', [\App\Http\Controllers\Api\PomodoroController::class, 'startSession'])->name('pomodoro.start');
+        Route::get('/pomodoro/active', [\App\Http\Controllers\Api\PomodoroController::class, 'getActiveSession'])->name('pomodoro.active');
+        Route::post('/pomodoro/stop', [\App\Http\Controllers\Api\PomodoroController::class, 'stopActiveSession'])->name('pomodoro.stop');
+        Route::get('/focus/analytics', [\App\Http\Controllers\Api\PomodoroController::class, 'getFocusAnalytics'])->name('focus.analytics');
 
         // User Activity Tracking
         Route::post('/heartbeat', [\App\Http\Controllers\Api\UserActivityController::class, 'heartbeat'])->name('heartbeat');
+
+        // Gamification & Cashback API
+        Route::get('/challenges/active', [\App\Http\Controllers\Api\ChallengeController::class, 'getActive'])->name('challenges.active');
+        Route::get('/challenges/history', [\App\Http\Controllers\Api\ChallengeController::class, 'getHistory'])->name('challenges.history');
+        
+        Route::get('/points/balance', [\App\Http\Controllers\Api\PointsController::class, 'getBalance'])->name('points.balance');
+        
+        Route::post('/cashback/redeem', [\App\Http\Controllers\Api\CashbackController::class, 'redeemToPromoCode'])->name('cashback.redeem');
+        Route::get('/cashback/history', [\App\Http\Controllers\Api\CashbackController::class, 'getRedemptionHistory'])->name('cashback.history');
     });
 
     // =========================================================================

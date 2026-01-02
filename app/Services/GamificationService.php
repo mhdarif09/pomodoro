@@ -5,19 +5,32 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Achievement;
 use App\Models\Challenge;
-use App\Models\XpTransaction;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use App\Models\UserPoint;
+use App\Models\PointTransaction;
+use App\Models\XpTransaction; // Added
+use Carbon\Carbon; // Added
+use Illuminate\Support\Facades\DB; // Added
 
 class GamificationService
 {
     /**
-     * Award XP to a user and handle level ups
+     * Assign a challenge to a user safely
      */
+    public function assignChallenge(User $user, Challenge $challenge)
+    {
+        if (!$user->challenges()->where('challenge_id', $challenge->id)->exists()) {
+            $user->challenges()->attach($challenge->id, [
+                'progress' => 0,
+                'completed' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
     public function awardXP(User $user, int $amount, string $reason, $source = null): array
     {
         return DB::transaction(function () use ($user, $amount, $reason, $source) {
-            // Create XP transaction
+            // Create XP Transaction
             XpTransaction::create([
                 'user_id' => $user->id,
                 'amount' => $amount,
@@ -26,36 +39,75 @@ class GamificationService
                 'source_id' => $source ? $source->id : null,
             ]);
 
-            // Update user XP
-            $user->xp += $amount;
+            // Update user stats
             $user->total_xp += $amount;
+            $user->xp += $amount; // Current level XP
 
+            // Check for level up
+            $xpForNextLevel = $user->getXpForNextLevel();
             $leveledUp = false;
             $newLevel = $user->level;
 
-            // Check for level up
-            while ($user->xp >= $user->getXpForNextLevel()) {
-                $user->xp -= $user->getXpForNextLevel();
-                $user->level += 1;
+            while ($user->xp >= $xpForNextLevel) {
+                $user->xp -= $xpForNextLevel;
+                $user->level++;
                 $leveledUp = true;
                 $newLevel = $user->level;
+                $xpForNextLevel = $user->getXpForNextLevel(); // Update required XP for next level
             }
 
             $user->save();
-
-            // Check for achievements after XP award
-            $newAchievements = $this->checkAchievements($user);
 
             return [
                 'xp_awarded' => $amount,
                 'leveled_up' => $leveledUp,
                 'new_level' => $newLevel,
                 'current_xp' => $user->xp,
-                'xp_for_next_level' => $user->getXpForNextLevel(),
-                'new_achievements' => $newAchievements,
+                'xp_for_next_level' => $xpForNextLevel,
             ];
         });
     }
+    
+    // I'll do this in chunks.
+    
+    /**
+     * Award Points to a user
+     */
+    public function awardPoints(User $user, int $amount, string $reason, $source = null): array
+    {
+        return DB::transaction(function () use ($user, $amount, $reason, $source) {
+            // Create Point transaction
+            PointTransaction::create([
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => 'earned',
+                'source_type' => $source ? get_class($source) : null,
+                'source_id' => $source ? $source->id : null,
+                'description' => $reason,
+            ]);
+
+            // Update user points
+            $userPoint = UserPoint::firstOrCreate(
+                ['user_id' => $user->id],
+                ['current_points' => 0, 'lifetime_points' => 0]
+            );
+            
+            $userPoint->current_points += $amount;
+            $userPoint->lifetime_points += $amount;
+            $userPoint->save();
+
+            return [
+                'points_awarded' => $amount,
+                'current_points' => $userPoint->current_points,
+            ];
+        });
+    }
+
+    /**
+     * Update user's streak
+     */
+
+
 
     /**
      * Update user's streak
@@ -164,9 +216,9 @@ class GamificationService
     }
 
     /**
-     * Update challenge progress for a user
+     * Update challenge progress for a user (Absolute Percentage)
      */
-    public function updateChallengeProgress(User $user, Challenge $challenge, int $progressIncrement = 1): array
+    public function updateChallengeProgress(User $user, Challenge $challenge, int $progressPercent): array
     {
         $userChallenge = $user->challenges()
             ->where('challenge_id', $challenge->id)
@@ -188,8 +240,12 @@ class GamificationService
             ];
         }
 
-        // Update progress
-        $newProgress = min(100, $userChallenge->pivot->progress + $progressIncrement);
+        // Update progress (Use the higher value to prevent regression if calculation fluctuates?)
+        // Actually, for daily challenges, it should track current state. If I uncheck a task, progress drops.
+        // So we should accept the new progress as is, but don't revoke completion if already done?
+        // But we already returned if completed. So yes, just update.
+        
+        $newProgress = min(100, max(0, $progressPercent));
         $completed = $newProgress >= 100;
 
         $user->challenges()->updateExistingPivot($challenge->id, [
@@ -201,6 +257,10 @@ class GamificationService
         // Award XP if completed
         if ($completed) {
             $this->awardXP($user, $challenge->xp_reward, 'challenge_completed', $challenge);
+
+            if ($challenge->points_reward > 0) {
+                $this->awardPoints($user, $challenge->points_reward, 'challenge_completed', $challenge);
+            }
         }
 
         return [

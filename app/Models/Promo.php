@@ -14,6 +14,8 @@ class Promo extends Model
         'discount_type',
         'discount_value',
         'is_active',
+        'is_cashback_promo',
+        'cashback_redemption_id',
         'expires_at',
         'usage_limit',
         'usage_count',
@@ -21,6 +23,7 @@ class Promo extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_cashback_promo' => 'boolean',
         'expires_at' => 'datetime',
         'discount_value' => 'integer',
         'usage_limit' => 'integer',

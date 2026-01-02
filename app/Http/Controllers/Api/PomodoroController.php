@@ -4,12 +4,110 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Services\FocusAnalyticsService;
 use App\Models\PomodoroSession;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PomodoroController extends Controller
 {
+    /**
+     * Start a new pomodoro session (for sync)
+     */
+    public function startSession(Request $request)
+    {
+        $validated = $request->validate([
+            'task_id' => 'nullable|exists:tasks,id',
+            'duration_minutes' => 'required|integer|min:1|max:180',
+        ]);
+
+        // Check if user already has an active session
+        $existingSession = PomodoroSession::where('user_id', auth()->id())
+            ->whereNull('ended_at')
+            ->first();
+
+        if ($existingSession) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Session already running',
+                'session' => $existingSession
+            ]);
+        }
+
+        $session = PomodoroSession::create([
+            'user_id' => auth()->id(),
+            'task_id' => $validated['task_id'] ?? null,
+            'focus_minutes' => $validated['duration_minutes'],
+            'started_at' => now(),
+            'ended_at' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Session started',
+            'session' => $session
+        ]);
+    }
+
+    /**
+     * Get active session for sync
+     */
+    public function getActiveSession(Request $request)
+    {
+        $session = PomodoroSession::where('user_id', auth()->id())
+            ->whereNull('ended_at')
+            ->with('task')
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'session' => $session
+        ]);
+    }
+
+    /**
+     * Stop/complete active session
+     */
+    public function stopActiveSession(Request $request)
+    {
+        $validated = $request->validate([
+            'break_minutes' => 'required|integer|min:0|max:60',
+            'tab_switches' => 'required|integer|min:0',
+            'ai_questions_asked' => 'required|integer|min:0',
+        ]);
+
+        $session = PomodoroSession::where('user_id', auth()->id())
+            ->whereNull('ended_at')
+            ->first();
+
+        if (!$session) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active session found'
+            ], 404);
+        }
+
+        $session->update([
+            'ended_at' => now(),
+            'break_minutes' => $validated['break_minutes'],
+            'tab_switches' => $validated['tab_switches'],
+            'ai_questions_asked' => $validated['ai_questions_asked'],
+        ]);
+
+        // Award XP
+        $gamificationService = app(\App\Services\GamificationService::class);
+        $xpAmount = max(1, floor($session->focus_minutes / 2.5));
+        $gamificationService->awardXP(auth()->user(), $xpAmount, 'pomodoro_focus', $session);
+        $gamificationService->updateStreak(auth()->user());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Session completed',
+            'session' => $session,
+            'xp_awarded' => $xpAmount
+        ]);
+    }
     public function store(Request $request)
     {
         $userId = auth()->id();
@@ -95,5 +193,21 @@ class PomodoroController extends Controller
             
             return response()->json(['message' => 'Gagal menyimpan session.'], 500);
         }
+    }
+
+    /**
+     * Get focus analytics for the authenticated user
+     */
+    public function getFocusAnalytics(Request $request, FocusAnalyticsService $analyticsService)
+    {
+        $userId = $request->user()->id;
+        
+        // Get simplified insights
+        $insights = $analyticsService->getSimplifiedInsights($userId);
+        
+        return response()->json([
+            'success' => true,
+            'insights' => $insights
+        ]);
     }
 }

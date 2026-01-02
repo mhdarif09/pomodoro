@@ -142,10 +142,32 @@ function TaskCard({ task, expandedTaskId, onToggleExpand, onToggleComplete, onSt
                                     </div>
                                 ))}
                                 {!task.is_completed && (
-                                    <form onSubmit={(e) => { e.preventDefault(); onAddSubtask(task.id, e.target.subtask.value); e.target.subtask.value = ''; }} className="relative mt-3">
-                                        <input name="subtask" type="text" placeholder={t('placeholder_add_subtask') || "Add step..."} className="w-full bg-white/5 dark:bg-black/20 border-none rounded-2xl py-2.5 pl-4 pr-10 text-xs font-semibold focus:ring-2 focus:ring-teal-500/10" />
-                                        <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-teal-500"><PlusIcon className="w-4 h-4" /></button>
-                                    </form>
+                                    <div className="mt-3 space-y-2">
+                                        <form onSubmit={(e) => { e.preventDefault(); onAddSubtask(task.id, e.target.subtask.value); e.target.subtask.value = ''; }} className="relative">
+                                            <input name="subtask" type="text" placeholder={t('placeholder_add_subtask') || "Add step..."} className="w-full bg-white/5 dark:bg-black/20 border-none rounded-2xl py-2.5 pl-4 pr-10 text-xs font-semibold focus:ring-2 focus:ring-teal-500/10" />
+                                            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-teal-500"><PlusIcon className="w-4 h-4" /></button>
+                                        </form>
+                                        {/* AI Suggest Button */}
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm('AI akan menyarankan langkah-langkah untuk tugas ini. Lanjutkan?')) {
+                                                    try {
+                                                        const res = await axios.post(route('api.tasks.suggest-breakdown', task.id));
+                                                        if (res.data.subtasks) {
+                                                            // Reload or update local
+                                                            res.data.subtasks.forEach(title => onAddSubtask(task.id, title));
+                                                        }
+                                                    } catch (err) {
+                                                        alert('Gagal mendapatkan saran AI.');
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full py-2 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10 rounded-xl transition-colors"
+                                        >
+                                            <span className="text-lg">✨</span>
+                                            {t('ai_suggest_subtasks') || 'Saran AI'}
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
@@ -335,7 +357,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                 </div>
 
                                 <DroppableContainer id={col.id} items={colTasks.map(t => t.id)}>
-                                    <div className="space-y-4 min-h-[100px]">
+                                    <div className="space-y-4 min-h-[100px] overflow-y-auto max-h-[calc(100vh-300px)]">
                                         {colTasks.map(task => (
                                             <SortableTaskItem
                                                 key={task.id} task={task} expandedTaskId={expandedTaskId}

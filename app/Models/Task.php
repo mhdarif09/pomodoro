@@ -23,12 +23,16 @@ class Task extends Model
         'auto_open_url',
         'notes',
         'estimated_minutes',
+        'ai_suggested_subtasks',
+        'complexity_score',
+        'auto_rescheduled_count',
     ];
 
     protected $casts = [
         'is_completed' => 'boolean',
         'due_date' => 'date',
         'start_date' => 'date',
+        'ai_suggested_subtasks' => 'array',
     ];
 
     /**

@@ -11,10 +11,12 @@ use Inertia\Inertia;
 class GamificationController extends Controller
 {
     protected $gamificationService;
+    protected $cashbackService;
 
-    public function __construct(GamificationService $gamificationService)
+    public function __construct(GamificationService $gamificationService, \App\Services\CashbackService $cashbackService)
     {
         $this->gamificationService = $gamificationService;
+        $this->cashbackService = $cashbackService;
     }
 
     /**
@@ -61,7 +63,9 @@ class GamificationController extends Controller
                 'title' => $challenge->title,
                 'description' => $challenge->description,
                 'type' => $challenge->type,
+                'type' => $challenge->type,
                 'xp_reward' => $challenge->xp_reward,
+                'points_reward' => $challenge->points_reward,
                 'progress' => $challenge->pivot->progress,
                 'completed' => $challenge->pivot->completed,
             ];
@@ -93,11 +97,15 @@ class GamificationController extends Controller
         // Calculate XP for next level
         $user->xp_for_next_level = $user->getXpForNextLevel();
 
+        // Get Points Balance
+        $pointsBalance = $this->cashbackService->getAvailablePoints($user);
+
         return Inertia::render('Gamification/Dashboard', [
             'challenges' => $userChallenges,
             'achievements' => $allAchievements,
             'leaderboard' => $leaderboard,
             'userRank' => $userRank,
+            'pointsBalance' => $pointsBalance,
         ]);
     }
 

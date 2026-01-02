@@ -15,7 +15,7 @@ import {
 import clsx from 'clsx';
 import axios from 'axios';
 
-const UpgradeModal = ({ isOpen, onClose, plans, midtransClientKey: propClientKey, isProduction: propIsProduction }) => {
+const UpgradeModal = ({ isOpen, onClose, plans, midtransClientKey: propClientKey, isProduction: propIsProduction, initialPlan }) => {
     const { midtrans } = usePage().props;
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [promoCode, setPromoCode] = useState('');
@@ -43,11 +43,15 @@ const UpgradeModal = ({ isOpen, onClose, plans, midtransClientKey: propClientKey
     }, [isOpen]);
 
     useEffect(() => {
-        if (plans && plans.length > 0 && !selectedPlan) {
-            const premiumPlan = plans.find(p => p.price > 0) || plans[0];
-            setSelectedPlan(premiumPlan);
+        if (isOpen) {
+            if (initialPlan) {
+                setSelectedPlan(initialPlan);
+            } else if (plans && plans.length > 0 && !selectedPlan) {
+                const premiumPlan = plans.find(p => p.price > 0) || plans[0];
+                setSelectedPlan(premiumPlan);
+            }
         }
-    }, [plans]);
+    }, [plans, initialPlan, isOpen]);
 
     const handleApplyPromo = async () => {
         if (!promoCode) return;

@@ -49,9 +49,17 @@ export default function ChallengeCard({ challenge, progress = 0, completed = fal
             </div>
 
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-amber-600">
-                    <span className="text-xl">✨</span>
-                    <span className="font-bold">{challenge.xp_reward} XP</span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
+                        <span className="text-xl">✨</span>
+                        <span className="font-bold">{challenge.xp_reward} XP</span>
+                    </div>
+                    {challenge.points_reward > 0 && (
+                        <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                            <span className="text-xl">🎟️</span>
+                            <span className="font-bold">{challenge.points_reward} Poin</span>
+                        </div>
+                    )}
                 </div>
                 {completed && onClaim && (
                     <button

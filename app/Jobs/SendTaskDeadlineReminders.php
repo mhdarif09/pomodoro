@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Task;
 use App\Services\FonnteService;
+use App\Services\ReminderMessageService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -31,22 +32,22 @@ class SendTaskDeadlineReminders implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(FonnteService $fonnteService): void
+    public function handle(FonnteService $fonnteService, ReminderMessageService $reminderService): void
     {
         // If specific task provided (instant notification)
         if ($this->task) {
-            $this->sendNotification($this->task, $fonnteService, 'instant');
+            $this->sendNotification($this->task, $fonnteService, $reminderService, 'instant');
             return;
         }
 
         // Otherwise, process all tasks with deadline tomorrow (scheduled)
-        $this->processScheduledReminders($fonnteService);
+        $this->processScheduledReminders($fonnteService, $reminderService);
     }
 
     /**
      * Process scheduled reminders for all users
      */
-    private function processScheduledReminders(FonnteService $fonnteService): void
+    private function processScheduledReminders(FonnteService $fonnteService, ReminderMessageService $reminderService): void
     {
         // Get tomorrow's date
         $tomorrow = Carbon::tomorrow()->format('Y-m-d');
@@ -77,7 +78,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
             $tasksToSend = $userTasks->take($limit);
 
             foreach ($tasksToSend as $task) {
-                $this->sendNotification($task, $fonnteService, 'scheduled');
+                $this->sendNotification($task, $fonnteService, $reminderService, 'scheduled');
             }
 
             // Log if some tasks were skipped due to limit
@@ -99,7 +100,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
     /**
      * Send notification for a specific task
      */
-    private function sendNotification(Task $task, FonnteService $fonnteService, string $type): void
+    private function sendNotification(Task $task, FonnteService $fonnteService, ReminderMessageService $reminderService, string $type): void
     {
         // Skip if user doesn't have a phone number
         if (!$task->user || !$task->user->phone) {
@@ -110,31 +111,17 @@ class SendTaskDeadlineReminders implements ShouldQueue
             return;
         }
 
-        // Get user timezone
-        $timezone = $this->getTimezoneString($task->user->timezone ?? 'WIB');
-        $timezoneCode = $task->user->timezone ?? 'WIB';
-
-        // Format the message based on type
-        $dueDate = Carbon::parse($task->due_date)->format('d M Y');
+        // Generate friendly message using ReminderMessageService
+        $user = $task->user;
         
-        if ($type === 'instant') {
-            // Instant notification when task created
-            $message = "🔔 *Task Baru dengan Deadline Besok!*\n\n";
-            $message .= "Halo {$task->user->name}! 👋\n\n";
-            $message .= "Task: *\"{$task->title}\"*\n";
-            $message .= "Due Date: {$dueDate} 23:59 {$timezoneCode}\n";
-            $message .= "Priority: {$task->priority}\n\n";
-            $message .= "Jangan lupa diselesaikan ya! 😊\n\n";
-            $message .= "Semangat! 💪";
-        } else {
-            // Scheduled notification at 23:00
-            $message = "⏰ *Reminder: 1 Jam Lagi Deadline!*\n\n";
-            $message .= "Halo {$task->user->name}! 👋\n\n";
-            $message .= "Task: *\"{$task->title}\"*\n";
-            $message .= "Due Date: Besok, {$dueDate} 23:59 {$timezoneCode}\n";
-            $message .= "Priority: {$task->priority}\n\n";
-            $message .= "Tinggal 1 jam lagi sebelum hari deadline! ⏳\n\n";
-            $message .= "Semangat menyelesaikannya! 💪";
+        // Try AI personalization for premium users first
+        if ($user->is_premium) {
+            $message = $reminderService->generateAIPersonalizedMessage($task, $user);
+        }
+        
+        // Fallback to friendly template-based message
+        if (empty($message)) {
+            $message = $reminderService->generateFriendlyReminder($task, $type);
         }
 
         // Send WhatsApp notification
@@ -146,6 +133,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
                 'user_id' => $task->user_id,
                 'phone' => $task->user->phone,
                 'type' => $type,
+                'used_ai' => $user->is_premium
             ]);
         } else {
             Log::error("Failed to send deadline reminder ({$type})", [

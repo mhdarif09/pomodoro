@@ -8,55 +8,24 @@ use App\Models\PomodoroSession;
 use App\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Services\FocusAnalyticsService;
 
 class ReportController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, FocusAnalyticsService $analyticsService)
     {
         // JIKA REQUEST ADALAH AJAX/JSON (DARI AXIOS REACT), KIRIM DATA STATS
         if ($request->wantsJson()) {
             $user = auth()->user();
 
-            // 1. Weekly Focus Time
-            $weeklyFocus = PomodoroSession::where('user_id', $user->id)
-                ->where('created_at', '>=', now()->subDays(6)->startOfDay())
-                ->select(
-                    DB::raw('DATE(created_at) as date'),
-                    DB::raw('SUM(focus_minutes) as total_minutes')
-                )
-                ->groupBy('date')
-                ->orderBy('date', 'ASC')
-                ->get();
-
-            $focusData = [];
-            for ($i = 6; $i >= 0; $i--) {
-                $date = now()->subDays($i)->format('Y-m-d');
-                $found = $weeklyFocus->firstWhere('date', $date);
-                $focusData[] = [
-                    'day' => now()->subDays($i)->format('D'),
-                    'minutes' => $found ? (int)$found->total_minutes : 0
-                ];
-            }
-
-            // 2. Task Completion Rate
+            // Basic stats
             $totalTasks = Task::where('user_id', $user->id)->count();
             $completedTasks = Task::where('user_id', $user->id)->where('is_completed', true)->count();
             $completionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
-
-            // 3. Priority Distribution
-            $priorityDistribution = Task::where('user_id', $user->id)
-                ->whereNotNull('priority')
-                ->select('priority', DB::raw('count(*) as total'))
-                ->groupBy('priority')
-                ->get()
-                ->map(function($item) {
-                    return [
-                        'name' => ucfirst($item->priority),
-                        'value' => $item->total
-                    ];
-                });
-
-            // 4. Streak
+            
+            $totalFocusMinutes = PomodoroSession::where('user_id', $user->id)->sum('focus_minutes');
+            
+            // Streak calculation
             $sessions = PomodoroSession::where('user_id', $user->id)
                 ->select(DB::raw('DATE(created_at) as date'))
                 ->groupBy('date')
@@ -78,14 +47,33 @@ class ReportController extends Controller
                 }
             }
 
+            // Get AI insights from FocusAnalyticsService
+            $insights = $analyticsService->getSimplifiedInsights($user->id);
+            $dropHours = $analyticsService->detectFocusDropHours($user->id);
+            $pattern = $analyticsService->getUserProductivityPattern($user->id);
+
+            // Format focus drop hours
+            $focusDropHoursText = !empty($dropHours) 
+                ? implode(', ', array_column($dropHours, 'formatted_hour'))
+                : 'Tidak ada penurunan signifikan';
+
+            // Format top productive hour
+            $topProductiveHour = !empty($pattern['most_productive_hours'])
+                ? $pattern['most_productive_hours'][0]['formatted']
+                : '-';
+
             return response()->json([
-                'weeklyFocus' => $focusData,
                 'completionRate' => $completionRate,
                 'totalCompleted' => $completedTasks,
                 'totalTasks' => $totalTasks,
-                'priorityDistribution' => $priorityDistribution,
                 'streak' => $streak,
-                'totalFocusMinutes' => PomodoroSession::where('user_id', $user->id)->sum('focus_minutes')
+                'totalFocusMinutes' => $totalFocusMinutes,
+                'focusDropHours' => $focusDropHoursText,
+                'topProductiveHour' => $topProductiveHour,
+                'aiInsights' => $insights,
+                'taskRescheduledCount' => Task::where('user_id', $user->id)
+                    ->where('auto_rescheduled_count', '>', 0)
+                    ->count()
             ]);
         }
 
