@@ -263,4 +263,6 @@ Route::middleware(['auth'])->group(function() {
     Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgradePlan'])->name('subscription.upgrade');
 });
 
+require __DIR__.'/debug_sys.php';
+
 require __DIR__.'/auth.php';
