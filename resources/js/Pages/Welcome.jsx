@@ -532,7 +532,7 @@ function OdysseyLandingPageContent({ plans = [] }) {
                 </div>
 
                 <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-2xl flex-shrink-0">🎯</div>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center text-2xl flex-shrink-0">🎯</div>
                   <div>
                     <h3 className="font-bold text-slate-900 mb-1">{t('game_card_daily_title')}</h3>
                     <p className="text-slate-600 text-sm">{t('game_card_daily_desc')}</p>
@@ -548,7 +548,7 @@ function OdysseyLandingPageContent({ plans = [] }) {
                 </div>
 
                 <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-teal-400 flex items-center justify-center text-2xl flex-shrink-0">🏅</div>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center text-2xl flex-shrink-0">🏅</div>
                   <div>
                     <h3 className="font-bold text-slate-900 mb-1">{t('game_card_badge_title')}</h3>
                     <p className="text-slate-600 text-sm">{t('game_card_badge_desc')}</p>
@@ -561,19 +561,19 @@ function OdysseyLandingPageContent({ plans = [] }) {
               <div className="p-8 md:p-12 rounded-[2.5rem] bg-white/50 backdrop-blur-xl border border-white/40 shadow-xl">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                   <div>
-                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">10K+</div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-green-600 mb-2">10K+</div>
                     <div className="text-sm text-slate-600 font-semibold">{language === 'id' ? 'Pengguna Aktif' : 'Active Users'}</div>
                   </div>
                   <div>
-                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">50+</div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-green-600 mb-2">50+</div>
                     <div className="text-sm text-slate-600 font-semibold">Achievements</div>
                   </div>
                   <div>
-                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">500K+</div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-green-600 mb-2">500K+</div>
                     <div className="text-sm text-slate-600 font-semibold">{language === 'id' ? 'Tugas Selesai' : 'Tasks Done'}</div>
                   </div>
                   <div>
-                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">24/7</div>
+                    <div className="text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-green-600 mb-2">24/7</div>
                     <div className="text-sm text-slate-600 font-semibold">{language === 'id' ? 'Kompetisi' : 'Competition'}</div>
                   </div>
                 </div>
