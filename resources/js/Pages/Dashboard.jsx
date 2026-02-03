@@ -9,10 +9,12 @@ import dayjs from 'dayjs';
 import axios from 'axios';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
 import DynamicChatBar from '@/Components/Dashboard/DynamicChatBar';
+import SmartSuggestionWidget from '@/Components/Dashboard/SmartSuggestionWidget';
 
-const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
+const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded, skills }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [skillId, setSkillId] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -26,7 +28,8 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                 description,
                 status: 'todo',
                 priority: 'Sedang',
-                estimated_minutes: 25
+                estimated_minutes: 25,
+                skill_id: skillId
             });
 
             setTitle('');
@@ -84,6 +87,21 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                         className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl border-none p-4 text-sm focus:ring-2 focus:ring-teal-500 dark:text-slate-300 resize-none"
                                         disabled={loading}
                                     />
+                                </div>
+                                <div className="flex gap-2 overflow-x-auto pb-1">
+                                    {skills && skills.map(skill => (
+                                        <button
+                                            key={skill.id}
+                                            type="button"
+                                            onClick={() => setSkillId(skill.id === skillId ? '' : skill.id)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-all
+                                                ${skillId === skill.id
+                                                    ? 'bg-teal-500 border-teal-500 text-white'
+                                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-500'}`}
+                                        >
+                                            {skill.name}
+                                        </button>
+                                    ))}
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-2">
@@ -197,7 +215,30 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
                 ))}
             </motion.div>
 
+            {/* Guild Widget */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="mb-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[2rem] p-6 sm:p-8 text-white shadow-xl relative overflow-hidden group cursor-pointer"
+                onClick={() => router.visit(route('guild.index'))}
+            >
+                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div>
+                        <h3 className="section-title text-white mb-2">Guild & Komunitas</h3>
+                        <p className="text-indigo-100 font-medium">Gabung dengan squad belajar, selesaikan quest bersama, dan raih XP lebih banyak!</p>
+                    </div>
+                    <button className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">
+                        Buka Guild HQ 🛡️
+                    </button>
+                </div>
+                {/* Decoration */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-white/20 transition-all duration-700" />
+            </motion.div>
+
             <div className="space-y-10">
+                <SmartSuggestionWidget />
+
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -354,6 +395,7 @@ export default function Dashboard(props) {
                         isOpen={isQuickAddOpen}
                         onClose={() => setIsQuickAddOpen(false)}
                         onTaskAdded={handleTaskAdded}
+                        skills={props.skills}
                     />
                 )}
 

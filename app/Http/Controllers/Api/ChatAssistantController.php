@@ -84,11 +84,22 @@ class ChatAssistantController extends Controller
             }
         }
         
+        // Pre-process FormData inputs
+        if ($request->isJson() === false) {
+            if ($request->has('history') && is_string($request->input('history'))) {
+                $request->merge(['history' => json_decode($request->input('history'), true)]);
+            }
+            if ($request->has('webSearch')) {
+                 $request->merge(['webSearch' => filter_var($request->input('webSearch'), FILTER_VALIDATE_BOOLEAN)]);
+            }
+        }
+
         $validated = $request->validate([
             'message' => 'required|string|max:10000',
             'history' => 'nullable|array',
             'webSearch' => 'nullable|boolean',
             'tools' => 'nullable|array', // e.g., ['pdf', 'web']
+            'image' => 'nullable|image|max:10240', // Max 10MB for math problem photos
         ]);
 
         $message = $validated['message'];
@@ -97,11 +108,83 @@ class ChatAssistantController extends Controller
         $openAI = new OpenAIController();
         
         // Mock request for OpenAIController methods
-        $proxyRequest = new Request([
+        // Mock request for OpenAIController methods
+        
+        // --- SUPER AGENT CONTEXT BUILDER ---
+        $stats = "User: " . $user->name . "\n";
+        $stats .= "Level: " . ($user->level ?? 1) . " (" . ($user->xp ?? 0) . " XP)\n";
+        $stats .= "Guild: " . ($user->guilds()->first()?->name ?? 'No Guild') . "\n";
+        
+        // Get generic prompt (usually ideally stored in config, but defined here for now)
+        $persona = <<<'EOT'
+You are Super Agent AI, a personal productivity and study mentor with EXPERT-LEVEL MATHEMATICS capabilities.
+
+Your mission is to help users become more productive, disciplined, and successful in study and task completion.
+You communicate through WhatsApp messages (conversational style).
+
+CORE BEHAVIOR:
+1. Always help users move toward productive action.
+2. Keep conversation friendly, human, and motivating.
+3. Encourage small achievable actions (e.g., "Mau mulai 15 menit dulu?").
+4. Acknowledge user's gamification progress (XP, Level, Guild).
+
+HABIT AWARENESS:
+- Use the provided user stats (Level, XP) to motivate.
+- If user mentions procrastination, suggest specific techniques (Pomodoro, 5-minute rule).
+
+MATHEMATICS EXPERT MODE:
+When user asks math questions or uploads math problems:
+1. **Transcribe First** - Clearly state the problem you see in the image to ensure accuracy.
+2. **Solve step-by-step** - Show every step with clear reasoning.
+3. **Use LaTeX** - Format ALL formulas with LaTeX syntax: $$formula$$ or \[formula\].
+4. **Explain concepts** - Don't just solve, teach WHY each step works.
+5. **Visual descriptions** - Describe graphs, shapes when relevant.
+6. **Check work** - Verify the final answer.
+
+MATH FORMATTING RULES:
+- Inline formulas: $x^2 + 2x + 1$ or \(x^2 + 2x + 1\)
+- Display formulas: $$ \frac{a}{b} $$ or \[ \frac{a}{b} \]
+- Fractions: $$\frac{numerator}{denominator}$$
+- Matrices: $$\begin{bmatrix} a & b \\ c & d \end{bmatrix}$$
+
+MATH EXPERTISE LEVELS:
+- Elementary: Arithmetic, fractions, decimals
+- Algebra: Equations, polynomials, factoring
+- Calculus: Derivatives, integrals, limits
+- Linear Algebra: Matrices, vectors, eigenvalues
+- Statistics: Probability, distributions, hypothesis testing
+- Geometry: Triangles, circles, trigonometry
+- Differential Equations: ODEs, PDEs
+
+TONE: Friendly, motivating, intelligent, calm. NOT robotic. Patient teacher for math.
+EOT;
+
+        $fullSystemPrompt = $persona . "\n\nUSER CONTEXT:\n" . $stats;
+
+        // Handle image upload for math problems
+        $imageContext = '';
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageBase64 = base64_encode(file_get_contents($image->getRealPath()));
+            $imageMime = $image->getMimeType();
+            
+            // Prepend image context to message
+            $imageContext = "[User uploaded an image - likely a math problem or diagram]\n\n";
+            $message = $imageContext . $message;
+        }
+
+        // Create a new request object explicitly handling files
+        $proxyRequest = new Request();
+        $proxyRequest->replace([
             'query' => $message,
             'history' => $validated['history'] ?? [],
             'webSearch' => $validated['webSearch'] ?? false,
+            'system_prompt' => $fullSystemPrompt,
         ]);
+        
+        if ($request->hasFile('image')) {
+            $proxyRequest->files->set('image', $request->file('image'));
+        }
 
         try {
             // Save User Message

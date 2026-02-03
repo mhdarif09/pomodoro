@@ -57,6 +57,8 @@ class DashboardController extends Controller
         $plans = Plan::all();
         $usageCount = $user->reflections()->whereNotNull('user_answer')->count();
         $remainingQuota = self::FREE_REFLECTION_LIMIT - $usageCount;
+
+        $skills = \App\Models\Skill::select('id', 'name', 'icon', 'color')->get();
         
         $showUpgradeModal = !$request->session()->get('dismissed_upgrade_modal', false) &&
             (!$user->is_premium);
@@ -74,7 +76,9 @@ class DashboardController extends Controller
             'filters' => $request->only(['filter']),
             'is_premium' => $user->is_premium,
             'hasReflectedToday' => $user->reflections()->whereDate('reflection_date', today())->exists(),
+            'hasReflectedToday' => $user->reflections()->whereDate('reflection_date', today())->exists(),
             'plans' => $plans ?? [],
+            'skills' => $skills ?? [],
             'snap_token' => $request->query('snap_token'),
             'flash' => [
             'show_upgrade_modal' => $request->session()->get('show_upgrade_modal') || $showUpgradeModal,

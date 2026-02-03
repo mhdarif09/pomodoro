@@ -39,6 +39,7 @@
         "driver.js": "^1.4.0",
         "framer-motion": "^12.23.22",
         "heroicons": "^2.2.0",
+        "katex": "^0.16.28",
         "lucide-react": "^0.544.0",
         "mammoth": "^1.11.0",
         "quill": "^2.0.3",

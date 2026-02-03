@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\Skill;
 use App\Models\Achievement;
 use App\Models\Challenge;
 use App\Models\XpTransaction;
@@ -14,8 +15,21 @@ class GamificationService
     /**
      * Award XP to a user and handle level ups
      */
-    public function awardXP(User $user, int $amount, string $reason, $source = null): array
+    /**
+     * Award XP to a user and handle level ups
+     */
+    public function awardXP(User $user, int $amount, string $reason, $source = null, ?Skill $skill = null): array
     {
+        // ... existing XP logic ...
+        
+        // Log to Memory Agent
+        $memoryService = app(\App\Services\MemoryAgentService::class);
+        $memoryService->log($user, 'xp_gained', [
+            'amount' => $amount,
+            'reason' => $reason,
+            'source_type' => $source ? get_class($source) : null
+        ]);
+
         // Create XP transaction
         XpTransaction::create([
             'user_id' => $user->id,
@@ -24,6 +38,10 @@ class GamificationService
             'source_type' => $source ? get_class($source) : null,
             'source_id' => $source ? $source->id : null,
         ]);
+        
+        // Guild Contribution (Social Agent)
+        $socialService = app(\App\Services\SocialGamificationService::class);
+        $socialService->contributeToQuest($user, 'total_xp', $amount);
 
         // Update user XP
         $user->xp += $amount;
@@ -38,9 +56,17 @@ class GamificationService
             $user->level += 1;
             $leveledUp = true;
             $newLevel = $user->level;
+            
+            $memoryService->log($user, 'level_up', ['new_level' => $newLevel]);
         }
 
         $user->save();
+
+        // Handle Skill XP
+        $skillResult = [];
+        if ($skill) {
+            $skillResult = $this->awardSkillXP($user, $skill, $amount);
+        }
 
         // Check for achievements after XP award
         $newAchievements = $this->checkAchievements($user);
@@ -52,6 +78,48 @@ class GamificationService
             'current_xp' => $user->xp,
             'xp_for_next_level' => $user->getXpForNextLevel(),
             'new_achievements' => $newAchievements,
+            'skill_result' => $skillResult,
+        ];
+    }
+
+    /**
+     * Award XP to a specific skill
+     */
+    private function awardSkillXP(User $user, Skill $skill, int $amount): array
+    {
+        $userSkill = $user->skills()->where('skill_id', $skill->id)->first();
+        
+        if (!$userSkill) {
+            $user->skills()->attach($skill->id, ['level' => 1, 'xp' => 0, 'total_xp' => 0]);
+            $userSkill = $user->skills()->where('skill_id', $skill->id)->first();
+        }
+
+        $pivot = $userSkill->pivot;
+        $pivot->xp += $amount;
+        $pivot->total_xp += $amount;
+
+        $leveledUp = false;
+        
+        // Simple skill leveling curve: Level * 100
+        $xpRequired = $pivot->level * 100;
+
+        while ($pivot->xp >= $xpRequired) {
+            $pivot->xp -= $xpRequired;
+            $pivot->level += 1;
+            $leveledUp = true;
+            $xpRequired = $pivot->level * 100;
+        }
+
+        $user->skills()->updateExistingPivot($skill->id, [
+            'level' => $pivot->level,
+            'xp' => $pivot->xp,
+            'total_xp' => $pivot->total_xp,
+        ]);
+
+        return [
+            'skill_name' => $skill->name,
+            'leveled_up' => $leveledUp,
+            'new_level' => $pivot->level,
         ];
     }
 

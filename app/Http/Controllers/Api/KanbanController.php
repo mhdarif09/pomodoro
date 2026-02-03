@@ -42,7 +42,8 @@ class KanbanController extends Controller
             'priority' => 'nullable|string',
             'status' => 'nullable|string|in:todo,in_progress,done',
             'estimated_minutes' => 'nullable|integer',
-            'document' => 'nullable|file|max:10240'
+            'document' => 'nullable|file|max:10240',
+            'skill_id' => 'nullable|exists:skills,id',
         ]);
         
         $estimatedMinutes = $request->input('estimated_minutes', 25);
@@ -60,7 +61,8 @@ class KanbanController extends Controller
             'document_path' => $documentPath,
             'priority' => $validated['priority'] ?? 'Sedang', 
             'estimated_minutes' => $estimatedMinutes,
-            'status' => $validated['status'] ?? 'todo'
+            'status' => $validated['status'] ?? 'todo',
+            'skill_id' => $validated['skill_id'] ?? null,
         ]);
 
         if ($request->has('subtasks') && is_array($request->subtasks)) {
@@ -163,9 +165,12 @@ class KanbanController extends Controller
                 'Rendah', 'Low' => 20,
                 default => 25,
             };
-            $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task);
+            $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task, $task->skill);
             $gamificationService->updateStreak($task->user);
             $gamificationService->checkAchievements($task->user);
+            
+            // Guild: Task Completed
+            app(\App\Services\SocialGamificationService::class)->contributeToQuest($task->user, 'tasks_completed', 1);
         }
 
         return response()->json([

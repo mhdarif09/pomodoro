@@ -23,6 +23,7 @@ class Task extends Model
         'auto_open_url',
         'notes',
         'estimated_minutes',
+        'skill_id',
     ];
 
     protected $casts = [
@@ -42,5 +43,10 @@ class Task extends Model
     public function subtasks()
     {
         return $this->hasMany(Subtask::class);
+    }
+
+    public function skill()
+    {
+        return $this->belongsTo(Skill::class);
     }
 }

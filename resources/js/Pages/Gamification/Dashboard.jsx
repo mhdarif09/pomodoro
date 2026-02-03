@@ -7,9 +7,10 @@ import LevelBadge from '@/Components/Gamification/LevelBadge';
 import ChallengeCard from '@/Components/Gamification/ChallengeCard';
 import AchievementBadge from '@/Components/Gamification/AchievementBadge';
 import LeaderboardTable from '@/Components/Gamification/LeaderboardTable';
+import SkillRadarChart from '@/Components/Gamification/SkillRadarChart';
 import { TrophyIcon, FireIcon, StarIcon } from '@heroicons/react/24/solid';
 
-export default function Dashboard({ auth, challenges, achievements, leaderboard, userRank }) {
+export default function Dashboard({ auth, challenges, achievements, leaderboard, userRank, userSkills }) {
     const user = auth.user;
 
     const stats = [
@@ -32,18 +33,26 @@ export default function Dashboard({ auth, challenges, achievements, leaderboard,
                             <p className="text-sm sm:text-base text-slate-600 font-medium">Level up, unlock achievements, dan compete dengan pemain lain!</p>
                         </div>
 
-                        {/* Level & XP Overview */}
-                        <div className="mb-6 sm:mb-8 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl">
-                            <div className="flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-8">
-                                <LevelBadge level={user.level} levelTitle={user.level_title} size="lg" />
-                                <div className="flex-1 w-full">
-                                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4 text-center md:text-left">Progress ke Level {user.level + 1}</h2>
-                                    <XPBar
-                                        currentXP={user.xp}
-                                        xpForNextLevel={user.xp_for_next_level || 150}
-                                        level={user.level}
-                                    />
+                        {/* Level & XP + Skills Row */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
+                            {/* Level & XP Overview */}
+                            <div className="lg:col-span-2 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl flex flex-col justify-center">
+                                <div className="flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-8">
+                                    <LevelBadge level={user.level} levelTitle={user.level_title} size="lg" />
+                                    <div className="flex-1 w-full">
+                                        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4 text-center md:text-left">Progress ke Level {user.level + 1}</h2>
+                                        <XPBar
+                                            currentXP={user.xp}
+                                            xpForNextLevel={user.xp_for_next_level || 150}
+                                            level={user.level}
+                                        />
+                                    </div>
                                 </div>
+                            </div>
+
+                            {/* Skill Radar */}
+                            <div className="lg:col-span-1">
+                                <SkillRadarChart skills={userSkills} />
                             </div>
                         </div>
 

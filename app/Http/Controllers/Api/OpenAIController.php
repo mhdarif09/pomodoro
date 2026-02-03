@@ -51,6 +51,7 @@ class OpenAIController extends Controller
             'query'     => 'required|string|max:4000',
             'history'   => 'nullable|array',
             'webSearch' => 'nullable|boolean',
+            'system_prompt' => 'nullable|string|max:10000',
         ]);
 
         $query = $validated['query'];
@@ -62,7 +63,13 @@ class OpenAIController extends Controller
             if ($validated['webSearch']) {
                 return $this->handleWebSearchQuery($query, $validated['history'] ?? []);
             }
-            return $this->handleSimpleChat($query, $validated['history'] ?? []);
+            
+            // Check if image is provided (for math problems, diagrams, etc.)
+            if ($request->hasFile('image')) {
+                return $this->handleImageQuery($query, $request->file('image'), $validated['history'] ?? [], $validated['system_prompt'] ?? null);
+            }
+            
+            return $this->handleSimpleChat($query, $validated['history'] ?? [], $validated['system_prompt'] ?? null);
 
         } catch (Exception $e) {
             Log::error('Orchestration Hub Error in ask(): ' . $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -238,11 +245,66 @@ PROMPT;
         return $this->generateAnswerFromContext($query, $context, $systemPrompt, $messages, $searchResults);
     }
 
-    private function handleSimpleChat(string $query, array $history)
+    private function handleImageQuery(string $query, $imageFile, array $history, ?string $systemPrompt = null)
+    {
+        Log::info("Handling image query (likely math problem): {$query}");
+        
+        // Convert image to base64
+        $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
+        $imageMime = $imageFile->getMimeType();
+        
+        $messages = [];
+        $defaultPrompt = 'You are an expert AI assistant with vision capabilities. Analyze images carefully and provide detailed, accurate responses.';
+        $messages[] = ['role' => 'system', 'content' => $systemPrompt ?? $defaultPrompt];
+        
+        // Add history
+        foreach ($history as $msg) {
+            if (isset($msg['role'], $msg['content'])) {
+                $messages[] = ['role' => $msg['role'], 'content' => $msg['content']];
+            }
+        }
+        
+        // Add user message with image
+        $messages[] = [
+            'role' => 'user',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'text' => $query
+                ],
+                [
+                    'type' => 'image_url',
+                    'image_url' => [
+                        'url' => "data:{$imageMime};base64,{$imageData}",
+                        'detail' => 'high' // High detail for math problems
+                    ]
+                ]
+            ]
+        ];
+        
+        try {
+            $response = $this->httpClient->post($this->apiBaseUrl, [
+                'model' => 'gpt-4o', // GPT-4 Vision model
+                'messages' => $messages,
+                'max_tokens' => $this->maxOutputTokens,
+                'temperature' => 0.2, // Lower temperature for accuracy in math
+            ]);
+            
+            $response->throw();
+            $content = $response->json('choices.0.message.content', 'Tidak ada respons dari AI.');
+            
+            return response()->json(['response' => $content, 'sources' => []]);
+        } catch (RequestException $e) {
+            return $this->handleApiException($e, 'Image Query');
+        }
+    }
+
+    private function handleSimpleChat(string $query, array $history, ?string $systemPrompt = null)
     {
         Log::info("Handling simple chat query: {$query}");
         $messages = [];
-        $messages[] = ['role' => 'system', 'content' => 'Anda adalah asisten AI yang membantu dan ramah.'];
+        $defaultPrompt = 'Anda adalah asisten AI yang membantu dan ramah.';
+        $messages[] = ['role' => 'system', 'content' => $systemPrompt ?? $defaultPrompt];
         foreach ($history as $msg) {
             if (isset($msg['role'], $msg['content'])) $messages[] = ['role' => $msg['role'], 'content' => $msg['content']];
         }

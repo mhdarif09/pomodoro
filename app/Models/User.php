@@ -171,6 +171,25 @@ class User extends Authenticatable
         return $this->hasMany(XpTransaction::class);
     }
 
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class, 'user_skills')
+            ->withPivot('level', 'xp', 'total_xp')
+            ->withTimestamps();
+    }
+
+    // --- Reminder Relationships ---
+    
+    public function reminders()
+    {
+        return $this->hasMany(UserReminder::class);
+    }
+
+    public function reminderLogs()
+    {
+        return $this->hasMany(ReminderLog::class);
+    }
+
     /**
      * Get XP required for next level
      */
@@ -224,6 +243,11 @@ class User extends Authenticatable
         }
         
         return $code;
+    }
+    public function guilds()
+    {
+        return $this->belongsToMany(Guild::class, 'guild_members')
+            ->withPivot('role', 'contribution_xp', 'joined_at');
     }
 }
 

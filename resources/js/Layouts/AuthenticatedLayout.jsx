@@ -84,6 +84,7 @@ export default function Authenticated({ children, header }) {
     const navLinks = [
         { routeName: 'dashboard', label: t('nav_dashboard'), icon: <HomeIcon className="h-5 w-5" /> },
         { routeName: 'gamification.dashboard', label: t('nav_gamification'), icon: <TrophyIcon className="h-5 w-5" /> },
+        { routeName: 'guild.index', label: 'Guild', icon: <UserIcon className="h-5 w-5" /> }, // Keeping icon simple for now
         { routeName: 'ai-assistant.index', label: t('nav_ai_genius'), icon: <SparklesIcon className="h-5 w-5" /> },
         { routeName: 'learning.index', label: t('nav_learning'), icon: <BookOpenIcon className="h-5 w-5" /> },
         { routeName: 'reports.index', label: t('nav_reports'), icon: <ChartBarIcon className="h-5 w-5" /> },

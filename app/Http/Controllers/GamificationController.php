@@ -78,12 +78,16 @@ class GamificationController extends Controller
 
         // Calculate XP for next level
         $user->xp_for_next_level = $user->getXpForNextLevel();
+        
+        // Get user skills
+        $userSkills = $user->skills;
 
         return Inertia::render('Gamification/Dashboard', [
             'challenges' => $userChallenges,
             'achievements' => $allAchievements,
             'leaderboard' => $leaderboard,
             'userRank' => $userRank,
+            'userSkills' => $userSkills,
         ]);
     }
 

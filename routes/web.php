@@ -120,6 +120,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // User Activity Tracking
         Route::post('/heartbeat', [\App\Http\Controllers\Api\UserActivityController::class, 'heartbeat'])->name('heartbeat');
+        
+        // Smart Suggestions (Habit Agent)
+        Route::get('/suggestions', [\App\Http\Controllers\Api\SmartSuggestionsController::class, 'index'])->name('api.suggestions');
+
+        // Reminder Management
+        Route::get('/reminders', [\App\Http\Controllers\Api\ReminderController::class, 'index'])->name('reminders.index');
+        Route::patch('/reminders/{reminder}', [\App\Http\Controllers\Api\ReminderController::class, 'update'])->name('reminders.update');
+        Route::post('/reminders/{reminder}/toggle', [\App\Http\Controllers\Api\ReminderController::class, 'toggle'])->name('reminders.toggle');
+        Route::post('/reminders/test', [\App\Http\Controllers\Api\ReminderController::class, 'sendTest'])->name('reminders.test');
+        Route::get('/reminders/stats', [\App\Http\Controllers\Api\ReminderController::class, 'stats'])->name('reminders.stats');
+
     });
 
     // =========================================================================
@@ -132,6 +143,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // --- History / Transactions ---
         Route::get('/transactions', [SubscriptionController::class, 'history'])->name('transactions.history');
+
+        // --- Social / Guilds ---
+        Route::get('/guild', [\App\Http\Controllers\Api\GuildController::class, 'index'])->name('guild.index');
+        Route::post('/guild/create', [\App\Http\Controllers\Api\GuildController::class, 'store'])->name('guild.store');
+        Route::post('/guild/join', [\App\Http\Controllers\Api\GuildController::class, 'join'])->name('guild.join');
 
         // --- Docs View ---
         Route::get('/docs', [DocumentPageController::class, 'index'])->name('docs.index');

@@ -13,9 +13,13 @@ import {
     MagnifyingGlassIcon,
     ShareIcon,
     CpuChipIcon,
-    LockClosedIcon
+    LockClosedIcon,
+    PhotoIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import MathRenderer from '@/Components/MathRenderer';
+import StepByStepSolver from '@/Components/StepByStepSolver';
 
 const MessageBubble = ({ message }) => {
     const isBot = message.role === 'assistant';
@@ -40,7 +44,13 @@ const MessageBubble = ({ message }) => {
                         <span className="text-[11px] font-extrabold uppercase tracking-tight text-slate-500">GrowthBot</span>
                     </div>
                 )}
-                <p className="text-[15px] leading-[1.6] font-medium tracking-tight whitespace-pre-wrap">{message.content}</p>
+                <div className="text-[15px] leading-[1.6] font-medium tracking-tight whitespace-pre-wrap">
+                    {isBot ? (
+                        <StepByStepSolver content={message.content} />
+                    ) : (
+                        <MathRenderer content={message.content} />
+                    )}
+                </div>
                 {message.metadata?.sources?.length > 0 && (
                     <div className="mt-6 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tight mb-3">Referensi Terkait</p>
@@ -72,6 +82,9 @@ export default function AIAssistantIndex() {
     const [isLoading, setIsLoading] = useState(false);
     const [webSearch, setWebSearch] = useState(false);
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
         fetchSessions();
@@ -115,9 +128,37 @@ export default function AIAssistantIndex() {
         }
     };
 
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Check file type and size
+            if (!file.type.startsWith('image/')) {
+                alert('Silakan upload file gambar.');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                alert('Ukuran file maksimal 10MB.');
+                return;
+            }
+
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!input.trim() || isLoading) return;
+        if ((!input.trim() && !selectedImage) || isLoading) return;
 
         let sessionObj = activeSession;
         if (!sessionObj) {
@@ -127,19 +168,48 @@ export default function AIAssistantIndex() {
             setActiveSession(sessionObj);
         }
 
-        const userMsg = { role: 'user', content: input };
+        const userMsg = {
+            role: 'user',
+            content: input,
+            image: imagePreview // Store preview for UI display
+        };
         setMessages([...messages, userMsg]);
         setInput('');
+
+        // Clear image state but keep for sending
+        const imageToSend = selectedImage;
+        const previewToSend = imagePreview;
+        removeImage();
+
         setIsLoading(true);
 
         try {
-            const res = await axios.post(route('api.ai.send-message', sessionObj.id), {
-                message: input,
-                history: messages,
-                webSearch: webSearch
+            // Use FormData for file upload
+            const formData = new FormData();
+            formData.append('message', userMsg.content || '[Image Upload]');
+            if (imageToSend) {
+                formData.append('image', imageToSend);
+            }
+            formData.append('webSearch', webSearch ? '1' : '0');
+            formData.append('history', JSON.stringify(messages));
+
+            const res = await axios.post(route('api.ai.send-message', sessionObj.id), formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
-            setMessages([...messages, userMsg, res.data.message]);
+            // If user only sent image, update content based on AI's understanding or default text
+            if (!userMsg.content) {
+                setMessages(prev => {
+                    const newMsgs = [...prev];
+                    const lastMsg = newMsgs[newMsgs.length - 2]; // The user message
+                    if (lastMsg) lastMsg.content = "Help me solve this math problem";
+                    return [...newMsgs, res.data.message];
+                });
+            } else {
+                setMessages(prev => [...prev, res.data.message]);
+            }
 
             // Update title in sidebar if it changed
             if (res.data.session.title !== sessionObj.title) {
@@ -249,17 +319,57 @@ export default function AIAssistantIndex() {
                     {/* Input Area */}
                     <div className="p-8 backdrop-blur-3xl">
                         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative group">
+                            {/* Image Preview */}
+                            {imagePreview && (
+                                <div className="absolute bottom-full left-0 mb-4 ml-4">
+                                    <div className="relative group/preview inline-block">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="h-24 w-auto rounded-xl shadow-lg border-2 border-white/20"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={removeImage}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600 transition-colors"
+                                        >
+                                            <XMarkIcon className="w-3 h-3 stroke-[3]" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileSelect}
+                                accept="image/*"
+                                className="hidden"
+                            />
+
                             <input
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 disabled={isLoading || !auth.user.premium_features.ai_assistant}
-                                placeholder={auth.user.premium_features.ai_assistant ? "Tanyakan sesuatu..." : "Upgrade ke Premium untuk bertanya"}
-                                className="w-full pl-8 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
+                                placeholder={auth.user.premium_features.ai_assistant ? "Tanyakan sesuatu atau upload foto soal..." : "Upgrade ke Premium untuk bertanya"}
+                                className="w-full pl-14 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
                             />
+
+                            {/* Upload Button */}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isLoading || !auth.user.premium_features.ai_assistant}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-xl transition-all disabled:opacity-50"
+                                title="Upload foto soal matematika"
+                            >
+                                <PhotoIcon className="w-6 h-6" />
+                            </button>
+
                             <button
                                 type="submit"
-                                disabled={!input.trim() || isLoading || !auth.user.premium_features.ai_assistant}
+                                disabled={(!input.trim() && !selectedImage) || isLoading || !auth.user.premium_features.ai_assistant}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
                             >
                                 <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />

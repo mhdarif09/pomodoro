@@ -20,6 +20,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('reminders:send-deadline')->dailyAt('16:00'); // 23:00 WIB
         $schedule->command('reminders:send-deadline')->dailyAt('15:00'); // 23:00 WITA
         $schedule->command('reminders:send-deadline')->dailyAt('14:00'); // 23:00 WIT
+
+        // Smart Reminder System - Runs every hour during active hours (7 AM - 10 PM)
+        $schedule->command('reminders:send')->hourly()->between('7:00', '22:00');
     }
 
     /**
