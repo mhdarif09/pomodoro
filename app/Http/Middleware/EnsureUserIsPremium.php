@@ -23,6 +23,10 @@ class EnsureUserIsPremium
             ->exists();
 
         if (! $hasActiveSubscription) {
+            if ($request->expectsJson() || $request->is('api/*') || $request->is('dashboard/api/*')) {
+                 return response()->json(['message' => 'Fitur ini hanya tersedia untuk pengguna premium.'], 403);
+            }
+
             return redirect()->route('subscribe.index')
                 ->with('error', 'Fitur ini hanya tersedia untuk pengguna premium.');
         }
