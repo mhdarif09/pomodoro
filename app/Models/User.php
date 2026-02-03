@@ -171,6 +171,25 @@ class User extends Authenticatable
         return $this->hasMany(XpTransaction::class);
     }
 
+    // --- Guild Relationships ---
+
+    public function guilds()
+    {
+        return $this->belongsToMany(Guild::class, 'guild_members')
+            ->withPivot('role', 'contribution_xp', 'weekly_contribution_xp')
+            ->withTimestamps();
+    }
+
+    public function guild()
+    {
+        return $this->guilds()->first();
+    }
+
+    public function guildMember()
+    {
+        return $this->hasOne(GuildMember::class);
+    }
+
     /**
      * Get XP required for next level
      */

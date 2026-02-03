@@ -8,9 +8,10 @@ import ChallengeCard from '@/Components/Gamification/ChallengeCard';
 import AchievementBadge from '@/Components/Gamification/AchievementBadge';
 import LeaderboardTable from '@/Components/Gamification/LeaderboardTable';
 import CashbackRedemptionModal from '@/Components/Gamification/CashbackRedemptionModal';
+import AgentWidget from '@/Components/Gamification/AgentWidget';
 import { TrophyIcon, FireIcon, StarIcon, TicketIcon } from '@heroicons/react/24/solid';
 
-export default function Dashboard({ auth, challenges, achievements, leaderboard, userRank, pointsBalance }) {
+export default function Dashboard({ auth, challenges, achievements, leaderboard, userRank, pointsBalance, agentBriefing }) {
     const user = auth.user;
     const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
     const [currentPoints, setCurrentPoints] = useState(pointsBalance || 0);
@@ -59,6 +60,9 @@ export default function Dashboard({ auth, challenges, achievements, leaderboard,
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-[900] tracking-tighter text-slate-900 mb-2">🎮 Gamifikasi</h1>
                             <p className="text-sm sm:text-base text-slate-600 font-medium">Level up, unlock achievements, dan compete dengan pemain lain!</p>
                         </div>
+
+                        {/* Agent Widget */}
+                        <AgentWidget briefing={agentBriefing} />
 
                         {/* Level & XP Overview */}
                         <div className="mb-6 sm:mb-8 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl">

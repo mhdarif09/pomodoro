@@ -58,6 +58,9 @@ class GamificationService
 
             $user->save();
 
+            // Record guild contribution (NEW)
+            app(\App\Services\GuildService::class)->recordMemberContribution($user, $amount);
+
             return [
                 'xp_awarded' => $amount,
                 'leveled_up' => $leveledUp,

@@ -183,6 +183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/challenges', [GamificationController::class, 'challenges'])->name('challenges');
         Route::get('/achievements', [GamificationController::class, 'achievements'])->name('achievements');
         Route::get('/leaderboard', [GamificationController::class, 'leaderboard'])->name('leaderboard');
+        Route::post('/rescue', [GamificationController::class, 'rescue'])->name('rescue');
     });
 
     // --- AFFILIATE DASHBOARD ---

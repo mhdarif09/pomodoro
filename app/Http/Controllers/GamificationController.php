@@ -12,11 +12,17 @@ class GamificationController extends Controller
 {
     protected $gamificationService;
     protected $cashbackService;
+    protected $agentService;
 
-    public function __construct(GamificationService $gamificationService, \App\Services\CashbackService $cashbackService)
+    public function __construct(
+        GamificationService $gamificationService, 
+        \App\Services\CashbackService $cashbackService,
+        \App\Services\AgentService $agentService
+    )
     {
         $this->gamificationService = $gamificationService;
         $this->cashbackService = $cashbackService;
+        $this->agentService = $agentService;
     }
 
     /**
@@ -100,12 +106,16 @@ class GamificationController extends Controller
         // Get Points Balance
         $pointsBalance = $this->cashbackService->getAvailablePoints($user);
 
+        // Get Agent Briefing
+        $agentBriefing = $this->agentService->getDailyBriefing($user);
+
         return Inertia::render('Gamification/Dashboard', [
             'challenges' => $userChallenges,
             'achievements' => $allAchievements,
             'leaderboard' => $leaderboard,
             'userRank' => $userRank,
             'pointsBalance' => $pointsBalance,
+            'agentBriefing' => $agentBriefing,
         ]);
     }
 
@@ -147,5 +157,44 @@ class GamificationController extends Controller
         return response()->json([
             'leaderboard' => $leaderboard,
         ]);
+    }
+    /**
+     * Handle "Rescue" action from agent.
+     */
+    public function rescue(Request $request) 
+    {
+        $user = $request->user();
+        $plan = $request->input('plan');
+
+        if (!$plan || !isset($plan['type'])) {
+            return back()->with('error', 'Invalid rescue plan.');
+        }
+
+        if ($plan['type'] === 'breakdown') {
+            $task = \App\Models\Task::find($plan['task_id']);
+            if ($task && $task->user_id === $user->id) {
+                // Call AI Service to generate subtasks
+                $taskAIService = app(\App\Services\TaskAIService::class);
+                $result = $taskAIService->suggestSubtasks($task);
+                
+                if ($result['success']) {
+                    return back()->with('success', 'Tugas berhasil dipecah menjadi subtask!');
+                }
+            }
+        }
+        
+        if ($plan['type'] === 'reschedule') {
+            $taskIds = $plan['task_ids'] ?? [];
+            $targetDate = $plan['target_date'] ?? now()->addDay()->toDateString();
+            
+            if (!empty($taskIds)) {
+                $count = app(\App\Services\AutoSchedulerService::class)
+                    ->applyReschedule($user, $taskIds, $targetDate);
+                    
+                return back()->with('success', "{$count} tugas berhasil digeser ke besok.");
+            }
+        }
+
+        return back()->with('success', 'Rescue plan processed.');
     }
 }
