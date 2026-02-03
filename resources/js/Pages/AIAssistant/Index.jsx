@@ -389,27 +389,8 @@ export default function AIAssistantIndex() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-
-                            <form onSubmit={handleSendMessage} className="relative">
-                                {/* Photo Button */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        console.log('Camera button clicked');
-                                        console.log('fileInputRef.current:', fileInputRef.current);
-                                        if (fileInputRef.current) {
-                                            fileInputRef.current.click();
-                                            console.log('Triggered file input click');
-                                        } else {
-                                            console.error('fileInputRef is null!');
-                                        }
-                                    }}
-                                    disabled={isLoading}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Upload Foto"
-                                >
-                                    <PhotoIcon className="w-6 h-6 stroke-2" />
-                                </button>
+                            <div className="max-w-5xl mx-auto px-8 relative">
+                                {/* File Input - Outside Form for Better Browser Compatibility */}
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -418,59 +399,81 @@ export default function AIAssistantIndex() {
                                     accept="image/*"
                                 />
 
-                                <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    disabled={isLoading}
-                                    placeholder="Ketik soal atau upload foto..."
-                                    className="w-full pl-16 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={(!input.trim() && !selectedImage) || isLoading}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
-                                >
-                                    <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />
-                                </button>
-                            </form>
+                                <form onSubmit={handleSendMessage} className="relative">
+                                    {/* Photo Button */}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            console.log('📷 Camera clicked');
+                                            if (fileInputRef.current) {
+                                                console.log('✅ fileInputRef exists, triggering click');
+                                                fileInputRef.current.click();
+                                            } else {
+                                                console.error('❌ fileInputRef is null!');
+                                            }
+                                        }}
+                                        disabled={isLoading}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                                        title="Upload Foto"
+                                    >
+                                        <PhotoIcon className="w-6 h-6 stroke-2" />
+                                    </button>
+
+                                    <input
+                                        type="text"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        disabled={isLoading}
+                                        placeholder="Ketik soal atau upload foto..."
+                                        className="w-full pl-16 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={(!input.trim() && !selectedImage) || isLoading}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+                                    >
+                                        <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* PREMIUM LOCK OVERLAY */}
-                {!auth.user.premium_features.ai_assistant && (
-                    <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-6">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 30 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            className="apple-glass rounded-[4rem] p-12 max-w-lg w-full text-center shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border-white/10"
-                        >
-                            <div className="w-24 h-24 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-8">
-                                <LockClosedIcon className="w-12 h-12 text-amber-500" />
-                            </div>
-                            <h3 className="text-4xl font-[900] text-slate-900 dark:text-white mb-4 tracking-tight">Kekuatan Terkunci</h3>
-                            <p className="text-[17px] font-medium text-slate-500 dark:text-slate-400 mb-12 leading-relaxed tracking-tight">
-                                GrowthBot Intelligence eksklusif untuk member Premium. Tingkatkan produktivitasmu dengan AI hari ini.
-                            </p>
-                            <div className="flex flex-col gap-4">
-                                <Link
-                                    href={route('subscribe.index')}
-                                    className="apple-button h-16 text-lg bg-teal-500 text-white shadow-2xl shadow-teal-500/20"
-                                >
-                                    Buka Akses Sekarang
-                                </Link>
-                                <Link
-                                    href={route('dashboard')}
-                                    className="text-sm font-extrabold text-slate-400 hover:text-slate-600 py-2 transition-colors"
-                                >
-                                    Kembali ke Dashboard
-                                </Link>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </div>
+                    {/* PREMIUM LOCK OVERLAY */}
+                    {!auth.user.premium_features.ai_assistant && (
+                        <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-6">
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                className="apple-glass rounded-[4rem] p-12 max-w-lg w-full text-center shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] border-white/10"
+                            >
+                                <div className="w-24 h-24 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-8">
+                                    <LockClosedIcon className="w-12 h-12 text-amber-500" />
+                                </div>
+                                <h3 className="text-4xl font-[900] text-slate-900 dark:text-white mb-4 tracking-tight">Kekuatan Terkunci</h3>
+                                <p className="text-[17px] font-medium text-slate-500 dark:text-slate-400 mb-12 leading-relaxed tracking-tight">
+                                    GrowthBot Intelligence eksklusif untuk member Premium. Tingkatkan produktivitasmu dengan AI hari ini.
+                                </p>
+                                <div className="flex flex-col gap-4">
+                                    <Link
+                                        href={route('subscribe.index')}
+                                        className="apple-button h-16 text-lg bg-teal-500 text-white shadow-2xl shadow-teal-500/20"
+                                    >
+                                        Buka Akses Sekarang
+                                    </Link>
+                                    <Link
+                                        href={route('dashboard')}
+                                        className="text-sm font-extrabold text-slate-400 hover:text-slate-600 py-2 transition-colors"
+                                    >
+                                        Kembali ke Dashboard
+                                    </Link>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </div>
         </AuthenticatedLayout>
     );
 }
