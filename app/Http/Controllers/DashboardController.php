@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
         private const FREE_REFLECTION_LIMIT = 10;
 
-        public function index(Request $request) {
+    public function index(Request $request, \App\Services\DeadlineRiskService $riskService) {
         $user = auth()->user();
         
         // --- Statistik Total dihitung di Backend ---
@@ -58,6 +58,9 @@ class DashboardController extends Controller
         $usageCount = $user->reflections()->whereNotNull('user_answer')->count();
         $remainingQuota = self::FREE_REFLECTION_LIMIT - $usageCount;
         
+        // --- Deadline/Workload Risk Detection ---
+        $deadlineRisks = $riskService->detectRisks($user);
+        
         $showUpgradeModal = !$request->session()->get('dismissed_upgrade_modal', false) &&
             (!$user->is_premium);
           return Inertia::render('Dashboard', [
@@ -82,6 +85,7 @@ class DashboardController extends Controller
             'remainingQuota' => max(0, $remainingQuota),
              'midtrans_client_key' => config('services.midtrans.client_key'),
             'midtrans_is_production' => config('services.midtrans.is_production'),
+            'deadlineRisks' => $deadlineRisks,
         ]);
     }
     //     $props = [

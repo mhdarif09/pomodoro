@@ -244,7 +244,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
 };
 
 export default function Dashboard(props) {
-    const { auth, tasks, taskStats, filters, plans } = props;
+    const { auth, tasks, taskStats, filters, plans, deadlineRisks = [] } = props;
     const { flash } = usePage().props;
 
     const [localTasks, setLocalTasks] = useState(tasks || { data: [], total: 0 });
@@ -471,6 +471,36 @@ export default function Dashboard(props) {
         >
             <Head title="Dashboard" />
             <div className={`transition-all duration-500 ${anyModalActive ? 'blur-md' : ''}`}>
+                {/* Deadline Risk Agent Alert */}
+                {deadlineRisks.length > 0 && (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 mt-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-4 flex items-start gap-3 shadow-sm"
+                        >
+                            <div className="p-2 bg-amber-100 dark:bg-amber-800/30 rounded-xl text-amber-600 dark:text-amber-400">
+                                <ExclamationTriangleIcon className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 dark:text-amber-100 text-lg">Perhatian! Ada deadline berisiko.</h3>
+                                <div className="space-y-2 mt-1">
+                                    {deadlineRisks.slice(0, 2).map((risk, idx) => (
+                                        <div key={idx} className="text-sm text-slate-600 dark:text-amber-200/80">
+                                            <span className="font-semibold text-slate-800 dark:text-amber-100">Task "{risk.task_title}":</span> {risk.reason}
+                                            <div className="mt-1 flex items-center gap-2">
+                                                <span className="text-xs bg-white dark:bg-amber-900/40 px-2 py-1 rounded-lg border border-amber-100 dark:border-amber-700/50 text-amber-700 dark:text-amber-300 font-medium">
+                                                    🤖 Agent: {risk.suggestion}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
                 <MainDashboard {...mainDashboardProps} />
             </div>
 

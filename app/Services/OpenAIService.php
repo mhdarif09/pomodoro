@@ -252,7 +252,57 @@ FORMAT:
 PROMPT;
     }
 
-    private function generateOpenAIResponse(string $prompt): string
+    public function getEducationalResponse(Collection $history, string $currentInput, ?array $imageData = null): string
+    {
+        $systemPrompt = <<<PROMPT
+You are an expert tutor who teaches by:
+1. Breaking problems into clear, numbered steps (Step 1, Step 2, etc.)
+2. Explaining WHY each step works (using 💡)
+3. Checking understanding
+4. Encouraging progress with a friendly, supportive tone
+
+**For Math & Science:**
+- Use LaTeX notation: $...$ for inline math, $$...$$ for distinct display math.
+- Example: "The quadratic formula is $$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$"
+- NEVER provide just the answer. Always explain the method.
+
+**For General Questions:**
+- Focus on conceptual understanding.
+- Use analogies where helpful.
+
+Your Goal: Help the user TRULY understand, not just get the answer. Build their confidence! 💪
+PROMPT;
+
+        $messages = [
+            ['role' => 'system', 'content' => $systemPrompt]
+        ];
+
+        // Format history
+        foreach ($history as $msg) {
+            $role = $msg->role === 'user' ? 'user' : 'assistant';
+            $messages[] = ['role' => $role, 'content' => $msg->content];
+        }
+
+        // Add current input
+        if ($imageData) {
+            // GPT-4 Vision Format
+            $messages[] = [
+                'role' => 'user', 
+                'content' => [
+                    ['type' => 'text', 'text' => $currentInput ?: "Please help me solve this problem step-by-step."],
+                    ['type' => 'image_url', 'image_url' => ['url' => $imageData['url']]]
+                ]
+            ];
+            $model = 'gpt-4o'; // Use vision model
+        } else {
+            $messages[] = ['role' => 'user', 'content' => $currentInput];
+            $model = 'gpt-4o-mini'; // Standard efficient model
+        }
+
+        return $this->generateRawOpenAIResponse($messages, $model);
+    }
+
+    private function generateRawOpenAIResponse(array $messages, string $model = 'gpt-4o-mini'): string
     {
         $maxRetries = 3;
         $retryCount = 0;
@@ -260,13 +310,11 @@ PROMPT;
         while ($retryCount < $maxRetries) {
             try {
                 $response = Http::withToken($this->apiKey)
-                    ->timeout(30)
+                    ->timeout(60) // Longer timeout for vision/edu
                     ->post($this->apiUrl, [
-                        'model' => 'gpt-4o-mini',
-                        'messages' => [
-                            ['role' => 'user', 'content' => $prompt]
-                        ],
-                        'max_tokens' => 300, // Batasi token untuk hemat biaya
+                        'model' => $model,
+                        'messages' => $messages,
+                        'max_tokens' => 1000, // Allow longer explanations
                         'temperature' => 0.7,
                     ]);
 
@@ -274,7 +322,7 @@ PROMPT;
                     return $response->json('choices.0.message.content');
                 }
                 
-                throw new \Exception('API request failed');
+                throw new \Exception('API request failed: ' . $response->body());
             } catch (\Exception $e) {
                 $retryCount++;
                 if ($retryCount >= $maxRetries) {
@@ -283,6 +331,14 @@ PROMPT;
                 sleep(1);
             }
         }
+        return "Maaf, saya sedang mengalami gangguan. Coba lagi nanti ya!";
+    }
+
+    private function generateOpenAIResponse(string $prompt): string
+    {
+        return $this->generateRawOpenAIResponse([
+            ['role' => 'user', 'content' => $prompt]
+        ]);
     }
 
     private function parseResponse(string $result, User $user, array $context): array

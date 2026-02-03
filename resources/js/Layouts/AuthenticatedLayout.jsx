@@ -5,7 +5,8 @@ import {
     Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, CreditCardIcon,
     DocumentTextIcon, UserIcon, ChevronLeftIcon, ChevronRightIcon,
     SparklesIcon, LockClosedIcon, ChartBarIcon, TrophyIcon,
-    ArrowRightOnRectangleIcon, LanguageIcon, QuestionMarkCircleIcon, TicketIcon
+    ArrowRightOnRectangleIcon, LanguageIcon, QuestionMarkCircleIcon, TicketIcon,
+    ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import ApplicationLogo from '@/Components/ApplicationLogo';
@@ -77,6 +78,7 @@ export default function Authenticated({ children, header }) {
     const navLinks = [
         { routeName: 'dashboard', label: t('nav_dashboard'), icon: <HomeIcon className="h-5 w-5" /> },
         { routeName: 'gamification.dashboard', label: t('nav_gamification'), icon: <TrophyIcon className="h-5 w-5" /> },
+        { routeName: 'guilds.index', label: 'Guilds', icon: <ShieldCheckIcon className="h-5 w-5" /> },
         { routeName: 'ai-assistant.index', label: t('nav_ai_genius'), icon: <SparklesIcon className="h-5 w-5" /> },
         { routeName: 'learning.index', label: t('nav_learning'), icon: <BookOpenIcon className="h-5 w-5" /> },
         { routeName: 'reports.index', label: t('nav_reports'), icon: <ChartBarIcon className="h-5 w-5" /> },

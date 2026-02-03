@@ -4,31 +4,23 @@ namespace App\Policies;
 
 use App\Models\ChatSession;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ChatSessionPolicy
 {
-    public function viewAny(User $user): bool
-    {
-        return true;
-    }
+    use HandlesAuthorization;
 
-    public function view(User $user, ChatSession $chatSession): bool
+    public function view(User $user, ChatSession $chatSession)
     {
         return $user->id === $chatSession->user_id;
     }
 
-    public function create(User $user): bool
-    {
-        return true;
-    }
-
-    public function update(User $user, ChatSession $chatSession): bool
+    public function update(User $user, ChatSession $chatSession)
     {
         return $user->id === $chatSession->user_id;
     }
 
-    public function delete(User $user, ChatSession $chatSession): bool
+    public function delete(User $user, ChatSession $chatSession)
     {
         return $user->id === $chatSession->user_id;
     }

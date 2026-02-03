@@ -18,6 +18,28 @@ class DocumentController extends Controller
         return $document->collaborators()->where('user_id', $user->id)->exists();
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        if (!$query) {
+            return response()->json(['documents' => []]);
+        }
+
+        $user = auth()->user();
+        $ownedDocumentIds = $user->documents()->where('title', 'like', "%{$query}%")->pluck('documents.id');
+        $sharedDocumentIds = $user->sharedDocuments()->where('title', 'like', "%{$query}%")->pluck('documents.id');
+        $allDocumentIds = $ownedDocumentIds->merge($sharedDocumentIds)->unique();
+
+        $documents = Document::whereIn('id', $allDocumentIds)
+                            ->select('id', 'title', 'updated_at', 'is_public', 'share_token')
+                            ->limit(10)
+                            ->get();
+
+        return response()->json([
+            'documents' => $documents
+        ]);
+    }
+
     public function index()
     {
         $user = auth()->user();

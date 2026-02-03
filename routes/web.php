@@ -111,6 +111,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/subtasks/{subtask}', [\App\Http\Controllers\Api\SubtaskController::class, 'destroy'])->name('subtasks.destroy');
 
         // Documents
+        Route::get('/documents/search', [\App\Http\Controllers\Api\DocumentController::class, 'search'])->name('documents.search');
         Route::get('/documents', [\App\Http\Controllers\Api\DocumentController::class, 'index'])->name('documents.index');
         Route::post('/documents', [\App\Http\Controllers\Api\DocumentController::class, 'store'])->name('documents.store');
         Route::get('/documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'show'])->name('documents.show');
@@ -137,6 +138,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::post('/cashback/redeem', [\App\Http\Controllers\Api\CashbackController::class, 'redeemToPromoCode'])->name('cashback.redeem');
         Route::get('/cashback/history', [\App\Http\Controllers\Api\CashbackController::class, 'getRedemptionHistory'])->name('cashback.history');
+        // Guild Voice Signaling
+        Route::post('/voice/join', [\App\Http\Controllers\Api\VoiceSessionController::class, 'join'])->name('voice.join');
+        Route::post('/voice/leave', [\App\Http\Controllers\Api\VoiceSessionController::class, 'leave'])->name('voice.leave');
+        Route::get('/voice/peers', [\App\Http\Controllers\Api\VoiceSessionController::class, 'peers'])->name('voice.peers');
     });
 
     // =========================================================================
@@ -204,10 +209,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-// --- DOCS SHARING (PUBLIC) ---
-Route::get('/share/docs/{share_token}', [DocumentPageController::class, 'showPublic'])->name('docs.share');
+// --- GUILD ROUTES ---
+Route::middleware(['auth'])->group(function () {
+    Route::resource('guilds', \App\Http\Controllers\GuildController::class);
+    Route::post('guilds/{guild}/join', [\App\Http\Controllers\GuildController::class, 'join'])->name('guilds.join');
+    Route::post('guilds/{guild}/leave', [\App\Http\Controllers\GuildController::class, 'leave'])->name('guilds.leave');
+    
+    // Guild Chat
+    Route::get('guilds/{guild}/messages', [\App\Http\Controllers\GuildChatController::class, 'index'])->name('api.guilds.chat.index');
+    Route::post('guilds/{guild}/messages', [\App\Http\Controllers\GuildChatController::class, 'store'])->name('api.guilds.chat.send');
+});
 
-// --- ADMIN ROUTES ---
+// --- AI ASSISTANT ROUTES (PREMIUM) ---
+Route::middleware(['auth', 'premium'])->prefix('api/ai')->name('api.ai.')->group(function () {
+    Route::get('/sessions', [\App\Http\Controllers\ChatAssistantController::class, 'index'])->name('sessions');
+    Route::post('/sessions', [\App\Http\Controllers\ChatAssistantController::class, 'store'])->name('store-session');
+    Route::delete('/sessions/{session}', [\App\Http\Controllers\ChatAssistantController::class, 'destroy'])->name('destroy-session');
+    Route::get('/sessions/{session}/messages', [\App\Http\Controllers\ChatAssistantController::class, 'messages'])->name('messages');
+    Route::post('/sessions/{session}/send', [\App\Http\Controllers\ChatAssistantController::class, 'sendMessage'])->name('send-message');
+});
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', AdminDashboardController::class)->name('dashboard');
 

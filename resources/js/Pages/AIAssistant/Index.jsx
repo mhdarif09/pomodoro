@@ -13,9 +13,12 @@ import {
     MagnifyingGlassIcon,
     ShareIcon,
     CpuChipIcon,
-    LockClosedIcon
+    LockClosedIcon,
+    PhotoIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import LatexRenderer from '@/Components/LatexRenderer';
 
 const MessageBubble = ({ message }) => {
     const isBot = message.role === 'assistant';
@@ -27,7 +30,7 @@ const MessageBubble = ({ message }) => {
             className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-10`}
         >
             <div className={`
-                max-w-[85%] sm:max-w-[80%] rounded-[2rem] p-6 shadow-xl
+                max-w-[85%] sm:max-w-[80%] rounded-[2rem] px-6 py-5 shadow-xl
                 ${isBot
                     ? 'apple-glass border-white/10 text-slate-800 dark:text-slate-200'
                     : 'bg-teal-500 text-white shadow-teal-500/25'}
@@ -40,7 +43,22 @@ const MessageBubble = ({ message }) => {
                         <span className="text-[11px] font-extrabold uppercase tracking-tight text-slate-500">GrowthBot</span>
                     </div>
                 )}
-                <p className="text-[15px] leading-[1.6] font-medium tracking-tight whitespace-pre-wrap">{message.content}</p>
+
+                {/* Image Display for User Messages */}
+                {message.metadata?.image_path && (
+                    <div className="mb-3 rounded-xl overflow-hidden shadow-sm border border-white/20">
+                        <img
+                            src={`/storage/${message.metadata.image_path}`}
+                            alt="Uploaded question"
+                            className="max-w-full h-auto max-h-64 object-cover"
+                        />
+                    </div>
+                )}
+
+                <div className="text-[15px] leading-[1.6] font-medium tracking-tight whitespace-pre-wrap">
+                    <LatexRenderer content={message.content} />
+                </div>
+
                 {message.metadata?.sources?.length > 0 && (
                     <div className="mt-6 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-tight mb-3">Referensi Terkait</p>
@@ -50,6 +68,7 @@ const MessageBubble = ({ message }) => {
                                     key={idx}
                                     href={source.url}
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     className="px-3 py-1.5 rounded-full apple-glass border-none text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:bg-white/40 max-w-[180px] truncate transition-all"
                                 >
                                     {source.title}
@@ -71,6 +90,8 @@ export default function AIAssistantIndex() {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [webSearch, setWebSearch] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const fileInputRef = useRef(null);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -88,65 +109,146 @@ export default function AIAssistantIndex() {
     }, [messages]);
 
     const fetchSessions = async () => {
-        const res = await axios.get(route('api.ai.sessions'));
-        setSessions(res.data);
+        try {
+            const res = await axios.get(route('api.ai.sessions'));
+            setSessions(res.data);
+        } catch (error) {
+            console.error("Failed to fetch sessions", error);
+        }
     };
 
     const fetchMessages = async (sessionId) => {
-        const res = await axios.get(route('api.ai.messages', sessionId));
-        setMessages(res.data);
+        try {
+            const res = await axios.get(route('api.ai.messages', sessionId));
+            setMessages(res.data);
+        } catch (error) {
+            console.error("Failed to fetch messages", error);
+        }
     };
 
     const createNewSession = async () => {
-        const res = await axios.post(route('api.ai.store-session'), { title: 'Chat Baru' });
-        setSessions([res.data, ...sessions]);
-        setActiveSession(res.data);
-        setMessages([]);
+        try {
+            const res = await axios.post(route('api.ai.store-session'), { title: 'Chat Baru' });
+            setSessions([res.data, ...sessions]);
+            setActiveSession(res.data);
+            setMessages([]);
+        } catch (error) {
+            console.error("Failed to create session", error);
+        }
     };
 
     const deleteSession = async (e, sessionId) => {
         e.stopPropagation();
         if (!confirm('Hapus percakapan ini?')) return;
-        await axios.delete(route('api.ai.destroy-session', sessionId));
-        setSessions(sessions.filter(s => s.id !== sessionId));
-        if (activeSession?.id === sessionId) {
-            setActiveSession(null);
-            setMessages([]);
+        try {
+            await axios.delete(route('api.ai.destroy-session', sessionId));
+            setSessions(sessions.filter(s => s.id !== sessionId));
+            if (activeSession?.id === sessionId) {
+                setActiveSession(null);
+                setMessages([]);
+            }
+        } catch (error) {
+            console.error("Failed to delete session", error);
         }
+    };
+
+    const handleImageSelect = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedImage({
+                file: file,
+                preview: URL.createObjectURL(file)
+            });
+        }
+    };
+
+    const clearImage = () => {
+        setSelectedImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!input.trim() || isLoading) return;
+        if ((!input.trim() && !selectedImage) || isLoading) return;
 
         let sessionObj = activeSession;
         if (!sessionObj) {
-            const res = await axios.post(route('api.ai.store-session'), { title: 'Chat Baru' });
-            sessionObj = res.data;
-            setSessions([sessionObj, ...sessions]);
-            setActiveSession(sessionObj);
+            try {
+                const res = await axios.post(route('api.ai.store-session'), { title: 'Chat Baru' });
+                sessionObj = res.data;
+                setSessions([sessionObj, ...sessions]);
+                setActiveSession(sessionObj);
+            } catch (error) {
+                console.error("Failed to create session", error);
+                return;
+            }
         }
 
-        const userMsg = { role: 'user', content: input };
+        const userMsg = {
+            role: 'user',
+            content: input,
+            metadata: selectedImage ? { image_path: 'temp_preview', preview_url: selectedImage.preview } : null
+        };
+
+        // Optimistic update (show preview immediately)
+        // Note: Real path comes from server response, but for now we show local preview
+        // We'll replace it with server response data mostly.
+
+        // Actually, let's keep it simple. We append userMsg. 
+        // If we want to show image, MessageBubble needs to handle the preview url or we rely on server response replacement.
+        // For smoother UX, we can just show the message bubble with image preview if metadata.preview_url exists.
+        // But MessageBubble uses /storage/ path. We might need logic there.
+        // Let's rely on server response for the image path primarily, but to avoid "disappearing" image,
+        // we could wait or handle it. For now, simple append.
+
         setMessages([...messages, userMsg]);
         setInput('');
+        const imagePayload = selectedImage; // Store ref
+        clearImage();
         setIsLoading(true);
 
+        const formData = new FormData();
+        formData.append('message', input);
+        if (imagePayload) {
+            formData.append('image', imagePayload.file);
+        }
+        // history is calculated on backend now for security/consistency, 
+        // or we can pass it if we want client-side context control.
+        // Controller implementation uses DB messages, so we don't need to pass history.
+
         try {
-            const res = await axios.post(route('api.ai.send-message', sessionObj.id), {
-                message: input,
-                history: messages,
-                webSearch: webSearch
+            const res = await axios.post(route('api.ai.send-message', sessionObj.id), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            setMessages([...messages, userMsg, res.data.message]);
+            // Replace the last optimistic message with the real one (which has the stored image path)
+            // and add AI response.
+            setMessages(prev => {
+                const newMsgs = [...prev];
+                newMsgs.pop(); // Remove optimistic user msg
+                return [...newMsgs, res.data.session.messages[res.data.session.messages.length - 2], res.data.message];
+                // Wait, res.data.message is AI message. User message is saved in DB.
+                // The controller returns { message: aiMessage, session: ... }
+                // We should probably just refetch or assume the structure. 
+                // Let's trust the server response for the AI message and recreate user message with correct path?
+                // Actually, let's just append AI message and update User message if valuable.
+                // Easier: Refetch messages or just use the response data if it included the user message too.
+                // The controller returns: 'message' => $aiMessage, 'session' => $session->fresh()
+                // So we can use session.messages if we want full sync, or just append AI message.
+                // But we want the image path for user message.
+            });
 
-            // Update title in sidebar if it changed
+            // Actually, fetching from session.messages (last 2) is safer.
+            const latestMessages = res.data.session.messages.slice(-2);
+            setMessages([...messages, ...latestMessages]);
+
+            // Update title
             if (res.data.session.title !== sessionObj.title) {
                 setSessions(sessions.map(s => s.id === sessionObj.id ? res.data.session : s));
             }
         } catch (err) {
             console.error(err);
+            // Revert or show error
         } finally {
             setIsLoading(false);
         }
@@ -195,6 +297,12 @@ export default function AIAssistantIndex() {
                                             {s.updated_at === s.created_at ? 'Baru saja' : new Date(s.updated_at).toLocaleDateString()}
                                         </p>
                                     </div>
+                                    <button
+                                        onClick={(e) => deleteSession(e, s.id)}
+                                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/10 text-red-500 rounded-lg transition-all"
+                                    >
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -232,8 +340,8 @@ export default function AIAssistantIndex() {
                                     <SparklesIcon className="w-12 h-12 text-teal-500" />
                                 </motion.div>
                                 <h3 className="text-3xl font-[900] text-slate-900 dark:text-white mb-4 tracking-tight">GrowthBot Intel</h3>
-                                <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed tracking-tight">
-                                    Tanyakan strategi, analisis laporan, atau rencanakan langkah produktifmu selanjutnya.
+                                <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed tracking-tight mb-8">
+                                    Tanyakan strategi, analisis laporan, atau upload foto soal matematika untuk penjelasan step-by-step! 📚📸
                                 </p>
                             </div>
                         ) : (
@@ -241,6 +349,15 @@ export default function AIAssistantIndex() {
                                 {messages.map((m, idx) => (
                                     <MessageBubble key={idx} message={m} />
                                 ))}
+                                {isLoading && (
+                                    <div className="flex justify-start mb-10">
+                                        <div className="apple-glass rounded-[2rem] px-6 py-5 border-white/10 flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75" />
+                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150" />
+                                        </div>
+                                    </div>
+                                )}
                                 <div ref={messagesEndRef} />
                             </div>
                         )}
@@ -248,23 +365,68 @@ export default function AIAssistantIndex() {
 
                     {/* Input Area */}
                     <div className="p-8 backdrop-blur-3xl">
-                        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative group">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                disabled={isLoading || !auth.user.premium_features.ai_assistant}
-                                placeholder={auth.user.premium_features.ai_assistant ? "Tanyakan sesuatu..." : "Upgrade ke Premium untuk bertanya"}
-                                className="w-full pl-8 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
-                            />
-                            <button
-                                type="submit"
-                                disabled={!input.trim() || isLoading || !auth.user.premium_features.ai_assistant}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
-                            >
-                                <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />
-                            </button>
-                        </form>
+                        <div className="max-w-4xl mx-auto relative group">
+                            {/* Image Preview */}
+                            <AnimatePresence>
+                                {selectedImage && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute bottom-full left-0 mb-4 p-2 bg-white dark:bg-slate-800 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-200 dark:border-slate-700"
+                                    >
+                                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100">
+                                            <img src={selectedImage.preview} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-500 truncate max-w-[120px]">{selectedImage.file.name}</p>
+                                        </div>
+                                        <button
+                                            onClick={clearImage}
+                                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-500"
+                                        >
+                                            <XMarkIcon className="w-4 h-4" />
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <form onSubmit={handleSendMessage} className="relative">
+                                {/* Photo Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isLoading || !auth.user.premium_features.ai_assistant}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-xl transition-all"
+                                    title="Upload Foto"
+                                >
+                                    <PhotoIcon className="w-6 h-6 stroke-2" />
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImageSelect}
+                                    className="hidden"
+                                    accept="image/*"
+                                />
+
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    disabled={isLoading || !auth.user.premium_features.ai_assistant}
+                                    placeholder={auth.user.premium_features.ai_assistant ? "Ketik soal atau upload foto..." : "Upgrade ke Premium untuk bertanya"}
+                                    className="w-full pl-16 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={(!input.trim() && !selectedImage) || isLoading || !auth.user.premium_features.ai_assistant}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+                                >
+                                    <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
 

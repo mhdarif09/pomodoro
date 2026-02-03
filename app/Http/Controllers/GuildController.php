@@ -52,7 +52,7 @@ class GuildController extends Controller
         ]);
 
         try {
-            $guild = $this->guild Service->createGuild(auth()->user(), $validated);
+            $guild = $this->guildService->createGuild(auth()->user(), $validated);
             return back()->with('success', "Guild {$guild->name} berhasil dibuat!");
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -110,6 +110,12 @@ class GuildController extends Controller
                     'role' => $m->pivot->role,
                     'contribution_xp' => $m->pivot->contribution_xp,
                 ]),
+                'chats' => $guild->chats->map(fn($c) => [
+                    'id' => $c->id,
+                    'user' => $c->user,
+                    'message' => $c->message,
+                    'created_at' => $c->created_at,
+                ])->reverse()->values(),
             ],
             'canManage' => $guild->members()->wherePivot('user_id', auth()->id())->wherePivot('role', 'leader')->exists(),
         ]);
