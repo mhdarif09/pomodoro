@@ -5,29 +5,30 @@ import { InlineMath, BlockMath } from 'react-katex';
 const LatexRenderer = ({ content }) => {
     if (!content) return null;
 
-    // Split content by block math delimiters $$...$$
-    // Then split by inline math delimiters $...$
-    // This is a basic parser. For more complex nesting, a library is better, 
-    // but standard OpenAI output is usually clean.
+    // Normalize LaTeX delimiters to standardized format
+    // Convert \( \) to $ $ and \[ \] to $$ $$
+    let normalized = content
+        .replace(/\\\(/g, '$')
+        .replace(/\\\)/g, '$')
+        .replace(/\\\[/g, '$$')
+        .replace(/\\\]/g, '$$');
 
     const parts = [];
-    let lastIndex = 0;
 
-    // Regex for block math $$...$$
-    // Using simple splitting since complex regex can be tricky with state
-    const blockSplit = content.split('$$');
+    // Split by block math $$...$$ first
+    const blockSplit = normalized.split('$$');
 
     blockSplit.forEach((blockPart, blockIdx) => {
-        // Even indices are text (or contain inline math), Odd indices are block math
+        // Odd indices are block math
         if (blockIdx % 2 === 1) {
-            parts.push({ type: 'block', content: blockPart });
+            parts.push({ type: 'block', content: blockPart.trim() });
         } else {
             // This part might contain inline math $...$
             const inlineSplit = blockPart.split('$');
             inlineSplit.forEach((inlinePart, inlineIdx) => {
                 if (inlineIdx % 2 === 1) {
-                    parts.push({ type: 'inline', content: inlinePart });
-                } else {
+                    parts.push({ type: 'inline', content: inlinePart.trim() });
+                } else if (inlinePart) {
                     parts.push({ type: 'text', content: inlinePart });
                 }
             });
@@ -38,7 +39,11 @@ const LatexRenderer = ({ content }) => {
         <>
             {parts.map((part, idx) => {
                 if (part.type === 'block') {
-                    return <div key={idx} className="my-4 overflow-x-auto"><BlockMath math={part.content} /></div>;
+                    return (
+                        <div key={idx} className="my-4 overflow-x-auto">
+                            <BlockMath math={part.content} />
+                        </div>
+                    );
                 }
                 if (part.type === 'inline') {
                     return <InlineMath key={idx} math={part.content} />;
@@ -50,3 +55,4 @@ const LatexRenderer = ({ content }) => {
 };
 
 export default LatexRenderer;
+

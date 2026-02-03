@@ -19,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import LatexRenderer from '@/Components/LatexRenderer';
+import StepByStepSolution from '@/Components/StepByStepSolution';
 
 const MessageBubble = ({ message }) => {
     const isBot = message.role === 'assistant';
@@ -56,7 +57,11 @@ const MessageBubble = ({ message }) => {
                 )}
 
                 <div className="text-[15px] leading-[1.6] font-medium tracking-tight whitespace-pre-wrap">
-                    <LatexRenderer content={message.content} />
+                    {isBot && (message.content.match(/(?:^|\n)(?:\*\*)?(?:Step )?\d+\.?(?:\*\*)?[:\s]/gi) || message.content.includes('follow these steps')) ? (
+                        <StepByStepSolution content={message.content} />
+                    ) : (
+                        <LatexRenderer content={message.content} />
+                    )}
                 </div>
 
                 {message.metadata?.sources?.length > 0 && (
