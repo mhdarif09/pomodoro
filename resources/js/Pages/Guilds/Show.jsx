@@ -37,6 +37,7 @@ export default function GuildShow({ auth, guild, canManage }) {
     const [newMessage, setNewMessage] = useState('');
     const [activeChannel, setActiveChannel] = useState('general'); // 'general', 'dashboard', 'voice-lounge', 'leaderboard'
     const [showRightSidebar, setShowRightSidebar] = useState(true);
+    const [showLeftSidebar, setShowLeftSidebar] = useState(false); // Mobile only
     const chatContainerRef = useRef(null);
 
     // Document Tagging State
@@ -58,6 +59,28 @@ export default function GuildShow({ auth, guild, canManage }) {
     const [peers, setPeers] = useState({}); // { peerId: { call: CallObj, stream: MediaStream, userName: 'Name' } }
     const peersRef = useRef({}); // Ref version for callbacks
     const pollingIntervalRef = useRef(null);
+
+    // Global Presence State (Who is in the room?)
+    const [activeRoomUsers, setActiveRoomUsers] = useState([]);
+
+    // Poll for active users whenever the component is mounted (to show in UI)
+    useEffect(() => {
+        const fetchActiveUsers = async () => {
+            // Only poll if we are NOT in the call (logic inside call handles it differently)
+            // or if we just want to update the UI "Active Count"
+            try {
+                const res = await axios.get(route('api.voice.peers'), { params: { guild_id: guild.id } });
+                setActiveRoomUsers(res.data);
+            } catch (e) {
+                // silent fail
+            }
+        };
+
+        fetchActiveUsers();
+        // Poll every 3 seconds for UI updates
+        const interval = setInterval(fetchActiveUsers, 3000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Sync state with ref
     useEffect(() => {
@@ -367,7 +390,14 @@ export default function GuildShow({ auth, guild, canManage }) {
             <div className="flex h-[calc(100vh-65px)] bg-slate-50 dark:bg-slate-900 overflow-hidden font-sans">
 
                 {/* 1. LEFT SIDEBAR (Channels) */}
-                <div className="w-[260px] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 z-20">
+                <div className={`fixed inset-y-0 left-0 bg-white/90 dark:bg-slate-800/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-700 flex flex-col z-50 transition-transform duration-300 transform md:relative md:translate-x-0 w-[280px] md:w-[260px] ${showLeftSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+                    {/* Close Button Mobile */}
+                    <button
+                        onClick={() => setShowLeftSidebar(false)}
+                        className="absolute right-4 top-5 md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                        <XMarkIcon className="w-6 h-6" />
+                    </button>
                     {/* Guild Header */}
                     <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-700/50">
                         <div className="flex items-center gap-3 overflow-hidden">
@@ -386,14 +416,14 @@ export default function GuildShow({ auth, guild, canManage }) {
                                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Dashboard</span>
                             </div>
                             <button
-                                onClick={() => setActiveChannel('dashboard')}
+                                onClick={() => { setActiveChannel('dashboard'); setShowLeftSidebar(false); }}
                                 className={`w-full flex items-center px-3 py-2.5 rounded-xl group transition-all mb-1 ${activeChannel === 'dashboard' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}
                             >
                                 <InformationCircleIcon className={`w-5 h-5 mr-3 ${activeChannel === 'dashboard' ? 'text-indigo-500' : 'text-slate-400'}`} />
                                 <span className="truncate">Overview</span>
                             </button>
                             <button
-                                onClick={() => setActiveChannel('leaderboard')}
+                                onClick={() => { setActiveChannel('leaderboard'); setShowLeftSidebar(false); }}
                                 className={`w-full flex items-center px-3 py-2.5 rounded-xl group transition-all mb-1 ${activeChannel === 'leaderboard' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}
                             >
                                 <TrophyIcon className={`w-5 h-5 mr-3 ${activeChannel === 'leaderboard' ? 'text-amber-500' : 'text-slate-400'}`} />
@@ -409,18 +439,31 @@ export default function GuildShow({ auth, guild, canManage }) {
                                 </div>
                             </div>
                             <button
-                                onClick={() => setActiveChannel('general')}
+                                onClick={() => { setActiveChannel('general'); setShowLeftSidebar(false); }}
                                 className={`w-full flex items-center px-3 py-2.5 rounded-xl group transition-all mb-1 ${activeChannel === 'general' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}
                             >
                                 <HashtagIcon className={`w-5 h-5 mr-3 ${activeChannel === 'general' ? 'text-indigo-500' : 'text-slate-400'}`} />
                                 <span className="truncate">General</span>
                             </button>
                             <button
-                                onClick={() => setActiveChannel('voice-lounge')}
+                                onClick={() => { setActiveChannel('voice-lounge'); setShowLeftSidebar(false); }}
                                 className={`w-full flex items-center px-3 py-2.5 rounded-xl group transition-all mb-1 ${activeChannel === 'voice-lounge' ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}
                             >
-                                <SpeakerWaveIcon className={`w-5 h-5 mr-3 ${activeChannel === 'voice-lounge' ? 'text-green-500' : 'text-slate-400 group-hover:text-green-500'}`} />
-                                <span className="truncate">Lounge Room</span>
+                                <div className="relative mr-3">
+                                    <SpeakerWaveIcon className={`w-5 h-5 ${activeChannel === 'voice-lounge' ? 'text-green-500' : 'text-slate-400 group-hover:text-green-500'}`} />
+                                    {Object.keys(activeRoomUsers).length > 0 && (
+                                        <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="truncate flex-1 text-left">Lounge Room</span>
+                                {Object.keys(activeRoomUsers).length > 0 && (
+                                    <span className="text-[10px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded-md font-bold">
+                                        {Object.keys(activeRoomUsers).length}
+                                    </span>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -453,6 +496,14 @@ export default function GuildShow({ auth, guild, canManage }) {
                     {/* Channel Header */}
                     <div className="h-16 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-between px-6 flex-shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                         <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowLeftSidebar(true)}
+                                className="md:hidden p-1.5 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                                </svg>
+                            </button>
                             <div className="w-8 h-8 bg-white dark:bg-slate-800 rounded-lg shadow-sm flex items-center justify-center text-slate-400">
                                 {activeChannel === 'general' ? <HashtagIcon className="w-4 h-4" /> :
                                     activeChannel === 'dashboard' ? <InformationCircleIcon className="w-4 h-4" /> :
@@ -495,11 +546,32 @@ export default function GuildShow({ auth, guild, canManage }) {
                         <div className="flex-1 p-6 relative flex flex-col items-center justify-center">
                             {!isInCall ? (
                                 <div className="text-center space-y-4">
-                                    <div className="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                                    <div className="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce relative">
                                         <SpeakerWaveIcon className="w-12 h-12 text-indigo-500" />
+                                        {/* Active Count Badge */}
+                                        {Object.keys(activeRoomUsers).length > 0 && (
+                                            <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm border-2 border-white dark:border-slate-800">
+                                                {Object.keys(activeRoomUsers).length} Live
+                                            </div>
+                                        )}
                                     </div>
                                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Ready to join?</h2>
                                     <p className="text-slate-500 dark:text-slate-400">Join the Lounge to talk, share screen, or hang out.</p>
+
+                                    {/* Active Users Preview */}
+                                    {Object.keys(activeRoomUsers).length > 0 && (
+                                        <div className="flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto my-4 bg-slate-100 dark:bg-slate-800/50 p-3 rounded-2xl">
+                                            {Object.values(activeRoomUsers).map(u => (
+                                                <div key={u.user_id} className="flex items-center gap-2 bg-white dark:bg-slate-700 px-3 py-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
+                                                    <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                                        {u.user_name.substring(0, 2)}
+                                                    </div>
+                                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{u.user_name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     <button
                                         onClick={() => joinVoiceRoom()}
                                         className="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-bold shadow-lg shadow-green-500/30 transition-all active:scale-95 flex items-center gap-2 mx-auto"
@@ -806,62 +878,68 @@ export default function GuildShow({ auth, guild, canManage }) {
                 </div>
 
                 {/* 3. RIGHT SIDEBAR (Members & Status) */}
-                {showRightSidebar && (
-                    <div className="w-[280px] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-l border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 z-20 animate-in slide-in-from-right duration-300">
-                        <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+                <div className={`fixed inset-y-0 right-0 w-[280px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-l border-slate-200 dark:border-slate-700 flex flex-col z-50 transition-transform duration-300 transform md:relative md:translate-x-0 ${showRightSidebar ? 'translate-x-0' : 'translate-x-full md:hidden'}`}>
+                    {/* Close Button Mobile */}
+                    <button
+                        onClick={() => setShowRightSidebar(false)}
+                        className="absolute left-4 top-5 md:hidden text-slate-400 hover:text-slate-600"
+                    >
+                        <XMarkIcon className="w-6 h-6" />
+                    </button>
 
-                            {/* Mission Card (Pinned) */}
-                            <div className="mb-8 p-5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[1.5rem] shadow-xl shadow-indigo-500/20 text-white relative overflow-hidden group hover:scale-[1.02] transition-transform">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                    <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
 
-                                <h3 className="text-xs font-extrabold uppercase mb-3 flex items-center tracking-wider opacity-90">
-                                    <FireIcon className="w-4 h-4 mr-1.5" />
-                                    Weekly Goal
-                                </h3>
+                        {/* Mission Card (Pinned) */}
+                        <div className="mb-8 p-5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[1.5rem] shadow-xl shadow-indigo-500/20 text-white relative overflow-hidden group hover:scale-[1.02] transition-transform">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
 
-                                <div className="flex items-end justify-between mb-2">
-                                    <span className="text-2xl font-[900]">{Math.round(progressPercent)}%</span>
-                                    <span className="text-xs font-bold opacity-80 mb-1.5">{guild.weekly_xp} XP</span>
-                                </div>
+                            <h3 className="text-xs font-extrabold uppercase mb-3 flex items-center tracking-wider opacity-90">
+                                <FireIcon className="w-4 h-4 mr-1.5" />
+                                Weekly Goal
+                            </h3>
 
-                                <div className="w-full bg-black/20 rounded-full h-2 mb-2 backdrop-blur-sm">
-                                    <div className="bg-white h-2 rounded-full shadow-sm" style={{ width: `${progressPercent}%` }}></div>
-                                </div>
+                            <div className="flex items-end justify-between mb-2">
+                                <span className="text-2xl font-[900]">{Math.round(progressPercent)}%</span>
+                                <span className="text-xs font-bold opacity-80 mb-1.5">{guild.weekly_xp} XP</span>
                             </div>
 
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Members</h3>
-                                <div className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-500 dark:text-slate-300">
-                                    {guild.members.length}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                {guild.members.map(member => (
-                                    <div key={member.id} className="flex items-center p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer group transition-all hover:scale-[1.02]">
-                                        <div className="relative mr-4">
-                                            <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-sm shadow-sm group-hover:shadow-md transition-shadow">
-                                                {member.name.substring(0, 2)}
-                                            </div>
-                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
-                                                <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="font-bold text-slate-700 dark:text-slate-200 text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                                    {member.name}
-                                                </div>
-                                                {member.role === 'leader' && <TrophyIcon className="w-3 h-3 text-amber-500" />}
-                                            </div>
-                                            <div className="text-xs text-slate-400 group-hover:text-slate-500">Level {member.level}</div>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="w-full bg-black/20 rounded-full h-2 mb-2 backdrop-blur-sm">
+                                <div className="bg-white h-2 rounded-full shadow-sm" style={{ width: `${progressPercent}%` }}></div>
                             </div>
                         </div>
+
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Members</h3>
+                            <div className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-500 dark:text-slate-300">
+                                {guild.members.length}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            {guild.members.map(member => (
+                                <div key={member.id} className="flex items-center p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer group transition-all hover:scale-[1.02]">
+                                    <div className="relative mr-4">
+                                        <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-sm shadow-sm group-hover:shadow-md transition-shadow">
+                                            {member.name.substring(0, 2)}
+                                        </div>
+                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
+                                            <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="font-bold text-slate-700 dark:text-slate-200 text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                                {member.name}
+                                            </div>
+                                            {member.role === 'leader' && <TrophyIcon className="w-3 h-3 text-amber-500" />}
+                                        </div>
+                                        <div className="text-xs text-slate-400 group-hover:text-slate-500">Level {member.level}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                )}
+                </div>
             </div>
         </AuthenticatedLayout>
     );

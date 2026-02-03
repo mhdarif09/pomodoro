@@ -10,6 +10,9 @@ export default function AgentWidget({ briefing }) {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isListening, setIsListening] = useState(false);
 
+    const [isProcessing, setIsProcessing] = useState(false);
+    const fileInputRef = React.useRef(null);
+
     const speak = (text) => {
         if (!window.speechSynthesis) return;
 
@@ -26,6 +29,37 @@ export default function AgentWidget({ briefing }) {
 
         setIsSpeaking(true);
         window.speechSynthesis.speak(utterance);
+    };
+
+    const handleQuickScan = async (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setIsProcessing(true);
+
+            try {
+                // 1. Create New Session
+                const importAxios = (await import('axios')).default; // Dynamic import if needed, or just standard
+                const sessionRes = await importAxios.post(route('api.ai.store-session'), { title: 'Smart Scan Analysis' });
+                const sessionId = sessionRes.data.id;
+
+                // 2. Send Image
+                const formData = new FormData();
+                formData.append('message', 'Analyze this image and provide relevant advice or solution.'); // Default prompt
+                formData.append('image', file);
+
+                await importAxios.post(route('api.ai.send-message', sessionId), formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                // 3. Redirect to AI Assistant
+                router.visit(route('ai-assistant.index'));
+
+            } catch (error) {
+                console.error("Smart Scan failed", error);
+                alert("Failed to process image. Please try again.");
+                setIsProcessing(false);
+            }
+        }
     };
 
     const listen = () => {
@@ -98,6 +132,24 @@ export default function AgentWidget({ briefing }) {
                     </div>
 
                     <div className="flex gap-2">
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`p-2 rounded-full backdrop-blur-sm transition ${isProcessing ? 'bg-white text-teal-600 animate-pulse' : 'bg-white/20 text-white hover:bg-white/30'}`}
+                            title="Smart Scan (Upload Photo)"
+                            disabled={isProcessing}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                            </svg>
+                        </button>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleQuickScan}
+                            className="hidden"
+                            accept="image/*"
+                        />
                         <button
                             onClick={() => speak(message)}
                             className={`p-2 rounded-full backdrop-blur-sm transition ${isSpeaking ? 'bg-white text-emerald-600 animate-pulse' : 'bg-white/20 text-white hover:bg-white/30'}`}

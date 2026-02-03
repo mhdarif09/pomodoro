@@ -45,10 +45,10 @@ const MessageBubble = ({ message }) => {
                 )}
 
                 {/* Image Display for User Messages */}
-                {message.metadata?.image_path && (
+                {(message.metadata?.image_path || message.metadata?.preview_url) && (
                     <div className="mb-3 rounded-xl overflow-hidden shadow-sm border border-white/20">
                         <img
-                            src={`/storage/${message.metadata.image_path}`}
+                            src={message.metadata.preview_url || `/storage/${message.metadata.image_path}`}
                             alt="Uploaded question"
                             className="max-w-full h-auto max-h-64 object-cover"
                         />
@@ -186,7 +186,7 @@ export default function AIAssistantIndex() {
 
         const userMsg = {
             role: 'user',
-            content: input,
+            content: input.trim() || (selectedImage ? 'Analyze this image and provide relevant advice or solution.' : ''),
             metadata: selectedImage ? { image_path: 'temp_preview', preview_url: selectedImage.preview } : null
         };
 
@@ -208,7 +208,8 @@ export default function AIAssistantIndex() {
         setIsLoading(true);
 
         const formData = new FormData();
-        formData.append('message', input);
+        const messageToSend = input.trim() || (imagePayload ? 'Analyze this image and provide relevant advice or solution.' : '');
+        formData.append('message', messageToSend);
         if (imagePayload) {
             formData.append('image', imagePayload.file);
         }
@@ -221,30 +222,29 @@ export default function AIAssistantIndex() {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            // Replace the last optimistic message with the real one (which has the stored image path)
-            // and add AI response.
-            setMessages(prev => {
-                const newMsgs = [...prev];
-                newMsgs.pop(); // Remove optimistic user msg
-                return [...newMsgs, res.data.session.messages[res.data.session.messages.length - 2], res.data.message];
-                // Wait, res.data.message is AI message. User message is saved in DB.
-                // The controller returns { message: aiMessage, session: ... }
-                // We should probably just refetch or assume the structure. 
-                // Let's trust the server response for the AI message and recreate user message with correct path?
-                // Actually, let's just append AI message and update User message if valuable.
-                // Easier: Refetch messages or just use the response data if it included the user message too.
-                // The controller returns: 'message' => $aiMessage, 'session' => $session->fresh()
-                // So we can use session.messages if we want full sync, or just append AI message.
-                // But we want the image path for user message.
-            });
+            console.log('Backend response:', res.data);
 
-            // Actually, fetching from session.messages (last 2) is safer.
-            const latestMessages = res.data.session.messages.slice(-2);
-            setMessages([...messages, ...latestMessages]);
+            // Backend returns { message: aiMessage, session: updatedSession (with all messages) }
+            // Add defensive checks
+            if (res.data && res.data.session && Array.isArray(res.data.session.messages)) {
+                const latestMessages = res.data.session.messages.slice(-2); // Last 2: [userMsg with real image_path, aiMsg]
 
-            // Update title
-            if (res.data.session.title !== sessionObj.title) {
-                setSessions(sessions.map(s => s.id === sessionObj.id ? res.data.session : s));
+                setMessages(prev => {
+                    const withoutOptimistic = prev.slice(0, -1); // Remove optimistic user message
+                    return [...withoutOptimistic, ...latestMessages]; // Add real user msg + AI msg
+                });
+
+                // Update title if it changed
+                if (res.data.session.title !== sessionObj.title) {
+                    setSessions(sessions.map(s => s.id === sessionObj.id ? res.data.session : s));
+                    setActiveSession(res.data.session);
+                }
+            } else {
+                console.error('Invalid response structure:', res.data);
+                // Fallback: just add AI message
+                if (res.data && res.data.message) {
+                    setMessages(prev => [...prev, res.data.message]);
+                }
             }
         } catch (err) {
             console.error(err);
@@ -264,7 +264,7 @@ export default function AIAssistantIndex() {
                     <div className="p-6">
                         <button
                             onClick={createNewSession}
-                            disabled={!auth.user.premium_features.ai_assistant}
+                            disabled={isLoading}
                             className="apple-button w-full bg-slate-900 dark:bg-teal-500 text-white flex items-center justify-center gap-2 shadow-xl disabled:opacity-50"
                         >
                             <PlusIcon className="w-5 h-5 stroke-2" />
@@ -276,13 +276,12 @@ export default function AIAssistantIndex() {
                         {sessions.map(s => (
                             <div
                                 key={s.id}
-                                onClick={() => auth.user.premium_features.ai_assistant && setActiveSession(s)}
+                                onClick={() => setActiveSession(s)}
                                 className={`
                                     group relative p-4 rounded-[1.5rem] cursor-pointer transition-all duration-300
                                     ${activeSession?.id === s.id
                                         ? 'apple-glass bg-white dark:bg-slate-800 shadow-lg border-white/20'
                                         : 'hover:bg-white/40 dark:hover:bg-white/5 text-slate-500'}
-                                    ${!auth.user.premium_features.ai_assistant ? 'opacity-50 grayscale cursor-not-allowed' : ''}
                                 `}
                             >
                                 <div className="flex items-center gap-3">
@@ -395,9 +394,18 @@ export default function AIAssistantIndex() {
                                 {/* Photo Button */}
                                 <button
                                     type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={isLoading || !auth.user.premium_features.ai_assistant}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-xl transition-all"
+                                    onClick={() => {
+                                        console.log('Camera button clicked');
+                                        console.log('fileInputRef.current:', fileInputRef.current);
+                                        if (fileInputRef.current) {
+                                            fileInputRef.current.click();
+                                            console.log('Triggered file input click');
+                                        } else {
+                                            console.error('fileInputRef is null!');
+                                        }
+                                    }}
+                                    disabled={isLoading}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Upload Foto"
                                 >
                                     <PhotoIcon className="w-6 h-6 stroke-2" />
@@ -414,13 +422,13 @@ export default function AIAssistantIndex() {
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    disabled={isLoading || !auth.user.premium_features.ai_assistant}
-                                    placeholder={auth.user.premium_features.ai_assistant ? "Ketik soal atau upload foto..." : "Upgrade ke Premium untuk bertanya"}
+                                    disabled={isLoading}
+                                    placeholder="Ketik soal atau upload foto..."
                                     className="w-full pl-16 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
                                 />
                                 <button
                                     type="submit"
-                                    disabled={(!input.trim() && !selectedImage) || isLoading || !auth.user.premium_features.ai_assistant}
+                                    disabled={(!input.trim() && !selectedImage) || isLoading}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
                                 >
                                     <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />

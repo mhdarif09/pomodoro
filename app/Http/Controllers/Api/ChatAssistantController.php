@@ -85,13 +85,28 @@ class ChatAssistantController extends Controller
         }
         
         $validated = $request->validate([
-            'message' => 'required|string|max:10000',
+            'message' => 'nullable|string|max:10000',
             'history' => 'nullable|array',
             'webSearch' => 'nullable|boolean',
-            'tools' => 'nullable|array', // e.g., ['pdf', 'web']
+            'tools' => 'nullable|array',
+            'image' => 'nullable|image|max:10240', // Max 10MB
         ]);
 
-        $message = $validated['message'];
+        $message = $validated['message'] ?? 'Analyze this image.';
+        $imageData = null;
+        $imagePath = null;
+
+        // Handle Image Upload
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $path = $file->store('chat_images', 'public'); // Store in storage/app/public/chat_images
+            $imagePath = $path;
+            
+            // Convert to Base64 for OpenAI API
+            $extension = $file->getClientOriginalExtension();
+            $base64 = base64_encode(file_get_contents($file->getPathname()));
+            $imageData = "data:image/{$extension};base64,{$base64}";
+        }
         
         // Use the existing OpenAIController logic but wrapped here
         $openAI = new OpenAIController();
@@ -101,14 +116,24 @@ class ChatAssistantController extends Controller
             'query' => $message,
             'history' => $validated['history'] ?? [],
             'webSearch' => $validated['webSearch'] ?? false,
+            'image' => $imageData, // Pass Base64 image
         ]);
 
         try {
             // Save User Message
-            $session->messages()->create([
+            $userMsgData = [
                 'role' => 'user',
                 'content' => $message
-            ]);
+            ];
+            
+            if ($imagePath) {
+                $userMsgData['metadata'] = [
+                    'image_path' => $imagePath, // Frontend uses /storage/{image_path}
+                    'has_image' => true
+                ];
+            }
+
+            $session->messages()->create($userMsgData);
 
             // Get AI Response
             $response = $openAI->ask($proxyRequest);
@@ -137,7 +162,7 @@ class ChatAssistantController extends Controller
 
             return response()->json([
                 'message' => $aiMessage,
-                'session' => $session->fresh()
+                'session' => $session->fresh()->load('messages') // Reload messages to include the user's image msg
             ]);
 
         } catch (Exception $e) {

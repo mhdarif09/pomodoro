@@ -51,9 +51,11 @@ class OpenAIController extends Controller
             'query'     => 'required|string|max:4000',
             'history'   => 'nullable|array',
             'webSearch' => 'nullable|boolean',
+            'image'     => 'nullable|string', // Base64 or URL
         ]);
 
         $query = $validated['query'];
+        $image = $validated['image'] ?? null;
         
         try {
             if (preg_match('/(youtube\.com\/watch\?v=|youtu\.be\/)([^&?#\s]+)/', $query, $matches)) {
@@ -62,7 +64,7 @@ class OpenAIController extends Controller
             if ($validated['webSearch']) {
                 return $this->handleWebSearchQuery($query, $validated['history'] ?? []);
             }
-            return $this->handleSimpleChat($query, $validated['history'] ?? []);
+            return $this->handleSimpleChat($query, $validated['history'] ?? [], $image);
 
         } catch (Exception $e) {
             Log::error('Orchestration Hub Error in ask(): ' . $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -238,14 +240,15 @@ PROMPT;
         return $this->generateAnswerFromContext($query, $context, $systemPrompt, $messages, $searchResults);
     }
 
-    private function handleSimpleChat(string $query, array $history)
+    private function handleSimpleChat(string $query, array $history, ?string $image = null)
     {
-        Log::info("Handling simple chat query: {$query}");
+        Log::info("Handling simple chat query: {$query}" . ($image ? " [WITH IMAGE]" : ""));
         $systemPrompt = <<<PROMPT
 You are Super Agent AI, a personal productivity and study mentor.
 
 Your mission:
 Help users become productive, disciplined, and successful in study and task completion.
+If an image is provided, analyze it thoroughly (e.g., solve the math problem, explain the chart, review the schedule/handwriting).
 
 You act as:
 - productivity coach
@@ -276,9 +279,24 @@ PROMPT;
         $messages = [];
         $messages[] = ['role' => 'system', 'content' => $systemPrompt];
         foreach ($history as $msg) {
-            if (isset($msg['role'], $msg['content'])) $messages[] = ['role' => $msg['role'], 'content' => $msg['content']];
+             // Basic text-only history support for now to avoid complexity with old images in context
+            if (isset($msg['role'], $msg['content']) && is_string($msg['content'])) {
+                $messages[] = ['role' => $msg['role'], 'content' => $msg['content']];
+            }
         }
-        $messages[] = ['role' => 'user', 'content' => $query];
+        
+        // Construct User Message (Text or Text+Image)
+        if ($image) {
+            $messages[] = [
+                'role' => 'user',
+                'content' => [
+                    ['type' => 'text', 'text' => $query],
+                    ['type' => 'image_url', 'image_url' => ['url' => $image]]
+                ]
+            ];
+        } else {
+            $messages[] = ['role' => 'user', 'content' => $query];
+        }
         try {
             $response = $this->httpClient->post($this->apiBaseUrl, [ 'model' => $this->mainModel, 'messages' => $messages, 'max_tokens' => $this->maxOutputTokens, 'temperature' => 0.7, ]);
             $response->throw();

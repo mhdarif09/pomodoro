@@ -98,6 +98,7 @@ class VoiceSessionController extends Controller
             Cache::put($key, $sessions, 60);
         }
 
-        return response()->json($activeSessions);
+        // KEY FIX: array_values ensures JSON is [{}, {}] not {"1":{}}
+        return response()->json(array_values($activeSessions));
     }
 }
