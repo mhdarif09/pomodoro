@@ -190,4 +190,48 @@ class MidtransService
     {
         return htmlspecialchars(strip_tags(trim($input)), ENT_QUOTES, 'UTF-8');
     }
+
+    /**
+     * Check transaction status directly from Midtrans API.
+     * Used as a fallback when webhook doesn't arrive (e.g. webhook URL misconfigured).
+     */
+    public function checkTransactionStatus(string $orderId): ?object
+    {
+        try {
+            $serverKey = config('services.midtrans.server_key');
+            $isProduction = config('services.midtrans.is_production');
+            
+            $baseUrl = $isProduction 
+                ? 'https://api.midtrans.com' 
+                : 'https://api.sandbox.midtrans.com';
+            
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
+            ])->get("{$baseUrl}/v2/{$orderId}/status");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('Midtrans status check', [
+                    'order_id' => $orderId,
+                    'transaction_status' => $data['transaction_status'] ?? 'N/A',
+                ]);
+                return (object) $data;
+            }
+
+            Log::warning('Midtrans status check failed', [
+                'order_id' => $orderId,
+                'status' => $response->status(),
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Midtrans status check error', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
 }

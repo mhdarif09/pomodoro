@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class SubscriptionController extends Controller
@@ -272,22 +273,72 @@ class SubscriptionController extends Controller
 
     public function paymentSuccessRedirect(Request $request)
     {
-        $request->session()->flash('success', 'Pembayaran berhasil! Selamat menikmati fitur premium.');
-        
-        // Update user premium status
         $user = auth()->user();
+        
         if ($user) {
-            // Cari subscription terbaru yang paid
-            $latestSubscription = Subscription::where('user_id', $user->id)
+            // First: Check if already has active paid subscription
+            $paidSubscription = Subscription::where('user_id', $user->id)
                 ->where('status', 'paid')
+                ->where('expired_at', '>', now())
                 ->latest()
                 ->first();
-                
-            if ($latestSubscription && $latestSubscription->expired_at > now()) {
-                $user->update(['is_premium' => true]);
+            
+            if ($paidSubscription) {
+                $request->session()->flash('success', 'Kamu sudah premium! Selamat menikmati fitur premium.');
+                return Redirect::route('dashboard');
+            }
+
+            // Second: Find the latest unpaid/pending subscription and verify with Midtrans
+            $latestSubscription = Subscription::where('user_id', $user->id)
+                ->whereIn('status', ['unpaid', 'pending'])
+                ->whereNotNull('midtrans_order_id')
+                ->latest()
+                ->first();
+
+            if ($latestSubscription) {
+                $midtrans = app(MidtransService::class);
+                $status = $midtrans->checkTransactionStatus($latestSubscription->midtrans_order_id);
+
+                if ($status) {
+                    $txStatus = $status->transaction_status ?? null;
+                    $fraudStatus = $status->fraud_status ?? null;
+
+                    Log::info('Payment success redirect: Midtrans status check', [
+                        'order_id' => $latestSubscription->midtrans_order_id,
+                        'transaction_status' => $txStatus,
+                        'fraud_status' => $fraudStatus,
+                        'user_id' => $user->id,
+                    ]);
+
+                    // Activate if payment is captured/settled
+                    if ($txStatus === 'settlement' || ($txStatus === 'capture' && $fraudStatus === 'accept')) {
+                        $this->handleSuccessfulPayment($latestSubscription);
+
+                        Log::info('Payment activated via redirect fallback', [
+                            'subscription_id' => $latestSubscription->id,
+                            'user_id' => $user->id,
+                        ]);
+
+                        $request->session()->flash('success', 'Pembayaran berhasil! Selamat menikmati fitur premium. 🚀');
+                        return Redirect::route('dashboard');
+                    }
+
+                    if ($txStatus === 'pending') {
+                        $latestSubscription->update(['status' => 'pending']);
+                        $request->session()->flash('info', 'Pembayaran sedang diproses. Status premium akan aktif setelah pembayaran dikonfirmasi.');
+                        return Redirect::route('dashboard');
+                    }
+
+                    if (in_array($txStatus, ['deny', 'cancel', 'expire'])) {
+                        $latestSubscription->update(['status' => 'failed']);
+                        $request->session()->flash('error', 'Pembayaran gagal. Silakan coba lagi.');
+                        return Redirect::route('subscribe.index');
+                    }
+                }
             }
         }
-        
+
+        $request->session()->flash('info', 'Status pembayaran sedang diverifikasi. Silakan refresh halaman dalam beberapa saat.');
         return Redirect::route('dashboard');
     }
 

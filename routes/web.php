@@ -53,6 +53,7 @@ Route::get('/login/google/callback', [GoogleLoginController::class, 'handleGoogl
 
 Route::get('/pricing', [SubscriptionController::class, 'index'])->name('subscribe.index');
 Route::post('/webhook/midtrans', [SubscriptionController::class, 'webhookHandler'])->name('midtrans.webhook');
+Route::post('/webhook/fonnte', [\App\Http\Controllers\WhatsAppBotController::class, 'handle'])->name('fonnte.webhook');
 
 // --- AUTHENTICATED ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {

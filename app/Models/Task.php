@@ -26,6 +26,9 @@ class Task extends Model
         'ai_suggested_subtasks',
         'complexity_score',
         'auto_rescheduled_count',
+        'reminder_at',
+        'reminder_sent',
+        'created_via',
     ];
 
     protected $casts = [
@@ -33,6 +36,8 @@ class Task extends Model
         'due_date' => 'date',
         'start_date' => 'date',
         'ai_suggested_subtasks' => 'array',
+        'reminder_at' => 'datetime',
+        'reminder_sent' => 'boolean',
     ];
 
     /**

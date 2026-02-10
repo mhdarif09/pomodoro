@@ -21,6 +21,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('reminders:send-deadline')->dailyAt('15:00'); // 23:00 WITA
         $schedule->command('reminders:send-deadline')->dailyAt('14:00'); // 23:00 WIT
 
+        // Custom WhatsApp reminders (user-set times)
+        $schedule->command('reminders:send-custom')->everyMinute();
+
         // Gamification
         $schedule->command('challenges:generate')->dailyAt('00:01');
         $schedule->command('challenges:check-progress')->hourly();
