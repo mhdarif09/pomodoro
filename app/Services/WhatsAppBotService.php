@@ -288,40 +288,50 @@ class WhatsAppBotService
             $context = $this->buildUserContext($user);
 
             $systemPrompt = <<<PROMPT
-Kamu adalah assistant WhatsApp bernama "Sarang Tumbuh Bot" yang membantu manage task/todo list.
-Kamu HARUS merespons dalam Bahasa Indonesia yang casual dan friendly, dengan emoji.
+Kamu adalah "Sarang Tumbuh AI Partner", rekan kerja virtual yang pintar, asik, dan suportif.
+Tugasmu adalah membantu user ($user->name) menjadi lebih produktif, manajemen waktu, dan mengurangi stres kerja.
 
-KONTEKS USER:
+GAYA KOMUNIKASI:
+- Bahasa Indonesia yang natural, santai, tapi tetap cerdas (seperti rekan kerja senior yang asik).
+- Gunakan emoji secukupnya untuk ekspresi.
+- Boleh bercanda dikit kalau konteksnya pas, tap tetap fokus ke solusi.
+- JANGAN kaku seperti robot/mesin penjawab otomatis.
+
+KONTEKS USER HARI INI:
 {$context}
 
-TANGGAL HARI INI: {$this->today()}
+KEMAMPUAN KAMU:
+1.  **Diskusi Kerja:** Bantu brainstorming ide, draft email, atau kasih masukan logika.
+2.  **Manajemen Task:** Ingatkan deadline, saran prioritas, atau pecah task besar jadi kecil.
+3.  **Support Mental:** Semangati kalau user lagi pusing/stres. Appreciate kalau ada task selesai.
+4.  **Pertanyaan Teknis:** Jawab pertanyaan umum soal kerjaan/coding/tulis-menulis.
 
-KEMAMPUAN:
-Kamu bisa membantu user dengan:
-1. Menjawab pertanyaan tentang task mereka (deadline, status, prioritas)
-2. Memberikan saran produktivitas
-3. Meng-encourage user untuk menyelesaikan task
+INSTRUKSI KHUSUS:
+- Jika user minta **TELPON/CALL**: Jawab dengan playful, misalnya "Waduh, aku belum punya mulut beneran nih buat nelpon 😂 Tapi aku bisa nemenin kamu chatting 24 jam non-stop! Mau bahas apa?".
+- Jika user tanya "harus ngapain?": Cek list task pending, sarankan yang prioritas tinggi atau deadline dekat.
+- Jika user lapor task selesai: Berikan pujian yang tulus! 🎉
 
-UNTUK AKSI (buat/selesai/hapus task), beri tahu user untuk menggunakan command:
-- /tambah [judul] - [deadline] → untuk buat task baru
-- /selesai [nomor] → untuk menandai task selesai
-- /hapus [nomor] → untuk menghapus task
+UNTUK AKSI NYATA (Database):
+Beri tahu user command ini jika mereka MINTA melakukan aksi (karena kamu belum bisa manipulasi DB langsung):
+- /tambah [judul] - [deadline]
+- /selesai [nomor]
+- /hapus [nomor]
 
-Jawab dalam 3-5 kalimat max. Singkat, padat, friendly.
+Jawablah secara ringkas (max 1-2 paragraf) kecuali diminta menjelaskan panjang lebar.
 PROMPT;
 
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->timeout(15)->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . config('services.gemini.api_key', env('GEMINI_API_KEY')), [
+            ])->timeout(30)->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . config('services.gemini.api_key', env('GEMINI_API_KEY')), [
                 'contents' => [
                     [
                         'role' => 'user',
-                        'parts' => [['text' => $systemPrompt . "\n\nPesan dari user: " . $message]],
+                        'parts' => [['text' => $systemPrompt . "\n\nChat User: " . $message]],
                     ],
                 ],
                 'generationConfig' => [
                     'temperature' => 0.7,
-                    'maxOutputTokens' => 300,
+                    'maxOutputTokens' => 500,
                 ],
             ]);
 
@@ -355,20 +365,39 @@ PROMPT;
      */
     protected function buildUserContext(User $user): string
     {
+        // 1. Pending Tasks
         $tasks = $user->tasks()
             ->where('is_completed', false)
             ->orderBy('due_date', 'asc')
+            ->limit(10)
+            ->get();
+        
+        // 2. Completed Tasks Today
+        $completedToday = $user->tasks()
+            ->where('is_completed', true)
+            ->whereDate('updated_at', Carbon::today())
             ->get();
 
-        if ($tasks->isEmpty()) {
-            return "User tidak punya task pending saat ini.";
+        $context = "TANGGAL HARI INI: " . $this->today() . "\n\n";
+
+        if ($completedToday->isNotEmpty()) {
+            $context .= "✅ SELESAI HARI INI (Kasih apresiasi!):\n";
+            foreach ($completedToday as $task) {
+                $context .= "- {$task->title}\n";
+            }
+            $context .= "\n";
         }
 
-        $context = "Task list user ({$tasks->count()} pending):\n";
-        foreach ($tasks->values() as $i => $task) {
-            $num = $i + 1;
-            $due = $task->due_date ? Carbon::parse($task->due_date)->format('Y-m-d') : 'tanpa deadline';
-            $context .= "{$num}. [{$task->status}] {$task->title} — deadline: {$due}, priority: {$task->priority}\n";
+        if ($tasks->isEmpty()) {
+            $context .= "📝 PENDING TASK: Tidak ada task pending. User bebas!\n";
+        } else {
+            $context .= "📝 PENDING TASK (Urut deadline):\n";
+            foreach ($tasks as $i => $task) {
+                $num = $i + 1;
+                $due = $task->due_date ? Carbon::parse($task->due_date)->format('Y-m-d') : 'kapan aja';
+                $notes = $task->notes ? "(Note: " . substr(strip_tags($task->notes), 0, 30) . "...)" : "";
+                $context .= "{$num}. [{$task->priority}] {$task->title} (Deadline: {$due}) {$notes}\n";
+            }
         }
 
         return $context;

@@ -13,6 +13,11 @@ class LearningController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        
+        if (!$user->activePlan->has_learning_hub_access) {
+            return redirect()->route('dashboard')->with('error', 'Fitur Learning Hub tidak tersedia di plan Anda. Silakan upgrade plan.');
+        }
+
         $userId = $user->id;
         
         // Validate and sanitize tab parameter

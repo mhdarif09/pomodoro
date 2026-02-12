@@ -25,7 +25,7 @@ class GuildService
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'emblem' => $data['emblem'] ?? '🏰',
-                'max_members' => $data['max_members'] ?? 10,
+                'max_members' => $creator->activePlan->max_guild_members,
                 'weekly_xp_reset_at' => now()->startOfWeek(),
             ]);
 
@@ -51,9 +51,46 @@ class GuildService
                 throw new \Exception('Kamu sudah tergabung dalam guild lain.');
             }
 
-            // Check if guild is full
-            if ($guild->isFull()) {
-                throw new \Exception('Guild sudah penuh.');
+            // Check member limit based on LEADER's subscription
+            $leader = $guild->leader;
+            // Use leader's active plan limit or default to 10
+            $limit = $leader ? $leader->activePlan->max_guild_members : 10;
+
+            if ($guild->members()->count() >= $limit) {
+                throw new \Exception($leader && $leader->is_premium ? 'Guild sudah penuh sesuai limit plan Leader.' : 'Guild Free terbatas. Upgrade Leader ke Premium untuk member lebih banyak!');
+            }
+
+            GuildMember::create([
+                'guild_id' => $guild->id,
+                'user_id' => $user->id,
+                'role' => 'member',
+            ]);
+        });
+    }
+
+    /**
+     * Invite member by email
+     */
+    public function inviteMemberByEmail(Guild $guild, string $email): void
+    {
+        DB::transaction(function () use ($guild, $email) {
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                throw new \Exception('User dengan email tersebut tidak ditemukan.');
+            }
+
+            if ($user->guildMember) {
+                throw new \Exception('User tersebut sudah tergabung dalam guild.');
+            }
+
+            // Check member limit based on LEADER's subscription
+            $leader = $guild->leader;
+            // Use leader's active plan limit or default to 10
+            $limit = $leader ? $leader->activePlan->max_guild_members : 10;
+
+            if ($guild->members()->count() >= $limit) {
+                throw new \Exception($leader && $leader->is_premium ? 'Guild sudah penuh sesuai limit plan Leader.' : 'Guild Free terbatas. Upgrade Leader ke Premium untuk member lebih banyak!');
             }
 
             GuildMember::create([

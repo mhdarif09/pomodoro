@@ -12,6 +12,7 @@ class Guild extends Model
     protected $fillable = [
         'name',
         'description',
+        'is_private',
         'emblem',
         'max_members',
         'total_xp',
@@ -21,6 +22,7 @@ class Guild extends Model
 
     protected $casts = [
         'weekly_xp_reset_at' => 'datetime',
+        'is_private' => 'boolean',
     ];
 
     /**
@@ -58,9 +60,17 @@ class Guild extends Model
     }
 
     /**
+     * Guild tasks (team to-do)
+     */
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
      * Get guild leader
      */
-    public function leader()
+    public function getLeaderAttribute()
     {
         return $this->members()->wherePivot('role', 'leader')->first();
     }

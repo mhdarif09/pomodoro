@@ -91,14 +91,26 @@ export default function TaskCard({ task, onEdit }) {
                 </button>
 
                 <div className="flex-1 min-w-0">
-                    {/* Priority Badge */}
-                    {task.priority && (
-                        <div className="mb-2">
-                            <span className={`text-xs px-2 py-1 rounded-full border ${priorityColors[task.priority] || priorityColors.Sedang}`}>
-                                {task.priority === 'Tinggi' ? '🔴 Tinggi' : task.priority === 'Sedang' ? '🟡 Sedang' : '🔵 Rendah'}
+                    {/* Priority Badge & Tags */}
+                    <div className="mb-2 flex flex-wrap gap-1">
+                        {task.priority && (
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${priorityColors[task.priority] || priorityColors.Sedang}`}>
+                                {task.priority === 'Tinggi' ? '🔴' : task.priority === 'Sedang' ? '🟡' : '🔵'} {task.priority}
                             </span>
-                        </div>
-                    )}
+                        )}
+                        {task.tags && task.tags.slice(0, 3).map(tag => (
+                            <span key={tag.id} className={`text-[10px] px-2 py-0.5 rounded-full border border-transparent ${tag.color === '#3B82F6' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                                tag.color === '#10B981' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                                    tag.color === '#F59E0B' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' :
+                                        'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                                }`}>
+                                {tag.name}
+                            </span>
+                        ))}
+                        {task.tags && task.tags.length > 3 && (
+                            <span className="text-[10px] px-1 py-0.5 text-slate-400">+{task.tags.length - 3}</span>
+                        )}
+                    </div>
 
                     {/* Title */}
                     <h4 className={`font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 ${task.is_completed ? 'line-through text-gray-500 dark:text-gray-400' : ''}`}>

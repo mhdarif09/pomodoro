@@ -32,6 +32,10 @@ class GamificationController extends Controller
     {
         $user = $request->user();
 
+        if (!$user->activePlan->has_gamification_access) {
+            return redirect()->route('dashboard')->with('error', 'Fitur Gamification tidak tersedia di plan Anda. Silakan upgrade plan.');
+        }
+
         // Update streak on dashboard visit
         $this->gamificationService->updateStreak($user);
 

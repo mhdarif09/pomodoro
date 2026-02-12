@@ -13,7 +13,9 @@ import {
     EyeIcon,
     EyeSlashIcon,
     SparklesIcon,
-    ChartBarIcon
+    ChartBarIcon,
+    BookOpenIcon,
+    TrophyIcon
 } from '@heroicons/react/24/solid';
 
 // --- Helper UI Components ---
@@ -145,6 +147,12 @@ const PlanItem = ({ plan }) => {
         has_productivity_report: plan.has_productivity_report ?? false,
         has_auto_open_url: plan.has_auto_open_url ?? false,
         has_quick_notes: plan.has_quick_notes ?? false,
+        max_guild_members: plan.max_guild_members || 10,
+        has_ai_guild_features: plan.has_ai_guild_features ?? false,
+        has_journal_access: plan.has_journal_access ?? true,
+        has_learning_hub_access: plan.has_learning_hub_access ?? true,
+        has_gamification_access: plan.has_gamification_access ?? true,
+        has_ai_genius_access: plan.has_ai_genius_access ?? false,
     });
 
     // Update form data when plan prop changes (e.g. after toggle status)
@@ -162,6 +170,12 @@ const PlanItem = ({ plan }) => {
             has_productivity_report: plan.has_productivity_report ?? false,
             has_auto_open_url: plan.has_auto_open_url ?? false,
             has_quick_notes: plan.has_quick_notes ?? false,
+            max_guild_members: plan.max_guild_members || 10,
+            has_ai_guild_features: plan.has_ai_guild_features ?? false,
+            has_journal_access: plan.has_journal_access ?? true,
+            has_learning_hub_access: plan.has_learning_hub_access ?? true,
+            has_gamification_access: plan.has_gamification_access ?? true,
+            has_ai_genius_access: plan.has_ai_genius_access ?? false,
         });
     }, [plan]);
 
@@ -350,6 +364,61 @@ const PlanItem = ({ plan }) => {
                             )}
                         </div>
 
+                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Guild & Personal Features</h3>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                    Max Guild Members
+                                </label>
+                                <Input
+                                    type="number"
+                                    value={data.max_guild_members}
+                                    onChange={e => setData('max_guild_members', e.target.value)}
+                                    className="rounded-xl"
+                                    min="0"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3">
+                                {[
+                                    { key: 'has_ai_guild_features', label: 'AI Guild Features', icon: SparklesIcon, desc: 'Akses fitur AI untuk Guild' },
+                                    { key: 'has_journal_access', label: 'Journal Access', icon: PencilSquareIcon, desc: 'Akses menu Journal' },
+                                    { key: 'has_learning_hub_access', label: 'Learning Hub', icon: BookOpenIcon, desc: 'Akses menu Learning Hub' },
+                                    { key: 'has_gamification_access', label: 'Gamification', icon: TrophyIcon, desc: 'Akses fitur Gamification' },
+                                    { key: 'has_ai_genius_access', label: 'AI Genius Access', icon: SparklesIcon, desc: 'Akses fitur AI Genius' },
+                                ].map((feat) => (
+                                    <div
+                                        key={feat.key}
+                                        onClick={() => setData(feat.key, !data[feat.key])}
+                                        className={clsx(
+                                            "flex items-start gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                                            data[feat.key]
+                                                ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20"
+                                                : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                        )}
+                                    >
+                                        <div className={clsx(
+                                            "p-2 rounded-xl shrink-0",
+                                            data[feat.key] ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-400"
+                                        )}>
+                                            <feat.icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between">
+                                                <span className="font-bold text-slate-900 dark:text-white">{feat.label}</span>
+                                                {data[feat.key] && <CheckIcon className="h-5 w-5 text-emerald-500" />}
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-0.5">{feat.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
                                 Marketing Features (Informasi List)
@@ -480,6 +549,12 @@ export default function Index({ auth, plans }) {
         has_productivity_report: false,
         has_auto_open_url: false,
         has_quick_notes: false,
+        max_guild_members: 10,
+        has_ai_guild_features: false,
+        has_journal_access: true,
+        has_learning_hub_access: true,
+        has_gamification_access: true,
+        has_ai_genius_access: false,
     });
 
     const handleFeaturesChange = (newFeatures) => {
@@ -663,6 +738,61 @@ export default function Index({ auth, plans }) {
                                                     />
                                                 </motion.div>
                                             )}
+                                        </div>
+
+                                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                                                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Guild & Personal Features</h3>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                                    Max Guild Members
+                                                </label>
+                                                <Input
+                                                    type="number"
+                                                    value={data.max_guild_members}
+                                                    onChange={e => setData('max_guild_members', e.target.value)}
+                                                    className="rounded-xl"
+                                                    min="0"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 gap-3">
+                                                {[
+                                                    { key: 'has_ai_guild_features', label: 'AI Guild Features', icon: SparklesIcon, desc: 'Akses fitur AI untuk Guild' },
+                                                    { key: 'has_journal_access', label: 'Journal Access', icon: PencilSquareIcon, desc: 'Akses menu Journal' },
+                                                    { key: 'has_learning_hub_access', label: 'Learning Hub', icon: BookOpenIcon, desc: 'Akses menu Learning Hub' },
+                                                    { key: 'has_gamification_access', label: 'Gamification', icon: TrophyIcon, desc: 'Akses fitur Gamification' },
+                                                    { key: 'has_ai_genius_access', label: 'AI Genius Access', icon: SparklesIcon, desc: 'Akses fitur AI Genius' },
+                                                ].map((feat) => (
+                                                    <div
+                                                        key={feat.key}
+                                                        onClick={() => setData(feat.key, !data[feat.key])}
+                                                        className={clsx(
+                                                            "flex items-start gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                                                            data[feat.key]
+                                                                ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20"
+                                                                : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                                        )}
+                                                    >
+                                                        <div className={clsx(
+                                                            "p-2 rounded-xl shrink-0",
+                                                            data[feat.key] ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-400"
+                                                        )}>
+                                                            <feat.icon className="h-5 w-5" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex justify-between">
+                                                                <span className="font-bold text-slate-900 dark:text-white">{feat.label}</span>
+                                                                {data[feat.key] && <CheckIcon className="h-5 w-5 text-emerald-500" />}
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 mt-0.5">{feat.desc}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
 
                                         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">

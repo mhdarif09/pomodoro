@@ -111,6 +111,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/subtasks/{subtask}', [\App\Http\Controllers\Api\SubtaskController::class, 'update'])->name('subtasks.update');
         Route::delete('/subtasks/{subtask}', [\App\Http\Controllers\Api\SubtaskController::class, 'destroy'])->name('subtasks.destroy');
 
+        // Tags
+        Route::get('/tags', [\App\Http\Controllers\Api\TagController::class, 'index'])->name('tags.index');
+        Route::post('/tags', [\App\Http\Controllers\Api\TagController::class, 'store'])->name('tags.store');
+        Route::delete('/tags/{tag}', [\App\Http\Controllers\Api\TagController::class, 'destroy'])->name('tags.destroy');
+
         // Documents
         Route::get('/documents/search', [\App\Http\Controllers\Api\DocumentController::class, 'search'])->name('documents.search');
         Route::get('/documents', [\App\Http\Controllers\Api\DocumentController::class, 'index'])->name('documents.index');
@@ -196,6 +201,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/affiliate', [AffiliateController::class, 'dashboard'])->name('affiliate.dashboard');
     Route::post('/affiliate/generate-code', [AffiliateController::class, 'generateCode'])->name('affiliate.generate-code');
 
+    // --- WALLET ---
+    Route::get('/wallet', [\App\Http\Controllers\WalletController::class, 'index'])->name('wallet.index');
+    Route::post('/wallet/redeem', [\App\Http\Controllers\WalletController::class, 'redeem'])->name('wallet.redeem');
+
+    // --- JOURNAL ---
+    Route::resource('journal', \App\Http\Controllers\ReflectionController::class)->only(['index', 'store', 'show']);
+
     // --- MEDIA API ---
     Route::get('/api/media/search', [\App\Http\Controllers\Api\MediaController::class, 'search'])->name('api.media.search');
 
@@ -214,11 +226,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::resource('guilds', \App\Http\Controllers\GuildController::class);
     Route::post('guilds/{guild}/join', [\App\Http\Controllers\GuildController::class, 'join'])->name('guilds.join');
-    Route::post('guilds/{guild}/leave', [\App\Http\Controllers\GuildController::class, 'leave'])->name('guilds.leave');
+Route::post('guilds/{guild}/leave', [\App\Http\Controllers\GuildController::class, 'leave'])->name('guilds.leave');
+Route::post('guilds/{guild}/invite', [\App\Http\Controllers\GuildController::class, 'invite'])->name('guilds.invite');
+
+    // Guild Tasks
+    Route::get('guilds/{guild}/tasks', [\App\Http\Controllers\GuildTaskController::class, 'index'])->name('guilds.tasks.index');
+    Route::post('guilds/{guild}/tasks', [\App\Http\Controllers\GuildTaskController::class, 'store'])->name('guilds.tasks.store');
+    Route::put('guilds/{guild}/tasks/{task}', [\App\Http\Controllers\GuildTaskController::class, 'update'])->name('guilds.tasks.update');
+    Route::delete('guilds/{guild}/tasks/{task}', [\App\Http\Controllers\GuildTaskController::class, 'destroy'])->name('guilds.tasks.destroy');
     
     // Guild Chat
     Route::get('guilds/{guild}/messages', [\App\Http\Controllers\GuildChatController::class, 'index'])->name('api.guilds.chat.index');
     Route::post('guilds/{guild}/messages', [\App\Http\Controllers\GuildChatController::class, 'store'])->name('api.guilds.chat.send');
+
+    // New Features
+    Route::get('guilds/{guild}/nexus', [\App\Http\Controllers\GuildController::class, 'focusNexus'])->name('guilds.nexus');
+    Route::get('guilds/{guild}/report', [\App\Http\Controllers\GuildController::class, 'report'])->name('guilds.report');
 });
 
 // --- AI ASSISTANT ROUTES (PREMIUM) ---
@@ -228,6 +251,9 @@ Route::middleware(['auth', 'premium'])->prefix('api/ai')->name('api.ai.')->group
     Route::delete('/sessions/{session}', [\App\Http\Controllers\ChatAssistantController::class, 'destroy'])->name('destroy-session');
     Route::get('/sessions/{session}/messages', [\App\Http\Controllers\ChatAssistantController::class, 'messages'])->name('messages');
     Route::post('/sessions/{session}/send', [\App\Http\Controllers\ChatAssistantController::class, 'sendMessage'])->name('send-message');
+    
+    // Text Editor Actions
+    Route::post('/text-action', [\App\Http\Controllers\Api\OpenAIController::class, 'processTextAction'])->name('text-action');
 });
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', AdminDashboardController::class)->name('dashboard');

@@ -29,6 +29,8 @@ class Task extends Model
         'reminder_at',
         'reminder_sent',
         'created_via',
+        'guild_id',
+        'is_archived',
     ];
 
     protected $casts = [
@@ -47,9 +49,35 @@ class Task extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function guild()
+    {
+        return $this->belongsTo(Guild::class);
+    }
     
     public function subtasks()
     {
         return $this->hasMany(Subtask::class);
+    }
+
+    /**
+     * Scope a query to only include personal tasks.
+     */
+    public function scopePersonal($query)
+    {
+        return $query->whereNull('guild_id');
+    }
+
+    /**
+     * Scope a query to only include guild tasks.
+     */
+    public function scopeGuild($query, $guildId)
+    {
+        return $query->where('guild_id', $guildId);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'task_tag');
     }
 }

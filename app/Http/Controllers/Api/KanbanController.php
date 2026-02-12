@@ -17,22 +17,18 @@ class KanbanController extends Controller
     public function index(Request $request)
     {
         $tasks = $request->user()->tasks()
+            ->personal()
             ->with('subtasks')
             ->when($request->status, function ($query, $status) {
                 return $query->where('status', $status);
             })
-            ->latest()
+            ->with(['subtasks', 'tags']) // Eager load tags
+            ->orderBy('is_completed', 'asc')
+            ->orderBy('priority', 'desc')
+            ->orderBy('due_date', 'asc')
             ->get();
 
-        $kanbanTasks = [
-            'todo' => $tasks->where('status', 'todo')->values(),
-            'in_progress' => $tasks->where('status', 'in_progress')->values(),
-            'done' => $tasks->where('status', 'done')->values(),
-        ];
-
-        return response()->json([
-            'tasks' => $kanbanTasks
-        ]);
+        return response()->json($tasks);
     }
 
     public function store(Request $request)
@@ -45,7 +41,10 @@ class KanbanController extends Controller
             'priority' => 'nullable|string',
             'status' => 'nullable|string|in:todo,in_progress,done',
             'estimated_minutes' => 'nullable|integer',
-            'document' => 'nullable|file|max:10240'
+            'document' => 'nullable|file|max:10240',
+            'notes' => 'nullable|string', // Rich text notes
+            'tags' => 'nullable|array',   // Array of tag IDs
+            'tags.*' => 'exists:tags,id',
         ]);
         
         $estimatedMinutes = $request->input('estimated_minutes', 25);
@@ -63,8 +62,14 @@ class KanbanController extends Controller
             'document_path' => $documentPath,
             'priority' => $validated['priority'] ?? 'Sedang', 
             'estimated_minutes' => $estimatedMinutes,
-            'status' => $validated['status'] ?? 'todo'
+            'status' => $validated['status'] ?? 'todo',
+            'notes' => $validated['notes'] ?? null,
         ]);
+
+        // Sync tags
+        if (!empty($validated['tags'])) {
+            $task->tags()->sync($validated['tags']);
+        }
 
         if ($request->has('subtasks') && is_array($request->subtasks)) {
             foreach ($request->subtasks as $subtaskData) {
@@ -86,7 +91,7 @@ class KanbanController extends Controller
 
         return response()->json([
             'message' => 'Tugas berhasil ditambahkan!',
-            'task' => $task->load('subtasks')
+            'task' => $task->load(['subtasks', 'tags'])
         ], 201);
     }
 
@@ -103,7 +108,9 @@ class KanbanController extends Controller
             'estimated_minutes' => 'nullable|integer',
             'notes' => 'nullable|string',
             'auto_open_url' => 'nullable|url',
-            'document' => 'nullable|file|max:10240'
+            'document' => 'nullable|file|max:10240',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
         ]);
 
         $estimatedMinutes = $request->input('estimated_minutes', $task->estimated_minutes);
@@ -121,6 +128,11 @@ class KanbanController extends Controller
                 'notes' => $request->input('notes'),
                 'auto_open_url' => $request->input('auto_open_url'),
             ]));
+
+            // Sync tags
+            if (isset($validated['tags'])) {
+                $task->tags()->sync($validated['tags']);
+            }
         });
 
         if ($task->wasChanged(['title', 'description', 'due_date'])) {
@@ -129,7 +141,7 @@ class KanbanController extends Controller
         
         return response()->json([
             'message' => 'Tugas berhasil diperbarui.',
-            'task' => $task->load('subtasks')
+            'task' => $task->load(['subtasks', 'tags'])
         ]);
     }
 

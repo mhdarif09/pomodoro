@@ -34,6 +34,7 @@ class User extends Authenticatable
         'is_premium',
         'is_banned',
         'premium_features',
+        'active_plan',
     ];
 
     protected $hidden = [
@@ -109,6 +110,34 @@ class User extends Authenticatable
             'productivity_report' => $this->canAccessFeature('productivity_report'),
             'auto_open_url' => $this->canAccessFeature('auto_open_url'),
             'quick_notes' => $this->canAccessFeature('quick_notes'),
+        ];
+    }
+
+    /**
+     * Get the active plan for the user.
+     * Returns the subscription plan or a default "Free" plan structure.
+     */
+    public function getActivePlanAttribute()
+    {
+        if ($this->is_premium && $this->subscription && $this->subscription->planDetail) {
+            return $this->subscription->planDetail;
+        }
+
+        // Default "Free" Plan Limits
+        return (object) [
+            'name' => 'Free',
+            'max_guild_members' => 10,
+            'has_ai_guild_features' => false,
+            'has_journal_access' => true,
+            'has_learning_hub_access' => true,
+            'has_gamification_access' => true,
+            'has_ai_genius_access' => false,
+            'max_subtasks' => 3,
+            'ai_chat_limit' => 0,
+            'has_ai_assistant' => false,
+            'has_productivity_report' => false,
+            'has_auto_open_url' => false,
+            'has_quick_notes' => false,
         ];
     }
 

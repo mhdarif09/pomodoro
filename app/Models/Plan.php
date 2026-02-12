@@ -22,7 +22,13 @@ class Plan extends Model
         'ai_chat_limit',
         'has_productivity_report',
         'has_auto_open_url',
-        'has_quick_notes'
+        'has_quick_notes',
+        'max_guild_members',
+        'has_ai_guild_features',
+        'has_journal_access',
+        'has_learning_hub_access',
+        'has_gamification_access',
+        'has_ai_genius_access',
     ];
 
     protected $casts = [
@@ -34,7 +40,13 @@ class Plan extends Model
         'ai_chat_limit' => 'integer',
         'has_productivity_report' => 'boolean',
         'has_auto_open_url' => 'boolean',
-        'has_quick_notes' => 'boolean'
+        'has_quick_notes' => 'boolean',
+        'max_guild_members' => 'integer',
+        'has_ai_guild_features' => 'boolean',
+        'has_journal_access' => 'boolean',
+        'has_learning_hub_access' => 'boolean',
+        'has_gamification_access' => 'boolean',
+        'has_ai_genius_access' => 'boolean',
     ];
 
     protected $attributes = [

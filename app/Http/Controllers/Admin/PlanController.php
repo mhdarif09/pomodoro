@@ -32,6 +32,11 @@ class PlanController extends Controller
             'has_productivity_report' => 'boolean',
             'has_auto_open_url' => 'boolean',
             'has_quick_notes' => 'boolean',
+            'max_guild_members' => 'nullable|integer|min:0',
+            'has_ai_guild_features' => 'boolean',
+            'has_journal_access' => 'boolean',
+            'has_learning_hub_access' => 'boolean',
+            'has_gamification_access' => 'boolean',
         ]);
 
         // Set default values untuk features jika tidak diisi
@@ -43,6 +48,12 @@ class PlanController extends Controller
         $validated['has_productivity_report'] = $request->has('has_productivity_report') ? $request->boolean('has_productivity_report') : false;
         $validated['has_auto_open_url'] = $request->has('has_auto_open_url') ? $request->boolean('has_auto_open_url') : false;
         $validated['has_quick_notes'] = $request->has('has_quick_notes') ? $request->boolean('has_quick_notes') : false;
+        $validated['max_guild_members'] = $validated['max_guild_members'] ?? 10;
+        $validated['has_ai_guild_features'] = $request->boolean('has_ai_guild_features');
+        $validated['has_journal_access'] = $request->boolean('has_journal_access', true);
+        $validated['has_learning_hub_access'] = $request->boolean('has_learning_hub_access', true);
+        $validated['has_gamification_access'] = $request->boolean('has_gamification_access', true);
+        $validated['has_ai_genius_access'] = $request->boolean('has_ai_genius_access', false);
 
         Plan::create($validated);
 
@@ -64,12 +75,22 @@ class PlanController extends Controller
             'has_productivity_report' => 'boolean',
             'has_auto_open_url' => 'boolean',
             'has_quick_notes' => 'boolean',
+            'max_guild_members' => 'nullable|integer|min:0',
+            'has_ai_guild_features' => 'boolean',
+            'has_journal_access' => 'boolean',
+            'has_learning_hub_access' => 'boolean',
+            'has_gamification_access' => 'boolean',
         ]);
 
         $validated['has_ai_assistant'] = $request->boolean('has_ai_assistant');
         $validated['has_productivity_report'] = $request->boolean('has_productivity_report');
         $validated['has_auto_open_url'] = $request->boolean('has_auto_open_url');
         $validated['has_quick_notes'] = $request->boolean('has_quick_notes');
+        $validated['has_ai_guild_features'] = $request->boolean('has_ai_guild_features');
+        $validated['has_journal_access'] = $request->boolean('has_journal_access');
+        $validated['has_learning_hub_access'] = $request->boolean('has_learning_hub_access');
+        $validated['has_gamification_access'] = $request->boolean('has_gamification_access');
+        $validated['has_ai_genius_access'] = $request->boolean('has_ai_genius_access');
         $validated['is_active'] = $request->boolean('is_active');
 
         $plan->update($validated);

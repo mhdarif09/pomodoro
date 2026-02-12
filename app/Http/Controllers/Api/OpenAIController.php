@@ -182,6 +182,59 @@ PROMPT;
         return $this->generateAnswerFromContext("Tulis bagian {$section} untuk topik di atas.", $context, $systemPrompt);
     }
 
+    /**
+     * Process text actions for Notion-like editor (Slash Commands)
+     */
+    public function processTextAction(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|string|in:continue,summarize,fix_grammar,simplify,brainstorm,translate',
+            'text' => 'required|string|max:5000',
+            'context' => 'nullable|string|max:2000', // Preceding text for context
+        ]);
+
+        $action = $validated['action'];
+        $text = $validated['text'];
+        $context = $validated['context'] ?? '';
+
+        $prompts = [
+            'continue' => "Lanjutkan tulisan berikut ini secara natural, mengikuti gaya dan tone yang sama. Jangan mengulang kalimat terakhir.",
+            'summarize' => "Buatkan ringkasan singkat dan padat dari teks berikut dalam bentuk bullet points.",
+            'fix_grammar' => "Perbaiki tata bahasa, ejaan, dan tanda baca dari teks berikut agar lebih baku dan profesional, tanpa mengubah makna aslinya.",
+            'simplify' => "Sederhanakan kalimat-kalimat dalam teks berikut agar lebih mudah dipahami oleh orang awam (EL5).",
+            'brainstorm' => "Berdasarkan topik dalam teks ini, berikan 5-7 ide kreatif atau langkah selanjutnya yang bisa dilakukan.",
+            'translate' => "Terjemahkan teks berikut ke dalam Bahasa Indonesia yang formal dan natural (atau ke Inggris jika input sudah Indonesia).",
+        ];
+
+        $systemPrompt = "Anda adalah Asisten Penulis AI Pro. Tugas Anda adalah membantu pengguna mengedit dan mengembangkan tulisan mereka. Berikan HANYA hasil editan/tulisan lanjutan tanpa basa-basi atau intro. Gunakan format Markdown jika perlu (bold, italic, list).";
+        
+        $userMessage = $prompts[$action] . "\n\n---\nTEKS:\n" . $text;
+        
+        if ($context && $action === 'continue') {
+            $userMessage = "Konteks sebelumnya:\n{$context}\n\n" . $userMessage;
+        }
+
+        try {
+            $response = $this->httpClient->post($this->apiBaseUrl, [
+                'model' => 'gpt-4o-mini', // Use faster model for editor actions
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $userMessage]
+                ],
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+            ]);
+
+            $response->throw();
+            return response()->json([
+                'result' => $response->json('choices.0.message.content')
+            ]);
+
+        } catch (RequestException $e) {
+            return $this->handleApiException($e, 'Text Action');
+        }
+    }
+
     private function extractTableFromSheet($file): string
     {
         Log::info("Attempting to parse spreadsheet file: " . $file->getClientOriginalName());

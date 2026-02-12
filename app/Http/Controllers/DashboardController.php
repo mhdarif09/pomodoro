@@ -26,14 +26,14 @@ class DashboardController extends Controller
         $endOfWeek = Carbon::now()->endOfWeek();
         
         $taskStats = [
-            'total' => $user->tasks()->count(),
-            'completed' => $user->tasks()->where('is_completed', true)->count(),
-            'dueThisWeek' => $user->tasks()->where('is_completed', false)->whereBetween('due_date', [$startOfWeek, $endOfWeek])->count(),
-            'overdue' => $user->tasks()->where('is_completed', false)->where('due_date', '<', $today)->count(),
+            'total' => $user->tasks()->personal()->count(),
+            'completed' => $user->tasks()->personal()->where('is_completed', true)->count(),
+            'dueThisWeek' => $user->tasks()->personal()->where('is_completed', false)->whereBetween('due_date', [$startOfWeek, $endOfWeek])->count(),
+            'overdue' => $user->tasks()->personal()->where('is_completed', false)->where('due_date', '<', $today)->count(),
         ];
 
         // --- Logika Pengambilan Data dengan Pagination ---
-        $tasksQuery = $user->tasks()->with('subtasks');
+        $tasksQuery = $user->tasks()->personal()->with('subtasks');
         $filter = $request->input('filter', 'all');
 
         switch ($filter) {

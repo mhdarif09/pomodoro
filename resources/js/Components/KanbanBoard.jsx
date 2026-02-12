@@ -263,10 +263,25 @@ export default function KanbanBoard({ initialTasks }) {
         }));
 
         try {
-            const response = await axios.post(route('api.tasks.store'), taskData);
+            const formData = new FormData();
+            for (const key in taskData) {
+                if (key === 'subtasks' && Array.isArray(taskData[key])) {
+                    taskData[key].forEach((subtask, index) => {
+                        formData.append(`subtasks[${index}][title]`, subtask.title);
+                    });
+                } else {
+                    formData.append(key, taskData[key]);
+                }
+            }
+
+            const response = await axios.post(route('tasks.store'), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            // Optimistic update correction or just refresh
+            // For now, let's just update the local state with the returned task which includes ID and tags
             const newTask = response.data.task;
 
-            // Update optimistic task with real data
             setTasks(prev => {
                 const updatedList = (prev[taskData.status] || []).map(t =>
                     t.id === tempId ? newTask : t
@@ -275,7 +290,6 @@ export default function KanbanBoard({ initialTasks }) {
             });
 
             if (onSuccessCallback) onSuccessCallback();
-
         } catch (error) {
             console.error('Failed to create task:', error);
             // Revert optimistic update

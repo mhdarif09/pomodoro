@@ -57,31 +57,31 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
                     {/* Hero Section */}
-                    <div className="relative overflow-hidden rounded-[2.5rem] bg-indigo-900 text-white shadow-2xl">
-                        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
-                        <div className="absolute top-0 left-0 -ml-20 -mt-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+                    <div className="relative overflow-hidden rounded-[2.5rem] bg-emerald-900 text-white shadow-2xl">
+                        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+                        <div className="absolute top-0 left-0 -ml-20 -mt-20 w-72 h-72 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
                         <div className="relative p-10 sm:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
                             <div className="max-w-2xl">
                                 <h1 className="text-4xl sm:text-5xl font-[900] tracking-tight mb-4">
                                     Join a Guild. <br />
-                                    <span className="text-indigo-300">Conquer Together.</span>
+                                    <span className="text-emerald-300">Conquer Together.</span>
                                 </h1>
-                                <p className="text-lg text-indigo-100 font-medium leading-relaxed mb-8 max-w-lg">
+                                <p className="text-lg text-emerald-100 font-medium leading-relaxed mb-8 max-w-lg">
                                     Collaborate on missions, compete in weekly leaderboards, and boost your productivity with social accountability.
                                 </p>
 
                                 {userGuild ? (
                                     <Link
                                         href={route('guilds.show', userGuild.id)}
-                                        className="apple-button px-8 py-4 bg-white text-indigo-900 font-bold shadow-xl shadow-indigo-900/20 hover:bg-indigo-50"
+                                        className="apple-button px-8 py-4 bg-white text-emerald-900 font-bold shadow-xl shadow-emerald-900/20 hover:bg-emerald-50"
                                     >
                                         Go to My Guild
                                     </Link>
                                 ) : (
                                     <button
                                         onClick={() => setShowCreateModal(true)}
-                                        className="apple-button px-8 py-4 bg-teal-400 text-indigo-950 font-bold shadow-xl shadow-teal-400/20 hover:bg-teal-300"
+                                        className="apple-button px-8 py-4 bg-teal-400 text-emerald-950 font-bold shadow-xl shadow-teal-400/20 hover:bg-teal-300"
                                     >
                                         <PlusIcon className="w-5 h-5 mr-2" />
                                         Create New Guild
@@ -106,7 +106,7 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                                 placeholder="Search guilds..."
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
                             />
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                         {filteredGuilds.map(guild => (
                             <div key={guild.id} className="group bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                                 <div className="flex items-start justify-between mb-6">
-                                    <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-4xl shadow-inner">
+                                    <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-4xl shadow-inner">
                                         {guild.emblem}
                                     </div>
                                     <div className="flex flex-col items-end">
@@ -143,7 +143,7 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                                             href={route('guilds.join', guild.id)}
                                             method="post"
                                             as="button"
-                                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors"
+                                            className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                                         >
                                             Join Guild
                                         </Link>
@@ -183,7 +183,7 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                                             type="button"
                                             key={emoji}
                                             onClick={() => setData('emblem', emoji)}
-                                            className={`h-10 rounded-lg flex items-center justify-center text-xl transition-all ${data.emblem === emoji ? 'bg-indigo-100 border-2 border-indigo-500' : 'hover:bg-slate-100'}`}
+                                            className={`h-10 rounded-lg flex items-center justify-center text-xl transition-all ${data.emblem === emoji ? 'bg-emerald-100 border-2 border-emerald-500' : 'hover:bg-slate-100'}`}
                                         >
                                             {emoji}
                                         </button>
@@ -213,7 +213,7 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
                                 >
                                     {processing ? 'Creating...' : 'Create Guild'}
                                 </button>

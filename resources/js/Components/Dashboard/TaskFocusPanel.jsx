@@ -4,7 +4,7 @@ import {
     CheckCircleIcon, TrashIcon, PlayIcon, ClockIcon,
     ChevronDownIcon, ChevronUpIcon, ChevronRightIcon,
     ListBulletIcon, CheckIcon, LockClosedIcon, PlusIcon, XMarkIcon, LinkIcon,
-    EllipsisHorizontalIcon
+    EllipsisHorizontalIcon, ExclamationCircleIcon, CalendarIcon, TagIcon
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,27 +28,22 @@ import { useLanguage } from '../../Contexts/LanguageContext';
 
 // --- Components ---
 
+// Import NotionEditor
+import NotionEditor from '../TodoList/NotionEditor';
+
+// Import SlideOver
+import SlideOver from '../SlideOver';
+
 // 1. Task Card (Pure UI)
-function TaskCard({ task, expandedTaskId, onToggleExpand, onToggleComplete, onStartFocus, onToggleSubtask, onAddSubtask, onUpdateTask, onDeleteTask, auth, t, isOverlay, listeners, attributes, style, setNodeRef }) {
-    // Quick Notes Debouncer
-    const updateNotes = useMemo(() => debounce((val) => onUpdateTask(task.id, { notes: val }), 1000), [task.id]);
-    // Auto URL Debouncer
-    const updateUrl = useMemo(() => debounce((val) => onUpdateTask(task.id, { auto_open_url: val }), 1000), [task.id]);
-
-    const formatDuration = (minutes) => {
-        if (!minutes) return '25m';
-        const hrs = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-    };
-
+function TaskCard({ task, onToggleComplete, onStartFocus, onToggleSubtask, onAddSubtask, onUpdateTask, onDeleteTask, auth, t, isOverlay, listeners, attributes, style, setNodeRef, onClick }) {
+    // Tags Display Only
     return (
         <div ref={setNodeRef} style={style} {...attributes}
-            className={`group relative apple-glass rounded-[2rem] border-none shadow-sm transition-all duration-300 overflow-hidden bg-white/40 dark:bg-white/5 ${isOverlay ? 'shadow-2xl scale-105 cursor-grabbing z-50' : 'hover:shadow-lg'}`}
+            className={`group relative apple-glass rounded-[2rem] border-none shadow-sm transition-all duration-300 overflow-hidden bg-white/40 dark:bg-slate-800/40 ${isOverlay ? 'shadow-2xl scale-105 cursor-grabbing z-50' : 'hover:shadow-lg'}`}
         >
             {/* Header / Draggable Area */}
             <div
-                onClick={() => onToggleExpand(task.id)}
+                onClick={onClick}
                 {...listeners} // Apply drag listeners here
                 className="p-5 cursor-pointer touch-none select-none relative"
             >
@@ -67,9 +62,30 @@ function TaskCard({ task, expandedTaskId, onToggleExpand, onToggleComplete, onSt
                     </button>
 
                     <div className="flex-1 min-w-0">
-                        <h4 className={`text-sm font-bold tracking-tight transition-all truncate ${task.is_completed ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'}`}>
-                            {task.title}
-                        </h4>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h4 className={`text-sm font-bold tracking-tight transition-all truncate ${task.is_completed ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'}`}>
+                                {task.title}
+                            </h4>
+                            {/* Tags Display */}
+                            {task.tags && task.tags.slice(0, 3).map(tag => (
+                                <span key={tag.id} className={`text-[9px] px-2 py-0.5 rounded-full border border-transparent ${tag.color === '#3B82F6' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                                    tag.color === '#10B981' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                                        tag.color === '#F59E0B' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' :
+                                            'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                                    }`}>
+                                    {tag.name}
+                                </span>
+                            ))}
+                            {/* Priority Badge */}
+                            {task.priority && (
+                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${task.priority === 'Tinggi' || task.priority === 'Mendesak' ? 'bg-red-100 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50' :
+                                    task.priority === 'Sedang' ? 'bg-amber-100 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/50' :
+                                        'bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/50'
+                                    }`}>
+                                    {task.priority}
+                                </span>
+                            )}
+                        </div>
 
                         <div className="flex items-center gap-3 mt-2">
                             {task.subtasks?.length > 0 && (
@@ -94,115 +110,146 @@ function TaskCard({ task, expandedTaskId, onToggleExpand, onToggleComplete, onSt
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
 
-            {/* Expanded Content */}
-            <AnimatePresence>
-                {expandedTaskId === task.id && !isOverlay && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/30 dark:bg-slate-900/20 cursor-auto"
-                        onPointerDown={(e) => e.stopPropagation()} // Stop Drag from content
-                    >
-                        <div className="p-5 space-y-5">
-                            {/* Focus Button */}
-                            {!task.is_completed && (
-                                <button
-                                    onClick={() => onStartFocus(task)}
-                                    className="apple-button w-full bg-slate-900 dark:bg-teal-500 text-white flex items-center justify-between p-4 shadow-xl active:scale-[0.98]"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <PlayIcon className="w-5 h-5 fill-current" />
-                                        <span className="text-[12px] font-extrabold tracking-tight">{t('start_focus') || 'Start Focus'}</span>
-                                    </div>
-                                    <div className="bg-white/10 px-3 py-1 rounded-full text-[10px] font-black tracking-tight border border-white/10">
-                                        {formatDuration(task.estimated_minutes || 25)}
-                                    </div>
-                                </button>
-                            )}
+// 2. Task Details Content (Rendered inside SlideOver)
+function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, onUpdateTask, onDeleteTask, t }) {
+    // Quick Notes Debouncer
+    const updateNotes = useMemo(() => debounce((val) => onUpdateTask(task.id, { notes: val }), 1000), [task.id]);
 
-                            {/* Subtasks */}
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('subtasks') || 'Sub-Tasks'}</h5>
-                                    <span className="text-[9px] font-bold text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full">
-                                        {task.subtasks?.filter(s => s.is_completed).length || 0}/{task.subtasks?.length || 0}
-                                    </span>
-                                </div>
-                                {task.subtasks?.map(sub => (
-                                    <div key={sub.id} className="flex items-center gap-3 p-1 hover:bg-white/5 rounded-xl">
-                                        <button
-                                            onClick={() => onToggleSubtask(task.id, sub.id, sub.is_completed)}
-                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${sub.is_completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300'}`}
-                                        >
-                                            {sub.is_completed && <CheckIcon className="w-3.5 h-3.5" />}
-                                        </button>
-                                        <span className={`text-[13px] font-semibold flex-1 ${sub.is_completed ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200'}`}>{sub.title}</span>
-                                    </div>
-                                ))}
-                                {!task.is_completed && (
-                                    <div className="mt-3 space-y-2">
-                                        <form onSubmit={(e) => { e.preventDefault(); onAddSubtask(task.id, e.target.subtask.value); e.target.subtask.value = ''; }} className="relative">
-                                            <input name="subtask" type="text" placeholder={t('placeholder_add_subtask') || "Add step..."} className="w-full bg-white/5 dark:bg-black/20 border-none rounded-2xl py-2.5 pl-4 pr-10 text-xs font-semibold focus:ring-2 focus:ring-teal-500/10" />
-                                            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-teal-500"><PlusIcon className="w-4 h-4" /></button>
-                                        </form>
-                                        {/* AI Suggest Button */}
-                                        <button
-                                            onClick={async () => {
-                                                if (confirm('AI akan menyarankan langkah-langkah untuk tugas ini. Lanjutkan?')) {
-                                                    try {
-                                                        const res = await axios.post(route('api.tasks.suggest-breakdown', task.id));
-                                                        if (res.data.subtasks) {
-                                                            // Reload or update local
-                                                            res.data.subtasks.forEach(title => onAddSubtask(task.id, title));
-                                                        }
-                                                    } catch (err) {
-                                                        alert('Gagal mendapatkan saran AI.');
-                                                    }
-                                                }
-                                            }}
-                                            className="w-full py-2 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10 rounded-xl transition-colors"
-                                        >
-                                            <span className="text-lg">✨</span>
-                                            {t('ai_suggest_subtasks') || 'Saran AI'}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+    return (
+        <div className="space-y-8">
+            {/* Properties Row (Notion Style) */}
+            <div className="grid grid-cols-[120px_1fr] gap-y-3 text-[13px] mb-6 border-b border-slate-100 dark:border-slate-800 pb-6">
 
-                            {/* Quick Notes */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('quick_notes') || 'Quick Notes'}</h5>
-                                    {!auth?.user?.premium_features?.quick_notes && <LockClosedIcon className="w-2.5 h-2.5 text-amber-500" />}
-                                </div>
-                                <div className="relative">
-                                    <textarea
-                                        defaultValue={task.notes}
-                                        disabled={!auth?.user?.premium_features?.quick_notes}
-                                        onChange={(e) => updateNotes(e.target.value)}
-                                        placeholder={auth?.user?.premium_features?.quick_notes ? (t('placeholder_notes') || "Write notes here...") : "Premium Feature"}
-                                        className="w-full bg-white/5 dark:bg-black/20 border-none rounded-[1.5rem] p-4 text-[13px] text-slate-600 dark:text-slate-300 min-h-[100px] focus:ring-2 focus:ring-teal-500/10 disabled:opacity-60"
-                                    />
-                                    {!auth?.user?.premium_features?.quick_notes && (
-                                        <Link href={route('subscribe.index')} className="absolute inset-0 flex items-center justify-center bg-slate-900/5 rounded-2xl group-hover:bg-slate-900/10 transition-all opacity-0 hover:opacity-100">
-                                            <span className="bg-white/90 px-3 py-1 rounded-full text-[9px] font-black uppercase text-amber-600 shadow-xl">{t('upgrade_premium') || 'Upgrade'}</span>
-                                        </Link>
-                                    )}
-                                </div>
-                            </div>
+                {/* Priority */}
+                <div className="text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <ExclamationCircleIcon className="w-4 h-4" />
+                    {t('priority') || 'Priority'}
+                </div>
+                <div className="flex items-center">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${task.priority === 'Tinggi' || task.priority === 'Mendesak' ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300' :
+                        task.priority === 'Sedang' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' :
+                            'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
+                        }`}>
+                        {task.priority || 'Normal'}
+                    </span>
+                </div>
 
-                            {/* Actions Footer */}
-                            <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
-                                <button onClick={() => onDeleteTask(task)} className="text-xs text-red-400 hover:text-red-500 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                    <TrashIcon className="w-3.5 h-3.5" /> {t('delete') || 'Delete'}
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
+                {/* Due Date */}
+                <div className="text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4" />
+                    {t('due_date') || 'Due Date'}
+                </div>
+                <div className="text-slate-700 dark:text-slate-200 font-medium">
+                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}
+                </div>
+
+                {/* Tags */}
+                <div className="text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <TagIcon className="w-4 h-4" />
+                    {t('tags') || 'Tags'}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                    {task.tags && task.tags.length > 0 ? task.tags.map(tag => (
+                        <span key={tag.id} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-xs text-slate-600 dark:text-slate-300 font-medium">
+                            {tag.name}
+                        </span>
+                    )) : <span className="text-slate-400 italic">Empty</span>}
+                </div>
+            </div>
+
+            {/* Focus Button */}
+            {!task.is_completed && (
+                <button
+                    onClick={() => onStartFocus(task)}
+                    className="apple-button w-full bg-slate-900 dark:bg-teal-500 text-white flex items-center justify-between p-4 shadow-xl active:scale-[0.98]"
+                >
+                    <div className="flex items-center gap-3">
+                        <PlayIcon className="w-5 h-5 fill-current" />
+                        <span className="text-[12px] font-extrabold tracking-tight">{t('start_focus') || 'Start Focus'}</span>
+                    </div>
+                    <div className="bg-white/10 px-3 py-1 rounded-full text-[10px] font-black tracking-tight border border-white/10">
+                        {task.estimated_minutes || 25}m
+                    </div>
+                </button>
+            )}
+
+            {/* Subtasks */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t('subtasks') || 'Sub-Tasks'}</h5>
+                    <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-900/20">
+                        {task.subtasks?.filter(s => s.is_completed).length || 0}/{task.subtasks?.length || 0}
+                    </span>
+                </div>
+                {task.subtasks?.map(sub => (
+                    <div key={sub.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors group">
+                        <button
+                            onClick={() => onToggleSubtask(task.id, sub.id, sub.is_completed)}
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${sub.is_completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 group-hover:border-teal-500'}`}
+                        >
+                            {sub.is_completed && <CheckIcon className="w-3.5 h-3.5" />}
+                        </button>
+                        <span className={`text-[14px] font-medium flex-1 ${sub.is_completed ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200'}`}>{sub.title}</span>
+                    </div>
+                ))}
+                {!task.is_completed && (
+                    <div className="mt-3 space-y-2">
+                        <form onSubmit={(e) => { e.preventDefault(); onAddSubtask(task.id, e.target.subtask.value); e.target.subtask.value = ''; }} className="relative">
+                            <input name="subtask" type="text" placeholder={t('placeholder_add_subtask') || "Add step..."} className="w-full bg-slate-50 dark:bg-black/20 border-none rounded-2xl py-3 pl-4 pr-10 text-sm font-medium focus:ring-2 focus:ring-teal-500/10 placeholder-slate-400" />
+                            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-white dark:bg-slate-700 rounded-lg text-teal-500 shadow-sm"><PlusIcon className="w-4 h-4" /></button>
+                        </form>
+                        {/* AI Suggest - Premium Only */}
+                        {auth.user?.is_premium && (
+                            <button
+                                onClick={async () => {
+                                    if (confirm('AI akan menyarankan langkah-langkah untuk tugas ini. Lanjutkan?')) {
+                                        try {
+                                            const res = await axios.post(route('api.tasks.suggest-breakdown', task.id));
+                                            if (res.data.subtasks) {
+                                                res.data.subtasks.forEach(title => onAddSubtask(task.id, title));
+                                            }
+                                        } catch (err) {
+                                            alert('Gagal mendapatkan saran AI.');
+                                        }
+                                    }
+                                }}
+                                className="w-full py-2.5 flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/20 rounded-xl transition-colors"
+                            >
+                                <span className="text-lg">✨</span>
+                                {t('ai_suggest_subtasks') || 'Saran AI'}
+                            </button>
+                        )}
+                    </div>
                 )}
-            </AnimatePresence>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Notes</h5>
+                </div>
+                <div className="relative overflow-hidden rounded-[1.5rem] bg-slate-50 dark:bg-black/20 focus-within:ring-2 focus-within:ring-teal-500/10 transition-all border border-slate-100 dark:border-white/5">
+                    <NotionEditor
+                        content={task.notes}
+                        onChange={(html) => updateNotes(html)}
+                        enableAi={auth.user?.is_premium}
+                    />
+                </div>
+            </div>
+
+            {/* Actions Footer */}
+            <div className="flex justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="text-xs text-slate-400 font-medium">
+                    Created {new Date(task.created_at).toLocaleDateString()}
+                </div>
+                <button onClick={() => onDeleteTask(task)} className="text-xs text-red-500 hover:text-red-600 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors">
+                    <TrashIcon className="w-4 h-4" /> {t('delete') || 'Delete Task'}
+                </button>
+            </div>
         </div>
     );
 }
@@ -220,6 +267,7 @@ function SortableTaskItem({ task, ...props }) {
             attributes={attributes}
             style={style}
             setNodeRef={setNodeRef}
+            onClick={() => props.onSelectTask(task)}
         />
     );
 }
@@ -239,7 +287,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
     const { t } = useLanguage();
     // Local State for Optimistic Updates
     const [localTasks, setLocalTasks] = useState(tasks.data || []);
-    const [expandedTaskId, setExpandedTaskId] = useState(null);
+    const [selectedTask, setSelectedTask] = useState(null); // For SlideOver
     const [processingId, setProcessingId] = useState(null);
     const [addingToColumn, setAddingToColumn] = useState(null);
     const [activeId, setActiveId] = useState(null); // Dragging ID
@@ -247,6 +295,9 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
     useEffect(() => { setLocalTasks(tasks.data || []); }, [tasks.data]);
 
     const activeTask = useMemo(() => localTasks.find(t => t.id === activeId), [activeId, localTasks]);
+    // Get latest version of selected task from localTasks
+    const currentSelectedTask = useMemo(() => localTasks.find(t => t.id === selectedTask?.id), [selectedTask, localTasks]);
+
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }) // Prevent accidental drag
@@ -330,6 +381,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
     const handleDeleteTask = (task) => {
         if (!confirm('Delete this task?')) return;
         setLocalTasks(prev => prev.filter(t => t.id !== task.id));
+        setSelectedTask(null); // Close sidebar if deleted
         axios.delete(route('api.tasks.destroy', task.id));
     };
 
@@ -360,8 +412,8 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                     <div className="space-y-4 min-h-[100px] overflow-y-auto max-h-[calc(100vh-300px)]">
                                         {colTasks.map(task => (
                                             <SortableTaskItem
-                                                key={task.id} task={task} expandedTaskId={expandedTaskId}
-                                                onToggleExpand={(id) => setExpandedTaskId(expandedTaskId === id ? null : id)}
+                                                key={task.id} task={task}
+                                                onSelectTask={setSelectedTask} // Set selected task for SlideOver
                                                 onToggleComplete={handleToggleComplete} onStartFocus={onStartFocus}
                                                 onToggleSubtask={handleToggleSubtask} onAddSubtask={handleAddSubtask}
                                                 onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask}
@@ -393,6 +445,28 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                     })}
                 </div>
             </div>
+
+            {/* Task Details SlideOver */}
+            <SlideOver
+                isOpen={!!selectedTask}
+                onClose={() => setSelectedTask(null)}
+                title={selectedTask?.title || 'Task Details'}
+            >
+                {currentSelectedTask ? (
+                    <TaskDetailContent
+                        task={currentSelectedTask}
+                        onStartFocus={onStartFocus}
+                        onToggleSubtask={handleToggleSubtask}
+                        onAddSubtask={handleAddSubtask}
+                        onUpdateTask={handleUpdateTask}
+                        onDeleteTask={handleDeleteTask}
+                        t={t}
+                    />
+                ) : (
+                    <div className="p-4 text-center text-slate-500">Task details not found.</div>
+                )}
+            </SlideOver>
+
             {createPortal(
                 <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
                     {activeTask ? <TaskCard task={activeTask} isOverlay t={t} expandedTaskId={null} /> : null}
