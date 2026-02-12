@@ -515,7 +515,7 @@ export default function Authenticated({ children, header }) {
                                     <Menu as="div" className="relative">
                                         <Menu.Button className="w-full bg-white dark:bg-slate-800 rounded-xl p-3 flex items-center gap-3 shadow-sm border border-slate-100 dark:border-slate-700">
                                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-xs font-bold text-white shadow-sm">
-                                                {workspaceMode === 'personal' ? user.name.charAt(0) : currentTeam?.name.charAt(0)}
+                                                {workspaceMode === 'personal' ? user.name.charAt(0) : (currentGuild?.name || 'G').charAt(0)}
                                             </div>
                                             <div className="flex-1 text-left">
                                                 <p className="text-sm font-bold text-slate-800 dark:text-white">
