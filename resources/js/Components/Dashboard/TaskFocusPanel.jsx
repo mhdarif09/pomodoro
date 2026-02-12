@@ -115,7 +115,7 @@ function TaskCard({ task, onToggleComplete, onStartFocus, onToggleSubtask, onAdd
 }
 
 // 2. Task Details Content (Rendered inside SlideOver)
-function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, onUpdateTask, onDeleteTask, t }) {
+function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, onUpdateTask, onDeleteTask, t, auth }) {
     // Quick Notes Debouncer
     const updateNotes = useMemo(() => debounce((val) => onUpdateTask(task.id, { notes: val }), 1000), [task.id]);
 
@@ -462,6 +462,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                         onUpdateTask={handleUpdateTask}
                         onDeleteTask={handleDeleteTask}
                         t={t}
+                        auth={auth}
                     />
                 ) : (
                     <div className="p-4 text-center text-slate-500">Task details not found.</div>
