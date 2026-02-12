@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { LanguageProvider } from './Contexts/LanguageContext';
+import ErrorBoundary from './Components/ErrorBoundary';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -15,9 +16,11 @@ createInertiaApp({
         const root = createRoot(el);
 
         root.render(
-            <LanguageProvider>
-                <App {...props} />
-            </LanguageProvider>
+            <ErrorBoundary>
+                <LanguageProvider>
+                    <App {...props} />
+                </LanguageProvider>
+            </ErrorBoundary>
         );
     },
     progress: {

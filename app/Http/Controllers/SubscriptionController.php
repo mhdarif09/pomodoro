@@ -39,6 +39,8 @@ class SubscriptionController extends Controller
         'promo_code' => 'nullable|string|max:20',
     ]);
 
+    set_time_limit(0); // Prevent timeout during payment gateway communication
+
     $userId = auth()->id();
     $user = auth()->user();
     
@@ -179,6 +181,8 @@ class SubscriptionController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'promo_code' => 'nullable|string|max:20',
         ]);
+
+        set_time_limit(0);
 
         $userId = auth()->id();
         $user = auth()->user();

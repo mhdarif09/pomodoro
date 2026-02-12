@@ -28,6 +28,7 @@ class DetermineTaskPriority implements ShouldQueue
     public function handle(OpenAIService $openAiService): void
     {
         try {
+            set_time_limit(0); 
             $priority = $openAiService->determineTaskPriority(
                 $this->task->title,
                 $this->task->description ?? '',

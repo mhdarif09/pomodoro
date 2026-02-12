@@ -14,6 +14,7 @@ class ReportController extends Controller
 {
     public function index(Request $request, FocusAnalyticsService $analyticsService)
     {
+        set_time_limit(0);
         // JIKA REQUEST ADALAH AJAX/JSON (DARI AXIOS REACT), KIRIM DATA STATS
         if ($request->wantsJson()) {
             $user = auth()->user();

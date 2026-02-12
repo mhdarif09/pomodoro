@@ -205,6 +205,7 @@ class KanbanController extends Controller
 
     public function suggestBreakdown(Task $task, TaskAIService $taskAIService)
     {
+        set_time_limit(0);
         try {
             $this->authorize('update', $task);
 

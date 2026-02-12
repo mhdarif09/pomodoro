@@ -24,6 +24,7 @@ class VoiceController extends Controller
      */
     public function transcribe(Request $request)
     {
+        set_time_limit(0);
         $request->validate([
             'audio' => 'required|file|mimes:webm,wav,opus',
         ]);

@@ -18,6 +18,7 @@ class DashboardController extends Controller
         private const FREE_REFLECTION_LIMIT = 10;
 
     public function index(Request $request, \App\Services\DeadlineRiskService $riskService) {
+        set_time_limit(0);
         $user = auth()->user();
         
         // --- Statistik Total dihitung di Backend ---
@@ -33,7 +34,7 @@ class DashboardController extends Controller
         ];
 
         // --- Logika Pengambilan Data dengan Pagination ---
-        $tasksQuery = $user->tasks()->personal()->with('subtasks');
+        $tasksQuery = $user->tasks()->personal()->with('subtasks', 'tags');
         $filter = $request->input('filter', 'all');
 
         switch ($filter) {
@@ -59,6 +60,14 @@ class DashboardController extends Controller
         $remainingQuota = self::FREE_REFLECTION_LIMIT - $usageCount;
         
         // --- Deadline/Workload Risk Detection ---
+        // Pre-load subtasks for risk service to avoid N+1
+        $user->load(['tasks' => function($query) {
+            $query->where('is_completed', false)
+                  ->whereNotNull('due_date')
+                  ->where('due_date', '<=', now()->addHours(48))
+                  ->with('subtasks');
+        }]);
+        
         $deadlineRisks = $riskService->detectRisks($user);
         
         $showUpgradeModal = !$request->session()->get('dismissed_upgrade_modal', false) &&

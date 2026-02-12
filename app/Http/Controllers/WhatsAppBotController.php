@@ -29,6 +29,7 @@ class WhatsAppBotController extends Controller
     public function handle(Request $request): JsonResponse
     {
         try {
+            set_time_limit(0); 
             $sender = $request->input('sender');
             $message = $request->input('message');
             $name = $request->input('name');

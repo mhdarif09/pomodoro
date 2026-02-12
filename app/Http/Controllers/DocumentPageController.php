@@ -46,6 +46,7 @@ class DocumentPageController extends Controller
 
     public function exportDocx(Document $document)
     {
+        set_time_limit(0);
         $phpWord = new PhpWord();
         $section = $phpWord->addSection();
         $content = $document->content;

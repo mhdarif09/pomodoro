@@ -167,6 +167,7 @@ class GamificationController extends Controller
      */
     public function rescue(Request $request) 
     {
+        set_time_limit(0);
         $user = $request->user();
         $plan = $request->input('plan');
 

@@ -19,23 +19,33 @@ class GuildController extends Controller
     /**
      * Display all guilds
      */
-    public function index()
+    public function index(Request $request)
     {
-        $guilds = Guild::with('members')->get()->map(function($guild) {
-            return [
-                'id' => $guild->id,
-                'name' => $guild->name,
-                'description' => $guild->description,
-                'emblem' => $guild->emblem,
-                'member_count' => $guild->members()->count(),
-                'max_members' => $guild->max_members,
-                'total_xp' => $guild->total_xp,
-                'is_full' => $guild->isFull(),
-            ];
-        });
+        $search = $request->input('search');
+
+        $guilds = Guild::with('members')
+            ->when($search, function($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->simplePaginate(12)
+            ->withQueryString()
+            ->through(function($guild) {
+                return [
+                    'id' => $guild->id,
+                    'name' => $guild->name,
+                    'description' => $guild->description,
+                    'emblem' => $guild->emblem,
+                    'member_count' => $guild->members()->count(),
+                    'max_members' => $guild->max_members,
+                    'total_xp' => $guild->total_xp,
+                    'is_full' => $guild->isFull(),
+                ];
+            });
 
         return Inertia::render('Guilds/Index', [
             'guilds' => $guilds,
+            'filters' => $request->only(['search']),
             'userGuild' => auth()->user()->guildMember ? auth()->user()->guild() : null,
         ]);
     }

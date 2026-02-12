@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
+import debounce from 'lodash/debounce'; // Inertia typically includes lodash or we can use custom
 import {
     UserGroupIcon,
     PlusIcon,
     TrophyIcon,
     MagnifyingGlassIcon,
     ShieldCheckIcon,
-    SparklesIcon
+    SparklesIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
-export default function GuildIndex({ auth, guilds, userGuild }) {
-    const [searchTerm, setSearchTerm] = useState('');
+export default function GuildIndex({ auth, guilds, userGuild, filters }) {
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         description: '',
@@ -19,9 +22,24 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
     });
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    const filteredGuilds = guilds.filter(g =>
-        g.name.toLowerCase().includes(searchTerm.toLowerCase())
+    // Debounce search
+    const performSearch = useCallback(
+        debounce((query) => {
+            router.get(route('guilds.index'), { search: query }, { preserveState: true, replace: true });
+        }, 500),
+        []
     );
+
+    useEffect(() => {
+        // Only trigger if searchTerm changed from initial filters to avoid double load? 
+        // Actually better to just bind input to local state and debounce the router call
+    }, []);
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        performSearch(value);
+    };
 
     const handleCreate = (e) => {
         e.preventDefault();
@@ -105,7 +123,7 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                                 type="text"
                                 placeholder="Search guilds..."
                                 value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
+                                onChange={handleSearchChange}
                                 className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
                             />
                         </div>
@@ -113,7 +131,7 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
 
                     {/* Guild Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredGuilds.map(guild => (
+                        {guilds.data.map(guild => (
                             <div key={guild.id} className="group bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                                 <div className="flex items-start justify-between mb-6">
                                     <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-4xl shadow-inner">
@@ -151,6 +169,21 @@ export default function GuildIndex({ auth, guilds, userGuild }) {
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="flex justify-between items-center mt-6">
+                        {guilds.prev_page_url ? (
+                            <Link href={guilds.prev_page_url} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 flex items-center gap-2">
+                                <ChevronLeftIcon className="w-4 h-4" /> Previous
+                            </Link>
+                        ) : <div></div>}
+
+                        {guilds.next_page_url && (
+                            <Link href={guilds.next_page_url} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 flex items-center gap-2">
+                                Next <ChevronRightIcon className="w-4 h-4" />
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>

@@ -54,6 +54,7 @@ class ChatAssistantController extends Controller
 
     public function sendMessage(ChatSession $session, Request $request)
     {
+        set_time_limit(0);
         $this->authorize('update', $session);
 
         $request->validate([

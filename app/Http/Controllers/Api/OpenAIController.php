@@ -58,6 +58,7 @@ class OpenAIController extends Controller
         $image = $validated['image'] ?? null;
         
         try {
+            set_time_limit(0); // Prevent timeout for long-running AI/Search requests
             if (preg_match('/(youtube\.com\/watch\?v=|youtu\.be\/)([^&?#\s]+)/', $query, $matches)) {
                 return $this->handleYoutubeQuery($query, $matches[2]);
             }
@@ -80,6 +81,7 @@ class OpenAIController extends Controller
         ]);
         
         try {
+            set_time_limit(0); 
             $textContent = $this->extractTextFromPdf($request->file('file'));
             if (empty(trim($textContent))) {
                  return response()->json(['error' => 'Gagal membaca teks dari PDF. Dokumen mungkin hanya berisi gambar atau terproteksi.'], 422);
@@ -101,6 +103,7 @@ class OpenAIController extends Controller
             'query' => 'required|string|max:4000',
         ]);
         try {
+            set_time_limit(0);
             $markdownTable = $this->extractTableFromSheet($request->file('file'));
             if (empty(trim($markdownTable))) {
                 return response()->json(['error' => 'Gagal membaca tabel dari file spreadsheet. Pastikan file memiliki setidaknya satu tabel dengan data.'], 422);
@@ -134,6 +137,7 @@ PROMPT;
         $validated = $request->validate([ 'file' => 'required|mimes:pdf|max:204800', ]);
 
         try {
+            set_time_limit(0);
             $pdfText = $this->extractTextFromPdf($request->file('file'));
             if (empty(trim($pdfText))) { return response()->json(['error' => 'Tidak dapat membaca teks dari file PDF.'], 422); }
             $systemPrompt = <<<PROMPT
@@ -162,6 +166,7 @@ PROMPT;
 
     public function askAcademicWriter(Request $request)
     {
+        set_time_limit(0);
         $validated = $request->validate([
             'topic' => 'required|string|max:4000', 'references' => 'nullable|string|max:8000', 'section' => 'nullable|string|max:100'
         ]);
@@ -215,6 +220,7 @@ PROMPT;
         }
 
         try {
+            set_time_limit(0); 
             $response = $this->httpClient->post($this->apiBaseUrl, [
                 'model' => 'gpt-4o-mini', // Use faster model for editor actions
                 'messages' => [
