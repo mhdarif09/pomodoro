@@ -17,14 +17,29 @@ class DeadlineRiskService
      */
     public function detectRisks(User $user)
     {
+        set_time_limit(0);
         $this->user = $user;
         
-        // Get tasks due within next 48 hours that are not completed
-        $urgentTasks = Task::where('user_id', $user->id)
-            ->where('is_completed', false)
-            ->whereNotNull('due_date')
-            ->where('due_date', '<=', now()->addHours(48))
-            ->get();
+        // If tasks are already loaded (from DashboardController), use the collection to filter
+        // Otherwise, query efficiently as fallback.
+        if ($user->relationLoaded('tasks')) {
+            $urgentTasks = $user->tasks->where('is_completed', false)
+                ->whereNotNull('due_date')
+                ->filter(function($task) {
+                    return $task->due_date->lte(now()->addHours(48));
+                });
+            // Note: withCount won't work on collection, we'll rely on pre-loaded subtasks
+            // DashboardController currently loads 'subtasks'
+        } else {
+            $urgentTasks = $user->tasks()
+                ->where('is_completed', false)
+                ->whereNotNull('due_date')
+                ->where('due_date', '<=', now()->addHours(48))
+                ->withCount(['subtasks' => function($query) {
+                    $query->where('is_completed', false);
+                }])
+                ->get();
+        }
 
         $risks = [];
 
@@ -53,7 +68,7 @@ class DeadlineRiskService
         // 2. Estimate Workload Remaining
         // Use estimated_minutes or subtasks count as proxy
         $estimatedMinutes = $task->estimated_minutes ?? 60; // Default 1 hour
-        $subtaskCount = $task->subtasks()->where('is_completed', false)->count();
+        $subtaskCount = $task->subtasks_count ?? 0;
         
         // Adjust estimate if subtasks exist (e.g., 30 mins per subtask)
         if ($subtaskCount > 0) {

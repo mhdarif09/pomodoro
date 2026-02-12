@@ -14,7 +14,7 @@ import { createPortal } from 'react-dom';
 
 // DnD Kit
 import {
-    DndContext, useSensor, useSensors, PointerSensor, DragOverlay,
+    DndContext, useSensor, useSensors, PointerSensor, TouchSensor, DragOverlay,
     defaultDropAnimationSideEffects, closestCorners
 } from '@dnd-kit/core';
 import {
@@ -45,7 +45,7 @@ function TaskCard({ task, onToggleComplete, onStartFocus, onToggleSubtask, onAdd
             <div
                 onClick={onClick}
                 {...listeners} // Apply drag listeners here
-                className="p-5 cursor-pointer touch-none select-none relative"
+                className="p-5 cursor-pointer select-none relative"
             >
                 <div className="flex items-start gap-4">
                     {/* Toggle Button */}
@@ -300,7 +300,8 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
 
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }) // Prevent accidental drag
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }), // Desktop
+        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }) // Mobile: Hold to drag, Tap to open
     );
 
     // Helpers
@@ -409,7 +410,7 @@ export default function TaskFocusPanel({ tasks, activeFilter, onStartFocus, auth
                                 </div>
 
                                 <DroppableContainer id={col.id} items={colTasks.map(t => t.id)}>
-                                    <div className="space-y-4 min-h-[100px] overflow-y-auto max-h-[calc(100vh-300px)]">
+                                    <div className="space-y-4 min-h-[100px] sm:overflow-y-auto sm:max-h-[calc(100vh-300px)]">
                                         {colTasks.map(task => (
                                             <SortableTaskItem
                                                 key={task.id} task={task}

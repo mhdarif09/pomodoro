@@ -26,11 +26,25 @@ class DashboardController extends Controller
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek = Carbon::now()->endOfWeek();
         
+        // --- Statistik Total dihitung di Backend dalam satu query ---
+        $todayStr = $today->toDateString();
+        $startOfWeekStr = $startOfWeek->toDateString();
+        $endOfWeekStr = $endOfWeek->toDateString();
+
+        $statsQuery = $user->tasks()->personal()
+            ->selectRaw("
+                count(*) as total,
+                count(case when is_completed = 1 then 1 end) as completed,
+                count(case when is_completed = 0 and due_date >= ? and due_date <= ? then 1 end) as dueThisWeek,
+                count(case when is_completed = 0 and due_date < ? then 1 end) as overdue
+            ", [$startOfWeekStr, $endOfWeekStr, $todayStr])
+            ->first();
+
         $taskStats = [
-            'total' => $user->tasks()->personal()->count(),
-            'completed' => $user->tasks()->personal()->where('is_completed', true)->count(),
-            'dueThisWeek' => $user->tasks()->personal()->where('is_completed', false)->whereBetween('due_date', [$startOfWeek, $endOfWeek])->count(),
-            'overdue' => $user->tasks()->personal()->where('is_completed', false)->where('due_date', '<', $today)->count(),
+            'total' => (int) $statsQuery->total,
+            'completed' => (int) $statsQuery->completed,
+            'dueThisWeek' => (int) $statsQuery->dueThisWeek,
+            'overdue' => (int) $statsQuery->overdue,
         ];
 
         // --- Logika Pengambilan Data dengan Pagination ---
