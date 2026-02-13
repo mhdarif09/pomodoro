@@ -10,7 +10,6 @@ import {
     ShieldCheckIcon,
     SparklesIcon,
     ChevronLeftIcon,
-    ChevronLeftIcon,
     ChevronRightIcon,
     ArrowRightIcon
 } from '@heroicons/react/24/outline';
