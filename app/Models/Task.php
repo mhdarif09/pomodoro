@@ -50,6 +50,16 @@ class Task extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function completer()
+    {
+        return $this->belongsTo(User::class, 'completed_by');
+    }
+
     public function guild()
     {
         return $this->belongsTo(Guild::class);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Guild;
 use App\Models\GuildChat;
 use Illuminate\Http\Request;
+use App\Helpers\SecurityHelper;
 
 class GuildChatController extends Controller
 {
@@ -55,7 +56,7 @@ class GuildChatController extends Controller
         $chat = GuildChat::create([
             'guild_id' => $guild->id,
             'user_id' => auth()->id(),
-            'message' => $validated['message'],
+            'message' => SecurityHelper::sanitizeHtml($validated['message']),
         ]);
 
         $chat->load('user:id,name');

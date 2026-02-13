@@ -16,6 +16,8 @@ protected $guarded = [];
         'content',
         'share_token',
         'is_public',
+        'guild_id',
+        'is_pinned',
     ];
 
     protected $casts = [
@@ -26,6 +28,11 @@ protected $guarded = [];
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function guild()
+    {
+        return $this->belongsTo(Guild::class);
     }
 
      public function collaborators()

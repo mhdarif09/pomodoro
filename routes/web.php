@@ -225,9 +225,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // --- GUILD ROUTES ---
 Route::middleware(['auth'])->group(function () {
     Route::resource('guilds', \App\Http\Controllers\GuildController::class);
+    // Join/Leave/Invite
+    Route::post('guilds/join-by-code', [\App\Http\Controllers\GuildController::class, 'joinByCode'])->name('guilds.join-code');
     Route::post('guilds/{guild}/join', [\App\Http\Controllers\GuildController::class, 'join'])->name('guilds.join');
-Route::post('guilds/{guild}/leave', [\App\Http\Controllers\GuildController::class, 'leave'])->name('guilds.leave');
-Route::post('guilds/{guild}/invite', [\App\Http\Controllers\GuildController::class, 'invite'])->name('guilds.invite');
+    Route::post('guilds/{guild}/leave', [\App\Http\Controllers\GuildController::class, 'leave'])->name('guilds.leave');
+    Route::post('guilds/{guild}/invite', [\App\Http\Controllers\GuildController::class, 'invite'])->name('guilds.invite');
 
     // Guild Tasks
     Route::get('guilds/{guild}/tasks', [\App\Http\Controllers\GuildTaskController::class, 'index'])->name('guilds.tasks.index');
@@ -242,6 +244,13 @@ Route::post('guilds/{guild}/invite', [\App\Http\Controllers\GuildController::cla
     // New Features
     Route::get('guilds/{guild}/nexus', [\App\Http\Controllers\GuildController::class, 'focusNexus'])->name('guilds.nexus');
     Route::get('guilds/{guild}/report', [\App\Http\Controllers\GuildController::class, 'report'])->name('guilds.report');
+
+    // Guild Divisions
+    Route::resource('guilds.divisions', \App\Http\Controllers\GuildDivisionController::class)->except(['create', 'edit', 'show']);
+    Route::post('guilds/{guild}/assign-member', [\App\Http\Controllers\GuildDivisionController::class, 'assignMember'])->name('guilds.divisions.assign-member');
+
+    // Guild Documents
+    Route::resource('guilds.documents', \App\Http\Controllers\GuildDocumentController::class)->except(['create', 'edit']);
 });
 
 // --- AI ASSISTANT ROUTES (PREMIUM) ---

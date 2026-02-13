@@ -15,6 +15,7 @@ class GuildMember extends Model
         'role',
         'contribution_xp',
         'weekly_contribution_xp',
+        'division_id',
     ];
 
     public function guild()
@@ -25,5 +26,10 @@ class GuildMember extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function division()
+    {
+        return $this->belongsTo(GuildDivision::class);
     }
 }

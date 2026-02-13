@@ -10,7 +10,9 @@ import {
     ShieldCheckIcon,
     SparklesIcon,
     ChevronLeftIcon,
-    ChevronRightIcon
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    ArrowRightIcon
 } from '@heroicons/react/24/outline';
 
 export default function GuildIndex({ auth, guilds, userGuild, filters }) {
@@ -127,6 +129,26 @@ export default function GuildIndex({ auth, guilds, userGuild, filters }) {
                                 className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
                             />
                         </div>
+
+                        {/* Join by Code */}
+                        {!userGuild && (
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                const code = e.target.elements.code.value;
+                                if (code) router.post(route('guilds.join-code'), { invite_code: code });
+                            }} className="relative sm:w-64">
+                                <input
+                                    name="code"
+                                    type="text"
+                                    placeholder="Enter Invite Code"
+                                    className="w-full pl-4 pr-12 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white uppercase tracking-widest font-mono"
+                                    maxLength={8}
+                                />
+                                <button type="submit" className="absolute right-2 top-2 bottom-2 aspect-square bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-xl flex items-center justify-center transition-colors">
+                                    <ArrowRightIcon className="w-5 h-5" />
+                                </button>
+                            </form>
+                        )}
                     </div>
 
                     {/* Guild Grid */}

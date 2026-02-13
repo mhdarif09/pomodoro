@@ -14,11 +14,23 @@ class Guild extends Model
         'description',
         'is_private',
         'emblem',
+        'invite_code',
         'max_members',
         'total_xp',
         'weekly_xp',
         'weekly_xp_reset_at',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($guild) {
+            if (empty($guild->invite_code)) {
+                $guild->invite_code = strtoupper(\Illuminate\Support\Str::random(8));
+            }
+        });
+    }
 
     protected $casts = [
         'weekly_xp_reset_at' => 'datetime',
@@ -65,6 +77,22 @@ class Guild extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Guild divisions
+     */
+    public function divisions()
+    {
+        return $this->hasMany(GuildDivision::class);
+    }
+
+    /**
+     * Guild documents
+     */
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
     }
 
     /**

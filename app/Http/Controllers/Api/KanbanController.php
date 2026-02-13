@@ -11,6 +11,7 @@ use App\Jobs\DetermineTaskPriority;
 use Illuminate\Support\Facades\DB;
 use App\Services\TaskAIService;
 use Carbon\Carbon;
+use App\Helpers\SecurityHelper;
 
 class KanbanController extends Controller
 {
@@ -63,7 +64,7 @@ class KanbanController extends Controller
             'priority' => $validated['priority'] ?? 'Sedang', 
             'estimated_minutes' => $estimatedMinutes,
             'status' => $validated['status'] ?? 'todo',
-            'notes' => $validated['notes'] ?? null,
+            'notes' => SecurityHelper::sanitizeHtml($validated['notes'] ?? null),
         ]);
 
         // Sync tags
@@ -125,7 +126,7 @@ class KanbanController extends Controller
             
             $task->update(array_merge($validated, [
                 'estimated_minutes' => $estimatedMinutes,
-                'notes' => $request->input('notes'),
+                'notes' => SecurityHelper::sanitizeHtml($request->input('notes')),
                 'auto_open_url' => $request->input('auto_open_url'),
             ]));
 

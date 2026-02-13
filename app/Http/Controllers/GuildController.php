@@ -120,10 +120,33 @@ class GuildController extends Controller
     /**
      * Show guild details (Overview Dashboard)
      */
+    /**
+     * Join guild by code
+     */
+    public function joinByCode(Request $request) 
+    {
+        $request->validate([
+            'invite_code' => 'required|string|size:8'
+        ]);
+
+        try {
+            $guild = $this->guildService->joinByCode(auth()->user(), strtoupper($request->invite_code));
+            return back()->with('success', "Berhasil bergabung dengan Guild {$guild->name}!");
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Show guild details (Overview Dashboard)
+     */
     public function show(Guild $guild)
     {
-        if (!auth()->user()->guilds->contains($guild->id)) {
-            abort(403, 'Unauthorized'); // Should probably separate public view from member view later
+        // IDOR PROTECTION: Check if user is a member of this specific guild
+        if (!$guild->members()->where('user_id', auth()->id())->exists()) {
+             // If guild is public, maybe allow view? For now, STRICT DENY as per request to avoid IDOR.
+             // Or redirect to index with error.
+             return to_route('guilds.index')->with('error', 'Kamu bukan anggota guild ini.');
         }
 
         $guild->load(['members', 'chats.user']);
@@ -134,6 +157,7 @@ class GuildController extends Controller
                 'name' => $guild->name,
                 'description' => $guild->description,
                 'emblem' => $guild->emblem,
+                'invite_code' => $guild->invite_code, // Pass invite code to view
                 'total_xp' => $guild->total_xp,
                 'member_count' => $guild->members->count(),
                 'max_members' => $guild->max_members,

@@ -566,6 +566,19 @@ export default function Authenticated({ children, header }) {
                                                         )}
                                                     </Menu.Item>
                                                 ))}
+                                                <Menu.Item>
+                                                    {({ active }) => (
+                                                        <Link
+                                                            href={route('guilds.index')}
+                                                            onClick={() => setSidebarOpen(false)}
+                                                            className={`${active ? 'bg-slate-50 dark:bg-white/5' : ''
+                                                                } group flex w-full items-center px-4 py-3 text-sm font-bold text-slate-500`}
+                                                        >
+                                                            <PlusCircleIcon className="mr-3 h-5 w-5 text-slate-400" />
+                                                            Join or Create Guild
+                                                        </Link>
+                                                    )}
+                                                </Menu.Item>
                                             </Menu.Items>
                                         </Transition>
                                     </Menu>

@@ -22,7 +22,7 @@ class GuildTaskController extends Controller
         }
 
         $tasks = $guild->tasks()
-            ->with(['subtasks', 'user', 'tags']) // eager load user to see who created/assigned
+            ->with(['subtasks', 'user', 'tags', 'assignee', 'completer']) // eager load user to see who created/assigned
             ->orderBy('is_completed', 'asc')
             ->orderBy('priority', 'desc')
             ->get();
@@ -55,6 +55,7 @@ class GuildTaskController extends Controller
             'priority' => 'nullable|string|in:Rendah,Sedang,Tinggi,Mendesak',
             'status' => 'nullable|string',
             'estimated_minutes' => 'nullable|integer',
+            'assigned_to' => 'nullable|exists:users,id',
         ]);
 
         $task = $guild->tasks()->create([
@@ -66,6 +67,7 @@ class GuildTaskController extends Controller
             'estimated_minutes' => $validated['estimated_minutes'] ?? 25,
             'user_id' => auth()->id(), // Creator
             'guild_id' => $guild->id,
+            'assigned_to' => $validated['assigned_to'] ?? null,
         ]);
 
         DetermineTaskPriority::dispatch($task);
@@ -93,9 +95,18 @@ class GuildTaskController extends Controller
             'priority' => 'nullable|string',
             'status' => 'nullable|string',
             'is_completed' => 'nullable|boolean',
+            'assigned_to' => 'nullable|exists:users,id',
         ]);
 
         $wasCompleted = $task->is_completed;
+        
+        // Handle completion logic
+        if (isset($validated['is_completed']) && $validated['is_completed'] && !$wasCompleted) {
+            $validated['completed_by'] = auth()->id();
+        } elseif (isset($validated['is_completed']) && !$validated['is_completed']) {
+            $validated['completed_by'] = null;
+        }
+
         $task->update($validated);
         
         if (isset($validated['is_completed']) && $validated['is_completed'] && !$wasCompleted) {
@@ -119,8 +130,13 @@ class GuildTaskController extends Controller
             abort(404);
         }
 
-        if (!auth()->user()->guilds->contains($guild->id)) {
-            abort(403, 'Unauthorized');
+        // AUTHORIZATION: Leader, Creator, or Assignee can delete
+        $isLeader = $guild->members()->where('user_id', auth()->id())->wherePivot('role', 'leader')->exists();
+        $isCreator = $task->user_id === auth()->id();
+        $isAssignee = $task->assigned_to === auth()->id();
+
+        if (!$isLeader && !$isCreator && !$isAssignee) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus misi ini.');
         }
 
         $task->delete();

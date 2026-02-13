@@ -47,7 +47,7 @@ class GuildService
     {
         DB::transaction(function () use ($user, $guild) {
             // Check if user is already in ANY guild
-            if ($user->guildMember) {
+            if ($user->guildMembers()->exists()) {
                 throw new \Exception('Kamu sudah tergabung dalam guild lain.');
             }
 
@@ -66,6 +66,22 @@ class GuildService
                 'role' => 'member',
             ]);
         });
+    }
+
+    /**
+    * Join guild by invite code
+    */
+    public function joinByCode(User $user, string $code): Guild
+    {
+        $guild = Guild::where('invite_code', $code)->first();
+
+        if (!$guild) {
+            throw new \Exception('Kode invite tidak valid.');
+        }
+
+        $this->joinGuild($user, $guild);
+
+        return $guild;
     }
 
     /**

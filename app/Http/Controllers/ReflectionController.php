@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Reflection;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Helpers\SecurityHelper;
 
 class ReflectionController extends Controller
 {
@@ -38,7 +39,7 @@ class ReflectionController extends Controller
         ]);
 
         $reflection = $request->user()->reflections()->create([
-            'user_answer' => $request->user_answer,
+            'user_answer' => SecurityHelper::sanitizeHtml($request->user_answer),
             'ai_question' => $request->ai_question ?? 'Apa yang kamu pelajari hari ini?',
             'reflection_date' => now(),
         ]);
