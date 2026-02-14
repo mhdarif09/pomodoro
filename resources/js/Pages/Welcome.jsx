@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import Lenis from '@studio-freight/lenis';
 import clsx from 'clsx';
 import {

@@ -299,7 +299,7 @@ function DroppableContainer({ id, items, children }) {
 }
 
 // 4. Main Component
-export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, onStartFocus, auth }) {
+export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, onStartFocus, auth, onTaskComplete }) {
     const { t } = useLanguage();
     // Local State for Optimistic Updates
     const [localTasks, setLocalTasks] = useState(tasks.data || []);
@@ -427,8 +427,8 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
         // Also update localFocusTasks so cycling detects completed focused tasks
         setLocalFocusTasks(prev => prev.map(t => t.id === task.id ? newTask : t));
 
-        if (newStatus && props.onTaskComplete) {
-            props.onTaskComplete();
+        if (newStatus && onTaskComplete) {
+            onTaskComplete();
         }
 
         axios.patch(route('api.tasks.toggle-complete', task.id))
