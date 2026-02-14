@@ -482,16 +482,7 @@ export default function Authenticated({ children, header }) {
 
             {/* Mobile & Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                {/* Mobile Header */}
-                <header className="sm:hidden flex items-center justify-between px-6 pt-6 pb-2 z-30">
-                    <div className="flex items-center gap-3">
-                        <ApplicationLogo className="h-8 w-auto text-teal-500 fill-current" />
-                        <span className="font-black text-lg tracking-tight">SarangTumbuh</span>
-                    </div>
-                    <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm ios-btn">
-                        <Bars3Icon className="h-6 w-6" />
-                    </button>
-                </header>
+
 
                 <main className="flex-1 overflow-y-auto scrollbar-hide p-0 sm:p-4 pb-20 sm:pb-4">
                     <div className="w-full max-w-[1600px] mx-auto relative">
@@ -514,8 +505,8 @@ export default function Authenticated({ children, header }) {
                                     ].map((item, i) => (
                                         <Link key={i} href={item.href}
                                             className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
-                                                    ? 'bg-teal-500/15 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 px-4 py-2.5 rounded-2xl'
-                                                    : 'text-slate-400 dark:text-slate-500 p-2.5'
+                                                ? 'bg-teal-500/15 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 px-4 py-2.5 rounded-2xl'
+                                                : 'text-slate-400 dark:text-slate-500 p-2.5'
                                                 }`}>
                                             {item.icon}
                                             {item.active && (
@@ -535,8 +526,8 @@ export default function Authenticated({ children, header }) {
                                     ].map((item, i) => (
                                         <Link key={i} href={item.href}
                                             className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
-                                                    ? 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-2.5 rounded-2xl'
-                                                    : 'text-slate-400 dark:text-slate-500 p-2.5'
+                                                ? 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-2.5 rounded-2xl'
+                                                : 'text-slate-400 dark:text-slate-500 p-2.5'
                                                 }`}>
                                             {item.icon}
                                             {item.active && (
@@ -551,189 +542,7 @@ export default function Authenticated({ children, header }) {
                 </nav>
             </div>
 
-            {/* Mobile Sidebar Overlay */}
-            <AnimatePresence>
-                {sidebarOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        onClick={() => setSidebarOpen(false)}
-                        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm sm:hidden"
-                    >
-                        <motion.div
-                            initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                            className="absolute left-0 top-0 bottom-0 w-[80%] max-w-[300px] bg-[#F5F5F7] dark:bg-[#1c1c1e] h-full shadow-2xl p-6 flex flex-col overflow-y-auto"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-black tracking-tight">Menu</h2>
-                                <div className="flex gap-2">
-                                    <button onClick={toggleLanguage} className="p-2 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold uppercase">
-                                        {language}
-                                    </button>
-                                    <button onClick={() => setSidebarOpen(false)}><XMarkIcon className="w-8 h-8" /></button>
-                                </div>
-                            </div>
-                            <nav className="space-y-4 flex-1">
-                                {/* Workspace Switcher Mobile */}
-                                <div className="px-4 pb-4 border-b border-slate-200 dark:border-slate-700">
-                                    <Menu as="div" className="relative">
-                                        <Menu.Button className="w-full bg-white dark:bg-slate-800 rounded-xl p-3 flex items-center gap-3 shadow-sm border border-slate-100 dark:border-slate-700">
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-xs font-bold text-white shadow-sm">
-                                                {workspaceMode === 'personal' ? user.name.charAt(0) : (currentGuild?.name || 'G').charAt(0)}
-                                            </div>
-                                            <div className="flex-1 text-left">
-                                                <p className="text-sm font-bold text-slate-800 dark:text-white">
-                                                    {workspaceMode === 'personal' ? 'Personal' : (currentGuild?.name || 'Select Guild')}
-                                                </p>
-                                                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Workspace</p>
-                                            </div>
-                                            <ChevronDownIcon className="h-5 w-5 text-slate-400" />
-                                        </Menu.Button>
-                                        <Transition
-                                            as={Fragment}
-                                            enter="transition ease-out duration-100"
-                                            enterFrom="transform opacity-0 scale-95"
-                                            enterTo="transform opacity-100 scale-100"
-                                            leave="transition ease-in duration-75"
-                                            leaveFrom="transform opacity-100 scale-100"
-                                            leaveTo="transform opacity-0 scale-95"
-                                        >
-                                            <Menu.Items className="absolute left-0 right-0 top-full mt-2 z-50 origin-top bg-white dark:bg-[#1C1C1E] rounded-xl shadow-2xl ring-1 ring-black/5 focus:outline-none divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
-                                                <Menu.Item>
-                                                    {({ active }) => (
-                                                        <button
-                                                            onClick={() => { setWorkspaceMode('personal'); setSidebarOpen(false); router.visit(route('dashboard')); }}
-                                                            className={`${active ? 'bg-slate-50 dark:bg-white/5' : ''} w-full flex items-center px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200`}
-                                                        >
-                                                            <UserIcon className="mr-3 h-5 w-5 text-slate-400" />
-                                                            Personal
-                                                        </button>
-                                                    )}
-                                                </Menu.Item>
-                                                {userGuilds.map((guild) => (
-                                                    <Menu.Item key={guild.id}>
-                                                        {({ active }) => (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setWorkspaceMode('guild');
-                                                                    setCurrentGuild(guild);
-                                                                    setSidebarOpen(false);
-                                                                    router.visit(route('guilds.show', guild.id));
-                                                                }}
-                                                                className={`${active ? 'bg-slate-50 dark:bg-white/5' : ''} w-full flex items-center px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200`}
-                                                            >
-                                                                <div className="mr-3 flex h-5 w-5 items-center justify-center rounded bg-emerald-500 text-[9px] text-white font-bold">
-                                                                    {guild.name.charAt(0)}
-                                                                </div>
-                                                                {guild.name}
-                                                            </button>
-                                                        )}
-                                                    </Menu.Item>
-                                                ))}
-                                                <Menu.Item>
-                                                    {({ active }) => (
-                                                        <Link
-                                                            href={route('guilds.index')}
-                                                            onClick={() => setSidebarOpen(false)}
-                                                            className={`${active ? 'bg-slate-50 dark:bg-white/5' : ''
-                                                                } group flex w-full items-center px-4 py-3 text-sm font-bold text-slate-500`}
-                                                        >
-                                                            <PlusCircleIcon className="mr-3 h-5 w-5 text-slate-400" />
-                                                            Join or Create Guild
-                                                        </Link>
-                                                    )}
-                                                </Menu.Item>
-                                            </Menu.Items>
-                                        </Transition>
-                                    </Menu>
-                                </div>
 
-                                {/* Navigation Items Mobile */}
-                                <div className="space-y-1 px-2">
-                                    <Link href={route('dashboard')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold ${route().current('dashboard') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500'}`}>
-                                        <HomeIcon className="h-5 w-5" />
-                                        Dashboard
-                                    </Link>
-                                    {user.active_plan?.has_ai_genius_access && (
-                                        <Link href={route('ai-assistant.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold ${route().current('ai-assistant.index') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500'}`}>
-                                            <SparklesIcon className="h-5 w-5 text-amber-500" />
-                                            AI Genius
-                                        </Link>
-                                    )}
-
-                                    {workspaceMode === 'personal' ? (
-                                        <>
-                                            <Link href={route('tasks.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('tasks.index') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                                                <DocumentTextIcon className="h-5 w-5" />
-                                                My Tasks
-                                            </Link>
-                                            <Link href={route('journal.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('journal.index') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                                                <BookOpenIcon className="h-5 w-5" />
-                                                Journal
-                                            </Link>
-                                            <Link href={route('transactions.history')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('transactions.history') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500'}`}>
-                                                <CreditCardIcon className="h-5 w-5" />
-                                                Wallet
-                                            </Link>
-                                            <Link href={route('reports.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('reports.index') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500'}`}>
-                                                <ChartBarIcon className="h-5 w-5" />
-                                                Report
-                                            </Link>
-                                            <Link href={route('upgrade.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('upgrade.index') ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                                                <SparklesIcon className="h-5 w-5 text-amber-400" />
-                                                Upgrade Plan
-                                            </Link>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Link href={currentGuild ? route('guilds.show', currentGuild.id) : route('guilds.index')} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
-                                                <BriefcaseIcon className="h-5 w-5" />
-                                                Guild Overview
-                                            </Link>
-                                            <Link href={currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#'} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
-                                                <FireIcon className="h-5 w-5" />
-                                                Missions
-                                            </Link>
-                                            <Link href={currentGuild ? route('guilds.tasks.index', currentGuild.id) : '#'} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
-                                                <DocumentTextIcon className="h-5 w-5" />
-                                                Tasks
-                                            </Link>
-                                            <Link href={currentGuild ? route('guilds.members.index', currentGuild.id) : '#'} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
-                                                <UserGroupIcon className="h-5 w-5" />
-                                                Members
-                                            </Link>
-                                            <button
-                                                onClick={() => { setSidebarOpen(false); setShowInviteModal(true); }}
-                                                className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
-                                            >
-                                                <PlusIcon className="h-5 w-5" />
-                                                Invite Member
-                                            </button>
-                                        </>
-                                    )}
-
-                                    <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
-                                        <p className="px-4 mb-2 text-xs font-black text-slate-400 uppercase tracking-widest">Library</p>
-                                        <Link href={route('docs.index')} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
-                                            <BookOpenIcon className="h-5 w-5" />
-                                            Templates
-                                        </Link>
-                                        <button className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
-                                            <TrashIcon className="h-5 w-5" />
-                                            Trash
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <Link href={route('logout')} method="post" as="button" className="flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-bold text-red-500 mt-8">
-                                    <ArrowRightOnRectangleIcon className="w-6 h-6" /> {t('logout')}
-                                </Link>
-                            </nav>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
