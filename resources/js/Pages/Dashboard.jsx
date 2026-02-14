@@ -15,7 +15,6 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { requestNotificationPermission, registerServiceWorker, startBackgroundTimer, stopBackgroundTimer } from '@/Utils/NotificationHelper';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
