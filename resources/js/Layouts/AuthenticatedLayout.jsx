@@ -493,11 +493,62 @@ export default function Authenticated({ children, header }) {
                     </button>
                 </header>
 
-                <main className="flex-1 overflow-y-auto scrollbar-hide p-0 sm:p-4">
+                <main className="flex-1 overflow-y-auto scrollbar-hide p-0 sm:p-4 pb-20 sm:pb-4">
                     <div className="w-full max-w-[1600px] mx-auto relative">
                         {children}
                     </div>
                 </main>
+
+                {/* ═══════ MOBILE BOTTOM NAV BAR ═══════ */}
+                <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden">
+                    <div className="mx-3 mb-3">
+                        <div className="bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl rounded-[20px] border border-slate-200/50 dark:border-slate-700/50 shadow-xl shadow-black/10 dark:shadow-black/30 px-1.5 py-2">
+                            {workspaceMode === 'personal' ? (
+                                <div className="flex items-center justify-around gap-1">
+                                    {[
+                                        { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard') },
+                                        { href: route('tasks.index'), icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('tasks.index') },
+                                        { href: route('gamification.dashboard'), icon: <TrophyIcon className="h-[22px] w-[22px]" />, label: 'Rewards', active: route().current('gamification.dashboard') },
+                                        { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guilds', active: route().current('guilds.index') || route().current('guilds.*') },
+                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit') },
+                                    ].map((item, i) => (
+                                        <Link key={i} href={item.href}
+                                            className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
+                                                    ? 'bg-teal-500/15 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 px-4 py-2.5 rounded-2xl'
+                                                    : 'text-slate-400 dark:text-slate-500 p-2.5'
+                                                }`}>
+                                            {item.icon}
+                                            {item.active && (
+                                                <span className="text-[11px] font-bold tracking-tight">{item.label}</span>
+                                            )}
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-around gap-1">
+                                    {[
+                                        { href: currentGuild ? route('guilds.show', currentGuild.id) : route('guilds.index'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.show') },
+                                        { href: currentGuild ? route('guilds.tasks.index', currentGuild.id) : '#', icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('guilds.tasks.index') },
+                                        { href: currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#', icon: <FireIcon className="h-[22px] w-[22px]" />, label: 'Missions', active: route().current('guilds.challenges.index') },
+                                        { href: currentGuild ? route('guilds.members.index', currentGuild.id) : '#', icon: <UserGroupIcon className="h-[22px] w-[22px]" />, label: 'Members', active: route().current('guilds.members.index') },
+                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit') },
+                                    ].map((item, i) => (
+                                        <Link key={i} href={item.href}
+                                            className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
+                                                    ? 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-2.5 rounded-2xl'
+                                                    : 'text-slate-400 dark:text-slate-500 p-2.5'
+                                                }`}>
+                                            {item.icon}
+                                            {item.active && (
+                                                <span className="text-[11px] font-bold tracking-tight">{item.label}</span>
+                                            )}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </nav>
             </div>
 
             {/* Mobile Sidebar Overlay */}
