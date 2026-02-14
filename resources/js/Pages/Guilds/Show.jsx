@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     ChatBubbleLeftRightIcon, TrophyIcon, UserGroupIcon,
-    BoltIcon, ArrowRightIcon, FireIcon, DocumentTextIcon
+    BoltIcon, ArrowRightIcon, FireIcon, DocumentTextIcon, LockClosedIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
@@ -54,8 +54,13 @@ export default function GuildOverview({ auth, guild, members }) {
                             {guild.emblem}
                         </div>
                         <div className="text-center md:text-left">
-                            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-2">
+                            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-2 flex items-center justify-center md:justify-start gap-3">
                                 {guild.name}
+                                {guild.is_private && (
+                                    <span className="px-3 py-1 rounded-full bg-slate-900/50 border border-slate-700/50 text-slate-300 text-xs font-bold backdrop-blur-sm flex items-center gap-1">
+                                        <LockClosedIcon className="w-3 h-3" /> Private
+                                    </span>
+                                )}
                             </h1>
                             <p className="text-emerald-200 text-lg max-w-2xl font-medium">
                                 {guild.description || "A guild for productive heroes."}
@@ -108,8 +113,8 @@ export default function GuildOverview({ auth, guild, members }) {
                                     <ArrowRightIcon className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                                 <Link
-                                    href="#"
-                                    className="flex items-center justify-between p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                                    href={route('guilds.report', guild.id)}
+                                    className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 hover:scale-[1.02] active:scale-[0.98] transition-all group"
                                 >
                                     <span className="font-bold flex items-center gap-3">
                                         <TrophyIcon className="w-5 h-5" /> Guild Report

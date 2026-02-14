@@ -17,7 +17,7 @@ class GuildTaskController extends Controller
     public function index(Guild $guild)
     {
         // Ensure user is member
-        if (!auth()->user()->guilds->contains($guild->id)) {
+        if (!auth()->user()->guilds->contains('id', $guild->id)) {
             abort(403, 'Unauthorized');
         }
 
@@ -27,6 +27,31 @@ class GuildTaskController extends Controller
             ->orderBy('priority', 'desc')
             ->get();
 
+        // Get ALL focused tasks today (completed + uncompleted) for cycling
+        $focusTasks = $guild->tasks()
+            ->whereDate('focus_date', today())
+            ->orderBy('is_completed', 'asc')
+            ->with(['subtasks', 'user', 'tags', 'assignee'])
+            ->get();
+
+        // Resume: last active uncompleted task for current user in this guild
+        $resumeTask = $guild->tasks()
+            ->where('is_completed', false)
+            ->where(function ($q) {
+                $q->where('user_id', auth()->id())
+                  ->orWhere('assigned_to', auth()->id());
+            })
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        // Stagnant tasks: not updated in 7+ days
+        $stagnantTasks = $guild->tasks()
+            ->where('is_completed', false)
+            ->where('updated_at', '<', now()->subDays(7))
+            ->orderBy('updated_at', 'asc')
+            ->take(5)
+            ->get();
+
         return Inertia::render('Guilds/ToDo', [
             'guild' => [
                 'id' => $guild->id,
@@ -34,6 +59,9 @@ class GuildTaskController extends Controller
                 'emblem' => $guild->emblem,
             ],
             'tasks' => $tasks,
+            'focusTasks' => $focusTasks,
+            'resumeTask' => $resumeTask,
+            'stagnantTasks' => $stagnantTasks,
             'members' => $guild->members()->get()->map(fn($m) => ['id' => $m->id, 'name' => $m->name, 'avatar' => $m->avatar]),
             'enableAi' => $guild->leader && $guild->leader->activePlan->has_ai_guild_features,
         ]);
@@ -44,8 +72,14 @@ class GuildTaskController extends Controller
      */
     public function store(Request $request, Guild $guild)
     {
-        if (!auth()->user()->guilds->contains($guild->id)) {
+        if (!auth()->user()->guilds->contains('id', $guild->id)) {
             abort(403, 'Unauthorized');
+        }
+
+        // ROLE CHECK: Only leader can create guild tasks
+        $isLeader = $guild->members()->where('user_id', auth()->id())->wherePivot('role', 'leader')->exists();
+        if (!$isLeader) {
+            abort(403, 'Hanya Leader yang dapat membuat misi guild.');
         }
 
         $validated = $request->validate([
@@ -84,7 +118,7 @@ class GuildTaskController extends Controller
             abort(404);
         }
 
-        if (!auth()->user()->guilds->contains($guild->id)) {
+        if (!auth()->user()->guilds->contains('id', $guild->id)) {
             abort(403, 'Unauthorized');
         }
 

@@ -8,7 +8,7 @@ import {
     SparklesIcon, LockClosedIcon, ChartBarIcon, TrophyIcon,
     ArrowRightOnRectangleIcon, LanguageIcon, QuestionMarkCircleIcon, TicketIcon,
     ShieldCheckIcon, BriefcaseIcon, UserGroupIcon, ChevronDownIcon,
-    PlusIcon, CheckIcon, PlusCircleIcon, MagnifyingGlassIcon, TrashIcon, Cog6ToothIcon
+    PlusIcon, CheckIcon, PlusCircleIcon, MagnifyingGlassIcon, TrashIcon, Cog6ToothIcon, FireIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import ApplicationLogo from '@/Components/ApplicationLogo';
@@ -297,8 +297,8 @@ export default function Authenticated({ children, header }) {
                             {!isCollapsed && <div className="px-2 mb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Private</div>}
                             <div className="space-y-0.5">
                                 <Link
-                                    href={route('dashboard')}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('dashboard') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                    href={route('tasks.index')}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('tasks.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
                                     <DocumentTextIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
                                     {!isCollapsed && <span>My Tasks</span>}
@@ -331,6 +331,20 @@ export default function Authenticated({ children, header }) {
                                     <TicketIcon className="h-4 w-4" />
                                     {!isCollapsed && <span>Affiliate</span>}
                                 </Link>
+                                <Link
+                                    href={route('reports.index')}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('reports.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                >
+                                    <ChartBarIcon className="h-4 w-4" />
+                                    {!isCollapsed && <span>Report</span>}
+                                </Link>
+                                <Link
+                                    href={route('upgrade.index')}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('upgrade.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                >
+                                    <SparklesIcon className="h-4 w-4 text-amber-400 group-hover:text-amber-500" />
+                                    {!isCollapsed && <span>Upgrade Plan</span>}
+                                </Link>
                             </div>
                         </div>
                     ) : (
@@ -349,25 +363,25 @@ export default function Authenticated({ children, header }) {
                                     className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('guilds.tasks.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
                                     <DocumentTextIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
-                                    {!isCollapsed && <span>Team Tasks</span>}
+                                    {!isCollapsed && <span>Tasks</span>}
                                 </Link>
                                 <Link
-                                    href={currentGuild ? route('guilds.show', currentGuild.id) : '#'}
-                                    className="flex items-center gap-2 px-2 py-1 rounded-md text-sm text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                                    href={currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#'}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('guilds.challenges.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
-                                    <ChartBarIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                    <FireIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
                                     {!isCollapsed && <span>Missions</span>}
                                 </Link>
                                 <Link
-                                    href={currentGuild ? route('guilds.show', currentGuild.id) : '#'}
-                                    className="flex items-center gap-2 px-2 py-1 rounded-md text-sm text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+                                    href={currentGuild ? route('guilds.members.index', currentGuild.id) : '#'}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('guilds.members.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
                                     <UserGroupIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
                                     {!isCollapsed && <span>Members</span>}
                                 </Link>
                                 <Link
-                                    href={route('reports.index')}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('reports.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                    href={currentGuild ? route('guilds.report', currentGuild.id) : '#'}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('guilds.report') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
                                     <ChartBarIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
                                     {!isCollapsed && <span>Reports</span>}
@@ -599,7 +613,7 @@ export default function Authenticated({ children, header }) {
 
                                     {workspaceMode === 'personal' ? (
                                         <>
-                                            <Link href={route('dashboard')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('dashboard') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                                            <Link href={route('tasks.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('tasks.index') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                                                 <DocumentTextIcon className="h-5 w-5" />
                                                 My Tasks
                                             </Link>
@@ -611,6 +625,14 @@ export default function Authenticated({ children, header }) {
                                                 <CreditCardIcon className="h-5 w-5" />
                                                 Wallet
                                             </Link>
+                                            <Link href={route('reports.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('reports.index') ? 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400' : 'text-slate-500'}`}>
+                                                <ChartBarIcon className="h-5 w-5" />
+                                                Report
+                                            </Link>
+                                            <Link href={route('upgrade.index')} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${route().current('upgrade.index') ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                                                <SparklesIcon className="h-5 w-5 text-amber-400" />
+                                                Upgrade Plan
+                                            </Link>
                                         </>
                                     ) : (
                                         <>
@@ -618,7 +640,15 @@ export default function Authenticated({ children, header }) {
                                                 <BriefcaseIcon className="h-5 w-5" />
                                                 Guild Overview
                                             </Link>
-                                            <Link href={currentGuild ? route('guilds.show', currentGuild.id) : '#'} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
+                                            <Link href={currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#'} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
+                                                <FireIcon className="h-5 w-5" />
+                                                Missions
+                                            </Link>
+                                            <Link href={currentGuild ? route('guilds.tasks.index', currentGuild.id) : '#'} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
+                                                <DocumentTextIcon className="h-5 w-5" />
+                                                Tasks
+                                            </Link>
+                                            <Link href={currentGuild ? route('guilds.members.index', currentGuild.id) : '#'} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5">
                                                 <UserGroupIcon className="h-5 w-5" />
                                                 Members
                                             </Link>

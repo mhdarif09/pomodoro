@@ -61,6 +61,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Core Dashboard & Profile
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/dismiss-upgrade-modal', [DashboardController::class, 'dismissUpgradeModal'])->name('dashboard.dismiss-upgrade-modal');
+    Route::get('/my-tasks', [\App\Http\Controllers\TaskPageController::class, 'index'])->name('tasks.index');
+    Route::get('/upgrade', [\App\Http\Controllers\UpgradePageController::class, 'index'])->name('upgrade.index');
+    Route::post('/upgrade/redeem-xp', [\App\Http\Controllers\UpgradePageController::class, 'redeemXP'])->name('upgrade.redeem-xp');
     
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -101,6 +104,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/tasks/{task}', [\App\Http\Controllers\Api\KanbanController::class, 'update'])->name('tasks.update');
         Route::delete('/tasks/{task}', [\App\Http\Controllers\Api\KanbanController::class, 'destroy'])->name('tasks.destroy');
         Route::patch('/tasks/{task}/toggle-complete', [\App\Http\Controllers\Api\KanbanController::class, 'toggleComplete'])->name('tasks.toggle-complete');
+        Route::patch('/tasks/{task}/toggle-focus', [\App\Http\Controllers\Api\KanbanController::class, 'toggleFocus'])->name('tasks.toggle-focus');
+        Route::post('/tasks/{task}/dismiss-suggestion', [\App\Http\Controllers\Api\KanbanController::class, 'dismissSuggestion'])->name('tasks.dismiss-suggestion');
+        Route::post('/tasks/focus-round-complete', [\App\Http\Controllers\Api\KanbanController::class, 'completeFocusRound'])->name('tasks.focus-round-complete');
         
         // AI Task Features
         Route::post('/tasks/{task}/suggest-breakdown', [\App\Http\Controllers\Api\KanbanController::class, 'suggestBreakdown'])->name('tasks.suggest-breakdown');
@@ -225,13 +231,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // --- GUILD ROUTES ---
 Route::middleware(['auth'])->group(function () {
     Route::resource('guilds', \App\Http\Controllers\GuildController::class);
+    Route::resource('guilds.tasks', \App\Http\Controllers\GuildTaskController::class)->shallow();
+    Route::resource('guilds.members', \App\Http\Controllers\GuildMemberController::class)->shallow()->only(['index', 'update', 'destroy']);
+    Route::post('guilds/{guild}/challenges/{challenge}/complete', [\App\Http\Controllers\GuildChallengeController::class, 'complete'])->name('guilds.challenges.complete');
+    Route::resource('guilds.challenges', \App\Http\Controllers\GuildChallengeController::class)->shallow();
+    
     // Join/Leave/Invite
     Route::post('guilds/join-by-code', [\App\Http\Controllers\GuildController::class, 'joinByCode'])->name('guilds.join-code');
     Route::post('guilds/{guild}/join', [\App\Http\Controllers\GuildController::class, 'join'])->name('guilds.join');
     Route::post('guilds/{guild}/leave', [\App\Http\Controllers\GuildController::class, 'leave'])->name('guilds.leave');
     Route::post('guilds/{guild}/invite', [\App\Http\Controllers\GuildController::class, 'invite'])->name('guilds.invite');
 
-    // Guild Tasks
     Route::get('guilds/{guild}/tasks', [\App\Http\Controllers\GuildTaskController::class, 'index'])->name('guilds.tasks.index');
     Route::post('guilds/{guild}/tasks', [\App\Http\Controllers\GuildTaskController::class, 'store'])->name('guilds.tasks.store');
     Route::put('guilds/{guild}/tasks/{task}', [\App\Http\Controllers\GuildTaskController::class, 'update'])->name('guilds.tasks.update');

@@ -125,7 +125,16 @@ class SendTaskDeadlineReminders implements ShouldQueue
         }
 
         // Send WhatsApp notification
-        $result = $fonnteService->sendMessage($task->user->phone, $message);
+        $result = $fonnteService->sendReminder($user, $message);
+
+        // Check for limit reached
+        if (isset($result['limit_reached']) && $result['limit_reached']) {
+            Log::warning('Deadline reminder limit reached', [
+                'user_id' => $user->id,
+                'task_id' => $task->id
+            ]);
+            return;
+        }
 
         if ($result['success']) {
             Log::info("Deadline reminder sent successfully ({$type})", [

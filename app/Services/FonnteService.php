@@ -84,4 +84,37 @@ class FonnteService
 
         return $results;
     }
+
+    /**
+     * Send a reminder message with rate limiting for free users.
+     * Limit: 10 reminders per day for free users. Unlimited for premium.
+     *
+     * @param \App\Models\User $user
+     * @param string $message
+     * @return array
+     */
+    public function sendReminder(\App\Models\User $user, string $message): array
+    {
+        if (!$user->phone) {
+            return ['success' => false, 'error' => 'User has no phone number'];
+        }
+
+        // Check premium status
+        $isPremium = $user->is_premium;
+
+        if (!$isPremium) {
+            $key = 'whatsapp_limit:' . $user->id . ':' . now()->format('Y-m-d');
+            $count = \Illuminate\Support\Facades\Cache::get($key, 0);
+
+            if ($count >= 10) {
+                Log::info('WhatsApp reminder limit reached for free user', ['user_id' => $user->id]);
+                return ['success' => false, 'error' => 'Daily reminder limit reached (10/day)', 'limit_reached' => true];
+            }
+
+            // Increment count (expires in 24 hours)
+            \Illuminate\Support\Facades\Cache::put($key, $count + 1, now()->addDay());
+        }
+
+        return $this->sendMessage($user->phone, $message);
+    }
 }

@@ -26,7 +26,11 @@ class Kernel extends ConsoleKernel
 
         // Gamification
         $schedule->command('challenges:generate')->dailyAt('00:01');
+
         $schedule->command('challenges:check-progress')->hourly();
+        
+        // Task Aging
+        $schedule->command('tasks:check-stagnant')->weeklyOn(1, '09:00');
     }
 
     /**

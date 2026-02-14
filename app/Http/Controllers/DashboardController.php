@@ -63,6 +63,35 @@ class DashboardController extends Controller
                 break;
         }
 
+        // --- New Features: Smart Focus 3 & Resume ---
+        // Get ALL focused tasks today (completed + uncompleted) for cycling
+        $focusTasks = $user->tasks()->personal()
+            ->whereDate('focus_date', today())
+            ->with('subtasks')
+            ->orderBy('is_completed', 'asc')
+            ->get();
+
+        // Smart Focus Suggestions (if slots available)
+        $suggestedFocusTasks = collect([]);
+        if ($focusTasks->where('is_completed', false)->count() < 3) {
+            $smartFocusService = new \App\Services\SmartFocusService();
+            $suggestedFocusTasks = $smartFocusService->getSuggestedTasks($user, 3);
+        }
+
+        $lastTask = $user->tasks()->personal()
+            ->where('is_completed', false)
+            ->whereNull('focus_date') // Don't suggest if already focused? Optional.
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        // --- Task Aging Alert ---
+        $stagnantTasks = $user->tasks()->personal()
+            ->where('is_completed', false)
+            ->where('updated_at', '<', now()->subDays(7))
+            ->orderBy('updated_at', 'asc')
+            ->take(5)
+            ->get();
+
         $tasks = $tasksQuery->orderBy('is_completed', 'asc')
                              ->orderBy('due_date', 'asc')
                              ->paginate(20)
@@ -86,16 +115,12 @@ class DashboardController extends Controller
         
         $showUpgradeModal = !$request->session()->get('dismissed_upgrade_modal', false) &&
             (!$user->is_premium);
-          return Inertia::render('Dashboard', [
-            'auth' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_premium' => $user->is_premium,
-                ],
-            ],
+        return Inertia::render('Dashboard', [
             'tasks' => $tasks ?? ['data' => [], 'total' => 0],
+            'focusTasks' => $focusTasks,
+            'suggestedFocusTasks' => $suggestedFocusTasks, // Pass to frontend
+            'resumeTask' => $lastTask,
+            'stagnantTasks' => $stagnantTasks,
             'taskStats' => $taskStats ?? ['total' => 0, 'completed' => 0, 'dueThisWeek' => 0, 'overdue' => 0],
             'filters' => $request->only(['filter']),
             'is_premium' => $user->is_premium,

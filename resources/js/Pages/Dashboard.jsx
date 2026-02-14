@@ -1,14 +1,25 @@
+import Companion from '@/Components/Companion';
+import TutorialGuide from '@/Components/TutorialGuide';
+
+import React, { useState, useEffect } from 'react';
+import { Head, usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import UpgradeModal from '@/Components/UpgradeModal';
+
 import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel';
-import { ListBulletIcon, CheckCircleIcon, CalendarDaysIcon, ExclamationTriangleIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import dayjs from 'dayjs';
-import axios from 'axios';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
-import { requestNotificationPermission, registerServiceWorker, startBackgroundTimer, stopBackgroundTimer } from '@/Utils/NotificationHelper';
+import UpgradeModal from '@/Components/UpgradeModal';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    PlusIcon, XMarkIcon, ListBulletIcon, CalendarDaysIcon,
+    ExclamationTriangleIcon, CheckCircleIcon, PlayIcon
+} from '@heroicons/react/24/outline';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
+
 
 const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     const [title, setTitle] = useState('');
@@ -150,7 +161,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     );
 };
 
-const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }) => {
+const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus, focusTasks, resumeTask, onTaskComplete }) => {
     const activeFilter = filters.filter || 'all';
 
     const handleFilterChange = (newFilter) => {
@@ -170,6 +181,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
 
     return (
         <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            {/* ... (Motion Header) ... */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -195,6 +207,45 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
                     </button>
                 </div>
             </motion.div>
+
+            {/* Resume Task Widget */}
+            <AnimatePresence>
+                {resumeTask && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, y: -20, height: 0 }}
+                        className="mb-8"
+                    >
+                        <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-white/10 dark:to-white/5 rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-teal-500/30 transition-all duration-1000" />
+
+                            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-2 text-teal-400 font-bold uppercase tracking-wider text-xs">
+                                        <PlayIcon className="w-4 h-4" />
+                                        <span>Resume Activation</span>
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-black text-white mb-1">
+                                        Welcome back, {auth.user.name.split(' ')[0]}!
+                                    </h3>
+                                    <p className="text-slate-400 text-sm md:text-base">
+                                        Ready to continue <span className="text-white font-bold">"{resumeTask.title}"</span>?
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => onStartFocus(resumeTask)}
+                                    className="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+                                >
+                                    <PlayIcon className="w-5 h-5 fill-current" />
+                                    <span>Resume Task</span>
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -233,9 +284,11 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
                 >
                     <TaskFocusPanel
                         tasks={allTasks}
+                        focusTasks={focusTasks}
                         activeFilter={activeFilter}
                         onStartFocus={onStartFocus}
                         auth={auth}
+                        onTaskComplete={onTaskComplete} // Pass to Panel
                     />
                 </motion.div>
             </div>
@@ -244,7 +297,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus }
 };
 
 export default function Dashboard(props) {
-    const { auth, tasks, taskStats, filters, plans, deadlineRisks = [] } = props;
+    const { auth, tasks, focusTasks = [], resumeTask, stagnantTasks = [], taskStats, filters, plans, deadlineRisks = [] } = props;
     const { flash } = usePage().props;
 
     const [localTasks, setLocalTasks] = useState(tasks || { data: [], total: 0 });
@@ -266,6 +319,50 @@ export default function Dashboard(props) {
     const [isRunning, setIsRunning] = useState(false);
     const [startTime, setStartTime] = useState(null);
     const [totalDuration, setTotalDuration] = useState(25 * 60);
+
+    // --- Companion State ---
+    const [companionState, setCompanionState] = useState('idle');
+    const [companionMessage, setCompanionMessage] = useState(null);
+
+    // Effect to update companion mood based on activity
+    useEffect(() => {
+        if (isRunning) {
+            setCompanionState('focusing');
+            setCompanionMessage("Mode fokus aktif. Semangat! 🤫");
+        } else {
+            setCompanionState('idle');
+        }
+    }, [isRunning]);
+
+    // Handle Task Completion (from TaskFocusPanel or QuickAdd) -> Celebrate
+    const handleTaskCompleted = () => {
+        setCompanionState('celebrating');
+        setCompanionMessage("Hebat! Satu tugas selesai! 🎉");
+        setTimeout(() => setCompanionState(isRunning ? 'focusing' : 'idle'), 3000);
+    };
+
+    // Passed to TaskFocusPanel to trigger celebration
+    const onTaskComplete = () => {
+        handleTaskCompleted();
+    };
+
+    // --- Stagnant Task Logic ---
+    const [isStagnantModalOpen, setIsStagnantModalOpen] = useState(false);
+
+    useEffect(() => {
+        if (stagnantTasks && stagnantTasks.length > 0) {
+            const hasSeen = sessionStorage.getItem('stagnant_alert_seen');
+            if (!hasSeen) {
+                // Short delay to not clash with animations
+                setTimeout(() => setIsStagnantModalOpen(true), 1500);
+            }
+        }
+    }, [stagnantTasks]);
+
+    const handleDismissStagnant = () => {
+        setIsStagnantModalOpen(false);
+        sessionStorage.setItem('stagnant_alert_seen', 'true');
+    };
 
     useEffect(() => {
         const openModal = () => setIsQuickAddOpen(true);
@@ -462,6 +559,8 @@ export default function Dashboard(props) {
         taskStats: localStats,
         filters,
         plans,
+        focusTasks,
+        resumeTask,
         onStartFocus: handleStartFocus,
     };
 
@@ -470,6 +569,20 @@ export default function Dashboard(props) {
             header={<h2 className="font-extrabold text-2xl text-slate-900 dark:text-white tracking-tight">Markas Pusat</h2>}
         >
             <Head title="Dashboard" />
+
+            {/* Companion Character */}
+            <Companion
+                state={companionState}
+                message={companionMessage}
+                onClick={() => setCompanionMessage("Ada yang bisa kubantu? 😊")}
+            />
+
+            <TutorialGuide
+                setSidebarOpen={() => { }}
+                setCompanionMessage={setCompanionMessage}
+                setCompanionState={setCompanionState}
+            />
+
             <div className={`transition-all duration-500 ${anyModalActive ? 'blur-md' : ''}`}>
                 {/* Deadline Risk Agent Alert */}
                 {deadlineRisks.length > 0 && (
@@ -501,7 +614,10 @@ export default function Dashboard(props) {
                     </div>
                 )}
 
-                <MainDashboard {...mainDashboardProps} />
+                <MainDashboard
+                    {...mainDashboardProps}
+                    onTaskComplete={onTaskComplete}
+                />
             </div>
 
             <AnimatePresence>
@@ -557,6 +673,83 @@ export default function Dashboard(props) {
                         onClose={handleCloseUpgradeModal} plans={plans}
                     />
                 }
+
+                {/* Stagnant Tasks Modal */}
+                {isStagnantModalOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+                            onClick={handleDismissStagnant}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+                        >
+                            <div className="w-full max-w-lg bg-white dark:bg-[#1C1C1E] rounded-[2rem] shadow-2xl p-6 pointer-events-auto border border-white/20 relative mx-4 max-h-[80vh] flex flex-col">
+                                <button onClick={handleDismissStagnant} className="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 z-10">
+                                    <XMarkIcon className="w-5 h-5 text-slate-500" />
+                                </button>
+
+                                <div className="text-center mb-6">
+                                    <div className="text-4xl mb-2">🕸️</div>
+                                    <h2 className="text-2xl font-black text-slate-900 dark:text-white">Task Cleaning Time!</h2>
+                                    <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm">
+                                        Ada {stagnantTasks?.length} tugas yang "berdebu" (lebih dari 7 hari tidak disentuh).
+                                        Yuk rapihkan!
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                                    {stagnantTasks?.map(task => (
+                                        <div key={task.id} className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{task.title}</h4>
+                                                <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500 font-mono">
+                                                    {dayjs(task.updated_at).fromNow()}
+                                                </span>
+                                            </div>
+                                            <div className="flex gap-2 mt-3">
+                                                <button
+                                                    onClick={() => {
+                                                        handleStartFocus(task);
+                                                        setIsStagnantModalOpen(false);
+                                                    }}
+                                                    className="flex-1 py-2 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 text-xs font-bold rounded-xl hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors"
+                                                >
+                                                    🚀 Resume
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('Archive/Delete this task?')) {
+                                                            axios.delete(route('api.tasks.destroy', task.id)).then(() => {
+                                                                router.reload({ only: ['stagnantTasks', 'tasks', 'taskStats'] });
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                                                >
+                                                    🗑️ Archive
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-center">
+                                    <button
+                                        onClick={handleDismissStagnant}
+                                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-sm font-bold"
+                                    >
+                                        Ingatkan Nanti Saja
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
             </AnimatePresence>
 
             <AnimatePresence>

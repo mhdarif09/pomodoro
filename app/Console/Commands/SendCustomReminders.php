@@ -51,7 +51,13 @@ class SendCustomReminders extends Command
                 . "Yuk segera dikerjakan! 💪🚀\n\n"
                 . "Ketik /list untuk lihat semua task.";
 
-            $result = $fonnteService->sendMessage($user->phone, $message);
+            $result = $fonnteService->sendReminder($user, $message);
+            
+            // If limit reached, don't mark as sent (try again tomorrow)
+            if (isset($result['limit_reached']) && $result['limit_reached']) {
+                $this->warn("⚠️ Limit reached for user {$user->id}. Skipping.");
+                continue; 
+            }
 
             $task->update(['reminder_sent' => true]);
 

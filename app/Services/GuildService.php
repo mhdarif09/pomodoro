@@ -25,6 +25,7 @@ class GuildService
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'emblem' => $data['emblem'] ?? '🏰',
+                'is_private' => $data['is_private'] ?? false,
                 'max_members' => $creator->activePlan->max_guild_members,
                 'weekly_xp_reset_at' => now()->startOfWeek(),
             ]);

@@ -193,6 +193,70 @@ class KanbanController extends Controller
         ]);
     }
 
+    public function toggleFocus(Task $task)
+    {
+        $this->authorize('update', $task);
+
+        $today = now()->toDateString();
+        $smartFocusService = new \App\Services\SmartFocusService();
+        
+        // If already focused today, unfocus
+        if ($task->focus_date && $task->focus_date->toDateString() === $today) {
+            $task->update(['focus_date' => null]);
+            $message = 'Removed from Focus';
+            
+            // Record rejection/removal for learning
+            $smartFocusService->recordUserChoice(auth()->user(), $task, 'rejected');
+        } else {
+            // Check limit (3 max)
+            if ($task->guild_id) {
+                // Guild Context: Count only UNCOMPLETED focused tasks (enables cycling)
+                $count = Task::where('guild_id', $task->guild_id)
+                    ->whereDate('focus_date', $today)
+                    ->where('is_completed', false)
+                    ->count();
+                $limitMsg = 'Guild Focus List Full (Max 3 aktif)';
+            } else {
+                // Personal Context: Count only UNCOMPLETED focused tasks (enables cycling)
+                $count = Task::where('user_id', auth()->id())
+                    ->whereNull('guild_id')
+                    ->whereDate('focus_date', $today)
+                    ->where('is_completed', false)
+                    ->count();
+                $limitMsg = 'Personal Focus List Full (Max 3 aktif)';
+            }
+            
+            if ($count >= 3) {
+                return response()->json(['message' => $limitMsg], 422);
+            }
+
+            $task->update(['focus_date' => $today]);
+            $message = 'Added to Focus';
+
+            // Record acceptance for learning
+            $smartFocusService->recordUserChoice(auth()->user(), $task, 'accepted');
+        }
+
+        return response()->json([
+            'message' => $message,
+            'task' => $task
+        ]);
+    }
+
+    /**
+     * Dismiss a suggested task (Smart Focus 3).
+     * Records 'skipped' preference so it won't be suggested again immediately.
+     */
+    public function dismissSuggestion(Task $task)
+    {
+        $this->authorize('update', $task);
+        
+        $smartFocusService = new \App\Services\SmartFocusService();
+        $smartFocusService->recordUserChoice(auth()->user(), $task, 'skipped');
+
+        return response()->json(['message' => 'Suggestion dismissed']);
+    }
+
     private function getTimezoneString($timezone)
     {
         $timezones = [

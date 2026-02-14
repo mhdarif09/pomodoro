@@ -31,12 +31,14 @@ class Task extends Model
         'created_via',
         'guild_id',
         'is_archived',
+        'focus_date',
     ];
 
     protected $casts = [
         'is_completed' => 'boolean',
         'due_date' => 'date',
         'start_date' => 'date',
+        'focus_date' => 'date',
         'ai_suggested_subtasks' => 'array',
         'reminder_at' => 'datetime',
         'reminder_sent' => 'boolean',

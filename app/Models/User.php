@@ -214,9 +214,9 @@ class User extends Authenticatable
         return $this->guilds()->first();
     }
 
-    public function guildMember()
+    public function guildMembers()
     {
-        return $this->hasOne(GuildMember::class);
+        return $this->hasMany(GuildMember::class);
     }
 
     /**

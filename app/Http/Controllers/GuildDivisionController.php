@@ -11,7 +11,7 @@ class GuildDivisionController extends Controller
 {
     public function index(Guild $guild)
     {
-        if (!auth()->user()->guilds->contains($guild->id)) {
+        if (!auth()->user()->guilds->contains('id', $guild->id)) {
             abort(403);
         }
 

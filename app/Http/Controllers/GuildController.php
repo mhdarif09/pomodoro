@@ -24,6 +24,7 @@ class GuildController extends Controller
         $search = $request->input('search');
 
         $guilds = Guild::with('members')
+            ->where('is_private', false)
             ->when($search, function($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%");
@@ -59,6 +60,7 @@ class GuildController extends Controller
             'name' => 'required|string|max:255|unique:guilds',
             'description' => 'nullable|string',
             'emblem' => 'nullable|string|max:10',
+            'is_private' => 'boolean',
         ]);
 
         try {
@@ -157,7 +159,8 @@ class GuildController extends Controller
                 'name' => $guild->name,
                 'description' => $guild->description,
                 'emblem' => $guild->emblem,
-                'invite_code' => $guild->invite_code, // Pass invite code to view
+                'invite_code' => $guild->invite_code,
+                'is_private' => $guild->is_private,
                 'total_xp' => $guild->total_xp,
                 'member_count' => $guild->members->count(),
                 'max_members' => $guild->max_members,

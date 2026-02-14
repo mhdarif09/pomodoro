@@ -19,11 +19,14 @@ class Challenge extends Model
         'is_active',
         'starts_at',
         'ends_at',
+        'is_team_mission',
+        'guild_id',
     ];
 
     protected $casts = [
         'requirements' => 'array',
         'is_active' => 'boolean',
+        'is_team_mission' => 'boolean',
         'starts_at' => 'date',
         'ends_at' => 'date',
     ];
@@ -33,5 +36,10 @@ class Challenge extends Model
         return $this->belongsToMany(User::class, 'user_challenges')
             ->withPivot('progress', 'completed', 'completed_at')
             ->withTimestamps();
+    }
+
+    public function guild()
+    {
+        return $this->belongsTo(Guild::class);
     }
 }
