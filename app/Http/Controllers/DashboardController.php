@@ -22,7 +22,8 @@ class DashboardController extends Controller
         \App\Services\DeadlineRiskService $riskService,
         \App\Services\TaskPrioritizationService $prioritization,
         \App\Services\AntiOverplanningService $antiOverplanning,
-        \App\Services\TaskRecoveryService $recovery
+        \App\Services\TaskRecoveryService $recovery,
+        \App\Services\FocusAnalyticsService $analytics
     ) {
         set_time_limit(0);
         $user = auth()->user();
@@ -135,10 +136,9 @@ class DashboardController extends Controller
             ];
         });
         
-        // Get yesterday's in-progress task for continuation
+        // Get last in-progress task for continuation (anytime)
         $continueWorkTask = $user->tasks()
             ->where('status', 'in_progress')
-            ->whereDate('updated_at', '<', today())
             ->orderBy('updated_at', 'desc')
             ->first();
         
@@ -156,7 +156,20 @@ class DashboardController extends Controller
         
         // Get daily focus stats
         $dailyStats = $antiOverplanning->getDailyStats($user);
-        
+
+        $todayTaskStats = $user->tasks()->personal()
+            ->whereDate('focus_date', today())
+            ->selectRaw("count(*) as total, count(case when is_completed = 1 then 1 end) as completed")
+            ->first();
+
+        $aiInsightSnippet = null;
+        $insights = $analytics->getSimplifiedInsights($user->id);
+        if (isset($insights['peak_hours'])) {
+            $aiInsightSnippet = $insights['peak_hours']['message'];
+        } elseif (isset($insights['focus_drop']) && $insights['focus_drop']['type'] === 'warning') {
+            $aiInsightSnippet = $insights['focus_drop']['message'];
+        }
+
         return Inertia::render('Dashboard', [
             'tasks' => $tasks ?? ['data' => [], 'total' => 0],
             'focusTasks' => $focusTasks,
@@ -164,6 +177,11 @@ class DashboardController extends Controller
             'resumeTask' => $lastTask,
             'stagnantTasks' => $stagnantTasks,
             'taskStats' => $taskStats ?? ['total' => 0, 'completed' => 0, 'dueThisWeek' => 0, 'overdue' => 0],
+            'todayTaskStats' => [
+                'total' => (int) ($todayTaskStats->total ?? 0),
+                'completed' => (int) ($todayTaskStats->completed ?? 0)
+            ],
+            'aiInsightSnippet' => $aiInsightSnippet,
             'filters' => $request->only(['filter']),
             'is_premium' => $user->is_premium,
             'hasReflectedToday' => $user->reflections()->whereDate('reflection_date', today())->exists(),

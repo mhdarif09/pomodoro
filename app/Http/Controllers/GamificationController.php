@@ -61,7 +61,8 @@ class GamificationController extends Controller
 
         if (!empty($newChallengesToAttach)) {
             \Illuminate\Support\Facades\DB::transaction(function () use ($user, $newChallengesToAttach) {
-                $user->challenges()->attach($newChallengesToAttach);
+                // Use syncWithoutDetaching for robustness and to avoid Duplicate Entry errors
+                $user->challenges()->syncWithoutDetaching($newChallengesToAttach);
             });
             $user->load('challenges'); // Refresh
         }

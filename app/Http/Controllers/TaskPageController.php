@@ -85,6 +85,12 @@ class TaskPageController extends Controller
             ->take(5)
             ->get();
 
+        // Today's Task stats
+        $todayTaskStats = $user->tasks()->personal()
+            ->whereDate('focus_date', today())
+            ->selectRaw("count(*) as total, count(case when is_completed = 1 then 1 end) as completed")
+            ->first();
+
         return Inertia::render('Tasks/Index', [
             'tasks' => $tasks,
             'focusTasks' => $focusTasks,
@@ -92,6 +98,10 @@ class TaskPageController extends Controller
             'resumeTask' => $resumeTask,
             'stagnantTasks' => $stagnantTasks,
             'taskStats' => $taskStats,
+            'todayTaskStats' => [
+                'total' => (int) ($todayTaskStats->total ?? 0),
+                'completed' => (int) ($todayTaskStats->completed ?? 0)
+            ],
             'filters' => $request->only(['filter']),
         ]);
     }

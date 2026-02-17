@@ -21,7 +21,6 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
         title: '',
         description: '',
         xp_reward: 100,
-        points_reward: 50,
         starts_at: '',
         ends_at: '',
     });
@@ -37,7 +36,6 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
             title: challenge.title,
             description: challenge.description || '',
             xp_reward: challenge.xp_reward,
-            points_reward: challenge.points_reward,
             starts_at: challenge.starts_at || '',
             ends_at: challenge.ends_at || '',
         });
@@ -59,7 +57,7 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
     };
 
     const handleDelete = (challenge) => {
-        if (confirm('Delete this mission?')) {
+        if (confirm('Hapus misi ini?')) {
             router.delete(route('guilds.challenges.destroy', [guild.id, challenge.id]));
         }
     };
@@ -76,7 +74,7 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                     </h1>
                     {isLeader && (
                         <button onClick={openCreate} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center gap-2">
-                            <PlusIcon className="w-5 h-5" /> New Mission
+                            <PlusIcon className="w-5 h-5" /> Misi Baru
                         </button>
                     )}
                 </div>
@@ -112,13 +110,12 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                                     <div className="text-xs text-slate-400 font-bold uppercase">Rewards</div>
                                     <div className="flex items-center gap-3 text-sm font-bold">
                                         <span className="text-amber-500 flex items-center gap-1"><CheckBadgeIcon className="w-4 h-4" /> {challenge.xp_reward} XP</span>
-                                        <span className="text-indigo-500 flex items-center gap-1"><FireIcon className="w-4 h-4" /> {challenge.points_reward} Pts</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     {challenge.completed_by_user ? (
                                         <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full text-xs font-bold flex items-center gap-1">
-                                            <CheckBadgeIcon className="w-4 h-4" /> Completed
+                                            <CheckBadgeIcon className="w-4 h-4" /> Selesai
                                         </span>
                                     ) : (
                                         <div className="flex items-center gap-2">
@@ -132,7 +129,7 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                                                     onClick={() => router.post(route('guilds.challenges.complete', [guild.id, challenge.id]))}
                                                     className="px-3 py-1 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-xs font-bold transition-colors"
                                                 >
-                                                    Complete
+                                                    Klaim Selesai
                                                 </button>
                                             )}
                                         </div>
@@ -144,8 +141,8 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                     {challenges.length === 0 && (
                         <div className="col-span-full py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
                             <TrophyIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                            <p className="text-slate-500 font-medium">No active missions.</p>
-                            {isLeader && <p className="text-sm text-slate-400">Create one to challenge your guild!</p>}
+                            <p className="text-slate-500 font-medium">Belum ada misi aktif.</p>
+                            {isLeader && <p className="text-sm text-slate-400">Buat satu untuk tantang anggota guild ente!</p>}
                         </div>
                     )}
                 </div>
@@ -154,32 +151,32 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                 <Modal show={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
                     <div className="p-6">
                         <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-4">
-                            {editingChallenge ? 'Edit Mission' : 'Create New Mission'}
+                            {editingChallenge ? 'Edit Misi' : 'Buat Misi Baru'}
                         </h2>
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <InputLabel value="Title" />
+                                <InputLabel value="Judul Misi" />
                                 <TextInput
                                     value={data.title}
                                     onChange={e => setData('title', e.target.value)}
                                     className="w-full mt-1"
-                                    placeholder="e.g. Weekly Code Sprint"
+                                    placeholder="Contoh: Sprint Coding Mingguan"
                                     required
                                 />
                                 {errors.title && <div className="text-red-500 text-xs mt-1">{errors.title}</div>}
                             </div>
                             <div>
-                                <InputLabel value="Description" />
+                                <InputLabel value="Deskripsi" />
                                 <TextInput
                                     value={data.description}
                                     onChange={e => setData('description', e.target.value)}
                                     className="w-full mt-1"
-                                    placeholder="Details about the mission..."
+                                    placeholder="Detail tentang misi ini..."
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <InputLabel value="XP Reward" />
+                                    <InputLabel value="Reward XP" />
                                     <TextInput
                                         type="number"
                                         value={data.xp_reward}
@@ -187,19 +184,10 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                                         className="w-full mt-1"
                                     />
                                 </div>
-                                <div>
-                                    <InputLabel value="Points Reward" />
-                                    <TextInput
-                                        type="number"
-                                        value={data.points_reward}
-                                        onChange={e => setData('points_reward', e.target.value)}
-                                        className="w-full mt-1"
-                                    />
-                                </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <InputLabel value="Starts At" />
+                                    <InputLabel value="Mulai Pada" />
                                     <TextInput
                                         type="date"
                                         value={data.starts_at}
@@ -208,7 +196,7 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                                     />
                                 </div>
                                 <div>
-                                    <InputLabel value="Ends At" />
+                                    <InputLabel value="Selesai Pada" />
                                     <TextInput
                                         type="date"
                                         value={data.ends_at}
@@ -218,8 +206,8 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 mt-6">
-                                <SecondaryButton onClick={() => setIsCreateOpen(false)}>Cancel</SecondaryButton>
-                                <PrimaryButton disabled={processing}>Save Mission</PrimaryButton>
+                                <SecondaryButton onClick={() => setIsCreateOpen(false)}>Batal</SecondaryButton>
+                                <PrimaryButton disabled={processing}>Simpan Misi</PrimaryButton>
                             </div>
                         </form>
                     </div>

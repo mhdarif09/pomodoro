@@ -299,7 +299,7 @@ function DroppableContainer({ id, items, children }) {
 }
 
 // 4. Main Component
-export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, onStartFocus, auth }) {
+export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, onStartFocus, auth, onTaskComplete, suggestedFocusTasks = [], hideHero = false }) {
     const { t } = useLanguage();
     // Local State for Optimistic Updates
     const [localTasks, setLocalTasks] = useState(tasks.data || []);
@@ -427,8 +427,8 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
         // Also update localFocusTasks so cycling detects completed focused tasks
         setLocalFocusTasks(prev => prev.map(t => t.id === task.id ? newTask : t));
 
-        if (newStatus && props.onTaskComplete) {
-            props.onTaskComplete();
+        if (newStatus && onTaskComplete) {
+            onTaskComplete();
         }
 
         axios.patch(route('api.tasks.toggle-complete', task.id))
@@ -496,8 +496,8 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
             <div className="space-y-8 select-none">
 
                 {/* --- SMART FOCUS 3 SECTION --- */}
-                {activeFilter === 'all' && (
-                    <div id="smart-focus-section" className="mb-8">
+                {activeFilter === 'all' && !hideHero && (
+                    <div id="smart-focus-section" className="mb-8 pt-4">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -559,7 +559,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                         </div>
 
                         {/* --- AI SUGGESTIONS SECTION (Only if slots available and suggestions exist) --- */}
-                        {activeFocusTasks.length < 3 && props.suggestedFocusTasks && props.suggestedFocusTasks.length > 0 && (
+                        {activeFocusTasks.length < 3 && suggestedFocusTasks && suggestedFocusTasks.length > 0 && (
                             <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="flex items-center gap-2 mb-3 px-1">
                                     <span className="text-lg">🤖</span>
@@ -568,7 +568,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                     </h4>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {props.suggestedFocusTasks.map((task, idx) => (
+                                    {suggestedFocusTasks.map((task, idx) => (
                                         <div key={task.id} className="bg-white dark:bg-slate-800/80 rounded-[1.5rem] p-4 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
                                             {/* Score Badge */}
                                             <div className="absolute top-0 right-0 bg-indigo-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-xl z-10">

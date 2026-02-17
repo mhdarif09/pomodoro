@@ -12,6 +12,7 @@ import DailyLimitIndicator from '@/Components/Dashboard/DailyLimitIndicator';
 import TaskRecoveryModal from '@/Components/Dashboard/TaskRecoveryModal';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
 import UpgradeModal from '@/Components/UpgradeModal';
+import DashboardNotes from '@/Components/Dashboard/DashboardNotes';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     PlusIcon, XMarkIcon, ListBulletIcon, CalendarDaysIcon,
@@ -165,7 +166,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     );
 };
 
-const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus, focusTasks, resumeTask, onTaskComplete }) => {
+const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, aiInsightSnippet, filters = {}, onStartFocus, focusTasks, resumeTask, onTaskComplete }) => {
     const activeFilter = filters.filter || 'all';
 
     const handleFilterChange = (newFilter) => {
@@ -184,134 +185,203 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus, 
     ];
 
     return (
-        <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-            {/* ... (Motion Header) ... */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 mb-12"
-            >
-                <div>
-                    <h1 className="text-4xl sm:text-6xl font-[900] text-slate-900 dark:text-white tracking-tight leading-tight">
-                        Halo, <span className="text-teal-500">{auth?.user?.name?.split(' ')[0] || 'Teman'}</span>
-                    </h1>
-                    <p className="text-xl text-slate-500 dark:text-slate-400 mt-3 font-semibold tracking-tight">
-                        Waktunya tumbuh dan lebih produktif hari ini. 🚀
-                    </p>
-                </div>
+        <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            {/* --- BEN TO GRID --- */}
+            <div className="grid grid-cols-12 gap-6 items-start">
 
-                <div className="flex shrink-0">
-                    <button
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-quick-add-task'))}
-                        className="apple-button bg-teal-500 hover:bg-teal-600 text-white shadow-xl shadow-teal-500/20 flex items-center gap-2"
-                    >
-                        <PlusIcon className="w-5 h-5 stroke-2" />
-                        Tambah Tugas
-                    </button>
-                </div>
-            </motion.div>
+                {/* 1. HERO AREA: Welcome & Header (col-12) */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="col-span-12 flex flex-col sm:flex-row sm:items-end justify-between gap-8 mb-4 border-b border-slate-100 dark:border-slate-800 pb-8"
+                >
+                    <div className="relative group">
+                        <div className="absolute -inset-4 bg-teal-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                        <h1 className="text-4xl sm:text-7xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10">
+                            Halo, <br />
+                            <span className="bg-gradient-to-r from-teal-500 to-emerald-400 bg-clip-text text-transparent">
+                                {auth?.user?.name?.split(' ')[0] || 'Teman'}
+                            </span>
+                        </h1>
+                    </div>
 
-            {/* Resume Task Widget */}
-            <AnimatePresence>
-                {resumeTask && (
+                    <div className="flex shrink-0">
+                        <button
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-quick-add-task'))}
+                            className="apple-button bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl flex items-center gap-2 py-4 px-8 rounded-2xl font-black active:scale-95 transition-all"
+                        >
+                            <PlusIcon className="w-5 h-5 stroke-[3]" />
+                            Tambah Tugas
+                        </button>
+                    </div>
+                </motion.div>
+
+                {/* 2. MAIN HUB (SMART FOCUS) - col-8 */}
+                <div className="col-span-12 lg:col-span-8 space-y-6">
+                    {/* Agent Briefing Tile - Kiko */}
                     <motion.div
-                        initial={{ opacity: 0, y: -20, height: 0 }}
-                        animate={{ opacity: 1, y: 0, height: 'auto' }}
-                        exit={{ opacity: 0, y: -20, height: 0 }}
-                        className="mb-8"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="apple-glass rounded-[2.5rem] p-6 shadow-xl border-white/5 bg-white dark:bg-slate-900 overflow-hidden group"
                     >
-                        <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-white/10 dark:to-white/5 rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-teal-500/30 transition-all duration-1000" />
-
-                            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2 text-teal-400 font-bold uppercase tracking-wider text-xs">
-                                        <PlayIcon className="w-4 h-4" />
-                                        <span>Resume Activation</span>
-                                    </div>
-                                    <h3 className="text-xl md:text-2xl font-black text-white mb-1">
-                                        Welcome back, {auth.user.name.split(' ')[0]}!
-                                    </h3>
-                                    <p className="text-slate-400 text-sm md:text-base">
-                                        Ready to continue <span className="text-white font-bold">"{resumeTask.title}"</span>?
-                                    </p>
-                                </div>
-
-                                <button
-                                    onClick={() => onStartFocus(resumeTask)}
-                                    className="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                            <div className="w-20 h-20 flex-shrink-0 bg-teal-50 dark:bg-teal-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                                <motion.div
+                                    animate={{ y: [0, -5, 0] }}
+                                    transition={{ repeat: Infinity, duration: 3 }}
+                                    className="text-4xl"
                                 >
-                                    <PlayIcon className="w-5 h-5 fill-current" />
-                                    <span>Resume Task</span>
-                                </button>
+                                    🤖
+                                </motion.div>
+                                <div className="absolute bottom-0 inset-x-0 h-1 bg-teal-500" />
+                            </div>
+                            <div className="flex-1 text-center sm:text-left">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                                    <span className="text-[10px] font-black text-teal-500 uppercase tracking-[0.2em]">Kiko's Briefing</span>
+                                    <span className="text-[10px] font-bold text-slate-400">STATUS: ACTIVE ANALYTICS</span>
+                                </div>
+                                <h4 className="text-xl font-black text-slate-900 dark:text-white mb-2 leading-tight">Siap beraksi hari ini?</h4>
+                                <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-0 sm:border-l-4 border-teal-500 pl-0 sm:pl-4 bg-teal-50/50 dark:bg-teal-900/10 py-3 rounded-xl sm:rounded-l-none sm:rounded-r-xl">
+                                    {aiInsightSnippet ? `✨ "${aiInsightSnippet}"` : "Waktunya tumbuh dan lebih produktif hari ini. Tetap fokus pada targetmu! 🚀"}
+                                </p>
                             </div>
                         </div>
                     </motion.div>
-                )}
-            </AnimatePresence>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="apple-glass p-1.5 rounded-[2rem] flex items-center shadow-lg border-white/5 mb-12 overflow-x-auto scrollbar-hide"
-            >
-                {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
-                    <button
-                        key={key}
-                        onClick={() => handleFilterChange(key)}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.5rem] text-[13px] font-bold transition-all duration-500 relative overflow-hidden group flex-shrink-0
-                            ${activeFilter === key
-                                ? 'text-white shadow-lg'
-                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                            }`}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="apple-glass rounded-[2.5rem] p-6 shadow-2xl border-white/10 dark:bg-white/5"
                     >
-                        {activeFilter === key && (
-                            <motion.div
-                                layoutId="activeFilterBg"
-                                className={`absolute inset-0 ${colorClass} brightness-110`}
-                                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                            />
-                        )}
-                        <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${activeFilter === key ? 'text-white' : 'text-slate-400 group-hover:text-teal-500'}`} />
-                        <span className={activeFilter === key ? 'block' : 'hidden md:block'}>{title}</span>
-                    </button>
-                ))}
-            </motion.div>
+                        <TaskFocusPanel
+                            tasks={allTasks}
+                            focusTasks={focusTasks}
+                            activeFilter="all"
+                            onStartFocus={onStartFocus}
+                            auth={auth}
+                            onTaskComplete={onTaskComplete}
+                            hideHero={false} // Show Smart Focus here
+                        />
+                    </motion.div>
+                </div>
 
-            <div className="space-y-10">
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                >
-                    <TaskFocusPanel
-                        tasks={allTasks}
-                        focusTasks={focusTasks}
-                        activeFilter={activeFilter}
-                        onStartFocus={onStartFocus}
-                        auth={auth}
-                        onTaskComplete={onTaskComplete} // Pass to Panel
-                    />
-                </motion.div>
+                {/* 3. PERFORMANCE SIDEBAR (col-4) */}
+                <div className="col-span-12 lg:col-span-4 space-y-6">
+                    {/* Momentum Stats Group */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="space-y-4"
+                    >
+                        {/* Task Momentum Card */}
+                        <div className="apple-glass p-8 rounded-[2.5rem] border-white/5 shadow-xl relative overflow-hidden group bg-gradient-to-br from-white/80 to-teal-50/20 dark:from-slate-900/80 dark:to-teal-900/10">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-12 -mt-12" />
+                            <div className="relative z-10">
+                                <span className="text-[10px] font-black text-teal-500 uppercase tracking-[0.2em] mb-4 block">Task Pipeline</span>
+                                <div className="flex items-end justify-between mb-4">
+                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-none">
+                                        {todayTaskStats.completed}<span className="text-slate-400 text-xl font-bold">/{Math.max(todayTaskStats.total, 3)}</span>
+                                    </h3>
+                                    <div className="bg-teal-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
+                                        {Math.round((todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%
+                                    </div>
+                                </div>
+                                <div className="h-3 bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner border border-white/5">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(100, (todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%` }}
+                                        className="h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Focus Momentum Card */}
+                        <div className="apple-glass p-8 rounded-[2.5rem] border-white/5 shadow-xl relative overflow-hidden group bg-gradient-to-br from-white/80 to-orange-50/20 dark:from-slate-900/80 dark:to-orange-900/10">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-12 -mt-12" />
+                            <div className="relative z-10">
+                                <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-4 block">Deep Work Flow</span>
+                                <div className="flex items-end justify-between mb-4">
+                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-none">
+                                        {dailyStats.current}<span className="text-slate-400 text-xl font-bold">/{dailyStats.limit}</span>
+                                    </h3>
+                                    <div className="bg-orange-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
+                                        {Math.round((dailyStats.current / dailyStats.limit) * 100)}%
+                                    </div>
+                                </div>
+                                <div className="h-3 bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner border border-white/5">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(100, (dailyStats.current / dailyStats.limit) * 100)}%` }}
+                                        className="h-full bg-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* 4. LOWER ROW: BACKLOG & FILTERS (col-12 or col-8) */}
+                <div className="col-span-12">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Semua Tugas 📖</h2>
+                        <div className="flex gap-2">
+                            {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => handleFilterChange(key)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all
+                                        ${activeFilter === key
+                                            ? `${colorClass} text-white shadow-lg`
+                                            : 'bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-100 dark:border-slate-700'
+                                        }`}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    <span>{title}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {activeFilter !== 'all' && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="apple-glass rounded-[2rem] p-4 shadow-xl mb-10"
+                        >
+                            <TaskFocusPanel
+                                tasks={allTasks}
+                                focusTasks={focusTasks}
+                                activeFilter={activeFilter}
+                                onStartFocus={onStartFocus}
+                                auth={auth}
+                                onTaskComplete={onTaskComplete}
+                                hideHero={true} // Hide Smart Focus here as it's already shown
+                            />
+                        </motion.div>
+                    )}
+                </div>
             </div>
-        </div >
+        </div>
     );
 };
 
 export default function Dashboard(props) {
     const {
         auth, tasks, focusTasks = [], resumeTask, stagnantTasks = [], taskStats, filters, plans, deadlineRisks = [],
-        priorityTasks = [], continueWorkTask, recoveryPlan, dailyStats = { current: 0, limit: 3 }
+        priorityTasks = [], continueWorkTask, recoveryPlan, dailyStats = { current: 0, limit: 3 },
+        todayTaskStats = { completed: 0, total: 3 }, aiInsightSnippet
     } = props;
     const { flash } = usePage().props;
 
-    const [localTasks, setLocalTasks] = useState(tasks || { data: [], total: 0 });
+    // Ensure we work with the array of tasks, handling both array and paginated object
+    const resolveTasks = (t) => Array.isArray(t) ? t : (t?.data || []);
+
+    const [localTasks, setLocalTasks] = useState(resolveTasks(tasks));
     const [localStats, setLocalStats] = useState(taskStats || { total: 0, completed: 0, dueThisWeek: 0, overdue: 0 });
 
     useEffect(() => {
-        setLocalTasks(tasks);
+        setLocalTasks(resolveTasks(tasks));
         setLocalStats(taskStats);
     }, [tasks, taskStats]);
 
@@ -371,6 +441,34 @@ export default function Dashboard(props) {
     const handleDismissStagnant = () => {
         setIsStagnantModalOpen(false);
         sessionStorage.setItem('stagnant_alert_seen', 'true');
+    };
+
+    // Helper functions for notifications and service worker
+    const requestNotificationPermission = async () => {
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notification");
+            return false;
+        }
+
+        let permission = Notification.permission;
+        if (permission === "granted") {
+            return true;
+        } else if (permission !== "denied") {
+            permission = await Notification.requestPermission();
+            return permission === "granted";
+        }
+        return false;
+    };
+
+    const registerServiceWorker = async () => {
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            } catch (err) {
+                console.log('ServiceWorker registration failed: ', err);
+            }
+        }
     };
 
     useEffect(() => {
@@ -571,11 +669,18 @@ export default function Dashboard(props) {
         auth,
         allTasks: localTasks,
         taskStats: localStats,
+        todayTaskStats,
+        dailyStats,
+        aiInsightSnippet,
         filters,
         plans,
         focusTasks,
         resumeTask,
         onStartFocus: handleStartFocus,
+        onTaskComplete: (taskId) => {
+            setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, is_completed: true } : t));
+            // Trigger refresh or update local stats if needed
+        }
     };
 
     return (
@@ -586,8 +691,12 @@ export default function Dashboard(props) {
 
             {/* Companion Character */}
             <Companion
+                tasks={localTasks}
+                isTimerRunning={isRunning}
+                user={auth.user}
                 state={companionState}
                 message={companionMessage}
+                activeTask={activeTask} // Pass active task for context analysis
                 onClick={() => setCompanionMessage("Ada yang bisa kubantu? 😊")}
             />
 
@@ -640,6 +749,10 @@ export default function Dashboard(props) {
                         <ContinueWorkBanner
                             task={continueWorkTask}
                             onDismiss={() => setShowContinueBanner(false)}
+                            onContinue={() => {
+                                handleStartFocus(continueWorkTask);
+                                setShowContinueBanner(false);
+                            }}
                         />
                     )}
 
@@ -796,6 +909,10 @@ export default function Dashboard(props) {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Quick Notes Widget */}
+            <DashboardNotes auth={auth} />
+
 
             <AnimatePresence>
                 {activeTask && (

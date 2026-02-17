@@ -162,6 +162,7 @@ class GuildController extends Controller
                 'invite_code' => $guild->invite_code,
                 'is_private' => $guild->is_private,
                 'total_xp' => $guild->total_xp,
+                'xp_balance' => $guild->xp_balance,
                 'member_count' => $guild->members->count(),
                 'max_members' => $guild->max_members,
                 'is_leader' => $guild->members()->where('user_id', auth()->id())->wherePivot('role', 'leader')->exists(),

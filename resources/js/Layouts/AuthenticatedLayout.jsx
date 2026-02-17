@@ -58,6 +58,8 @@ export default function Authenticated({ children, header }) {
         return null;
     });
 
+    const isLeader = activeGuild?.is_leader || currentGuild?.pivot?.role === 'leader';
+
     // Sync state with active route/prop changes
     useEffect(() => {
         if (activeGuild) {
@@ -365,13 +367,15 @@ export default function Authenticated({ children, header }) {
                                     <DocumentTextIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
                                     {!isCollapsed && <span>Tasks</span>}
                                 </Link>
-                                <Link
-                                    href={currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#'}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('guilds.challenges.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
-                                >
-                                    <FireIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
-                                    {!isCollapsed && <span>Missions</span>}
-                                </Link>
+                                {isLeader && (
+                                    <Link
+                                        href={currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#'}
+                                        className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('guilds.challenges.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                    >
+                                        <FireIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                        {!isCollapsed && <span>Missions</span>}
+                                    </Link>
+                                )}
                                 <Link
                                     href={currentGuild ? route('guilds.members.index', currentGuild.id) : '#'}
                                     className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('guilds.members.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
@@ -520,7 +524,7 @@ export default function Authenticated({ children, header }) {
                                     {[
                                         { href: currentGuild ? route('guilds.show', currentGuild.id) : route('guilds.index'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.show') },
                                         { href: currentGuild ? route('guilds.tasks.index', currentGuild.id) : '#', icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('guilds.tasks.index') },
-                                        { href: currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#', icon: <FireIcon className="h-[22px] w-[22px]" />, label: 'Missions', active: route().current('guilds.challenges.index') },
+                                        ...(isLeader ? [{ href: currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#', icon: <FireIcon className="h-[22px] w-[22px]" />, label: 'Missions', active: route().current('guilds.challenges.index') }] : []),
                                         { href: currentGuild ? route('guilds.members.index', currentGuild.id) : '#', icon: <UserGroupIcon className="h-[22px] w-[22px]" />, label: 'Members', active: route().current('guilds.members.index') },
                                         { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit') },
                                     ].map((item, i) => (

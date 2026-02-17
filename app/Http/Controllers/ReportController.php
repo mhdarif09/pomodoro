@@ -26,6 +26,12 @@ class ReportController extends Controller
             
             $totalFocusMinutes = PomodoroSession::where('user_id', $user->id)->sum('focus_minutes');
             
+            $successSessions = PomodoroSession::where('user_id', $user->id)
+                ->where('completed_successfully', true)
+                ->count();
+            $totalSessions = PomodoroSession::where('user_id', $user->id)->count();
+            $focusSuccessRate = $totalSessions > 0 ? round(($successSessions / $totalSessions) * 100) : 0;
+            
             // Streak calculation
             $sessions = PomodoroSession::where('user_id', $user->id)
                 ->select(DB::raw('DATE(created_at) as date'))
@@ -69,6 +75,7 @@ class ReportController extends Controller
                 'totalTasks' => $totalTasks,
                 'streak' => $streak,
                 'totalFocusMinutes' => $totalFocusMinutes,
+                'focusSuccessRate' => $focusSuccessRate,
                 'focusDropHours' => $focusDropHoursText,
                 'topProductiveHour' => $topProductiveHour,
                 'aiInsights' => $insights,

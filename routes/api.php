@@ -20,3 +20,6 @@ Route::post('/ask-academic-writer', [OpenAIController::class, 'askAcademicWriter
 // 📚 Analisis dari file PDF / Excel (fitur unggah)
 Route::post('/ask-from-pdf', [OpenAIController::class, 'askFromPdf'])->name('ai.askFromPdf');
 Route::post('/ask-from-sheet', [OpenAIController::class, 'askFromSheet'])->name('ai.askFromSheet');
+
+// 💳 Midtrans Webhook
+Route::post('midtrans/webhook', [\App\Http\Controllers\PaymentCallbackController::class, 'handle'])->name('midtrans.webhook');

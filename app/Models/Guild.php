@@ -19,6 +19,7 @@ class Guild extends Model
         'total_xp',
         'weekly_xp',
         'weekly_xp_reset_at',
+        'xp_balance',
     ];
 
     protected static function boot()

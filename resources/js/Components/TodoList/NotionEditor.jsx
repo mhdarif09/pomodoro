@@ -40,7 +40,42 @@ const SlashCommand = Extension.create({
 
 export default function ModernEditor({ content, onChange, editable = true, enableAi = true }) {
 
-    // ... (handleAICommand remains same)
+    const handleAICommand = async (editor, range, item) => {
+        // 1. Delete the slash command query
+        editor.chain().focus().deleteRange(range).run();
+
+        // 2. Insert Loading State
+        const loadingPos = editor.state.selection.from;
+        editor.chain().focus().insertContent('<span class="text-slate-400 italic animate-pulse">✨ AI sedang berpikir...</span>').run();
+
+        try {
+            // 3. Call API
+            const response = await axios.post(route('api.ai.text-action'), {
+                action: item.title,
+                context: editor.getText(), // Send plain text for better context processing
+                marketing_mode: false
+            });
+
+            // 4. Replace Loading with Result
+            // We select the range where we inserted the loading text. 
+            // Since it's just a span, we can try to undo? No, that's risky.
+            // Let's just delete the range of the inserted loading text.
+            // Approximate length of "✨ AI sedang berpikir..." is 24 chars + span tags.
+            // A safer way: Select the whole document and replace? No.
+            // Let's just use `undo` to remove the loading text, then insert.
+            editor.chain().focus().undo().run();
+
+            if (response.data && response.data.text) {
+                editor.chain().focus().insertContent(response.data.text).run();
+            }
+
+        } catch (error) {
+            console.error("AI Error:", error);
+            editor.chain().focus().undo().run(); // Remove loading
+            // Optional: Insert error message
+            // editor.chain().focus().insertContent('<span class="text-red-500 text-xs">Gagal.</span>').run();
+        }
+    };
 
     const editor = useEditor({
         extensions: [
@@ -49,7 +84,7 @@ export default function ModernEditor({ content, onChange, editable = true, enabl
                 orderedList: { keepMarks: true, keepAttributes: false },
             }),
             Placeholder.configure({
-                placeholder: enableAi ? 'Type "/" for AI commands...' : 'Type something...',
+                placeholder: enableAi ? 'Ketik "/" untuk perintah AI...' : 'Mulai menulis...',
             }),
             TaskList,
             TaskItem.configure({ nested: true }),
@@ -57,12 +92,12 @@ export default function ModernEditor({ content, onChange, editable = true, enabl
                 suggestion: {
                     items: ({ query }) => {
                         return [
-                            { title: 'Continue Writing', description: 'AI writes the next paragraph.', icon: PencilSquareIcon },
-                            { title: 'Summarize', description: 'Condense the text above.', icon: ListBulletIcon },
-                            { title: 'Fix Grammar', description: 'Fix spelling errors.', icon: SparklesIcon },
-                            { title: 'Simplify', description: 'Make it easier to read.', icon: BookOpenIcon },
-                            { title: 'Brainstorm Ideas', description: 'Generate creative ideas.', icon: SparklesIcon },
-                            { title: 'Translate to ID/EN', description: 'Translate text.', icon: LanguageIcon },
+                            { title: 'Lanjutkan Tulisan', description: 'AI melanjutkan kalimatmu.', icon: PencilSquareIcon },
+                            { title: 'Ringkas Teks', description: 'Buat kesimpulan singkat.', icon: ListBulletIcon },
+                            { title: 'Perbaiki Ejaan', description: 'Koreksi tata bahasa.', icon: SparklesIcon },
+                            { title: 'Sederhanakan', description: 'Buat kalimat lebih mudah dipahami.', icon: BookOpenIcon },
+                            { title: 'Cari Ide', description: 'Brainstorming ide kreatif.', icon: SparklesIcon },
+                            { title: 'Terjemahkan', description: 'Indonesia <-> Inggris.', icon: LanguageIcon },
                         ].filter(item => item.title.toLowerCase().startsWith(query.toLowerCase()));
                     },
                     render: () => {

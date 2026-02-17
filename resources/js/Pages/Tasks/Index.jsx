@@ -4,7 +4,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     PlusIcon, ListBulletIcon, CalendarDaysIcon, ExclamationTriangleIcon,
-    CheckCircleIcon, CheckIcon, PlayIcon, XMarkIcon
+    CheckCircleIcon, CheckIcon, PlayIcon, XMarkIcon, ChartBarIcon
 } from '@heroicons/react/24/outline';
 import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
@@ -90,7 +90,7 @@ function QuickAddTaskModal({ isOpen, onClose, onTaskAdded }) {
 }
 
 export default function MyTasks(props) {
-    const { auth, tasks, focusTasks = [], resumeTask, stagnantTasks = [], taskStats, filters } = props;
+    const { auth, tasks, focusTasks = [], resumeTask, stagnantTasks = [], taskStats, todayTaskStats = { completed: 0, total: 3 }, filters, suggestedFocusTasks = [] } = props;
 
     const [localTasks, setLocalTasks] = useState(tasks || { data: [], total: 0 });
     const [localStats, setLocalStats] = useState(taskStats || { total: 0, completed: 0, dueThisWeek: 0, overdue: 0 });
@@ -298,120 +298,133 @@ export default function MyTasks(props) {
         >
             <Head title="My Tasks" />
 
-            <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                {/* Header */}
+            <div className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+                {/* 1. MINIMALIST HEADER */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8 }}
+                    className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-slate-100 dark:border-slate-800 pb-10"
                 >
                     <div>
-                        <h1 className="text-3xl sm:text-5xl font-[900] text-slate-900 dark:text-white tracking-tight leading-tight">
-                            My Tasks 📋
+                        <h1 className="text-5xl sm:text-7xl font-[1000] text-slate-900 dark:text-white tracking-[ -0.05em] leading-[0.9]">
+                            My Tasks <span className="text-teal-500">.</span>
                         </h1>
-                        <p className="text-lg text-slate-500 dark:text-slate-400 mt-2 font-semibold tracking-tight">
-                            Kelola semua tugas pribadimu di sini.
+                        <p className="text-xl text-slate-400 dark:text-slate-500 mt-4 font-bold tracking-tight">
+                            Command your day, one task at a time.
                         </p>
                     </div>
 
                     <div className="flex shrink-0">
                         <button
                             onClick={() => setIsQuickAddOpen(true)}
-                            className="apple-button bg-teal-500 hover:bg-teal-600 text-white shadow-xl shadow-teal-500/20 flex items-center gap-2"
+                            className="bg-teal-500 hover:bg-teal-600 text-white shadow-2xl shadow-teal-500/20 px-10 py-5 rounded-[2rem] font-[1000] text-lg transition-all active:scale-95 flex items-center gap-3"
                         >
-                            <PlusIcon className="w-5 h-5 stroke-2" />
-                            Tambah Tugas
+                            <PlusIcon className="w-6 h-6 stroke-[3]" />
+                            Create Task
                         </button>
                     </div>
                 </motion.div>
 
-                {/* Resume Task Widget */}
-                <AnimatePresence>
-                    {resumeTask && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -20, height: 0 }}
-                            animate={{ opacity: 1, y: 0, height: 'auto' }}
-                            exit={{ opacity: 0, y: -20, height: 0 }}
-                            className="mb-8"
-                        >
-                            <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-white/10 dark:to-white/5 rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-teal-500/30 transition-all duration-1000" />
-                                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2 text-teal-400 font-bold uppercase tracking-wider text-xs">
-                                            <PlayIcon className="w-4 h-4" />
-                                            <span>Resume Activation</span>
+                {/* 2. PERSISTENCE BANNERS (Resume & Momentum) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Resume Widget */}
+                    <AnimatePresence>
+                        {resumeTask && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="col-span-1 md:col-span-2"
+                            >
+                                <div className="bg-slate-900 dark:bg-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group h-full">
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-teal-500/30 transition-all duration-1000" />
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-2 mb-4 text-teal-400 dark:text-teal-600 font-black uppercase tracking-widest text-[10px]">
+                                            <PlayIcon className="w-4 h-4 fill-current" />
+                                            <span>Active Memory</span>
                                         </div>
-                                        <h3 className="text-xl md:text-2xl font-black text-white mb-1">
-                                            Lanjutkan tugasmu!
+                                        <h3 className="text-2xl md:text-3xl font-black text-white dark:text-slate-900 mb-6 leading-tight">
+                                            Keep looking at <br />
+                                            <span className="text-teal-400 dark:text-teal-600">"{resumeTask.title}"</span>
                                         </h3>
-                                        <p className="text-slate-400 text-sm md:text-base">
-                                            Ready to continue <span className="text-white font-bold">"{resumeTask.title}"</span>?
-                                        </p>
+                                        <button
+                                            onClick={() => handleStartFocus(resumeTask)}
+                                            className="px-8 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl font-black hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center gap-3"
+                                        >
+                                            <PlayIcon className="w-6 h-6 fill-current" />
+                                            <span>Focus Now</span>
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => handleStartFocus(resumeTask)}
-                                        className="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-2"
-                                    >
-                                        <PlayIcon className="w-5 h-5 fill-current" />
-                                        <span>Resume Task</span>
-                                    </button>
                                 </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                {/* Filter Tabs */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    className="apple-glass p-1.5 rounded-[2rem] flex items-center shadow-lg border-white/5 mb-10 overflow-x-auto scrollbar-hide"
-                >
-                    {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
-                        <button
-                            key={key}
-                            onClick={() => handleFilterChange(key)}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.5rem] text-[13px] font-bold transition-all duration-500 relative overflow-hidden group flex-shrink-0
-                                ${activeFilter === key
-                                    ? 'text-white shadow-lg'
-                                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                                }`}
-                        >
-                            {activeFilter === key && (
-                                <motion.div
-                                    layoutId="activeFilterBgTasks"
-                                    className={`absolute inset-0 ${colorClass} brightness-110`}
-                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                            <Icon className={`w-4 h-4 relative z-10 transition-transform group-hover:scale-110 ${activeFilter === key ? 'text-white' : 'text-slate-400 group-hover:text-teal-500'}`} />
-                            <span className="relative z-10">{title}</span>
-                        </button>
-                    ))}
-                </motion.div>
-
-                {/* Focus Panel + Tasks */}
-                <div className="space-y-10">
+                    {/* Momentum Stats Group */}
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="col-span-1 border-2 border-slate-100 dark:border-slate-800 p-8 rounded-[2.5rem] relative overflow-hidden flex flex-col justify-between"
                     >
+                        <div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Daily Velocity</span>
+                            <p className="text-5xl font-black text-slate-900 dark:text-white">
+                                {todayTaskStats.completed}<span className="text-slate-300">/{Math.max(todayTaskStats.total, 3)}</span>
+                            </p>
+                        </div>
+                        <div className="mt-8">
+                            <div className="h-4 bg-slate-50 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-100 dark:border-slate-800">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${Math.round((todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%` }}
+                                    className="h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+                                />
+                            </div>
+                            <p className="text-[11px] font-black text-teal-500 uppercase mt-4 text-right">
+                                {Math.round((todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}% COMPLETED
+                            </p>
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* 3. TASK REPOSITORY (Filters & List) */}
+                <div className="space-y-8">
+                    {/* Visual Tabs */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-wrap items-center gap-3"
+                    >
+                        {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
+                            <button
+                                key={key}
+                                onClick={() => handleFilterChange(key)}
+                                className={`flex items-center gap-2 px-8 py-4 rounded-[2rem] text-sm font-black transition-all border-2
+                                    ${activeFilter === key
+                                        ? `${colorClass} text-white border-transparent shadow-xl`
+                                        : 'bg-white dark:bg-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white border-slate-100 dark:border-slate-800'
+                                    }`}
+                            >
+                                <Icon className="w-5 h-5 stroke-[2.5]" />
+                                <span>{title}</span>
+                            </button>
+                        ))}
+                    </motion.div>
+
+                    {/* Task Display */}
+                    <div className="apple-glass rounded-[3rem] p-6 shadow-2xl border-white/5">
                         <TaskFocusPanel
                             tasks={localTasks}
                             focusTasks={focusTasks}
                             activeFilter={activeFilter}
                             onStartFocus={handleStartFocus}
                             auth={auth}
+                            suggestedFocusTasks={suggestedFocusTasks}
+                            hideHero={false} // Hero shows "Today's Focus" inside TaskFocusPanel
                         />
-                    </motion.div>
+                    </div>
                 </div>
             </div>
-
-            {/* Quick Add Modal */}
             <AnimatePresence>
                 {isQuickAddOpen && (
                     <QuickAddTaskModal
@@ -553,6 +566,6 @@ export default function MyTasks(props) {
                     />
                 )}
             </AnimatePresence>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 }

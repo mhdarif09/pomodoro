@@ -80,6 +80,45 @@ class MidtransService
         }
     }
 
+    public function createTopupTransaction(\App\Models\XpTopup $topup)
+    {
+        $topup->load(['user', 'guild']);
+
+        $orderId = 'TOPUP-' . uniqid() . '-' . $topup->id;
+        $topup->update(['midtrans_order_id' => $orderId]);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => (int) $topup->amount_idr,
+            ],
+            'customer_details' => [
+                'first_name' => $this->sanitizeInput($topup->user->name),
+                'email' => filter_var($topup->user->email, FILTER_SANITIZE_EMAIL),
+            ],
+            'item_details' => [
+                [
+                    'id' => 'XP-TOPUP',
+                    'price' => (int) $topup->amount_idr,
+                    'quantity' => 1,
+                    'name' => "Guild XP Top-up: {$topup->amount_xp} XP for {$topup->guild->name}",
+                ]
+            ],
+            'callbacks' => [
+                'finish' => route('guilds.show', $topup->guild_id),
+            ]
+        ];
+
+        try {
+            $snap = Snap::createTransaction($params);
+            $topup->update(['snap_token' => $snap->token]);
+            return $snap;
+        } catch (\Exception $e) {
+            Log::error("Midtrans Top-up creation failed", ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
     /**
      * Handle and validate Midtrans notification webhook
      */
@@ -144,7 +183,7 @@ class MidtransService
         }
 
         // Validate order_id format
-        if (!preg_match('/^ORDER-[a-f0-9]+-\d+$/i', $notification->order_id)) {
+        if (!preg_match('/^(ORDER|TOPUP)-[a-f0-9]+-\d+$/i', $notification->order_id)) {
             Log::warning("Suspicious order_id format", ['order_id' => $notification->order_id]);
         }
 

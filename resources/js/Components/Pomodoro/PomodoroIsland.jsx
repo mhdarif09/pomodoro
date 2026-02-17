@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlayIcon, PauseIcon, ArrowPathIcon, XMarkIcon, ChevronUpIcon } from '@heroicons/react/24/solid'; // Changed imports
 import BreakMode from './BreakMode';
+import MusicPlayer from './MusicPlayer';
 
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -143,7 +144,7 @@ export default function PomodoroIsland({
                         pointer-events-auto cursor-pointer
                         bg-black dark:bg-slate-900 border border-white/10
                         shadow-2xl shadow-black/40
-                        flex items-center justify-between overflow-hidden
+                        flex items-center justify-between ${isExpanded ? 'overflow-visible' : 'overflow-hidden'}
                         ${isExpanded ? 'rounded-[2.5rem] w-[340px] p-6' : 'rounded-full w-[170px] h-[36px] p-2'}
                     `}
                     style={{
@@ -152,8 +153,8 @@ export default function PomodoroIsland({
                         transition: { type: 'spring', stiffness: 300, damping: 30 }
                     }}
                 >
-                    {!isExpanded ? (
-                        /* Mini View */
+                    {/* Mini View */}
+                    {!isExpanded && (
                         <div className="flex items-center justify-between w-full px-2">
                             <div className="flex items-center gap-2">
                                 <div className={`w-5 h-5 rounded-full border-2 ${isBreakActive ? 'border-emerald-500/30' : 'border-teal-500/30'} flex items-center justify-center relative`}>
@@ -186,118 +187,120 @@ export default function PomodoroIsland({
                                 )}
                             </div>
                         </div>
-                    ) : (
-                        /* Expanded View */
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="w-full space-y-4"
-                        >
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0 pr-4">
-                                    <p className={`text-[10px] font-black ${isBreakActive ? 'text-emerald-400' : 'text-teal-400'} uppercase tracking-widest mb-1`}>
-                                        {isBreakActive ? 'Break Mode' : 'Focus Mode'}
-                                    </p>
-                                    <h3 className="text-sm font-bold text-white truncate">
-                                        {isBreakActive ? 'Recharging...' : (taskTitle || 'Sesi Fokus')}
-                                    </h3>
-                                </div>
+                    )}
+
+                    {/* Expanded View */}
+                    <motion.div
+                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                        className={`${isExpanded ? "w-full space-y-4" : "absolute top-0 left-0 w-full h-0 overflow-hidden opacity-0 pointer-events-none"}`}
+                    >
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0 pr-4">
+                                <p className={`text-[10px] font-black ${isBreakActive ? 'text-emerald-400' : 'text-teal-400'} uppercase tracking-widest mb-1`}>
+                                    {isBreakActive ? 'Break Mode' : 'Focus Mode'}
+                                </p>
+                                <h3 className="text-sm font-bold text-white truncate">
+                                    {isBreakActive ? 'Recharging...' : (taskTitle || 'Sesi Fokus')}
+                                </h3>
+                            </div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                                className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
+                            >
+                                <XMarkIcon className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col items-center">
+                            <span className="text-5xl font-black text-white font-mono tracking-tighter">
+                                {formatTime(activeTime)}
+                            </span>
+
+                            {/* Progress Bar */}
+                            <div className="w-full h-1.5 bg-white/5 rounded-full mt-4 overflow-hidden">
+                                <motion.div
+                                    className={`h-full ${bgColor}`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${activeProgress * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-3 pt-2">
+                            {/* Music Player */}
+                            <MusicPlayer />
+
+                            {!isBreakActive && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); onClose(); }}
-                                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
+                                    onClick={handleManualBreak}
+                                    className="p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-all active:scale-95 border border-emerald-500/20"
+                                    title="Take a Break"
                                 >
-                                    <XMarkIcon className="w-4 h-4" />
+                                    ☕
+                                </button>
+                            )}
+
+                            {isBreakActive ? (
+                                <>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); toggleBreakPause(); }}
+                                        className={`flex-1 py-3 px-6 rounded-2xl ${isBreakPaused ? 'bg-emerald-500 text-black' : 'bg-white text-black'} font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95`}
+                                    >
+                                        {isBreakPaused ? <PlayIcon className="w-4 h-4" /> : <PauseIcon className="w-4 h-4" />}
+                                        {isBreakPaused ? 'Resume' : 'Pause'}
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleSkipBreak(); }}
+                                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-95"
+                                        title="End Break"
+                                    >
+                                        <XMarkIcon className="w-5 h-5" />
+                                    </button>
+                                </>
+                            ) : (
+                                /* Focus Controls */
+                                <>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onReset(); }}
+                                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-95"
+                                        title="Reset"
+                                    >
+                                        <ArrowPathIcon className="w-5 h-5" />
+                                    </button>
+
+                                    {!isRunning ? (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onStart(); }}
+                                            className="flex-1 py-3 px-6 rounded-2xl bg-teal-500 hover:bg-teal-400 text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-500/20 active:scale-95"
+                                        >
+                                            <PlayIcon className="w-4 h-4" />
+                                            Mulai
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onStop(); }}
+                                            className="flex-1 py-3 px-6 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+                                        >
+                                            <PauseIcon className="w-4 h-4" />
+                                            Pause
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {isBreakActive && (
+                            <div className="flex justify-center mt-2">
+                                <button
+                                    onClick={handleMaximizeBreak}
+                                    className="text-[10px] text-emerald-400/60 hover:text-emerald-400 uppercase font-black tracking-widest flex items-center gap-1"
+                                >
+                                    <ChevronUpIcon className="w-3 h-3" />
+                                    Open Fullscreen
                                 </button>
                             </div>
-
-                            <div className="flex flex-col items-center">
-                                <span className="text-5xl font-black text-white font-mono tracking-tighter">
-                                    {formatTime(activeTime)}
-                                </span>
-
-                                {/* Progress Bar */}
-                                <div className="w-full h-1.5 bg-white/5 rounded-full mt-4 overflow-hidden">
-                                    <motion.div
-                                        className={`h-full ${bgColor}`}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${activeProgress * 100}%` }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-center gap-3 pt-2">
-                                {!isBreakActive && (
-                                    <button
-                                        onClick={handleManualBreak}
-                                        className="p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-all active:scale-95 border border-emerald-500/20"
-                                        title="Take a Break"
-                                    >
-                                        ☕
-                                    </button>
-                                )}
-
-                                {isBreakActive ? (
-                                    <>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); toggleBreakPause(); }}
-                                            className={`flex-1 py-3 px-6 rounded-2xl ${isBreakPaused ? 'bg-emerald-500 text-black' : 'bg-white text-black'} font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95`}
-                                        >
-                                            {isBreakPaused ? <PlayIcon className="w-4 h-4" /> : <PauseIcon className="w-4 h-4" />}
-                                            {isBreakPaused ? 'Resume' : 'Pause'}
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleSkipBreak(); }}
-                                            className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-95"
-                                            title="End Break"
-                                        >
-                                            <XMarkIcon className="w-5 h-5" />
-                                        </button>
-                                    </>
-                                ) : (
-                                    /* Focus Controls */
-                                    <>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); onReset(); }}
-                                            className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-95"
-                                            title="Reset"
-                                        >
-                                            <ArrowPathIcon className="w-5 h-5" />
-                                        </button>
-
-                                        {!isRunning ? (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); onStart(); }}
-                                                className="flex-1 py-3 px-6 rounded-2xl bg-teal-500 hover:bg-teal-400 text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-500/20 active:scale-95"
-                                            >
-                                                <PlayIcon className="w-4 h-4" />
-                                                Mulai
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); onStop(); }}
-                                                className="flex-1 py-3 px-6 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
-                                            >
-                                                <PauseIcon className="w-4 h-4" />
-                                                Pause
-                                            </button>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-
-                            {isBreakActive && (
-                                <div className="flex justify-center mt-2">
-                                    <button
-                                        onClick={handleMaximizeBreak}
-                                        className="text-[10px] text-emerald-400/60 hover:text-emerald-400 uppercase font-black tracking-widest flex items-center gap-1"
-                                    >
-                                        <ChevronUpIcon className="w-3 h-3" />
-                                        Open Fullscreen
-                                    </button>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
+                        )}
+                    </motion.div>
                 </motion.div>
             </div>
         </>

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Guild;
-use App\Models\Challenge;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,8 +14,10 @@ class GuildChallengeController extends Controller
      */
     public function index(Guild $guild)
     {
-        if (!auth()->user()->guilds->contains('id', $guild->id)) {
-            abort(403);
+        $isLeader = $guild->members()->where('user_id', auth()->id())->wherePivot('role', 'leader')->exists();
+        
+        if (!$isLeader) {
+            abort(403, 'Akses ditolak. Hanya Leader yang dapat mengelola Misi.');
         }
 
         return Inertia::render('Guilds/Challenges/Index', [
@@ -25,16 +27,18 @@ class GuildChallengeController extends Controller
                 'emblem' => $guild->emblem,
                 'leader_id' => $guild->leader->id ?? null,
             ],
-            'challenges' => $guild->challenges()
-                ->where('is_team_mission', true)
-                ->with(['users' => function($q) {
-                    $q->where('user_id', auth()->id());
-                }])
+            // [SYNC] Fetch missions from tasks table
+            'challenges' => $guild->tasks()
+                ->where('is_mission', true)
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->map(function ($challenge) {
-                    $challenge->completed_by_user = $challenge->users->isNotEmpty() && $challenge->users->first()->pivot->completed;
-                    return $challenge;
+                ->map(function ($mission) {
+                    // Check if mission is completed (Quest Style)
+                    $mission->completed_by_user = $mission->is_completed;
+                    // Compatibility mapping
+                    $mission->starts_at = $mission->start_date;
+                    $mission->ends_at = $mission->due_date;
+                    return $mission;
                 }),
         ]);
     }
@@ -54,32 +58,31 @@ class GuildChallengeController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'xp_reward' => 'required|integer|min:0',
-            'points_reward' => 'required|integer|min:0',
-            'requirements' => 'nullable|array', // Structure defined by frontend, e.g. { type: 'pomodoro_count', count: 10 }
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date|after_or_equal:starts_at',
         ]);
 
-        $guild->challenges()->create([
+        // [SYNC] Use GuildEconomy functionality or manually deduct if needed
+        // For simplicity and matching ToDo.jsx logic:
+        $guild->tasks()->create([
             'title' => $validated['title'],
             'description' => $validated['description'],
             'xp_reward' => $validated['xp_reward'],
-            'points_reward' => $validated['points_reward'],
-            'type' => 'custom', // Standard type for user-created missions
-            'is_team_mission' => true,
-            'is_active' => true,
-            'requirements' => $validated['requirements'] ?? [],
-            'starts_at' => $validated['starts_at'] ?? now(),
-            'ends_at' => $validated['ends_at'],
+            'is_mission' => true,
+            'status' => 'todo',
+            'start_date' => $validated['starts_at'] ?? now(),
+            'due_date' => $validated['ends_at'],
+            'user_id' => auth()->id(), // Creator
+            'approval_status' => 'approved',
         ]);
 
-        return back()->with('success', 'Guild Mission created successfully.');
+        return back()->with('success', 'Misi Guild berhasil dibuat dan muncul di Board!');
     }
 
     /**
      * Update the specified mission in storage.
      */
-    public function update(Request $request, Guild $guild, Challenge $challenge)
+    public function update(Request $request, Guild $guild, Task $challenge)
     {
         if ($challenge->guild_id !== $guild->id) abort(404);
 
@@ -90,11 +93,18 @@ class GuildChallengeController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'xp_reward' => 'required|integer',
-            'points_reward' => 'required|integer',
-            'is_active' => 'boolean',
+            'starts_at' => 'nullable|date',
+            'ends_at' => 'nullable|date|after_or_equal:starts_at',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        $challenge->update($validated);
+        $challenge->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'xp_reward' => $validated['xp_reward'],
+            'start_date' => $validated['starts_at'],
+            'due_date' => $validated['ends_at'],
+        ]);
 
         return back()->with('success', 'Mission updated.');
     }
@@ -102,7 +112,7 @@ class GuildChallengeController extends Controller
     /**
      * Remove the specified mission from storage.
      */
-    public function destroy(Guild $guild, Challenge $challenge)
+    public function destroy(Guild $guild, Task $challenge)
     {
         if ($challenge->guild_id !== $guild->id) abort(404);
 
@@ -117,38 +127,27 @@ class GuildChallengeController extends Controller
     /**
      * Mark mission as completed by user.
      */
-    public function complete(Request $request, Guild $guild, Challenge $challenge)
+    public function complete(Request $request, Guild $guild, Task $challenge)
     {
         if ($challenge->guild_id !== $guild->id) abort(404);
         
-        // Check if already completed
-        if ($challenge->users()->where('user_id', auth()->id())->wherePivot('completed', true)->exists()) {
-            return back()->with('error', 'You have already completed this mission.');
+        // Manual completion by user (if allowed on Mission page)
+        // Award XP logic...
+        if ($challenge->is_completed) {
+            return back()->with('error', 'Misi sudah selesai.');
         }
 
-        // Mark as completed
-        $challenge->users()->attach(auth()->id(), [
-            'completed' => true,
-            'completed_at' => now(),
-            'progress' => 100 // Auto-complete for now
+        $challenge->update([
+            'is_completed' => true,
+            'status' => 'done',
+            'completed_by' => auth()->id()
         ]);
 
-        // Award XP/Points (Simplified logic - normally handled via Service/Events)
-        $user = auth()->user();
-        $user->increment('xp', $challenge->xp_reward);
-        $user->increment('points', $challenge->points_reward);
-        
-        // Also add to Guild Member Contribution
-        $member = $guild->members()->where('user_id', $user->id)->first();
-        if ($member) {
-             $guild->members()->updateExistingPivot($user->id, [
-                'contribution_xp' => $member->pivot->contribution_xp + $challenge->xp_reward,
-                'weekly_contribution_xp' => $member->pivot->weekly_contribution_xp + $challenge->xp_reward
-            ]);
-            $guild->increment('total_xp', $challenge->xp_reward);
-            $guild->increment('weekly_xp', $challenge->xp_reward);
+        // Award XP
+        if ($challenge->xp_reward > 0) {
+            auth()->user()->increment('redeemable_xp', $challenge->xp_reward);
         }
 
-        return back()->with('success', 'Mission completed! Rewards claimed.');
+        return back()->with('success', 'Misi selesai! XP telah diberikan.');
     }
 }

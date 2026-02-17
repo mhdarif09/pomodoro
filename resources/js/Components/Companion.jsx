@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ══════════════════════════════════════════
@@ -60,15 +60,10 @@ const createGrid = (mood) => {
 
     // Hair (rows 0-4)
     const hair = [
-        // Row 0: top of hair
         [_, _, _, _, _, K, K, K, K, K, K, _, _, _, _, _],
-        // Row 1
         [_, _, _, _, K, H, H, Hl, H, H, H, K, _, _, _, _],
-        // Row 2
         [_, _, _, K, H, H, Hl, Hl, H, H, H, H, K, _, _, _],
-        // Row 3: hair sides + forehead
         [_, _, K, H, H, S, S, S, S, S, S, H, H, K, _, _],
-        // Row 4: fringe detail
         [_, _, K, H, S, S, S, S, S, S, S, S, H, K, _, _],
     ];
 
@@ -76,55 +71,34 @@ const createGrid = (mood) => {
     let face;
     if (mood === 'focusing') {
         face = [
-            // Row 5: headband
             [_, _, K, C.Hb, C.Hb, C.Hb, C.Hb, C.Hb, C.Hb, C.Hb, C.Hb, C.Hb, C.Hb, K, _, _],
-            // Row 6: eyes (determined)
             [_, _, K, S, S, K, K, S, S, K, K, S, S, K, _, _],
-            // Row 7: lower eyes
             [_, _, K, S, S, K, P, S, S, K, P, S, S, K, _, _],
-            // Row 8: nose area
             [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
-            // Row 9: mouth (flat line = focused)
             [_, _, _, K, S, S, K, K, K, K, S, S, K, _, _, _],
         ];
     } else if (mood === 'celebrating') {
         face = [
-            // Row 5: forehead
             [_, _, K, S, S, S, S, S, S, S, S, S, S, K, _, _],
-            // Row 6: happy eyes (^ ^)
             [_, _, K, S, S, _, K, S, S, _, K, S, S, K, _, _],
-            // Row 7: closed happy eyes
             [_, _, K, S, K, _, _, K, K, _, _, K, S, K, _, _],
-            // Row 8: blush + nose
             [_, _, _, K, Bl, S, S, S, S, S, S, Bl, K, _, _, _],
-            // Row 9: big smile
             [_, _, _, K, S, K, C.M, C.M, C.M, C.M, K, S, K, _, _, _],
         ];
     } else if (mood === 'sleeping') {
         face = [
-            // Row 5
             [_, _, K, S, S, S, S, S, S, S, S, S, S, K, _, _],
-            // Row 6: — — eyes
             [_, _, K, S, S, K, K, S, S, K, K, S, S, K, _, _],
-            // Row 7
             [_, _, K, S, S, S, S, S, S, S, S, S, S, K, _, _],
-            // Row 8
             [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
-            // Row 9: small "o" mouth
             [_, _, _, K, S, S, S, K, K, S, S, S, K, _, _, _],
         ];
     } else {
-        // idle / guiding
         face = [
-            // Row 5
             [_, _, K, S, S, S, S, S, S, S, S, S, S, K, _, _],
-            // Row 6: eyes
             [_, _, K, S, S, E, E, S, S, E, E, S, S, K, _, _],
-            // Row 7: pupils
             [_, _, K, S, S, E, P, S, S, E, P, S, S, K, _, _],
-            // Row 8: nose area
             [_, _, _, K, S, S, S, K, S, S, S, S, K, _, _, _],
-            // Row 9: small smile
             [_, _, _, K, S, S, K, C.Md, C.Md, K, S, S, K, _, _, _],
         ];
     }
@@ -133,43 +107,28 @@ const createGrid = (mood) => {
     let body;
     if (mood === 'celebrating') {
         body = [
-            // Row 10: neck + raised arms start
             [_, _, _, _, K, S, T, T, T, T, S, K, _, _, _, _],
-            // Row 11: arms up!
             [_, S, K, K, T, T, Tl, T, T, Tl, T, T, K, K, S, _],
-            // Row 12: torso
             [_, _, _, K, T, Tl, T, T, T, T, Tl, T, K, _, _, _],
-            // Row 13
             [_, _, _, K, T, T, Td, T, T, Td, T, T, K, _, _, _],
-            // Row 14: bottom torso 
             [_, _, _, _, K, T, T, T, T, T, T, K, _, _, _, _],
         ];
     } else {
         body = [
-            // Row 10: neck
             [_, _, _, _, _, K, S, S, S, S, K, _, _, _, _, _],
-            // Row 11: shoulders
             [_, _, _, K, K, T, T, Tl, T, T, T, K, K, _, _, _],
-            // Row 12: torso + arms
             [_, _, K, S, T, T, Tl, T, T, Tl, T, T, S, K, _, _],
-            // Row 13
             [_, _, K, S, T, T, Td, T, T, Td, T, T, S, K, _, _],
-            // Row 14: waist
             [_, _, _, K, T, T, T, T, T, T, T, T, K, _, _, _],
         ];
     }
 
     // Legs (rows 15-19)
     const legs = [
-        // Row 15: belt area
         [_, _, _, _, K, P4, P4, P4l, P4, P4, P4, K, _, _, _, _],
-        // Row 16: upper legs
         [_, _, _, _, K, P4, P4l, P4, P4, P4l, P4, K, _, _, _, _],
-        // Row 17: lower legs
         [_, _, _, _, K, P4, K, _, _, K, P4, K, _, _, _, _],
-        // Row 18: ankles
         [_, _, _, _, K, P4, K, _, _, K, P4, K, _, _, _, _],
-        // Row 19: shoes
         [_, _, _, K, Sh, Shl, K, _, _, K, Sh, Shl, K, _, _, _],
     ];
 
@@ -193,14 +152,7 @@ const PixelCharacter = ({ mood }) => {
                 {grid.map((row, y) =>
                     row.map((color, x) =>
                         color !== C._ ? (
-                            <rect
-                                key={`${x}-${y}`}
-                                x={x * PIXEL}
-                                y={y * PIXEL}
-                                width={PIXEL}
-                                height={PIXEL}
-                                fill={color}
-                            />
+                            <rect key={`${x}-${y}`} x={x * PIXEL} y={y * PIXEL} width={PIXEL} height={PIXEL} fill={color} />
                         ) : null
                     )
                 )}
@@ -209,69 +161,150 @@ const PixelCharacter = ({ mood }) => {
             {/* Zzz for sleeping */}
             {mood === 'sleeping' && (
                 <>
-                    <motion.span
-                        className="absolute -top-1 -right-2 text-indigo-400 font-mono select-none"
-                        style={{ fontSize: '8px', fontWeight: 900 }}
-                        animate={{ opacity: [0.2, 1, 0.2], y: [0, -3, 0] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                    >z</motion.span>
-                    <motion.span
-                        className="absolute -top-3 right-0 text-indigo-300 font-mono select-none"
-                        style={{ fontSize: '10px', fontWeight: 900 }}
-                        animate={{ opacity: [0.2, 1, 0.2], y: [0, -3, 0] }}
-                        transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}
-                    >Z</motion.span>
+                    <motion.span className="absolute -top-1 -right-2 text-indigo-400 font-mono select-none" style={{ fontSize: '8px', fontWeight: 900 }} animate={{ opacity: [0.2, 1, 0.2], y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 2 }}>z</motion.span>
+                    <motion.span className="absolute -top-3 right-0 text-indigo-300 font-mono select-none" style={{ fontSize: '10px', fontWeight: 900 }} animate={{ opacity: [0.2, 1, 0.2], y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}>Z</motion.span>
                 </>
             )}
 
             {/* Sparkles for celebrating */}
             {mood === 'celebrating' && (
                 <>
-                    <motion.span
-                        className="absolute -top-4 -left-3 text-yellow-400 select-none"
-                        style={{ fontSize: '10px' }}
-                        animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 0.5], rotate: [0, 180, 360] }}
-                        transition={{ repeat: Infinity, duration: 0.8 }}
-                    >✦</motion.span>
-                    <motion.span
-                        className="absolute -top-2 -right-4 text-amber-400 select-none"
-                        style={{ fontSize: '8px' }}
-                        animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 0.5] }}
-                        transition={{ repeat: Infinity, duration: 0.8, delay: 0.3 }}
-                    >★</motion.span>
-                    <motion.span
-                        className="absolute top-1 -left-4 text-orange-300 select-none"
-                        style={{ fontSize: '7px' }}
-                        animate={{ opacity: [0, 1, 0], y: [2, -4, 2] }}
-                        transition={{ repeat: Infinity, duration: 1, delay: 0.6 }}
-                    >✧</motion.span>
+                    <motion.span className="absolute -top-4 -left-3 text-yellow-400 select-none" style={{ fontSize: '10px' }} animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 0.5], rotate: [0, 180, 360] }} transition={{ repeat: Infinity, duration: 0.8 }}>✦</motion.span>
+                    <motion.span className="absolute -top-2 -right-4 text-amber-400 select-none" style={{ fontSize: '8px' }} animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 0.5] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.3 }}>★</motion.span>
                 </>
             )}
 
             {/* Focus aura */}
             {mood === 'focusing' && (
-                <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-indigo-400/30"
-                    style={{ margin: '-4px' }}
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0, 0.4] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                />
+                <motion.div className="absolute inset-0 rounded-full border-2 border-indigo-400/30" style={{ margin: '-4px' }} animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0, 0.4] }} transition={{ repeat: Infinity, duration: 2 }} />
             )}
         </div>
     );
 };
 
-export default function Companion({ state = 'idle', message = null, onClick }) {
-    const [isHovered, setIsHovered] = useState(false);
-    const [localMessage, setLocalMessage] = useState(message);
+// ══════════════════════════════════════════
+// 🧠 COMPANION BRAIN
+// ══════════════════════════════════════════
+
+const useCompanionBrain = (tasks, isTimerRunning, user, activeTask) => {
+    const [thought, setThought] = useState({ state: 'idle', message: null });
+
+    const hour = new Date().getHours();
+    const taskCount = tasks.filter(t => !t.is_completed).length;
+    const completedCount = tasks.filter(t => t.is_completed).length;
+    const userName = user?.name ? user.name.split(' ')[0] : 'Sobat';
+
+    // Context Analysis Helpers
+    const getContext = () => {
+        if (!activeTask) return null;
+        const title = activeTask.title.toLowerCase();
+        if (title.includes('bug') || title.includes('fix') || title.includes('error')) return 'bug_squashing';
+        if (title.includes('design') || title.includes('ui') || title.includes('ux') || title.includes('mockup')) return 'designing';
+        if (title.includes('meeting') || title.includes('sync') || title.includes('call')) return 'meeting';
+        if (title.includes('write') || title.includes('docs') || title.includes('post') || title.includes('blog')) return 'writing';
+        if (title.includes('plan') || title.includes('strategy') || title.includes('roadmap')) return 'planning';
+        return 'general_focus';
+    };
+
+    const getStreak = () => {
+        // Simple mock streak based on recent completions in this session state
+        // In a real app, track timestamps of completions
+        return completedCount > 2 ? 'high' : completedCount > 0 ? 'medium' : 'none';
+    };
+
+    const MESSAGES = useMemo(() => ({
+        morning: [`Pagi, ${userName}! Siap taklukkan hari?`, "Yuk, mulai dengan 1 tugas prioritas!", "Kopi dulu ☕, baru kerja."],
+        evening: [`Udah malam, ${userName}. Istirahat gih.`, "Jangan forsir tenaga. Simpan buat besok.", "Tidur yang cukup ya!"],
+        empty: [`Wah kosong nih. Tambah tugas dulu yuk?`, "Mulai dari hal kecil aja.", `Mau ngapain hari ini, ${userName}?`],
+        focusing: {
+            general: ["Sshh... Mode fokus on. 🤫", "Kamu pasti bisa!", "Keep going! 🔥", "Ganbatte! 💪"],
+            bug_squashing: ["Basmi bug itu! 🐛", "Pasti cuma typo doang kan?", "Debugging is detective work. 🕵️‍♂️"],
+            designing: ["Pixel perfect! 🎨", "Eksplorasi itu seru ya.", "Jangan lupa whitespace!"],
+            meeting: ["Meeting lagi? Semangat! 🎧", "Semoga meetingnya efektif.", "Catat poin penting ya."],
+            writing: ["Flow state is key. ✍️", "Tulis aja dulu, edit nanti.", "Kata-kata adalah senjata."],
+            planning: ["Gagal merencana = Merencana gagal. 🧠", "Strategi yang mantap!", "Lihat big picture-nya."]
+        },
+        heavy: ["Waduh, banyak tugas. Pelan-pelan ya.", "Fokus satu-satu, jangan panik.", "Tarik napas... yuk lanjut."],
+        completed: {
+            normal: ["Keren! Lanjut lagi?", "Mantap! 🎉", "Produktif banget hari ini!"],
+            streak: ["3x Combo! 🔥🔥🔥", "Kamu unstoppable hari ini!", "Gacor parah! 😎"]
+        },
+        idle: [`Masih di sana, ${userName}?`, "Yuk lanjut dikit lagi.", "Jangan lupa goal hari ini."],
+        sleeping: ["Zzz...", "Sleep is productive too.", "Recharge energy..."]
+    }), [userName]);
 
     useEffect(() => {
-        if (message) {
-            setLocalMessage(message);
-            const timer = setTimeout(() => setLocalMessage(null), 5000);
+        let newState = 'idle';
+        let possibleMessages = [];
+
+        // 1. Check Time
+        if (hour >= 23 || hour < 5) {
+            newState = 'sleeping';
+            possibleMessages = MESSAGES.sleeping;
+        }
+
+        // 2. Check Timer & Active Task
+        else if (isTimerRunning) {
+            newState = 'focusing';
+            const context = getContext();
+            possibleMessages = MESSAGES.focusing[context] || MESSAGES.focusing.general;
+        }
+        // 3. Check Tasks
+        else if (taskCount === 0 && completedCount === 0) {
+            newState = 'guiding';
+            possibleMessages = MESSAGES.empty;
+        } else if (taskCount > 8) {
+            newState = 'idle'; // visually normal but concerned message
+            possibleMessages = MESSAGES.heavy;
+        } else if (completedCount > 0 && !isTimerRunning) {
+            // Just finished something?
+            const streak = getStreak();
+            if (streak === 'high') {
+                newState = 'celebrating';
+                possibleMessages = MESSAGES.completed.streak;
+            } else {
+                newState = 'celebrating';
+                possibleMessages = MESSAGES.completed.normal;
+            }
+        } else {
+            // Idle states
+            if (hour < 11) possibleMessages = MESSAGES.morning;
+            else if (hour >= 20) possibleMessages = MESSAGES.evening;
+            else possibleMessages = MESSAGES.idle;
+        }
+
+        // Logic to pick a message occasionally (not spamming)
+        const randomMsg = possibleMessages[Math.floor(Math.random() * possibleMessages.length)];
+
+        // Update thought
+        setThought({ state: newState, message: randomMsg });
+
+    }, [tasks, isTimerRunning, hour, MESSAGES, activeTask, completedCount]); // Added activeTask dependency
+
+    return thought;
+};
+
+// ══════════════════════════════════════════
+// 🧩 MAIN COMPONENT
+// ══════════════════════════════════════════
+
+export default function Companion({ tasks = [], isTimerRunning = false, user, onClick, state: overrideState, message: overrideMessage }) {
+    const brain = useCompanionBrain(tasks, isTimerRunning, user);
+
+    // Use overrides if provided, otherwise generic brain
+    const state = overrideState && overrideState !== 'idle' ? overrideState : brain.state;
+    const message = overrideMessage || brain.message;
+    const [isHovered, setIsHovered] = useState(false);
+    const [visibleMessage, setVisibleMessage] = useState(null);
+
+    // Show message when state changes or on hover
+    useEffect(() => {
+        if (message && state !== 'sleeping') {
+            setVisibleMessage(message);
+            const timer = setTimeout(() => setVisibleMessage(null), 8000); // Hide after 8s
             return () => clearTimeout(timer);
         }
-    }, [message]);
+    }, [message, state]);
 
     const variants = {
         idle: { y: [0, -2, 0], transition: { repeat: Infinity, duration: 3, ease: "easeInOut" } },
@@ -282,10 +315,10 @@ export default function Companion({ state = 'idle', message = null, onClick }) {
     };
 
     return (
-        <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end pointer-events-none" style={{ maxWidth: '200px' }}>
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end pointer-events-none" style={{ maxWidth: '200px' }}>
             {/* Dialogue Bubble */}
             <AnimatePresence>
-                {(localMessage || isHovered) && (
+                {(visibleMessage || isHovered) && state !== 'sleeping' && (
                     <motion.div
                         initial={{ opacity: 0, y: 8, scale: 0.85 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -293,7 +326,7 @@ export default function Companion({ state = 'idle', message = null, onClick }) {
                         className="mb-2 mr-1 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl rounded-br-none shadow-lg border border-slate-200 dark:border-slate-700 max-w-[170px] pointer-events-auto"
                     >
                         <p className="text-[11px] text-slate-700 dark:text-slate-200 font-medium leading-tight">
-                            {localMessage || "Siap produktif? 🚀"}
+                            {visibleMessage || "Ada yang bisa dibantu?"}
                         </p>
                     </motion.div>
                 )}
@@ -303,12 +336,12 @@ export default function Companion({ state = 'idle', message = null, onClick }) {
             <motion.div
                 variants={variants}
                 animate={state}
-                className="cursor-pointer pointer-events-auto hover:scale-125 transition-transform duration-200 p-2"
+                className="cursor-pointer pointer-events-auto hover:scale-110 transition-transform duration-200 p-2"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 onClick={onClick}
                 whileTap={{ scale: 0.85 }}
-                title="Kiko — Companion"
+                title="Kiko — Your Productivity Companion"
             >
                 <PixelCharacter mood={state} />
             </motion.div>

@@ -39,6 +39,7 @@ class User extends Authenticatable
         'daily_task_limit',
         'anti_overplanning_enabled',
         'last_recovery_date',
+        'redeemable_xp',
     ];
 
     protected $appends = [
@@ -58,6 +59,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'growth_goals' => 'array',
         'onboarding_complete' => 'boolean',
+        'last_recovery_date' => 'datetime',
         'whatsapp_reminders_reset_at' => 'datetime',
     ];
 

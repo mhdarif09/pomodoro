@@ -38,6 +38,14 @@ class Task extends Model
         'deadline_reminder_30min_sent',
         'is_daily_focus',
         'priority_score',
+        'xp_reward',
+        'is_mission',
+        'funded_by_guild_id',
+        'mission_id',
+        'assigned_to',
+        'completed_by',
+        'approval_status',
+        'approved_by',
     ];
 
     protected $casts = [
@@ -82,6 +90,21 @@ class Task extends Model
     public function subtasks()
     {
         return $this->hasMany(Subtask::class);
+    }
+
+    public function mission()
+    {
+        return $this->belongsTo(Task::class, 'mission_id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(TaskComment::class);
+    }
+
+    public function missionTasks()
+    {
+        return $this->hasMany(Task::class, 'mission_id');
     }
 
     /**

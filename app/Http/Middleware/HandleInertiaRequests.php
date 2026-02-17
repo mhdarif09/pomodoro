@@ -38,6 +38,11 @@ class HandleInertiaRequests extends Middleware
                 'client_key' => config('services.midtrans.client_key'),
                 'is_production' => config('services.midtrans.is_production'),
             ],
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+                'snap_token' => session('snap_token'),
+            ],
         ];
     }
 }
