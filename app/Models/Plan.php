@@ -29,6 +29,8 @@ class Plan extends Model
         'has_learning_hub_access',
         'has_gamification_access',
         'has_ai_genius_access',
+        'whatsapp_reminder_limit',
+        'journal_limit',
     ];
 
     protected $casts = [
@@ -47,6 +49,8 @@ class Plan extends Model
         'has_learning_hub_access' => 'boolean',
         'has_gamification_access' => 'boolean',
         'has_ai_genius_access' => 'boolean',
+        'whatsapp_reminder_limit' => 'integer',
+        'journal_limit' => 'integer',
     ];
 
     protected $attributes = [

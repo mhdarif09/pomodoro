@@ -153,6 +153,8 @@ const PlanItem = ({ plan }) => {
         has_learning_hub_access: plan.has_learning_hub_access ?? true,
         has_gamification_access: plan.has_gamification_access ?? true,
         has_ai_genius_access: plan.has_ai_genius_access ?? false,
+        whatsapp_reminder_limit: plan.whatsapp_reminder_limit ?? null,
+        journal_limit: plan.journal_limit ?? null,
     });
 
     // Update form data when plan prop changes (e.g. after toggle status)
@@ -176,6 +178,8 @@ const PlanItem = ({ plan }) => {
             has_learning_hub_access: plan.has_learning_hub_access ?? true,
             has_gamification_access: plan.has_gamification_access ?? true,
             has_ai_genius_access: plan.has_ai_genius_access ?? false,
+            whatsapp_reminder_limit: plan.whatsapp_reminder_limit ?? null,
+            journal_limit: plan.journal_limit ?? null,
         });
     }, [plan]);
 
@@ -302,6 +306,37 @@ const PlanItem = ({ plan }) => {
                                     className="rounded-xl"
                                     min="0"
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                        WhatsApp Reminder Limit/Bulan
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        value={data.whatsapp_reminder_limit || ''}
+                                        onChange={e => setData('whatsapp_reminder_limit', e.target.value ? parseInt(e.target.value) : null)}
+                                        className="rounded-xl"
+                                        placeholder="Kosongkan untuk unlimited"
+                                        min="1"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1 ml-1">Kosongkan = Unlimited</p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                        Journal Limit (Total)
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        value={data.journal_limit || ''}
+                                        onChange={e => setData('journal_limit', e.target.value ? parseInt(e.target.value) : null)}
+                                        className="rounded-xl"
+                                        placeholder="Kosongkan untuk unlimited"
+                                        min="1"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1 ml-1">Kosongkan = Unlimited</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -555,6 +590,8 @@ export default function Index({ auth, plans }) {
         has_learning_hub_access: true,
         has_gamification_access: true,
         has_ai_genius_access: false,
+        whatsapp_reminder_limit: null,
+        journal_limit: null,
     });
 
     const handleFeaturesChange = (newFeatures) => {
@@ -680,6 +717,39 @@ export default function Index({ auth, plans }) {
                                                     required
                                                 />
                                                 {errors.max_subtasks && <p className="text-red-500 text-xs mt-1">{errors.max_subtasks}</p>}
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                                        WhatsApp Reminder Limit/Bulan
+                                                    </label>
+                                                    <Input
+                                                        type="number"
+                                                        value={data.whatsapp_reminder_limit || ''}
+                                                        onChange={e => setData('whatsapp_reminder_limit', e.target.value ? parseInt(e.target.value) : null)}
+                                                        className="rounded-xl"
+                                                        placeholder="Kosongkan untuk unlimited"
+                                                        min="1"
+                                                    />
+                                                    <p className="text-[10px] text-slate-400 mt-1 ml-1">Kosongkan = Unlimited</p>
+                                                    {errors.whatsapp_reminder_limit && <p className="text-red-500 text-xs mt-1">{errors.whatsapp_reminder_limit}</p>}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                                        Journal Limit (Total)
+                                                    </label>
+                                                    <Input
+                                                        type="number"
+                                                        value={data.journal_limit || ''}
+                                                        onChange={e => setData('journal_limit', e.target.value ? parseInt(e.target.value) : null)}
+                                                        className="rounded-xl"
+                                                        placeholder="Kosongkan untuk unlimited"
+                                                        min="1"
+                                                    />
+                                                    <p className="text-[10px] text-slate-400 mt-1 ml-1">Kosongkan = Unlimited</p>
+                                                    {errors.journal_limit && <p className="text-red-500 text-xs mt-1">{errors.journal_limit}</p>}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

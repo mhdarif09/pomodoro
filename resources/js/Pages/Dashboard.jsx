@@ -6,6 +6,10 @@ import { Head, usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel';
+import PriorityTaskWidget from '@/Components/Dashboard/PriorityTaskWidget';
+import ContinueWorkBanner from '@/Components/Dashboard/ContinueWorkBanner';
+import DailyLimitIndicator from '@/Components/Dashboard/DailyLimitIndicator';
+import TaskRecoveryModal from '@/Components/Dashboard/TaskRecoveryModal';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
 import UpgradeModal from '@/Components/UpgradeModal';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -297,7 +301,10 @@ const MainDashboard = ({ auth, allTasks, taskStats, filters = {}, onStartFocus, 
 };
 
 export default function Dashboard(props) {
-    const { auth, tasks, focusTasks = [], resumeTask, stagnantTasks = [], taskStats, filters, plans, deadlineRisks = [] } = props;
+    const {
+        auth, tasks, focusTasks = [], resumeTask, stagnantTasks = [], taskStats, filters, plans, deadlineRisks = [],
+        priorityTasks = [], continueWorkTask, recoveryPlan, dailyStats = { current: 0, limit: 3 }
+    } = props;
     const { flash } = usePage().props;
 
     const [localTasks, setLocalTasks] = useState(tasks || { data: [], total: 0 });
@@ -313,6 +320,8 @@ export default function Dashboard(props) {
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
     const [showAIChoice, setShowAIChoice] = useState(false);
     const [newlyCreatedTask, setNewlyCreatedTask] = useState(null);
+    const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+    const [showContinueBanner, setShowContinueBanner] = useState(true);
 
     const [activeTask, setActiveTask] = useState(null);
     const [secondsLeft, setSecondsLeft] = useState(25 * 60);
@@ -377,8 +386,13 @@ export default function Dashboard(props) {
         };
         initializeNotifications();
 
+        // Show recovery modal if plan exists
+        if (recoveryPlan) {
+            setTimeout(() => setShowRecoveryModal(true), 2000);
+        }
+
         return () => window.removeEventListener('open-quick-add-task', openModal);
-    }, []);
+    }, [recoveryPlan]);
 
     const handleTaskAdded = (newTask) => {
         setLocalTasks(prevTasks => ({
@@ -614,6 +628,29 @@ export default function Dashboard(props) {
                     </div>
                 )}
 
+                {/* Productivity Features Container */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+                    {/* Daily Limit Indicator - Top Right */}
+                    <div className="flex justify-end mb-4">
+                        <DailyLimitIndicator current={dailyStats.current} limit={dailyStats.limit} />
+                    </div>
+
+                    {/* Continue Work Banner */}
+                    {continueWorkTask && showContinueBanner && (
+                        <ContinueWorkBanner
+                            task={continueWorkTask}
+                            onDismiss={() => setShowContinueBanner(false)}
+                        />
+                    )}
+
+                    {/* Priority Task Widget */}
+                    {priorityTasks.length > 0 && (
+                        <div className="mb-6">
+                            <PriorityTaskWidget tasks={priorityTasks} />
+                        </div>
+                    )}
+                </div>
+
                 <MainDashboard
                     {...mainDashboardProps}
                     onTaskComplete={onTaskComplete}
@@ -749,6 +786,14 @@ export default function Dashboard(props) {
                             </div>
                         </motion.div>
                     </>
+                )}
+
+                {/* Task Recovery Modal */}
+                {showRecoveryModal && recoveryPlan && (
+                    <TaskRecoveryModal
+                        plan={recoveryPlan}
+                        onClose={() => setShowRecoveryModal(false)}
+                    />
                 )}
             </AnimatePresence>
 

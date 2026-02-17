@@ -38,6 +38,12 @@ class ReflectionController extends Controller
             'ai_question' => 'nullable|string',
         ]);
 
+        // Check journal limit
+        if (!$request->user()->canCreateReflection()) {
+            $usage = $request->user()->getReflectionsUsage();
+            return back()->with('error', "Batas journal gratis sudah tercapai ({$usage['current']}/{$usage['limit']}). Upgrade plan untuk unlimited journal!");
+        }
+
         $reflection = $request->user()->reflections()->create([
             'user_answer' => SecurityHelper::sanitizeHtml($request->user_answer),
             'ai_question' => $request->ai_question ?? 'Apa yang kamu pelajari hari ini?',

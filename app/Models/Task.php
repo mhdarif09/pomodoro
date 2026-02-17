@@ -32,6 +32,12 @@ class Task extends Model
         'guild_id',
         'is_archived',
         'focus_date',
+        'last_touched_at',
+        'deadline_reminder_1day_sent',
+        'deadline_reminder_3hour_sent',
+        'deadline_reminder_30min_sent',
+        'is_daily_focus',
+        'priority_score',
     ];
 
     protected $casts = [
@@ -42,6 +48,12 @@ class Task extends Model
         'ai_suggested_subtasks' => 'array',
         'reminder_at' => 'datetime',
         'reminder_sent' => 'boolean',
+        'last_touched_at' => 'datetime',
+        'deadline_reminder_1day_sent' => 'boolean',
+        'deadline_reminder_3hour_sent' => 'boolean',
+        'deadline_reminder_30min_sent' => 'boolean',
+        'is_daily_focus' => 'boolean',
+        'priority_score' => 'integer',
     ];
 
     /**
@@ -91,5 +103,39 @@ class Task extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'task_tag');
+    }
+
+    /**
+     * Touch the task to update last interaction time
+     */
+    public function touch($attribute = null)
+    {
+        if ($attribute !== null) {
+            return parent::touch($attribute);
+        }
+        
+        $this->update(['last_touched_at' => now()]);
+        return parent::touch();
+    }
+
+    /**
+     * Check if task is untouched for given days
+     */
+    public function isUntouched(int $days = 3): bool
+    {
+        return !$this->last_touched_at || 
+               $this->last_touched_at->diffInDays(now()) >= $days;
+    }
+
+    /**
+     * Reset all deadline reminder flags (useful for rescheduled tasks)
+     */
+    public function resetDeadlineReminders(): void
+    {
+        $this->update([
+            'deadline_reminder_1day_sent' => false,
+            'deadline_reminder_3hour_sent' => false,
+            'deadline_reminder_30min_sent' => false,
+        ]);
     }
 }

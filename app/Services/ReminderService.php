@@ -10,11 +10,13 @@ class ReminderService
 {
     protected $fonnteService;
     protected $habitService;
+    protected $smartReminder;
 
-    public function __construct(FonnteService $fonnteService, HabitService $habitService)
+    public function __construct(FonnteService $fonnteService, HabitService $habitService, SmartReminderService $smartReminder)
     {
         $this->fonnteService = $fonnteService;
         $this->habitService = $habitService;
+        $this->smartReminder = $smartReminder;
     }
 
     /**
@@ -26,10 +28,20 @@ class ReminderService
             return;
         }
 
+        // Check if user can send more WhatsApp reminders
+        if (!$user->canSendWhatsAppReminder()) {
+            Log::info("WhatsApp reminder limit reached for user {$user->id} ({$user->name})");
+            return;
+        }
+
         $message = $this->determineMessage($user);
 
         if ($message) {
             $this->fonnteService->sendMessage($user->phone, $message);
+            
+            // Track reminder sent
+            $user->incrementWhatsAppReminderCount();
+            
             Log::info("Reminder sent to {$user->id}: {$message}");
         }
     }
@@ -41,7 +53,19 @@ class ReminderService
     {
         $hour = Carbon::now()->hour;
 
-        // Priority 1: DEADLINE REMINDER (Tasks due today/tomorrow)
+        // Priority 1: UNTOUCHED TASKS (high priority, not started for 3+ days)
+        $untouchedTasks = $this->smartReminder->getUntouchedTasks($user);
+        if ($untouchedTasks->isNotEmpty()) {
+            return $this->smartReminder->generateSmartMessage($user, 'untouched', $untouchedTasks);
+        }
+
+        // Priority 2: TASK PILE-UP (too many pending tasks)
+        $piledUpTasks = $this->smartReminder->getPiledUpTasks($user);
+        if ($piledUpTasks) {
+            return $this->smartReminder->generateSmartMessage($user, 'pile_up', $piledUpTasks);
+        }
+
+        // Priority 3: DEADLINE REMINDER (Tasks due today/tomorrow)
         $urgentTasks = $user->tasks()
             ->where('status', '!=', 'done')
             ->whereBetween('due_date', [Carbon::today(), Carbon::today()->addDay()])
@@ -51,18 +75,31 @@ class ReminderService
             return $this->getDeadlineReminder($user, $urgentTasks);
         }
 
-        // Priority 2: STUDY REMINDER (Peak productivity time)
+        // Priority 4: RESUME YESTERDAY'S WORK (morning only)
+        if ($hour >= 8 && $hour <= 10) {
+            $yesterdayTasks = $this->smartReminder->getYesterdayInProgressTasks($user);
+            if ($yesterdayTasks->isNotEmpty()) {
+                return $this->smartReminder->generateSmartMessage($user, 'resume_work', $yesterdayTasks);
+            }
+        }
+
+        // Priority 5: WORK INVITATION (peak time, no activity today)
+        if ($this->smartReminder->shouldSendWorkInvitation($user)) {
+            return $this->smartReminder->generateSmartMessage($user, 'work_invitation');
+        }
+
+        // Priority 6: STUDY REMINDER (Peak productivity time)
         if ($this->habitService->isPeakTime($user)) {
             return $this->getStudyReminder($user);
         }
 
-        // Priority 3: COMEBACK REMINDER (Inactive for a while)
+        // Priority 7: COMEBACK REMINDER (Inactive for a while)
         $lastActiveDate = $user->last_active_date ? Carbon::parse($user->last_active_date) : null;
         if ($lastActiveDate && $lastActiveDate->diffInDays(Carbon::today()) > 2) {
             return $this->getComebackReminder($user);
         }
 
-        // Priority 4: HABIT REMINDER (Streak maintenance - evening)
+        // Priority 8: HABIT REMINDER (Streak maintenance - evening)
         if ($hour >= 19 && $hour <= 22) {
             $todayActivity = $user->pomodoroSessions()
                 ->whereDate('created_at', Carbon::today())
@@ -73,7 +110,7 @@ class ReminderService
             }
         }
 
-        // Priority 5: MOTIVATION REMINDER (Morning boost)
+        // Priority 9: MOTIVATION REMINDER (Morning boost)
         if ($hour >= 8 && $hour <= 10) {
             return $this->getMotivationReminder($user);
         }

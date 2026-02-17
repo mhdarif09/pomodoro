@@ -17,7 +17,13 @@ class DashboardController extends Controller
 
         private const FREE_REFLECTION_LIMIT = 10;
 
-    public function index(Request $request, \App\Services\DeadlineRiskService $riskService) {
+    public function index(
+        Request $request, 
+        \App\Services\DeadlineRiskService $riskService,
+        \App\Services\TaskPrioritizationService $prioritization,
+        \App\Services\AntiOverplanningService $antiOverplanning,
+        \App\Services\TaskRecoveryService $recovery
+    ) {
         set_time_limit(0);
         $user = auth()->user();
         
@@ -115,6 +121,42 @@ class DashboardController extends Controller
         
         $showUpgradeModal = !$request->session()->get('dismissed_upgrade_modal', false) &&
             (!$user->is_premium);
+            
+        // --- PRODUCTIVITY FEATURES ---
+        // Get top 3 priority tasks
+        $priorityTasks = $prioritization->getTopPriorityTasks($user, 3)->map(function($task) use ($prioritization) {
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'priority_score' => $task->priority_score,
+                'reasoning' => $prioritization->getReasoningText($task),
+                'due_date' => $task->due_date,
+                'complexity_score' => $task->complexity_score,
+            ];
+        });
+        
+        // Get yesterday's in-progress task for continuation
+        $continueWorkTask = $user->tasks()
+            ->where('status', 'in_progress')
+            ->whereDate('updated_at', '<', today())
+            ->orderBy('updated_at', 'desc')
+            ->first();
+        
+        // Check if recovery should be offered
+        $recoveryPlan = null;
+        if ($recovery->shouldOfferRecovery($user)) {
+            $plan = $recovery->generateRecoveryPlan($user);
+            $recoveryPlan = [
+                'total_tasks' => $plan['total_tasks'],
+                'to_archive' => $plan['to_archive'],
+                'to_reschedule' => $plan['to_reschedule'],
+                'to_keep' => $plan['to_keep'],
+            ];
+        }
+        
+        // Get daily focus stats
+        $dailyStats = $antiOverplanning->getDailyStats($user);
+        
         return Inertia::render('Dashboard', [
             'tasks' => $tasks ?? ['data' => [], 'total' => 0],
             'focusTasks' => $focusTasks,
@@ -134,6 +176,12 @@ class DashboardController extends Controller
              'midtrans_client_key' => config('services.midtrans.client_key'),
             'midtrans_is_production' => config('services.midtrans.is_production'),
             'deadlineRisks' => $deadlineRisks,
+            
+            // Productivity features
+            'priorityTasks' => $priorityTasks,
+            'continueWorkTask' => $continueWorkTask,
+            'recoveryPlan' => $recoveryPlan,
+            'dailyStats' => $dailyStats,
         ]);
     }
     //     $props = [

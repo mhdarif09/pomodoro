@@ -37,6 +37,8 @@ class PlanController extends Controller
             'has_journal_access' => 'boolean',
             'has_learning_hub_access' => 'boolean',
             'has_gamification_access' => 'boolean',
+            'whatsapp_reminder_limit' => 'nullable|integer|min:1',
+            'journal_limit' => 'nullable|integer|min:1',
         ]);
 
         // Set default values untuk features jika tidak diisi
@@ -54,6 +56,8 @@ class PlanController extends Controller
         $validated['has_learning_hub_access'] = $request->boolean('has_learning_hub_access', true);
         $validated['has_gamification_access'] = $request->boolean('has_gamification_access', true);
         $validated['has_ai_genius_access'] = $request->boolean('has_ai_genius_access', false);
+        $validated['whatsapp_reminder_limit'] = $validated['whatsapp_reminder_limit'] ?? null;
+        $validated['journal_limit'] = $validated['journal_limit'] ?? null;
 
         Plan::create($validated);
 
@@ -80,6 +84,8 @@ class PlanController extends Controller
             'has_journal_access' => 'boolean',
             'has_learning_hub_access' => 'boolean',
             'has_gamification_access' => 'boolean',
+            'whatsapp_reminder_limit' => 'nullable|integer|min:1',
+            'journal_limit' => 'nullable|integer|min:1',
         ]);
 
         $validated['has_ai_assistant'] = $request->boolean('has_ai_assistant');
@@ -92,6 +98,8 @@ class PlanController extends Controller
         $validated['has_gamification_access'] = $request->boolean('has_gamification_access');
         $validated['has_ai_genius_access'] = $request->boolean('has_ai_genius_access');
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['whatsapp_reminder_limit'] = $request->input('whatsapp_reminder_limit');
+        $validated['journal_limit'] = $request->input('journal_limit');
 
         $plan->update($validated);
 

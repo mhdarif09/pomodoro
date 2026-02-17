@@ -28,6 +28,17 @@ class User extends Authenticatable
         'affiliate_code',
         'referred_by_id',
         'affiliate_balance',
+        'whatsapp_reminders_sent_this_month',
+        'whatsapp_reminders_reset_at',
+        'subscription_status',
+        'subscription_plan_id',
+        'whatsapp_verified_at',
+        'referred_by',
+        'timezone',
+        'last_active_date',
+        'daily_task_limit',
+        'anti_overplanning_enabled',
+        'last_recovery_date',
     ];
 
     protected $appends = [
@@ -47,6 +58,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'growth_goals' => 'array',
         'onboarding_complete' => 'boolean',
+        'whatsapp_reminders_reset_at' => 'datetime',
     ];
 
     // Relasi ke Subscription (ambil yang terbaru)
@@ -138,6 +150,8 @@ class User extends Authenticatable
             'has_productivity_report' => false,
             'has_auto_open_url' => false,
             'has_quick_notes' => false,
+            'whatsapp_reminder_limit' => 10, // 10 reminders per month for free users
+            'journal_limit' => 30, // 30 total journals for free users
         ];
     }
 
@@ -260,18 +274,128 @@ class User extends Authenticatable
     }
 
     /**
-     * Generate unique affiliate code
+     * Generate a unique affiliate code
      */
-    public static function generateAffiliateCode($name)
+    public static function generateAffiliateCode(): string
     {
-        $base = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 4));
-        $code = $base . rand(1000, 9999);
-        
-        while (self::where('affiliate_code', $code)->exists()) {
-            $code = $base . rand(1000, 9999);
-        }
-        
+        do {
+            $code = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+        } while (static::where('affiliate_code', $code)->exists());
+
         return $code;
+    }
+
+    /**
+     * Check if user can send more WhatsApp reminders this month
+     */
+    public function canSendWhatsAppReminder(): bool
+    {
+        // Admin always can send
+        if (strtolower($this->role) === 'admin') {
+            return true;
+        }
+
+        $plan = $this->active_plan;
+        
+        // If plan has no limit (null), unlimited
+        if ($plan->whatsapp_reminder_limit === null) {
+            return true;
+        }
+
+        // Reset counter if needed
+        $this->resetWhatsAppReminderCountIfNeeded();
+
+        return $this->whatsapp_reminders_sent_this_month < $plan->whatsapp_reminder_limit;
+    }
+
+    /**
+     * Increment WhatsApp reminder count
+     */
+    public function incrementWhatsAppReminderCount(): void
+    {
+        $this->resetWhatsAppReminderCountIfNeeded();
+        $this->increment('whatsapp_reminders_sent_this_month');
+    }
+
+    /**
+     * Reset WhatsApp reminder counter if month changed
+     */
+    public function resetWhatsAppReminderCountIfNeeded(): void
+    {
+        $now = now();
+        
+        // If reset_at is null or it's a new month, reset
+        if (!$this->whatsapp_reminders_reset_at || 
+            $this->whatsapp_reminders_reset_at->month !== $now->month ||
+            $this->whatsapp_reminders_reset_at->year !== $now->year) {
+            
+            $this->update([
+                'whatsapp_reminders_sent_this_month' => 0,
+                'whatsapp_reminders_reset_at' => $now,
+            ]);
+        }
+    }
+
+    /**
+     * Get remaining WhatsApp reminders for this month
+     */
+    public function getRemainingWhatsAppReminders(): int|string
+    {
+        $plan = $this->active_plan;
+        
+        if ($plan->whatsapp_reminder_limit === null) {
+            return 'unlimited';
+        }
+
+        $this->resetWhatsAppReminderCountIfNeeded();
+        
+        return max(0, $plan->whatsapp_reminder_limit - $this->whatsapp_reminders_sent_this_month);
+    }
+
+    /**
+     * Check if user can create more reflections/journals
+     */
+    public function canCreateReflection(): bool
+    {
+        // Admin always can
+        if (strtolower($this->role) === 'admin') {
+            return true;
+        }
+
+        $plan = $this->active_plan;
+        
+        // If plan has no limit (null), unlimited
+        if ($plan->journal_limit === null) {
+            return true;
+        }
+
+        $currentCount = $this->reflections()->count();
+        
+        return $currentCount < $plan->journal_limit;
+    }
+
+    /**
+     * Get reflections count and limit
+     */
+    public function getReflectionsUsage(): array
+    {
+        $plan = $this->active_plan;
+        $currentCount = $this->reflections()->count();
+        
+        return [
+            'current' => $currentCount,
+            'limit' => $plan->journal_limit ?? null,
+            'unlimited' => $plan->journal_limit === null,
+            'remaining' => $plan->journal_limit ? max(0, $plan->journal_limit - $currentCount) : null,
+        ];
+    }
+    
+    /**
+     * Task recovery history relationship
+     */
+    public function taskRecoveryHistory()
+    {
+        return $this->hasMany(\App\Models\TaskRecoveryHistory::class);
     }
 }
 

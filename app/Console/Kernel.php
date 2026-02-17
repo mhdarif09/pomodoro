@@ -12,14 +12,24 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Send WhatsApp reminders for tasks with deadline tomorrow
-        // Runs at 23:00 for each Indonesian timezone (H-1 hour before deadline day)
-        // WIB (UTC+7): 23:00 = 16:00 UTC
-        // WITA (UTC+8): 23:00 = 15:00 UTC  
-        // WIT (UTC+9): 23:00 = 14:00 UTC
-        $schedule->command('reminders:send-deadline')->dailyAt('16:00'); // 23:00 WIB
-        $schedule->command('reminders:send-deadline')->dailyAt('15:00'); // 23:00 WITA
-        $schedule->command('reminders:send-deadline')->dailyAt('14:00'); // 23:00 WIT
+        // Multi-stage deadline reminders - runs every 30 minutes
+        // This will check and send H-1, 3h, and 30min reminders
+        $schedule->command('reminders:send-deadline')
+                 ->everyThirtyMinutes()
+                 ->between('6:00', '23:00');
+
+        // Smart contextual reminders - 3x daily
+        $schedule->command('gamification:send-reminders')
+                 ->dailyAt('09:00')  // Morning work invitation
+                 ->timezone('Asia/Jakarta');
+                 
+        $schedule->command('gamification:send-reminders')
+                 ->dailyAt('14:00')  // Afternoon check-in
+                 ->timezone('Asia/Jakarta');
+                 
+        $schedule->command('gamification:send-reminders')
+                 ->dailyAt('20:00')  // Evening reminder
+                 ->timezone('Asia/Jakarta');
 
         // Custom WhatsApp reminders (user-set times)
         $schedule->command('reminders:send-custom')->everyMinute();

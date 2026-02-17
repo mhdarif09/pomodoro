@@ -150,6 +150,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::post('/cashback/redeem', [\App\Http\Controllers\Api\CashbackController::class, 'redeemToPromoCode'])->name('cashback.redeem');
         Route::get('/cashback/history', [\App\Http\Controllers\Api\CashbackController::class, 'getRedemptionHistory'])->name('cashback.history');
+        
+        // Productivity Features
+        Route::get('/productivity/priority-tasks', [\App\Http\Controllers\ProductivityController::class, 'priorityRecommendations'])->name('productivity.priority-tasks');
+        Route::get('/productivity/continue-work', [\App\Http\Controllers\ProductivityController::class, 'continueWork'])->name('productivity.continue-work');
+        Route::get('/productivity/recovery-plan', [\App\Http\Controllers\ProductivityController::class, 'recoveryPlan'])->name('productivity.recovery-plan');
+        Route::post('/productivity/recovery-apply', [\App\Http\Controllers\ProductivityController::class, 'applyRecovery'])->name('productivity.apply-recovery');
+        Route::get('/productivity/daily-focus-stats', [\App\Http\Controllers\ProductivityController::class, 'dailyFocusStats'])->name('productivity.daily-focus-stats');
+        Route::post('/tasks/{task}/set-daily-focus', [\App\Http\Controllers\ProductivityController::class, 'setDailyFocus'])->name('tasks.set-daily-focus');
+        Route::post('/tasks/{task}/move-tomorrow', [\App\Http\Controllers\ProductivityController::class, 'moveToTomorrow'])->name('tasks.move-tomorrow');
+        
         // Guild Voice Signaling
         Route::post('/voice/join', [\App\Http\Controllers\Api\VoiceSessionController::class, 'join'])->name('voice.join');
         Route::post('/voice/leave', [\App\Http\Controllers\Api\VoiceSessionController::class, 'leave'])->name('voice.leave');
