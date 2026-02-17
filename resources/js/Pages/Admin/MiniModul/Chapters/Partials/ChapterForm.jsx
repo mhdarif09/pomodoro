@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SelectInput from '@/Components/SelectInput';
 import Checkbox from '@/Components/Checkbox';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import "quill/dist/quill.snow.css";
 
 export default function ChapterForm({ data, setData, errors, handleSubmit, processing, isEditing = false }) {
     
