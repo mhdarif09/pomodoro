@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Subscription;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -60,6 +61,25 @@ class DashboardController extends Controller
             // Kirim data grafik
             'userGrowthData' => $userGrowth,
             'subscriptionPlanData' => $subscriptionPlansDistribution,
+            
+            // System Settings
+            'settings' => Setting::where('group', 'system')->get()->pluck('value', 'key'),
         ]);
+    }
+
+    /**
+     * Update a system setting
+     */
+    public function updateSetting(Request $request)
+    {
+        $request->validate([
+            'key' => 'required|string',
+            'value' => 'required',
+            'type' => 'required|string',
+        ]);
+
+        Setting::set($request->key, $request->value, $request->type, 'system');
+
+        return back()->with('success', 'Setting updated successfully');
     }
 }

@@ -8,7 +8,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Impor ikon-ikon baru yang keren
 import {
-    Bars3Icon, XMarkIcon, HomeIcon, UserGroupIcon, DocumentTextIcon, CreditCardIcon, ChartBarIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, TicketIcon, BanknotesIcon
+    Bars3Icon, XMarkIcon, HomeIcon, UserGroupIcon, DocumentTextIcon, CreditCardIcon, ChartBarIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, TicketIcon, BanknotesIcon, ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 
 const UserAvatar = ({ user }) => {
@@ -49,6 +49,7 @@ export default function Authenticated({ children, header }) {
 
     const adminLinks = [
         { routeName: 'admin.dashboard', label: 'Dashboard Admin', icon: ChartBarIcon, for: 'admin' },
+        { routeName: 'admin.settings.index', label: 'Feature Access', icon: ShieldCheckIcon, for: 'admin' },
         { routeName: 'admin.users.index', label: 'Manajemen User', icon: UserGroupIcon, for: 'admin' },
         { routeName: 'admin.cashouts.index', label: 'Cashouts', icon: BanknotesIcon, for: 'admin' },
         { routeName: 'admin.mini-moduls.index', label: 'Manajemen Modul', icon: DocumentTextIcon, for: 'admin' },

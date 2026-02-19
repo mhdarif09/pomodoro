@@ -11,7 +11,8 @@ import {
     ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 
-export default function Edit({ auth, mustVerifyEmail, status }) {
+export default function Edit({ auth, mustVerifyEmail, status, settings }) {
+    const isGoogleCalendarEnabled = settings?.google_calendar_enabled ?? true;
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -48,46 +49,48 @@ export default function Edit({ auth, mustVerifyEmail, status }) {
                     </motion.div>
 
                     {/* Integration Section */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.05 }}
-                        className="space-y-3"
-                    >
-                        <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-4">Integrasi & Layanan</h3>
-                        <div className="bg-white dark:bg-[#1C1C1E] rounded-[1.5rem] shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] overflow-hidden border border-slate-100 dark:border-white/5">
-                            <div className="p-6 sm:p-8 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
-                                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Google" className="w-6 h-6"
-                                            onError={(e) => { e.target.onerror = null; e.target.src = "https://cdn-icons-png.flaticon.com/512/300/300221.png" }} // Fallback to generic Google icon
-                                        />
-                                        {/* Using a generic Google Calendar icon URL or similar since I can't guarantee local assets */}
+                    {isGoogleCalendarEnabled && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.05 }}
+                            className="space-y-3"
+                        >
+                            <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-4">Integrasi & Layanan</h3>
+                            <div className="bg-white dark:bg-[#1C1C1E] rounded-[1.5rem] shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] overflow-hidden border border-slate-100 dark:border-white/5">
+                                <div className="p-6 sm:p-8 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Google" className="w-6 h-6"
+                                                onError={(e) => { e.target.onerror = null; e.target.src = "https://cdn-icons-png.flaticon.com/512/300/300221.png" }} // Fallback to generic Google icon
+                                            />
+                                            {/* Using a generic Google Calendar icon URL or similar since I can't guarantee local assets */}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-800 dark:text-white">Google Calendar</h4>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">Sinkronisasi tugas otomatis ke kalender Anda.</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-white">Google Calendar</h4>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">Sinkronisasi tugas otomatis ke kalender Anda.</p>
-                                    </div>
-                                </div>
 
-                                <div>
-                                    {auth.user.is_google_connected ? (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold ring-1 ring-emerald-100 dark:ring-emerald-800">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            Terhubung
-                                        </span>
-                                    ) : (
-                                        <a
-                                            href={route('login.google.redirect')}
-                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black text-xs font-bold hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors"
-                                        >
-                                            Hubungkan
-                                        </a>
-                                    )}
+                                    <div>
+                                        {auth.user.is_google_connected ? (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold ring-1 ring-emerald-100 dark:ring-emerald-800">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                Terhubung
+                                            </span>
+                                        ) : (
+                                            <a
+                                                href={route('login.google.redirect')}
+                                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black text-xs font-bold hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors"
+                                            >
+                                                Hubungkan
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    )}
 
                     {/* Security Section */}
                     <motion.div

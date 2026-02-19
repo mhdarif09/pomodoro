@@ -28,6 +28,10 @@ class GoogleCalendarService
      */
     protected function setupClient(User $user)
     {
+        if (!\App\Models\Setting::get('google_calendar_enabled', true)) {
+            return false;
+        }
+
         if (!$user->google_access_token) {
             return false;
         }
@@ -229,6 +233,10 @@ class GoogleCalendarService
      */
     public function autoScheduleTasks(User $user)
     {
+        if (!\App\Models\Setting::get('google_calendar_enabled', true)) {
+            return ['success' => false, 'message' => 'Google Calendar Integration sedang dinonaktifkan oleh Admin.'];
+        }
+
         if (!$this->setupClient($user)) return ['success' => false, 'message' => 'Gagal koneksi GCal.'];
 
         // 1. Get High Priority Tasks (Not Completed, Todo/Progress)

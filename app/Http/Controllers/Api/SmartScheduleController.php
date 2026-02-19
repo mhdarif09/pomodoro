@@ -20,6 +20,10 @@ class SmartScheduleController extends Controller
      */
     public function schedule(Request $request)
     {
+        if (!\App\Models\Setting::get('google_calendar_enabled', true)) {
+            return response()->json(['message' => 'Google Calendar features are currently disabled by administrator.'], 403);
+        }
+
         $user = $request->user();
 
         /*
@@ -87,6 +91,10 @@ class SmartScheduleController extends Controller
      */
     public function checkSlots(Request $request)
     {
+        if (!\App\Models\Setting::get('google_calendar_enabled', true)) {
+            return response()->json(['message' => 'Google Calendar features are currently disabled by administrator.'], 403);
+        }
+
         $user = $request->user();
         $slots = $this->calendarService->findFreeSlots($user);
 

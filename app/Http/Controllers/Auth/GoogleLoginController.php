@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Setting;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,12 +18,20 @@ class GoogleLoginController extends Controller
      */
     public function redirectToGoogle()
     {
+
         if (request()->has('origin')) {
             session(['login_origin' => request('origin')]);
         }
         
-        return Socialite::driver('google')
-            ->scopes(['https://www.googleapis.com/auth/calendar.events'])
+        $isCalendarEnabled = Setting::get('google_calendar_enabled', true);
+        
+        $driver = Socialite::driver('google');
+        
+        if ($isCalendarEnabled) {
+            $driver->scopes(['https://www.googleapis.com/auth/calendar.events']);
+        }
+        
+        return $driver
             ->with(['access_type' => 'offline', 'prompt' => 'consent'])
             ->redirect();
     }

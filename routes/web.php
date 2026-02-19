@@ -518,6 +518,8 @@ Route::middleware(['auth', 'premium'])->prefix('api/ai')->name('api.ai.')->group
 });
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', AdminDashboardController::class)->name('dashboard');
+    Route::get('/feature-access', [\App\Http\Controllers\Admin\FeatureAccessController::class, 'index'])->name('settings.index');
+    Route::post('/settings/update', [AdminDashboardController::class, 'updateSetting'])->name('settings.update');
 
     // Admin Users Management
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
