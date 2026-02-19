@@ -9,9 +9,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // $this->call([
-        //     PlanSeeder::class,
-        //     AdminSeeder::class,
-        // ]);
+        $this->call([
+            // PlanSeeder::class,
+            // AdminSeeder::class,
+            AchievementSeeder::class,
+        ]);
     }
 }

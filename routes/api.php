@@ -25,5 +25,12 @@ Route::post('/ask-from-sheet', [OpenAIController::class, 'askFromSheet'])->name(
 Route::post('midtrans/webhook', [\App\Http\Controllers\PaymentCallbackController::class, 'handle'])->name('midtrans.webhook');
 
 // 📱 WhatsApp Webhook (Fonnte)
+// 📱 WhatsApp Webhook (Fonnte)
 Route::post('whatsapp/webhook', [\App\Http\Controllers\Api\WhatsAppWebhookController::class, 'handle'])->name('whatsapp.webhook');
+
+// 📅 Smart Schedule (Premium)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/smart-schedule', [App\Http\Controllers\Api\SmartScheduleController::class, 'schedule'])->name('api.smart-schedule');
+    Route::get('/smart-schedule/slots', [App\Http\Controllers\Api\SmartScheduleController::class, 'checkSlots']); // Debugging only
+});
 

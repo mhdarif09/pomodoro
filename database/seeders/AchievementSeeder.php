@@ -109,10 +109,24 @@ class AchievementSeeder extends Seeder
                 'criteria' => json_encode(['level_reached' => 50]),
                 'xp_reward' => 500,
             ],
+            
+            // Feature Mastery
+            [
+                'name' => 'Time Master',
+                'slug' => 'time-master',
+                'description' => 'Gunakan fitur Smart Scheduling pertama kali',
+                'icon' => '⏳',
+                'rarity' => 'rare',
+                'criteria' => json_encode(['smart_schedule_used' => 1]),
+                'xp_reward' => 150,
+            ],
         ];
 
         foreach ($achievements as $achievement) {
-            Achievement::create($achievement);
+            Achievement::firstOrCreate(
+                ['slug' => $achievement['slug']],
+                $achievement
+            );
         }
     }
 }

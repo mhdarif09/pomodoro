@@ -21,7 +21,10 @@ class GoogleLoginController extends Controller
             session(['login_origin' => request('origin')]);
         }
         
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')
+            ->scopes(['https://www.googleapis.com/auth/calendar.events'])
+            ->with(['access_type' => 'offline', 'prompt' => 'consent'])
+            ->redirect();
     }
 
     /**
@@ -46,6 +49,9 @@ class GoogleLoginController extends Controller
             $user->update([
                 'name' => $googleUser->getName(),
                 'google_id' => $googleUser->getId(),
+                'google_access_token' => $googleUser->token,
+                'google_refresh_token' => $googleUser->refreshToken, // Only available if access_type=offline
+                'google_token_expires_at' => now()->addSeconds($googleUser->expiresIn),
             ]);
         } else {
             // Jika user belum ada, buat baru dengan password random
@@ -55,6 +61,9 @@ class GoogleLoginController extends Controller
                 'google_id' => $googleUser->getId(),
                 'password' => Hash::make(str()->random(24)),
                 'email_verified_at' => now(), // Auto verify email dari Google
+                'google_access_token' => $googleUser->token,
+                'google_refresh_token' => $googleUser->refreshToken,
+                'google_token_expires_at' => now()->addSeconds($googleUser->expiresIn),
             ]);
         }
         // ======================================================================

@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use App\Services\WhatsAppAIService;
 
 class SmartReminderService
 {
@@ -76,25 +77,40 @@ class SmartReminderService
     /**
      * Generate contextual message based on reminder type
      */
+    protected $aiService;
+
+    public function __construct(WhatsAppAIService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
+
+    /**
+     * Generate contextual message based on reminder type
+     */
     public function generateSmartMessage(User $user, string $type, $data = null): string
     {
         $name = $user->name;
         
+        // Use AI for specific types if data (Task/Tasks) is available
+        if (($type === 'untouched' || $type === 'resume_work') && $data instanceof Collection && $data->isNotEmpty()) {
+            return $this->aiService->generateSmartReminder($user, $data->first());
+        }
+
         switch ($type) {
-            case 'untouched':
+            case 'untouched': // Fallback if no AI or error
                 return $this->getUntouchedMessage($name, $data);
                 
             case 'pile_up':
                 return $this->getPileUpMessage($name, $data);
                 
-            case 'resume_work':
+            case 'resume_work': // Fallback
                 return $this->getResumeWorkMessage($name, $data);
                 
             case 'work_invitation':
                 return $this->getWorkInvitationMessage($name);
                 
             default:
-                return null;
+                return "Halo {$name}, produktif yuk!";
         }
     }
 

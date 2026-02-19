@@ -299,7 +299,7 @@ function DroppableContainer({ id, items, children }) {
 }
 
 // 4. Main Component
-export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, onStartFocus, auth, onTaskComplete, suggestedFocusTasks = [], hideHero = false }) {
+export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, onStartFocus, auth, onTaskComplete, suggestedFocusTasks = [], hideHero = false, hideList = false }) {
     const { t } = useLanguage();
     // Local State for Optimistic Updates
     const resolveTasks = (t) => Array.isArray(t) ? t : (t?.data || []);
@@ -499,6 +499,28 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                 {/* --- SMART FOCUS 3 SECTION --- */}
                 {activeFilter === 'all' && !hideHero && (
                     <div id="smart-focus-section" className="mb-8 pt-4">
+
+                        {/* Google Calendar Nudge (If not connected) */}
+                        {!auth.user.is_google_connected && (
+                            <div className="mb-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-2xl p-4 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-white dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                                        <CalendarIcon className="w-5 h-5 text-blue-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 dark:text-blue-100 text-sm">Sinkronisasi Jadwal Otomatis?</h4>
+                                        <p className="text-xs text-slate-500 dark:text-blue-200/70">Hubungkan Google Calendar agar tugasmu langsung masuk ke jadwal.</p>
+                                    </div>
+                                </div>
+                                <a
+                                    href={route('login.google.redirect')}
+                                    className="whitespace-nowrap px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/20"
+                                >
+                                    Connect GCal
+                                </a>
+                            </div>
+                        )}
+
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -612,58 +634,123 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                 )}
                 {/* ----------------------------- */}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {columns.map(col => {
-                        const colTasks = getColumnTasks(col.status);
-                        return (
-                            <div key={col.id} className="flex flex-col gap-4">
-                                <div className="flex items-center gap-3 px-4 py-2">
-                                    <div className={`w-3 h-3 rounded-full ${col.id === 'doing-col' ? 'bg-teal-500 animate-pulse' : col.color}`} />
-                                    <h3 className="text-[13px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{col.title}</h3>
-                                    <span className="ml-auto text-[11px] font-bold apple-glass border-none px-2.5 py-1 rounded-full text-slate-500">{colTasks.length}</span>
-                                    {col.status === 'todo' && (
-                                        <button onClick={() => setAddingToColumn('todo')} className="p-1 text-slate-400 hover:text-teal-500"><PlusIcon className="w-5 h-5" /></button>
-                                    )}
-                                </div>
+                {/* ----------------------------- */}
 
-                                <DroppableContainer id={col.id} items={colTasks.map(t => t.id)}>
-                                    <div className="space-y-4 min-h-[100px] sm:overflow-y-auto sm:max-h-[calc(100vh-300px)]">
-                                        {colTasks.map(task => (
-                                            <SortableTaskItem
-                                                key={task.id} task={task}
-                                                isFocused={isTaskFocused(task.id)}
-                                                onToggleFocus={() => handleToggleFocus(task)}
-                                                onSelectTask={setSelectedTask} // Set selected task for SlideOver
-                                                onToggleComplete={handleToggleComplete} onStartFocus={onStartFocus}
-                                                onToggleSubtask={handleToggleSubtask} onAddSubtask={handleAddSubtask}
-                                                onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask}
-                                                auth={auth} t={t}
-                                            />
-                                        ))}
-                                        {addingToColumn === col.status && (
-                                            <div className="apple-glass p-5 rounded-[2rem] border-teal-500/30">
-                                                <form onSubmit={(e) => {
-                                                    e.preventDefault(); const title = e.target.title.value;
-                                                    if (!title.trim()) return;
-                                                    setProcessingId('quick-add');
-                                                    axios.post(route('api.tasks.store'), { title, status: col.status }).then((res) => {
-                                                        setLocalTasks(prev => [res.data.task, ...prev]); setAddingToColumn(null);
-                                                    }).finally(() => setProcessingId(null));
-                                                }} className="space-y-3">
-                                                    <input autoFocus name="title" placeholder={t('placeholder_quick_add') || "New Task..."} className="w-full bg-transparent border-none p-0 font-bold focus:ring-0" />
-                                                    <div className="flex justify-end gap-2">
-                                                        <button type="button" onClick={() => setAddingToColumn(null)} className="text-xs">Cancel</button>
-                                                        <button type="submit" className="text-xs bg-teal-500 text-white px-3 py-1 rounded-lg">Add</button>
-                                                    </div>
-                                                </form>
-                                            </div>
+                {!hideList && (
+                    <div className="space-y-4">
+                        {/* Task List Header & Controls */}
+                        <div className="flex items-center justify-between pb-2">
+                            <h3 className="font-black text-xl text-slate-900 dark:text-white tracking-tight">Kanban Board</h3>
+
+                            {/* GCal Status / Upsell */}
+                            <div className="flex items-center gap-2">
+                                {auth.user.is_premium && auth.user.is_google_connected && (
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('AI akan menyusun jadwal otomatis di Google Calendar berdasarkan prioritas tugas. Lanjutkan?')) {
+                                                setProcessingId('auto-schedule');
+                                                axios.post(route('api.smart-schedule'))
+                                                    .then(res => {
+                                                        let msg = res.data.message;
+                                                        if (res.data.new_badge) {
+                                                            msg += `\n\n🏆 Badge Unlocked: ${res.data.new_badge.name} (+${res.data.new_badge.xp} XP)`;
+                                                        }
+                                                        alert(msg);
+                                                        router.reload({ only: ['tasks'] });
+                                                    })
+                                                    .catch(err => {
+                                                        alert(err.response?.data?.message || 'Gagal menyusun jadwal.');
+                                                    })
+                                                    .finally(() => setProcessingId(null));
+                                            }
+                                        }}
+                                        disabled={processingId === 'auto-schedule'}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                                    >
+                                        {processingId === 'auto-schedule' ? (
+                                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <span className="text-sm">✨</span>
                                         )}
-                                    </div>
-                                </DroppableContainer>
+                                        <span>Auto-Schedule</span>
+                                    </button>
+                                )}
+
+                                {auth.user.is_google_connected ? (
+                                    !auth.user.is_premium ? (
+                                        <button onClick={() => alert("Upgrade ke Pro untuk fitur Smart Scheduling AI!")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 text-[11px] font-bold border border-indigo-100 dark:border-indigo-800 transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/30">
+                                            <span className="text-sm">✨</span>
+                                            <span>Upgrade Smart Schedule</span>
+                                        </button>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold border border-emerald-100 dark:border-emerald-800 opacity-60 hover:opacity-100 transition-opacity cursor-help" title="Google Calendar Connected & Smart Schedule Active">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>Sync Active</span>
+                                        </div>
+                                    )
+                                ) : (
+                                    <a href={route('login.google.redirect')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[11px] font-bold hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                                        <CalendarIcon className="w-3.5 h-3.5" />
+                                        <span>Sync Calendar</span>
+                                    </a>
+                                )}
                             </div>
-                        );
-                    })}
-                </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {columns.map(col => {
+                                const colTasks = getColumnTasks(col.status);
+                                return (
+                                    <div key={col.id} className="flex flex-col gap-4">
+                                        <div className="flex items-center gap-3 px-4 py-2">
+                                            <div className={`w-3 h-3 rounded-full ${col.id === 'doing-col' ? 'bg-teal-500 animate-pulse' : col.color}`} />
+                                            <h3 className="text-[13px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{col.title}</h3>
+                                            <span className="ml-auto text-[11px] font-bold apple-glass border-none px-2.5 py-1 rounded-full text-slate-500">{colTasks.length}</span>
+                                            {col.status === 'todo' && (
+                                                <button onClick={() => setAddingToColumn('todo')} className="p-1 text-slate-400 hover:text-teal-500"><PlusIcon className="w-5 h-5" /></button>
+                                            )}
+                                        </div>
+
+                                        <DroppableContainer id={col.id} items={colTasks.map(t => t.id)}>
+                                            <div className="space-y-4 min-h-[100px] sm:overflow-y-auto sm:max-h-[calc(100vh-300px)]">
+                                                {colTasks.map(task => (
+                                                    <SortableTaskItem
+                                                        key={task.id} task={task}
+                                                        isFocused={isTaskFocused(task.id)}
+                                                        onToggleFocus={() => handleToggleFocus(task)}
+                                                        onSelectTask={setSelectedTask} // Set selected task for SlideOver
+                                                        onToggleComplete={handleToggleComplete} onStartFocus={onStartFocus}
+                                                        onToggleSubtask={handleToggleSubtask} onAddSubtask={handleAddSubtask}
+                                                        onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask}
+                                                        auth={auth} t={t}
+                                                    />
+                                                ))}
+                                                {addingToColumn === col.status && (
+                                                    <div className="apple-glass p-5 rounded-[2rem] border-teal-500/30">
+                                                        <form onSubmit={(e) => {
+                                                            e.preventDefault(); const title = e.target.title.value;
+                                                            if (!title.trim()) return;
+                                                            setProcessingId('quick-add');
+                                                            axios.post(route('api.tasks.store'), { title, status: col.status }).then((res) => {
+                                                                setLocalTasks(prev => [res.data.task, ...prev]); setAddingToColumn(null);
+                                                            }).finally(() => setProcessingId(null));
+                                                        }} className="space-y-3">
+                                                            <input autoFocus name="title" placeholder={t('placeholder_quick_add') || "New Task..."} className="w-full bg-transparent border-none p-0 font-bold focus:ring-0" />
+                                                            <div className="flex justify-end gap-2">
+                                                                <button type="button" onClick={() => setAddingToColumn(null)} className="text-xs">Cancel</button>
+                                                                <button type="submit" className="text-xs bg-teal-500 text-white px-3 py-1 rounded-lg">Add</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </DroppableContainer>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Task Details SlideOver */}

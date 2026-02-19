@@ -383,6 +383,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/voice/join', [\App\Http\Controllers\Api\VoiceSessionController::class, 'join'])->name('voice.join');
         Route::post('/voice/leave', [\App\Http\Controllers\Api\VoiceSessionController::class, 'leave'])->name('voice.leave');
         Route::get('/voice/peers', [\App\Http\Controllers\Api\VoiceSessionController::class, 'peers'])->name('voice.peers');
+
+        // 📊 Productivity Stats (Session Context)
+        Route::get('/productivity/summary', [App\Http\Controllers\Api\ProductivityController::class, 'summary'])->name('productivity.summary');
+        Route::get('/productivity/trends', [App\Http\Controllers\Api\ProductivityController::class, 'trends'])->name('productivity.trends');
+        Route::get('/productivity/insights', [App\Http\Controllers\Api\ProductivityController::class, 'insights'])->name('productivity.insights');
+        Route::get('/productivity/report', [App\Http\Controllers\Api\ReportController::class, 'downloadWeeklyReport'])->name('productivity.report');
     });
 
     // =========================================================================

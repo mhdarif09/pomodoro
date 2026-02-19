@@ -45,11 +45,17 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['status' => true]); 
         }
 
-        // 2. Generate AI Response
+        // 2. Log User Message & Generate Response
         Log::info("WhatsApp Webhook: Processing message from registered user", ['user' => $user->name]);
         
-        // Indicate typing or processing (Optional: Fonnte doesn't support typing status via API easily)
-        
+        \App\Models\ReminderLog::create([
+            'user_id' => $user->id,
+            'message' => $message,
+            'sender' => 'user',
+            'type' => 'chat',
+            'status' => 'received'
+        ]);
+
         $reply = $this->aiService->generateResponse($user, $message);
 
         // 3. Send Reply via Fonnte

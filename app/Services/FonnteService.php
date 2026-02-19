@@ -93,28 +93,53 @@ class FonnteService
      * @param string $message
      * @return array
      */
-    public function sendReminder(\App\Models\User $user, string $message): array
+    public function sendReminder(\App\Models\User $user, string $message, $taskId = null): array
     {
         if (!$user->phone) {
             return ['success' => false, 'error' => 'User has no phone number'];
         }
 
-        // Check premium status
-        $isPremium = $user->is_premium;
-
-        if (!$isPremium) {
-            $key = 'whatsapp_limit:' . $user->id . ':' . now()->format('Y-m-d');
-            $count = \Illuminate\Support\Facades\Cache::get($key, 0);
-
-            if ($count >= 10) {
-                Log::info('WhatsApp reminder limit reached for free user', ['user_id' => $user->id]);
-                return ['success' => false, 'error' => 'Daily reminder limit reached (10/day)', 'limit_reached' => true];
+        // 1. Check Monthly Limit per Task (Max 20)
+        if ($taskId) {
+            $monthStart = now()->startOfMonth();
+            $count = \App\Models\ReminderLog::where('user_id', $user->id)
+                ->where('task_id', $taskId)
+                ->where('created_at', '>=', $monthStart)
+                ->count();
+            
+            if ($count >= 20) {
+                Log::info('WhatsApp reminder limit reached for task', ['user_id' => $user->id, 'task_id' => $taskId]);
+                return ['success' => false, 'error' => 'Monthly reminder limit reached for this task (20/month)', 'limit_reached' => true];
             }
-
-            // Increment count (expires in 24 hours)
-            \Illuminate\Support\Facades\Cache::put($key, $count + 1, now()->addDay());
         }
 
-        return $this->sendMessage($user->phone, $message);
+        // 2. Check Daily Limit for Free Users
+        $isPremium = $user->is_premium;
+        if (!$isPremium) {
+            $key = 'whatsapp_limit:' . $user->id . ':' . now()->format('Y-m-d');
+            $dailyCount = \Illuminate\Support\Facades\Cache::get($key, 0);
+
+            if ($dailyCount >= 10) {
+                 return ['success' => false, 'error' => 'Daily reminder limit reached (10/day)', 'limit_reached' => true];
+            }
+            \Illuminate\Support\Facades\Cache::put($key, $dailyCount + 1, now()->addDay());
+        }
+
+        // 3. Send Message
+        $result = $this->sendMessage($user->phone, $message);
+
+        // 4. Log to DB
+        if ($result['success']) {
+            \App\Models\ReminderLog::create([
+                'user_id' => $user->id,
+                'task_id' => $taskId,
+                'message' => $message,
+                'sender' => 'assistant', // Reminders are sent by the assistant/system
+                'type' => 'reminder',
+                'status' => 'sent'
+            ]);
+        }
+
+        return $result;
     }
 }

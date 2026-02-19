@@ -11,6 +11,7 @@ import ContinueWorkBanner from '@/Components/Dashboard/ContinueWorkBanner';
 import DailyLimitIndicator from '@/Components/Dashboard/DailyLimitIndicator';
 import TaskRecoveryModal from '@/Components/Dashboard/TaskRecoveryModal';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
+import ProductivityPulse from '@/Components/Dashboard/ProductivityPulse';
 import UpgradeModal from '@/Components/UpgradeModal';
 import DashboardNotes from '@/Components/Dashboard/DashboardNotes';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -166,7 +167,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     );
 };
 
-const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, aiInsightSnippet, filters = {}, onStartFocus, focusTasks, suggestedFocusTasks, resumeTask, onTaskComplete }) => {
+const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, aiInsightSnippet, filters = {}, onStartFocus, focusTasks, suggestedFocusTasks, resumeTask, onTaskComplete, productivityRefreshTrigger }) => {
     const activeFilter = filters.filter || 'all';
 
     const handleFilterChange = (newFilter) => {
@@ -262,12 +263,16 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                             auth={auth}
                             onTaskComplete={onTaskComplete}
                             hideHero={false} // Show Smart Focus here
+                            hideList={true} // Hide the redundant list
                         />
                     </motion.div>
                 </div>
 
                 {/* 3. PERFORMANCE SIDEBAR (col-4) */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
+                    {/* Productivity Pulse (Trends) */}
+                    <ProductivityPulse refreshTrigger={productivityRefreshTrigger} />
+
                     {/* Momentum Stats Group */}
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
@@ -344,23 +349,22 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                         </div>
                     </div>
 
-                    {activeFilter !== 'all' && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="apple-glass rounded-[2rem] p-4 shadow-xl mb-10"
-                        >
-                            <TaskFocusPanel
-                                tasks={allTasks}
-                                focusTasks={focusTasks}
-                                activeFilter={activeFilter}
-                                onStartFocus={onStartFocus}
-                                auth={auth}
-                                onTaskComplete={onTaskComplete}
-                                hideHero={true} // Hide Smart Focus here as it's already shown
-                            />
-                        </motion.div>
-                    )}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="apple-glass rounded-[2rem] p-4 shadow-xl mb-10"
+                    >
+                        <TaskFocusPanel
+                            tasks={allTasks}
+                            focusTasks={focusTasks}
+                            activeFilter={activeFilter}
+                            onStartFocus={onStartFocus}
+                            auth={auth}
+                            onTaskComplete={onTaskComplete}
+                            hideHero={true} // Hide Smart Focus here as it's already shown above
+                            hideList={false} // Always show list here
+                        />
+                    </motion.div>
                 </div>
             </div>
         </div>
@@ -404,6 +408,8 @@ export default function Dashboard(props) {
     const [companionState, setCompanionState] = useState('idle');
     const [companionMessage, setCompanionMessage] = useState(null);
 
+    const [productivityRefreshTrigger, setProductivityRefreshTrigger] = useState(0);
+
     // Effect to update companion mood based on activity
     useEffect(() => {
         if (isRunning) {
@@ -418,6 +424,7 @@ export default function Dashboard(props) {
     const handleTaskCompleted = () => {
         setCompanionState('celebrating');
         setCompanionMessage("Hebat! Satu tugas selesai! 🎉");
+        setProductivityRefreshTrigger(prev => prev + 1); // Refresh stats
         setTimeout(() => setCompanionState(isRunning ? 'focusing' : 'idle'), 3000);
     };
 
@@ -494,11 +501,7 @@ export default function Dashboard(props) {
     }, [recoveryPlan]);
 
     const handleTaskAdded = (newTask) => {
-        setLocalTasks(prevTasks => ({
-            ...prevTasks,
-            data: [newTask, ...(prevTasks?.data || [])],
-            total: (prevTasks?.total || 0) + 1
-        }));
+        setLocalTasks(prevTasks => [newTask, ...prevTasks]);
 
         setLocalStats(prevStats => ({
             ...prevStats,
@@ -593,6 +596,12 @@ export default function Dashboard(props) {
                 tab_switches: 0,
                 ai_questions_asked: 0,
             });
+            await axios.post(route('api.pomodoro.stop'), {
+                break_minutes: 0,
+                tab_switches: 0,
+                ai_questions_asked: 0,
+            });
+            setProductivityRefreshTrigger(prev => prev + 1); // Refresh stats
             router.reload({ only: ['tasks', 'taskStats'] });
         } catch (error) {
             console.error("Failed to save session:", error);
@@ -698,7 +707,8 @@ export default function Dashboard(props) {
         onTaskComplete: (taskId) => {
             setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, is_completed: true } : t));
             // Trigger refresh or update local stats if needed
-        }
+        },
+        productivityRefreshTrigger // Pass the trigger down
     };
 
     return (

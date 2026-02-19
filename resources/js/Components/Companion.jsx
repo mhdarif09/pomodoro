@@ -289,7 +289,9 @@ const useCompanionBrain = (tasks, isTimerRunning, user, activeTask) => {
 // ══════════════════════════════════════════
 
 export default function Companion({ tasks = [], isTimerRunning = false, user, onClick, state: overrideState, message: overrideMessage }) {
-    const brain = useCompanionBrain(tasks, isTimerRunning, user);
+    // Determine if tasks is paginated object or array
+    const tasksArray = Array.isArray(tasks) ? tasks : (tasks?.data || []);
+    const brain = useCompanionBrain(tasksArray, isTimerRunning, user);
 
     // Use overrides if provided, otherwise generic brain
     const state = overrideState && overrideState !== 'idle' ? overrideState : brain.state;
