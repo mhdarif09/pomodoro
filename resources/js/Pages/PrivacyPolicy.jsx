@@ -9,12 +9,12 @@ export default function PrivacyPolicy() {
     return (
         <GuestLayout>
             <Head title="Privacy Policy" />
-            
+
             <div className="py-12 sm:py-24 bg-slate-50 dark:bg-slate-900">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                
+
                     <div className="mb-8">
-                        <Link 
+                        <Link
                             href="/login"
                             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
                         >
@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
 
                     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg p-6 sm:p-10 lg:p-12">
                         {/* ----- PERUBAHAN UTAMA ADA DI BAGIAN className INI ----- */}
-                        <div 
+                        <div
                             className="
                                 prose sm:prose-lg dark:prose-invert 
                                 prose-slate
@@ -38,43 +38,102 @@ export default function PrivacyPolicy() {
                                 text-slate-700 dark:text-slate-300
                             "
                         >
-                            <h1>Kebijakan Privasi (Privacy Policy)</h1>
-                            <p className="lead !text-slate-500 !-mt-2">Efektif per: 19 Oktober 2025</p>
-                            
-                            <p>
-                               Kebijakan Privasi ini menjelaskan bagaimana <strong>Sarang Tumbuh</strong> ("Aplikasi", "Layanan", "kami") mengumpulkan, menggunakan, dan melindungi informasi pribadi Anda. Dengan menggunakan Layanan kami, Anda menyetujui pengumpulan dan penggunaan informasi sesuai dengan kebijakan ini.
-                            </p>
-                            
-                            <h2>1. Informasi yang Kami Kumpulkan</h2>
-                            <p>Kami mengumpulkan informasi berikut untuk menyediakan dan meningkatkan Layanan kami:</p>
-                            <ul>
-                                <li><strong>Informasi Akun:</strong> Saat Anda mendaftar menggunakan Google, kami mengumpulkan nama, alamat email, dan ID akun Google Anda.</li>
-                                <li><strong>Data Penggunaan:</strong> Kami mengumpulkan data yang Anda buat di dalam aplikasi, seperti tugas (to-do list), misi yang diselesaikan, dan goal harian.</li>
-                                <li><strong>Informasi Transaksi:</strong> Kami menyimpan riwayat transaksi Koin di dalam aplikasi untuk fitur Wallet. Kami tidak menyimpan informasi rekening bank Anda.</li>
-                            </ul>
-                            
-                            <h2>2. Bagaimana Kami Menggunakan Informasi Anda</h2>
-                            <p>Informasi Anda digunakan untuk tujuan berikut:</p>
-                            <ul>
-                                <li>Untuk menyediakan, mengoperasikan, dan memelihara Layanan kami.</li>
-                                <li>Untuk mempersonalisasi pengalaman Anda.</li>
-                                <li>Untuk memproses transaksi Misi dan Wallet Anda.</li>
-                                <li>Untuk berkomunikasi dengan Anda.</li>
-                                <li>Untuk memantau dan menganalisis penggunaan untuk meningkatkan Layanan.</li>
-                            </ul>
-                            
-                            <h2>3. Berbagi Informasi</h2>
-                            <p>Kami <strong>tidak menjual atau menyewakan</strong> informasi pribadi Anda kepada pihak ketiga.</p>
-                            
-                            <h2>4. Keamanan Data</h2>
-                            <p>Keamanan data Anda adalah prioritas kami. Kami menggunakan langkah-langkah keamanan yang wajar untuk melindungi informasi Anda.</p>
-                            
-                            <h2>5. Hak Anda</h2>
-                            <p>Anda memiliki hak untuk mengakses atau meminta penghapusan data pribadi Anda. Silakan hubungi kami jika Anda ingin mengajukan permintaan ini.</p>
+                            <h1>Privacy Policy – SarangTumbuh</h1>
+                            <p className="lead !text-slate-500 !-mt-2">Efektif per: 19 Februari 2026</p>
 
-                            <h2>6. Kontak</h2>
                             <p>
-                                Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi kami di <a href="mailto:sarangtumbuhofficial@gmail.com">sarangtumbuhofficial@gmail.com</a>.
+                                SarangTumbuh ("Aplikasi", "Layanan", "kami") menghargai privasi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi Anda saat menggunakan layanan kami.
+                            </p>
+
+                            <p>
+                                Dengan menggunakan SarangTumbuh, Anda menyetujui praktik yang dijelaskan dalam Kebijakan Privasi ini.
+                            </p>
+
+                            <h2>1. Informasi yang Kami Kumpulkan</h2>
+                            <p>Kami mengumpulkan informasi berikut untuk menyediakan dan meningkatkan layanan:</p>
+
+                            <h3>a. Informasi Akun Google</h3>
+                            <p>Saat Anda masuk menggunakan akun Google, kami mengakses:</p>
+                            <ul>
+                                <li>Nama</li>
+                                <li>Alamat email</li>
+                                <li>ID akun Google</li>
+                                <li>Foto profil (jika tersedia)</li>
+                            </ul>
+                            <p>Informasi ini digunakan untuk autentikasi dan identifikasi akun Anda.</p>
+
+                            <h3>b. Data Google Calendar</h3>
+                            <p>Jika Anda memberikan izin, SarangTumbuh dapat:</p>
+                            <ul>
+                                <li>Membuat event di Google Calendar Anda</li>
+                                <li>Mengelola event yang dibuat melalui SarangTumbuh</li>
+                                <li>Menyinkronkan tugas dengan jadwal Anda</li>
+                            </ul>
+                            <p>Kami <strong>TIDAK</strong>:</p>
+                            <ul>
+                                <li>Membaca seluruh isi kalender Anda di luar kebutuhan sinkronisasi</li>
+                                <li>Menghapus atau mengubah event yang tidak dibuat melalui SarangTumbuh</li>
+                                <li>Menjual atau membagikan data kalender Anda kepada pihak ketiga</li>
+                            </ul>
+                            <p>Akses ini menggunakan layanan resmi dari Google Calendar API.</p>
+
+                            <h3>c. Data Penggunaan Aplikasi</h3>
+                            <p>Kami menyimpan:</p>
+                            <ul>
+                                <li>To-do list</li>
+                                <li>Misi dan goal harian</li>
+                                <li>Riwayat aktivitas</li>
+                                <li>Riwayat transaksi Koin dalam fitur Wallet</li>
+                            </ul>
+                            <p>Kami tidak menyimpan informasi rekening bank atau data pembayaran sensitif.</p>
+
+                            <h2>2. Bagaimana Kami Menggunakan Informasi</h2>
+                            <p>Informasi Anda digunakan untuk:</p>
+                            <ul>
+                                <li>Mengoperasikan dan memelihara layanan SarangTumbuh</li>
+                                <li>Menyinkronkan tugas dengan Google Calendar</li>
+                                <li>Menyediakan pengingat dan sistem manajemen produktivitas</li>
+                                <li>Meningkatkan fitur dan pengalaman pengguna</li>
+                                <li>Memberikan dukungan pengguna</li>
+                            </ul>
+                            <p>Kami tidak menggunakan data Anda untuk iklan pihak ketiga.</p>
+
+                            <h2>3. Berbagi Informasi</h2>
+                            <p>Kami tidak menjual, menyewakan, atau memperdagangkan informasi pribadi Anda kepada pihak ketiga.</p>
+                            <p>Kami hanya dapat membagikan data jika diwajibkan oleh hukum atau permintaan resmi pemerintah.</p>
+
+                            <h2>4. Penyimpanan dan Keamanan Data</h2>
+                            <p>Kami menggunakan langkah-langkah teknis dan administratif yang wajar untuk melindungi data Anda dari akses tidak sah, perubahan, atau kebocoran.</p>
+                            <p>Namun, tidak ada sistem yang 100% aman, dan kami tidak dapat menjamin keamanan absolut.</p>
+
+                            <h2>5. Penyimpanan Data</h2>
+                            <p>Data Anda disimpan selama akun Anda aktif atau selama diperlukan untuk menyediakan layanan.</p>
+                            <p>Anda dapat meminta penghapusan akun dan data kapan saja dengan menghubungi kami.</p>
+
+                            <h2>6. Hak Anda</h2>
+                            <p>Anda memiliki hak untuk:</p>
+                            <ul>
+                                <li>Mengakses data pribadi Anda</li>
+                                <li>Memperbarui data</li>
+                                <li>Meminta penghapusan akun</li>
+                                <li>Mencabut akses Google kapan saja melalui pengaturan akun Google Anda</li>
+                            </ul>
+
+                            <h2>7. Layanan Pihak Ketiga</h2>
+                            <p>
+                                Layanan ini menggunakan sistem autentikasi dari Google melalui protokol OAuth 2.0 dan layanan resmi Google.
+                                Informasi penggunaan Google juga tunduk pada kebijakan privasi Google yang tersedia di: <br />
+                                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">https://policies.google.com/privacy</a>
+                            </p>
+
+                            <h2>8. Perubahan Kebijakan</h2>
+                            <p>Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Perubahan akan dipublikasikan di halaman ini dengan tanggal efektif terbaru.</p>
+
+                            <h2>9. Kontak</h2>
+                            <p>Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi:</p>
+                            <p>
+                                📧 <a href="mailto:sarangtumbuhofficial@gmail.com">sarangtumbuhofficial@gmail.com</a> <br />
+                                🌐 <a href="https://sarangtumbuh.site" target="_blank" rel="noopener noreferrer">https://sarangtumbuh.site</a>
                             </p>
                         </div>
                     </div>

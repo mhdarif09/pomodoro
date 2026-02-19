@@ -799,6 +799,8 @@ function LandingPageContent({ plans = [] }) {
                                 <ul className="space-y-1.5 text-xs text-slate-400">
                                     <li><a href="#faq" className="hover:text-emerald-600 transition-colors">FAQ</a></li>
                                     <li><a href="/login" className="hover:text-emerald-600 transition-colors">Masuk</a></li>
+                                    <li><Link href="/privacy-policy" className="hover:text-emerald-600 transition-colors">Privacy Policy</Link></li>
+                                    <li><Link href="/terms-of-service" className="hover:text-emerald-600 transition-colors">Terms of Service</Link></li>
                                 </ul>
                             </div>
                         </div>
