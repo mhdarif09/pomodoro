@@ -324,14 +324,14 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
 
                 {/* 4. LOWER ROW: BACKLOG & FILTERS (col-12 or col-8) */}
                 <div className="col-span-12">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                         <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Semua Tugas 📖</h2>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                             {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
                                 <button
                                     key={key}
                                     onClick={() => handleFilterChange(key)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex-shrink-0
                                         ${activeFilter === key
                                             ? `${colorClass} text-white shadow-lg`
                                             : 'bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-100 dark:border-slate-700'
