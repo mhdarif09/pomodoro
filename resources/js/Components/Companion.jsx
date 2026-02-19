@@ -315,7 +315,7 @@ export default function Companion({ tasks = [], isTimerRunning = false, user, on
     };
 
     return (
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end pointer-events-none" style={{ maxWidth: '200px' }}>
+        <div className="fixed bottom-24 sm:bottom-4 right-4 z-50 flex flex-col items-end pointer-events-none" style={{ maxWidth: '200px' }}>
             {/* Dialogue Bubble */}
             <AnimatePresence>
                 {(visibleMessage || isHovered) && state !== 'sleeping' && (

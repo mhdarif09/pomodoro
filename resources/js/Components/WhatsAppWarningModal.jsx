@@ -21,8 +21,8 @@ export default function WhatsAppWarningModal() {
 
             if (!isTutorialDone) return;
 
-            // Check if permanently dismissed
-            if (localStorage.getItem('whatsapp_warning_seen') === 'true') return;
+            // Check if dismissed this session
+            if (sessionStorage.getItem('whatsapp_warning_seen') === 'true') return;
 
             // Show modal after a small delay
             setTimeout(() => setOpen(true), 1500);
@@ -41,7 +41,8 @@ export default function WhatsAppWarningModal() {
 
     const handleDismiss = () => {
         setOpen(false);
-        localStorage.setItem('whatsapp_warning_seen', 'true');
+        // Use sessionStorage so it shows again next visit/reload, NOT permanent
+        sessionStorage.setItem('whatsapp_warning_seen', 'true');
         // Dispatch event so Dashboard can show Upgrade Modal
         window.dispatchEvent(new CustomEvent('whatsapp-modal-dismissed'));
     };

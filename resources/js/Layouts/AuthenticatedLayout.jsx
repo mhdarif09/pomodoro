@@ -492,7 +492,7 @@ export default function Authenticated({ children, header }) {
             </motion.aside>
 
             {/* Mobile & Main Content */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            <div className="flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative">
 
 
                 <main className="flex-1 overflow-y-auto scrollbar-hide p-0 sm:p-4 pb-20 sm:pb-4">
@@ -513,8 +513,10 @@ export default function Authenticated({ children, header }) {
                                         { href: route('gamification.dashboard'), icon: <TrophyIcon className="h-[22px] w-[22px]" />, label: 'Rewards', active: route().current('gamification.dashboard'), id: 'mobile-rewards-nav' },
                                         { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guilds', active: route().current('guilds.index') || route().current('guilds.*'), id: 'mobile-guilds-nav' },
                                         { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit'), id: 'mobile-profile-nav' },
-                                    ].map((item, i) => (
-                                        <Link key={i} href={item.href} id={item.id}
+                                    ].concat([
+                                        { href: route('logout'), icon: <ArrowRightOnRectangleIcon className="h-[22px] w-[22px]" />, label: 'Logout', active: false, id: 'mobile-logout-nav', method: 'post', as: 'button' }
+                                    ]).map((item, i) => (
+                                        <Link key={i} href={item.href} id={item.id} method={item.method} as={item.as}
                                             className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
                                                 ? 'bg-teal-500/15 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 px-4 py-2.5 rounded-2xl'
                                                 : 'text-slate-400 dark:text-slate-500 p-2.5'
