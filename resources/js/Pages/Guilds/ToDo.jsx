@@ -144,7 +144,7 @@ function DroppableColumn({ id, title, tasks, children, color }) {
 export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focusTasks = [], resumeTask, stagnantTasks = [], members, enableAi, errors }) {
     // --- Core state ---
     const [viewMode, setViewMode] = useState('board');
-    const [localTasks, setLocalTasks] = useState(tasks);
+    const [localTasks, setLocalTasks] = useState(Array.isArray(tasks) ? tasks : (tasks?.data || []));
     const [localFocusTasks, setLocalFocusTasks] = useState(focusTasks);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -187,7 +187,10 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
     const [isClaimingMission, setIsClaimingMission] = useState(false);
 
     // Sync props to local
-    useEffect(() => { setLocalTasks(tasks); }, [tasks]);
+    useEffect(() => {
+        const taskData = Array.isArray(tasks) ? tasks : (tasks?.data || []);
+        setLocalTasks(taskData);
+    }, [tasks]);
     useEffect(() => { setLocalFocusTasks(focusTasks); }, [focusTasks]);
 
     // --- Focus Cycling Logic ---

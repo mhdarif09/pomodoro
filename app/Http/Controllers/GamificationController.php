@@ -39,41 +39,33 @@ class GamificationController extends Controller
         // Update streak on dashboard visit
         $this->gamificationService->updateStreak($user);
 
-        // Get active challenges
-        $activeChallenges = Challenge::where('is_active', true)->get();
+        // OPTIMIZATION: Only fetch active challenges that user DOES NOT have yet
+        // Instead of fetching ALL and iterating
+        $activeChallengeIds = Challenge::where('is_active', true)->pluck('id');
+        $userChallengeIds = $user->challenges()->pluck('challenges.id');
+        
+        $missingChallengeIds = $activeChallengeIds->diff($userChallengeIds);
 
-        // Get user with relations
-        $user->load(['challenges' => function($q) {
-            $q->wherePivot('completed', false);
-        }, 'achievements']);
-
-        $assignedChallengeIds = $user->challenges->pluck('id')->toArray();
-        $newChallengesToAttach = [];
-
-        foreach ($activeChallenges as $challenge) {
-            if (!in_array($challenge->id, $assignedChallengeIds)) {
-                $newChallengesToAttach[$challenge->id] = [
-                    'progress' => 0,
-                    'completed' => false,
-                ];
-            }
+        if ($missingChallengeIds->isNotEmpty()) {
+             // Take only first 5 to prevent massive inserts if many are added
+             $toAttach = $missingChallengeIds->take(5);
+             $attachData = [];
+             foreach($toAttach as $id) {
+                 $attachData[$id] = ['progress' => 0, 'completed' => false];
+             }
+             $user->challenges()->syncWithoutDetaching($attachData);
         }
 
-        if (!empty($newChallengesToAttach)) {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($user, $newChallengesToAttach) {
-                // Use syncWithoutDetaching for robustness and to avoid Duplicate Entry errors
-                $user->challenges()->syncWithoutDetaching($newChallengesToAttach);
-            });
-            $user->load('challenges'); // Refresh
-        }
-
-        // Get user's active challenges
-        $userChallenges = $user->challenges->map(function ($challenge) {
+        // Get user's active challenges - LIMIT TO 10
+        $userChallenges = $user->challenges()
+            ->wherePivot('completed', false)
+            ->limit(10) // LIMIT HERE
+            ->get()
+            ->map(function ($challenge) {
             return [
                 'id' => $challenge->id,
                 'title' => $challenge->title,
                 'description' => $challenge->description,
-                'type' => $challenge->type,
                 'type' => $challenge->type,
                 'xp_reward' => $challenge->xp_reward,
                 'points_reward' => $challenge->points_reward,

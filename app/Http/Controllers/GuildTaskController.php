@@ -26,7 +26,7 @@ class GuildTaskController extends Controller
             ->with(['subtasks', 'user', 'tags', 'assignee', 'completer', 'missionTasks', 'mission', 'comments.user']) // eager load relations
             ->orderBy('is_completed', 'asc')
             ->orderBy('priority', 'desc')
-            ->get();
+            ->paginate(15);
 
         $pendingTasks = [];
         $isLeader = $guild->members()->where('user_id', auth()->id())->wherePivot('role', 'leader')->exists();

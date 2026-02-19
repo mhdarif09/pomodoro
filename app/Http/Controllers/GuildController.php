@@ -151,7 +151,7 @@ class GuildController extends Controller
              return to_route('guilds.index')->with('error', 'Kamu bukan anggota guild ini.');
         }
 
-        $guild->load(['members', 'chats.user']);
+        $guild->load(['chats.user']);
 
         return Inertia::render('Guilds/Show', [
             'guild' => [
@@ -178,7 +178,8 @@ class GuildController extends Controller
                 }),
                 'recent_tasks_count' => $guild->tasks()->where('is_completed', true)->where('updated_at', '>=', now()->subDays(7))->count(),
             ],
-            'members' => $guild->members->take(5)->map(fn($m) => ['id' => $m->id, 'name' => $m->name, 'avatar' => $m->avatar]),
+            // Optimization: Only load TOP 5 members + Total Count (handled by member_count above)
+            'members' => $guild->members()->limit(5)->get()->map(fn($m) => ['id' => $m->id, 'name' => $m->name, 'avatar' => $m->avatar]),
             'enableAi' => $guild->leader && $guild->leader->is_premium,
         ]);
     }

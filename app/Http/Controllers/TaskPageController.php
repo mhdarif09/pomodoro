@@ -54,7 +54,7 @@ class TaskPageController extends Controller
 
         $tasks = $tasksQuery->orderBy('is_completed', 'asc')
                             ->orderBy('due_date', 'asc')
-                            ->paginate(50)
+                            ->paginate(20)
                             ->withQueryString();
 
         // Focus tasks for cycling

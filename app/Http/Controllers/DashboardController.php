@@ -105,16 +105,18 @@ class DashboardController extends Controller
                              ->withQueryString();
         
         // --- Sisa Logika Controller Anda (Tidak Diubah) ---
-        $plans = Plan::all();
+        $plans = Plan::where('is_active', true)->get();
         $usageCount = $user->reflections()->whereNotNull('user_answer')->count();
         $remainingQuota = self::FREE_REFLECTION_LIMIT - $usageCount;
         
         // --- Deadline/Workload Risk Detection ---
-        // Pre-load subtasks for risk service to avoid N+1
+        // Pre-load subtasks for risk service to avoid N+1, but LIMIT to top 20 urgent tasks
         $user->load(['tasks' => function($query) {
             $query->where('is_completed', false)
                   ->whereNotNull('due_date')
                   ->where('due_date', '<=', now()->addHours(48))
+                  ->orderBy('due_date', 'asc') // Prioritize closest deadlines
+                  ->limit(20)
                   ->with('subtasks');
         }]);
         
