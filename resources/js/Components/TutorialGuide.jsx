@@ -19,7 +19,7 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                     element: '#dashboard-nav',
                     popover: {
                         title: '👋 Halo, Teman Baru!',
-                        description: 'Aku akan menemanimu di sini. Ini adalah <b>Markas Pusat</b> kita. Semua misi harian dimonitor dari sini.',
+                        description: 'Selamat datang di Markas Pusat! Di sini kita atur semua strategi dan pantau misi harianmu.',
                         side: "right",
                         align: 'start',
                         onPopoverRender: () => {
@@ -30,8 +30,8 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                 {
                     element: '#smart-focus-section',
                     popover: {
-                        title: '🧠 Smart Focus 3',
-                        description: 'Ini senjata rahasia kita! Aku akan pilihkan 3 tugas terbaik buatmu setiap hari. Tapi kamu bosnya, bebas pilih sendiri juga kok!',
+                        title: '🧠 Smart Focus',
+                        description: 'Bingung mau mulai dari mana? Aku akan pilihkan 3 tugas prioritas buatmu. Fokus selesaikan ini dulu ya!',
                         side: "bottom",
                         align: 'center',
                         onPopoverRender: () => {
@@ -41,10 +41,37 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                     }
                 },
                 {
+                    element: '#ai-genius-nav',
+                    popover: {
+                        title: '✨ AI Genius',
+                        description: 'Butuh teman brainstorming atau bantuan nulis? Asisten AI kita siap bantu kapan saja.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#gamification-nav',
+                    popover: {
+                        title: '🏆 Rewards & XP',
+                        description: 'Setiap tugas yang selesai memberimu XP! Naikkan levelmu dan kumpulkan badge keren.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#guilds-nav',
+                    popover: {
+                        title: '🛡️ Guilds',
+                        description: 'Gabung dengan komunitas! Kerjakan misi bareng teman-teman biar makin semangat.',
+                        side: "right",
+                        align: 'start'
+                    }
+                },
+                {
                     element: '#learning-nav',
                     popover: {
                         title: '📚 Ruang Belajar',
-                        description: 'Kalau butuh fokus penuh, kita ke sini. Ada timer Pomodoro dan materi belajar biar makin jago.',
+                        description: 'Tempat fokus belajar. Ada timer Pomodoro khusus dan materi pengembangan diri.',
                         side: "right",
                         align: 'start'
                     }
@@ -52,8 +79,8 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                 {
                     element: '#documents-nav',
                     popover: {
-                        title: '🗂️ Gudang Data',
-                        description: 'Tempat simpan dokumen penting dan papan strategi (Kanban). Rapi pangkal produktif!',
+                        title: '🗂️ Arsip & Dokumen',
+                        description: 'Simpan catatan, dokumen, dan template di sini. Semuanya terorganisir rapi.',
                         side: "right",
                         align: 'start',
                         onPopoverRender: () => {
@@ -65,10 +92,10 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
 
             const mobileSteps = [
                 {
-                    element: 'body',
+                    element: 'body', // Fallback if no specific element
                     popover: {
                         title: '👋 Halo, Teman Baru!',
-                        description: 'Aku teman kerjamu di SarangTumbuh. Yuk keliling sebentar!',
+                        description: 'Selamat datang di SarangTumbuh! Yuk, aku ajak keliling sebentar.',
                         side: "bottom",
                         align: 'center',
                         onPopoverRender: () => {
@@ -79,8 +106,44 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                 {
                     element: '#mobile-dashboard-nav',
                     popover: {
-                        title: '📊 Markas Pusat',
-                        description: 'Tempat kita atur strategi harian.',
+                        title: '🏠 Markas Pusat',
+                        description: 'Ini layar utamamu. Pantau semua progres harian dari sini.',
+                        side: "top",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#mobile-tasks-nav',
+                    popover: {
+                        title: '📝 Misi Saya',
+                        description: 'Daftar semua tugasmu ada di sini. Atur jadwal dan deadline dengan mudah.',
+                        side: "top",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#mobile-rewards-nav',
+                    popover: {
+                        title: '🏆 Rewards',
+                        description: 'Cek level, XP, dan pencapaianmu di sini. Jadikan produktivitas seperti main game!',
+                        side: "top",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#mobile-guilds-nav',
+                    popover: {
+                        title: '🛡️ Komunitas',
+                        description: 'Cari teman seperjuangan dan gabung Guild untuk misi bareng.',
+                        side: "top",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '#mobile-profile-nav',
+                    popover: {
+                        title: '👤 Profil',
+                        description: 'Atur akun dan langgananmu di sini. Selamat produktif!',
                         side: "top",
                         align: 'center'
                     }

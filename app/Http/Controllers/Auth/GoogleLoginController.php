@@ -38,19 +38,25 @@ class GoogleLoginController extends Controller
         // ======================= PERUBAHAN UTAMA DI SINI =======================
         // Cari pengguna berdasarkan email. Jika tidak ada, buat pengguna baru.
         // Jika ada, perbarui datanya (misalnya nama atau google_id).
-        $user = User::updateOrCreate(
-            [
-                'email' => $googleUser->getEmail() // Kunci utama untuk mencari pengguna
-            ],
-            [
+        // Cari pengguna berdasarkan email
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if ($user) {
+            // Jika user ada, update google_id dan informasinya (tanpa mengubah password)
+            $user->update([
                 'name' => $googleUser->getName(),
                 'google_id' => $googleUser->getId(),
-                // 'password' akan diisi jika user baru dibuat (karena ada di UserObserver/mutator/etc,
-                // atau jika password-nya null, Eloquent tidak akan mencoba update)
-                // Jika ingin memastikan, kita bisa set password secara acak lagi jika null.
-                'password' => Hash::make(str()->random(24)) // Ini memastikan pengguna sosial bisa mereset password jika mau
-            ]
-        );
+            ]);
+        } else {
+            // Jika user belum ada, buat baru dengan password random
+            $user = User::create([
+                'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'google_id' => $googleUser->getId(),
+                'password' => Hash::make(str()->random(24)),
+                'email_verified_at' => now(), // Auto verify email dari Google
+            ]);
+        }
         // ======================================================================
 
         // Log the user in

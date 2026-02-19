@@ -23,3 +23,7 @@ Route::post('/ask-from-sheet', [OpenAIController::class, 'askFromSheet'])->name(
 
 // 💳 Midtrans Webhook
 Route::post('midtrans/webhook', [\App\Http\Controllers\PaymentCallbackController::class, 'handle'])->name('midtrans.webhook');
+
+// 📱 WhatsApp Webhook (Fonnte)
+Route::post('whatsapp/webhook', [\App\Http\Controllers\Api\WhatsAppWebhookController::class, 'handle'])->name('whatsapp.webhook');
+

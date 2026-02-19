@@ -8,33 +8,42 @@ export default function WhatsAppWarningModal() {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        // Check if user has phone
-        if (user.phone) return;
+        const checkShouldShow = () => {
+            // Check if user has phone
+            if (user.phone) return;
 
-        // Don't show if already on profile page
-        if (route().current('profile.edit') || window.location.pathname === '/profile') return;
+            // Don't show if already on profile page
+            if (route().current('profile.edit') || window.location.pathname === '/profile') return;
 
-        // Check if tutorial is completed (either in DB or local storage)
-        // We want to show this ONLY after tutorial is done
-        const localSeen = localStorage.getItem('tutorial_seen');
-        const isTutorialDone = user.has_seen_tutorial || localSeen === 'true';
+            // Check if tutorial is completed (either in DB or local storage)
+            const localSeen = localStorage.getItem('tutorial_seen');
+            const isTutorialDone = user.has_seen_tutorial || localSeen === 'true';
 
-        if (!isTutorialDone) return;
+            if (!isTutorialDone) return;
 
-        // Check if upgrade modal has been dismissed (wait for it to show first)
-        if (localStorage.getItem('upgrade_modal_dismissed') !== 'true') return;
+            // Check if permanently dismissed
+            if (localStorage.getItem('whatsapp_warning_seen') === 'true') return;
 
-        // Check if permanently dismissed
-        if (localStorage.getItem('whatsapp_warning_seen') === 'true') return;
+            // Show modal after a small delay
+            setTimeout(() => setOpen(true), 1500);
+        };
 
-        // Show modal after a small delay for better UX
-        const timer = setTimeout(() => setOpen(true), 1500);
-        return () => clearTimeout(timer);
+        checkShouldShow();
+
+        // Listen for tutorial completion to trigger this immediately
+        const handleTutorialCompleted = () => {
+            checkShouldShow();
+        };
+
+        window.addEventListener('tutorial-completed', handleTutorialCompleted);
+        return () => window.removeEventListener('tutorial-completed', handleTutorialCompleted);
     }, [user.phone, user.has_seen_tutorial]);
 
     const handleDismiss = () => {
         setOpen(false);
         localStorage.setItem('whatsapp_warning_seen', 'true');
+        // Dispatch event so Dashboard can show Upgrade Modal
+        window.dispatchEvent(new CustomEvent('whatsapp-modal-dismissed'));
     };
 
     if (user.phone) return null;

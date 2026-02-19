@@ -269,6 +269,11 @@ Route::get('/pricing', [SubscriptionController::class, 'index'])->name('subscrib
 Route::post('/webhook/midtrans', [SubscriptionController::class, 'webhookHandler'])->name('midtrans.webhook');
 Route::post('/webhook/fonnte', [\App\Http\Controllers\WhatsAppBotController::class, 'handle'])->name('fonnte.webhook');
 
+// --- PUBLIC API ROUTES ---
+Route::prefix('dashboard/api')->name('api.')->group(function() {
+    Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login'])->name('login');
+});
+
 // --- AUTHENTICATED ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
     
@@ -309,7 +314,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // =========================================================================
     Route::prefix('dashboard/api')->name('api.')->group(function() {
         // Auth
-        Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login'])->name('login');
+        // Login route moved to public section
         Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout'])->name('logout');
         
         // Tasks & Kanban

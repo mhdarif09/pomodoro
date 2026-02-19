@@ -8,7 +8,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Impor ikon-ikon baru yang keren
 import {
-    Bars3Icon, XMarkIcon, HomeIcon, UserGroupIcon, DocumentTextIcon, CreditCardIcon, ChartBarIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, TicketIcon
+    Bars3Icon, XMarkIcon, HomeIcon, UserGroupIcon, DocumentTextIcon, CreditCardIcon, ChartBarIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, TicketIcon, BanknotesIcon
 } from '@heroicons/react/24/outline';
 
 const UserAvatar = ({ user }) => {

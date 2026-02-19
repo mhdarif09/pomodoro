@@ -289,7 +289,7 @@ export default function Authenticated({ children, header }) {
                                 {!isCollapsed && <span>Learning</span>}
                             </Link>
                             {user.active_plan?.has_ai_genius_access && (
-                                <Link href={route('ai-assistant.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('ai-assistant.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                                <Link id="ai-genius-nav" href={route('ai-assistant.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('ai-assistant.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
                                     <SparklesIcon className="h-4 w-4 text-amber-500" />
                                     {!isCollapsed && <span>AI Genius</span>}
                                 </Link>
@@ -324,6 +324,7 @@ export default function Authenticated({ children, header }) {
                                     {!isCollapsed && <span>Wallet</span>}
                                 </Link>
                                 <Link
+                                    id="gamification-nav"
                                     href={route('gamification.dashboard')}
                                     className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('gamification.dashboard') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
@@ -395,6 +396,7 @@ export default function Authenticated({ children, header }) {
                                     {!isCollapsed && <span>Reports</span>}
                                 </Link>
                                 <Link
+                                    id="guilds-nav"
                                     href={route('guilds.index')}
                                     className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('guilds.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
@@ -507,10 +509,10 @@ export default function Authenticated({ children, header }) {
                                 <div className="flex items-center justify-around gap-1">
                                     {[
                                         { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard'), id: 'mobile-dashboard-nav' },
-                                        { href: route('tasks.index'), icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('tasks.index') },
-                                        { href: route('gamification.dashboard'), icon: <TrophyIcon className="h-[22px] w-[22px]" />, label: 'Rewards', active: route().current('gamification.dashboard') },
-                                        { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guilds', active: route().current('guilds.index') || route().current('guilds.*') },
-                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit') },
+                                        { href: route('tasks.index'), icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('tasks.index'), id: 'mobile-tasks-nav' },
+                                        { href: route('gamification.dashboard'), icon: <TrophyIcon className="h-[22px] w-[22px]" />, label: 'Rewards', active: route().current('gamification.dashboard'), id: 'mobile-rewards-nav' },
+                                        { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guilds', active: route().current('guilds.index') || route().current('guilds.*'), id: 'mobile-guilds-nav' },
+                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit'), id: 'mobile-profile-nav' },
                                     ].map((item, i) => (
                                         <Link key={i} href={item.href} id={item.id}
                                             className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
@@ -527,11 +529,11 @@ export default function Authenticated({ children, header }) {
                             ) : (
                                 <div className="flex items-center justify-around gap-1">
                                     {[
-                                        { href: currentGuild ? route('guilds.show', currentGuild.id) : route('guilds.index'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.show') },
-                                        { href: currentGuild ? route('guilds.tasks.index', currentGuild.id) : '#', icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('guilds.tasks.index') },
-                                        ...(isLeader ? [{ href: currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#', icon: <FireIcon className="h-[22px] w-[22px]" />, label: 'Missions', active: route().current('guilds.challenges.index') }] : []),
-                                        { href: currentGuild ? route('guilds.members.index', currentGuild.id) : '#', icon: <UserGroupIcon className="h-[22px] w-[22px]" />, label: 'Members', active: route().current('guilds.members.index') },
-                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit') },
+                                        { href: currentGuild ? route('guilds.show', currentGuild.id) : route('guilds.index'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.show'), id: 'mobile-guild-home-nav' },
+                                        { href: currentGuild ? route('guilds.tasks.index', currentGuild.id) : '#', icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('guilds.tasks.index'), id: 'mobile-guild-tasks-nav' },
+                                        ...(isLeader ? [{ href: currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#', icon: <FireIcon className="h-[22px] w-[22px]" />, label: 'Missions', active: route().current('guilds.challenges.index'), id: 'mobile-guild-missions-nav' }] : []),
+                                        { href: currentGuild ? route('guilds.members.index', currentGuild.id) : '#', icon: <UserGroupIcon className="h-[22px] w-[22px]" />, label: 'Members', active: route().current('guilds.members.index'), id: 'mobile-guild-members-nav' },
+                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit'), id: 'mobile-profile-nav-guild' },
                                     ].map((item, i) => (
                                         <Link key={i} href={item.href}
                                             className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active

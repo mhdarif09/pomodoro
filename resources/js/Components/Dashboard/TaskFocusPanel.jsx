@@ -302,7 +302,8 @@ function DroppableContainer({ id, items, children }) {
 export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, onStartFocus, auth, onTaskComplete, suggestedFocusTasks = [], hideHero = false }) {
     const { t } = useLanguage();
     // Local State for Optimistic Updates
-    const [localTasks, setLocalTasks] = useState(tasks.data || []);
+    const resolveTasks = (t) => Array.isArray(t) ? t : (t?.data || []);
+    const [localTasks, setLocalTasks] = useState(resolveTasks(tasks));
     const [localFocusTasks, setLocalFocusTasks] = useState(focusTasks || []);
     const [selectedTask, setSelectedTask] = useState(null); // For SlideOver
     const [processingId, setProcessingId] = useState(null);
@@ -311,7 +312,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
     const [xpToast, setXpToast] = useState(null); // XP celebration toast
     const [roundClaiming, setRoundClaiming] = useState(false);
 
-    useEffect(() => { setLocalTasks(tasks.data || []); }, [tasks.data]);
+    useEffect(() => { setLocalTasks(resolveTasks(tasks)); }, [tasks]);
     useEffect(() => { setLocalFocusTasks(focusTasks || []); }, [focusTasks]);
 
     // --- Focus Cycling Logic ---

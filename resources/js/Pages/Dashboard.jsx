@@ -166,7 +166,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     );
 };
 
-const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, aiInsightSnippet, filters = {}, onStartFocus, focusTasks, resumeTask, onTaskComplete }) => {
+const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, aiInsightSnippet, filters = {}, onStartFocus, focusTasks, suggestedFocusTasks, resumeTask, onTaskComplete }) => {
     const activeFilter = filters.filter || 'all';
 
     const handleFilterChange = (newFilter) => {
@@ -256,6 +256,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                         <TaskFocusPanel
                             tasks={allTasks}
                             focusTasks={focusTasks}
+                            suggestedFocusTasks={suggestedFocusTasks}
                             activeFilter="all"
                             onStartFocus={onStartFocus}
                             auth={auth}
@@ -370,7 +371,7 @@ export default function Dashboard(props) {
     const {
         auth, tasks, focusTasks = [], resumeTask, stagnantTasks = [], taskStats, filters, plans, deadlineRisks = [],
         priorityTasks = [], continueWorkTask, recoveryPlan, dailyStats = { current: 0, limit: 3 },
-        todayTaskStats = { completed: 0, total: 3 }, aiInsightSnippet
+        todayTaskStats = { completed: 0, total: 3 }, aiInsightSnippet, suggestedFocusTasks = []
     } = props;
     const { flash } = usePage().props;
 
@@ -648,13 +649,29 @@ export default function Dashboard(props) {
     }, [isRunning, secondsLeft]);
 
     useEffect(() => {
-        const localSeen = localStorage.getItem('tutorial_seen');
-        const isTutorialDone = auth.user.has_seen_tutorial || localSeen === 'true';
+        const checkUpgradeModal = () => {
+            const localSeen = localStorage.getItem('tutorial_seen');
+            const isTutorialDone = auth.user.has_seen_tutorial || localSeen === 'true';
 
-        if (flash?.show_upgrade_modal && isTutorialDone) {
-            setShowUpgradeModal(true);
-        }
-    }, [flash, auth.user.has_seen_tutorial]);
+            // Check WhatsApp Flow
+            const hasPhone = auth.user.phone;
+            const whatsappSeen = localStorage.getItem('whatsapp_warning_seen') === 'true';
+            const isWhatsAppDone = hasPhone || whatsappSeen;
+
+            if (flash?.show_upgrade_modal && isTutorialDone && isWhatsAppDone) {
+                setShowUpgradeModal(true);
+            }
+        };
+
+        checkUpgradeModal();
+
+        const handleWhatsAppDismissed = () => {
+            checkUpgradeModal();
+        };
+
+        window.addEventListener('whatsapp-modal-dismissed', handleWhatsAppDismissed);
+        return () => window.removeEventListener('whatsapp-modal-dismissed', handleWhatsAppDismissed);
+    }, [flash, auth.user.has_seen_tutorial, auth.user.phone]);
 
     const shouldShowUpgrade = showUpgradeModal;
     const anyModalActive = shouldShowUpgrade;
@@ -676,6 +693,7 @@ export default function Dashboard(props) {
         plans,
         focusTasks,
         resumeTask,
+        suggestedFocusTasks, // Pass to MainDashboard
         onStartFocus: handleStartFocus,
         onTaskComplete: (taskId) => {
             setLocalTasks(prev => prev.map(t => t.id === taskId ? { ...t, is_completed: true } : t));
