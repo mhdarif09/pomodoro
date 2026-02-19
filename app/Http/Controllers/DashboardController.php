@@ -160,7 +160,13 @@ class DashboardController extends Controller
         $dailyStats = $antiOverplanning->getDailyStats($user);
 
         $todayTaskStats = $user->tasks()->personal()
-            ->whereDate('focus_date', today())
+            ->where(function($q) {
+                $q->whereDate('focus_date', today())
+                  ->orWhere(function($sq) {
+                      $sq->where('is_completed', true)
+                         ->whereDate('updated_at', today());
+                  });
+            })
             ->selectRaw("count(*) as total, count(case when is_completed = 1 then 1 end) as completed")
             ->first();
 

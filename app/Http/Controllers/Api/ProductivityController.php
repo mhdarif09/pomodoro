@@ -34,7 +34,7 @@ class ProductivityController extends Controller
     public function insights(Request $request)
     {
         $user = $request->user();
-        if (!$user->is_premium) {
+        if (!$user->is_premium && !$user->is_admin) {
              return response()->json([
                  'message' => 'Premium required',
                  'insights' => null,

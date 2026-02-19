@@ -110,8 +110,8 @@ export default function ProductivityPulse({ className = '', refreshTrigger = 0 }
                 </div>
             </div>
 
-            {/* Insights (Premium) */}
-            {isPremium && insights && (
+            {/* Insights (Premium or Admin) */}
+            {(isPremium || auth.user.is_admin) && insights && (
                 <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white relative overflow-hidden">
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">

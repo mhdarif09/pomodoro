@@ -221,34 +221,36 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                 {/* 2. MAIN HUB (SMART FOCUS) - col-8 */}
                 <div className="col-span-12 lg:col-span-8 space-y-6">
                     {/* Agent Briefing Tile - Kiko */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="apple-glass rounded-[2.5rem] p-6 shadow-xl border-white/5 bg-white dark:bg-slate-900 overflow-hidden group"
-                    >
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                            <div className="w-20 h-20 flex-shrink-0 bg-teal-50 dark:bg-teal-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                                <motion.div
-                                    animate={{ y: [0, -5, 0] }}
-                                    transition={{ repeat: Infinity, duration: 3 }}
-                                    className="text-4xl"
-                                >
-                                    🤖
-                                </motion.div>
-                                <div className="absolute bottom-0 inset-x-0 h-1 bg-teal-500" />
-                            </div>
-                            <div className="flex-1 text-center sm:text-left">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                                    <span className="text-[10px] font-black text-teal-500 uppercase tracking-[0.2em]">Kiko's Briefing</span>
-                                    <span className="text-[10px] font-bold text-slate-400">STATUS: ACTIVE ANALYTICS</span>
+                    {(auth.user.is_premium || auth.user.is_admin) && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="apple-glass rounded-[2.5rem] p-6 shadow-xl border-white/5 bg-white dark:bg-slate-900 overflow-hidden group"
+                        >
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                                <div className="w-20 h-20 flex-shrink-0 bg-teal-50 dark:bg-teal-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                                    <motion.div
+                                        animate={{ y: [0, -5, 0] }}
+                                        transition={{ repeat: Infinity, duration: 3 }}
+                                        className="text-4xl"
+                                    >
+                                        🤖
+                                    </motion.div>
+                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-teal-500" />
                                 </div>
-                                <h4 className="text-xl font-black text-slate-900 dark:text-white mb-2 leading-tight">Siap beraksi hari ini?</h4>
-                                <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-0 sm:border-l-4 border-teal-500 pl-0 sm:pl-4 bg-teal-50/50 dark:bg-teal-900/10 py-3 rounded-xl sm:rounded-l-none sm:rounded-r-xl">
-                                    {aiInsightSnippet ? `✨ "${aiInsightSnippet}"` : "Waktunya tumbuh dan lebih produktif hari ini. Tetap fokus pada targetmu! 🚀"}
-                                </p>
+                                <div className="flex-1 text-center sm:text-left">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                                        <span className="text-[10px] font-black text-teal-500 uppercase tracking-[0.2em]">Kiko's Briefing</span>
+                                        <span className="text-[10px] font-bold text-slate-400">STATUS: ACTIVE ANALYTICS</span>
+                                    </div>
+                                    <h4 className="text-xl font-black text-slate-900 dark:text-white mb-2 leading-tight">Siap beraksi hari ini?</h4>
+                                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-0 sm:border-l-4 border-teal-500 pl-0 sm:pl-4 bg-teal-50/50 dark:bg-teal-900/10 py-3 rounded-xl sm:rounded-l-none sm:rounded-r-xl">
+                                        {aiInsightSnippet ? `✨ "${aiInsightSnippet}"` : "Waktunya tumbuh dan lebih produktif hari ini. Tetap fokus pada targetmu! 🚀"}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    )}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
