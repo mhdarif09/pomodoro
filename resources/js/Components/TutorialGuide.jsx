@@ -28,7 +28,7 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                     }
                 },
                 {
-                    element: '#smart-focus-section', // Need to add ID to Smart Focus section in TaskFocusPanel or Dashboard
+                    element: '#smart-focus-section',
                     popover: {
                         title: '🧠 Smart Focus 3',
                         description: 'Ini senjata rahasia kita! Aku akan pilihkan 3 tugas terbaik buatmu setiap hari. Tapi kamu bosnya, bebas pilih sendiri juga kok!',
@@ -77,59 +77,50 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                     }
                 },
                 {
-                    element: '#mobile-menu-button',
-                    popover: {
-                        title: '🍔 Petu Navigasi',
-                        description: 'Lewat sini kita bisa ke mana saja. Coba intip sebentar...',
-                        side: "bottom",
-                        align: 'start'
-                    },
-                    onNext: () => {
-                        if (setSidebarOpen) {
-                            setSidebarOpen(true);
-                            return new Promise((resolve) => setTimeout(resolve, 300));
-                        }
-                    }
-                },
-                // ... (standard mobile steps kept simple)
-                {
                     element: '#mobile-dashboard-nav',
                     popover: {
                         title: '📊 Markas Pusat',
                         description: 'Tempat kita atur strategi harian.',
-                        side: "bottom",
-                        align: 'start'
+                        side: "top",
+                        align: 'center'
                     }
                 }
             ];
 
-            const driverObj = driver({
-                showProgress: true,
-                animate: true,
-                allowClose: false,
-                doneBtnText: 'Siap Kerja! 🚀',
-                nextBtnText: 'Lanjut',
-                prevBtnText: 'Mundur',
-                progressText: '{{current}} / {{total}}',
-                popoverClass: 'driver-theme-green',
-                steps: isMobile ? mobileSteps : desktopSteps,
-                onDestroyStarted: () => {
-                    if (!driverObj.hasNextStep() || confirm("Sudah paham jalannya?")) {
-                        driverObj.destroy();
-                        if (isMobile && setSidebarOpen) setSidebarOpen(false);
-                        localStorage.setItem('tutorial_seen', 'true');
-                        axios.post(route('profile.tutorial-seen')).catch(err => console.error(err));
-
-                        if (setCompanionMessage) setCompanionMessage("Oke, ayo mulai kerja! Semangat! 🔥");
-                        if (setCompanionState) setCompanionState('celebrating');
-                        setTimeout(() => { if (setCompanionState) setCompanionState('idle'); }, 3000);
-                    }
-                },
+            // Filter steps to only include those where the element exists
+            const availableSteps = (isMobile ? mobileSteps : desktopSteps).filter(step => {
+                const el = document.querySelector(step.element);
+                return !!el;
             });
 
-            // Keep custom styles
-            const style = document.createElement('style');
-            style.innerHTML = `
+            if (availableSteps.length > 0) {
+                const driverObj = driver({
+                    showProgress: true,
+                    animate: true,
+                    allowClose: false,
+                    doneBtnText: 'Siap Kerja! 🚀',
+                    nextBtnText: 'Lanjut',
+                    prevBtnText: 'Mundur',
+                    progressText: '{{current}} / {{total}}',
+                    popoverClass: 'driver-theme-green',
+                    steps: availableSteps,
+                    onDestroyStarted: () => {
+                        if (!driverObj.hasNextStep() || confirm("Sudah paham jalannya?")) {
+                            driverObj.destroy();
+                            if (isMobile && setSidebarOpen) setSidebarOpen(false);
+                            localStorage.setItem('tutorial_seen', 'true');
+                            axios.post(route('profile.tutorial-seen')).catch(err => console.error(err));
+
+                            if (setCompanionMessage) setCompanionMessage("Oke, ayo mulai kerja! Semangat! 🔥");
+                            if (setCompanionState) setCompanionState('celebrating');
+                            setTimeout(() => { if (setCompanionState) setCompanionState('idle'); }, 3000);
+                        }
+                    },
+                });
+
+                // Keep custom styles
+                const style = document.createElement('style');
+                style.innerHTML = `
                 .driver-theme-green .driver-popover-next-btn,
                 .driver-theme-green .driver-popover-done-btn {
                     background-color: #6366f1 !important; /* Indigo 500 for Companion vibe */
@@ -145,14 +136,15 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                     color: #1e293b;
                 }
             `;
-            document.head.appendChild(style);
+                document.head.appendChild(style);
 
-            // Small delay to let page load before starting tour
-            setTimeout(() => driverObj.drive(), 1000);
+                // Small delay to let page load before starting tour
+                setTimeout(() => driverObj.drive(), 1000);
 
-            return () => {
-                document.head.removeChild(style);
-            };
+                return () => {
+                    document.head.removeChild(style);
+                };
+            }
         }
     }, [user.has_seen_tutorial]);
 

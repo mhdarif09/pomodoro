@@ -288,12 +288,7 @@ export default function AboutUsPage() {
         </div>
       </footer>
 
-      <style jsx global>{`
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #059669; }
-      `}</style>
+
     </div>
   );
 }

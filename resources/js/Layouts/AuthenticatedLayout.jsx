@@ -280,9 +280,13 @@ export default function Authenticated({ children, header }) {
                     <div>
                         {!isCollapsed && <div className="px-2 mb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Favorites</div>}
                         <div className="space-y-0.5">
-                            <Link href={route('dashboard')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('dashboard') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                            <Link id="dashboard-nav" href={route('dashboard')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('dashboard') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
                                 <HomeIcon className="h-4 w-4" />
                                 {!isCollapsed && <span>Dashboard</span>}
+                            </Link>
+                            <Link id="learning-nav" href={route('learning.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('learning.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                                <BookOpenIcon className="h-4 w-4" />
+                                {!isCollapsed && <span>Learning</span>}
                             </Link>
                             {user.active_plan?.has_ai_genius_access && (
                                 <Link href={route('ai-assistant.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('ai-assistant.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
@@ -448,11 +452,12 @@ export default function Authenticated({ children, header }) {
                             </Disclosure>
 
                             <Link
+                                id="documents-nav"
                                 href={route('docs.index')}
                                 className="flex items-center gap-2 px-2 py-1 rounded-md text-sm text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
                             >
-                                <BookOpenIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
-                                {!isCollapsed && <span>Templates</span>}
+                                <DocumentTextIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                {!isCollapsed && <span>Docs & Templates</span>}
                             </Link>
                         </div>
                     </div>
@@ -501,13 +506,13 @@ export default function Authenticated({ children, header }) {
                             {workspaceMode === 'personal' ? (
                                 <div className="flex items-center justify-around gap-1">
                                     {[
-                                        { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard') },
+                                        { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard'), id: 'mobile-dashboard-nav' },
                                         { href: route('tasks.index'), icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('tasks.index') },
                                         { href: route('gamification.dashboard'), icon: <TrophyIcon className="h-[22px] w-[22px]" />, label: 'Rewards', active: route().current('gamification.dashboard') },
                                         { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guilds', active: route().current('guilds.index') || route().current('guilds.*') },
                                         { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit') },
                                     ].map((item, i) => (
-                                        <Link key={i} href={item.href}
+                                        <Link key={i} href={item.href} id={item.id}
                                             className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
                                                 ? 'bg-teal-500/15 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 px-4 py-2.5 rounded-2xl'
                                                 : 'text-slate-400 dark:text-slate-500 p-2.5'

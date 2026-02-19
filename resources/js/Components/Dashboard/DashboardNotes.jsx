@@ -148,21 +148,7 @@ export default function DashboardNotes({ auth }) {
                 )}
             </AnimatePresence>
 
-            <style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background-color: rgba(156, 163, 175, 0.3);
-                    border-radius: 20px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background-color: rgba(156, 163, 175, 0.5);
-                }
-            `}</style>
+
         </>
     );
 }
