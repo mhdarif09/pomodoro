@@ -115,35 +115,6 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         </select>
                     </InputGroup>
 
-                    <div className="col-span-1 md:col-span-2 pt-2">
-                        <div className="bg-slate-50 dark:bg-black/20 rounded-2xl p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-white dark:bg-white/10 rounded-full flex items-center justify-center shadow-sm">
-                                    <span className="text-lg">📅</span>
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-sm text-slate-800 dark:text-white">Google Calendar Sync</h4>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Sinkronisasi tugas ke kalender otomatis.</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                {user.is_google_connected ? (
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-[10px] uppercase font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">Connected</span>
-                                        {/* Optional: Add disconnect button later if needed, user just wanted 'check' */}
-                                    </div>
-                                ) : (
-                                    <a href={route('login.google.redirect')} className="apple-switch-label cursor-pointer flex items-center gap-2">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">OFF</span>
-                                        <div className="w-12 h-7 bg-slate-200 dark:bg-slate-700 rounded-full relative transition-colors hover:bg-slate-300">
-                                            <div className="absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform" />
-                                        </div>
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="flex items-center gap-6 pt-4">

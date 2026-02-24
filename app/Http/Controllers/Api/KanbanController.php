@@ -90,18 +90,6 @@ class KanbanController extends Controller
             \App\Jobs\SendTaskDeadlineReminders::dispatch($task, 'instant');
         }
 
-        // --- GOOGLE CALENDAR SYNC ---
-        if ($user->google_access_token) {
-            try {
-                // Fire and forget or sync inline? Inline is fine for now as it's fast.
-                // For better performance, dispatch a Job: SyncTaskToGoogleCalendar::dispatch($user, $task);
-                // But for mvp inline is okay.
-                $calendarService = app(\App\Services\GoogleCalendarService::class);
-                $calendarService->syncTaskToCalendar($user, $task);
-            } catch (\Exception $e) {
-                \Log::error("Failed to auto-sync task to GCal: " . $e->getMessage());
-            }
-        }
 
         return response()->json([
             'message' => 'Tugas berhasil ditambahkan!',

@@ -10,12 +10,10 @@ class WhatsAppAIService
 {
     protected $openaiApiKey;
     protected $apiUrl = 'https://api.openai.com/v1/chat/completions';
-    protected $calendarService;
 
-    public function __construct(GoogleCalendarService $calendarService)
+    public function __construct()
     {
         $this->openaiApiKey = config('services.openai.api_key');
-        $this->calendarService = $calendarService;
     }
 
     /**
@@ -58,40 +56,7 @@ class WhatsAppAIService
                 $contextData .= "Tidak ada tugas pending.\n";
             }
 
-            // --- 1b. Fetch Google Calendar Events & Free Slots ---
-            $calendarEvents = [];
-            $freeSlotsContext = "";
-            
-            if ($user->google_access_token) {
-                // Fetch events
-                $calendarEvents = $this->calendarService->getUpcomingEvents($user, 2);
-                
-                // Fetch Free Slots for today
-                $freeSlots = $this->calendarService->findFreeSlots($user, Carbon::today());
-                if (!empty($freeSlots)) {
-                    $freeSlotsContext = "SLOT KOSONG HARI INI (Ready untuk Deep Work):\n";
-                    foreach ($freeSlots as $slot) {
-                        $start = $slot['start']->format('H:i');
-                        $end = $slot['end']->format('H:i');
-                        $freeSlotsContext .= "- Pukul {$start} s/d {$end} ({$slot['duration']} menit)\n";
-                    }
-                } else {
-                    $freeSlotsContext = "HARI INI PADAT MERAYAP. Tidak ada slot kosong > 15 menit.\n";
-                }
-            }
 
-            $calendarContext = "[JADWAL GOOGLE CALENDAR (Hari Ini & Besok)]\n";
-            if (empty($calendarEvents)) {
-                $calendarContext .= "Tidak ada data jadwal (atau belum connect GCal).\n";
-            } else {
-                foreach ($calendarEvents as $event) {
-                    $time = $event['is_all_day'] ? "All Day" : substr($event['start'], 11, 5) . " - " . substr($event['end'], 11, 5);
-                    $date = substr($event['start'], 0, 10);
-                    $summary = $event['summary'];
-                    $calendarContext .= "- [{$date}] [{$time}] {$summary}\n";
-                }
-            }
-            $contextData .= "\n" . $calendarContext . "\n" . $freeSlotsContext;
 
             // --- 3. Build System Prompt (High Premium Assistant) ---
             $userName = $user->name;
@@ -106,23 +71,18 @@ class WhatsAppAIService
             {$contextData}
             
             INSTRUKSI PENTING:
-            1. **Cek Jadwal Dulu**: Sebelum menyarankan waktu, SELALU lihat [JADWAL GOOGLE CALENDAR] dan [SLOT KOSONG].
-               - Jangan sarankan jam yang bertabrakan.
-               - Jika padat, tunjukkan empati: 'Waduh, hari ini full banget bos. Mau selipin istirahat bentar?'
-            
-            2. **Respon Natural**:
+            1. **Respon Natural**:
                - Gunakan bahasa percakapan sehari-hari tapi tetap sopan.
                - Contoh: 'Oke sip', 'Siap bos', 'Gas keun', 'Hati-hati burnout ya'.
             
-            3. **Kelola Tugas**:
-               - Jika user minta saran tugas, pilih dari [TUGAS PENDING] yang ETIMASI WAKTUNYA muat di SLOT KOSONG terdekat.
-               - Jika slot hanya 30 menit, jangan sarankan tugas berat 2 jam.
+            2. **Kelola Tugas**:
+               - Jika user minta saran tugas, pilih dari [TUGAS PENDING] berdasarkan deadline dan estimasi waktu.
             
-            4. **Handling 'Udah'/'Belum'**:
+            3. **Handling 'Udah'/'Belum'**:
                - 'Udah': Rayakan! Beri pujian spesifik.
                - 'Belum': Tanya kendala atau tawarkan 'biar aku pecah jadi subtask kecil?'.
 
-            5. **Insight**:
+            4. **Insight**:
                - Sesekali berikan insight jika relevan, misal: 'Kamu produktif banget pagi ini!'
 
             Jawablah dengan singkat, padat, dan membantu. Jangan terlalu panjang lebar seperti artikel.

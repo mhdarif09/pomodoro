@@ -18,10 +18,6 @@ class User extends Authenticatable
         'phone',
         'password',
         'google_id',
-        'google_access_token',
-        'google_refresh_token',
-        'google_token_expires_at',
-        'google_calendar_id',
         'role',
         'banned_at',
         'growth_goals',
@@ -52,20 +48,16 @@ class User extends Authenticatable
         'is_banned',
         'premium_features',
         'active_plan',
-        'is_google_connected',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
-        'google_access_token',
-        'google_refresh_token',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'google_token_expires_at' => 'datetime',
         'growth_goals' => 'array',
         'onboarding_complete' => 'boolean',
         'last_recovery_date' => 'datetime',
@@ -172,13 +164,7 @@ class User extends Authenticatable
         return !is_null($this->banned_at);
     }
 
-    /**
-     * Check if user uses Google Login / Calendar
-     */
-    public function getIsGoogleConnectedAttribute(): bool
-    {
-        return !empty($this->google_id) && !empty($this->google_access_token);
-    }
+
 
     public function pomodoroSessions()
     {

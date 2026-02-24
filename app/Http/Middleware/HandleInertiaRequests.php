@@ -43,9 +43,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => session('error'),
                 'snap_token' => session('snap_token'),
             ],
-            'settings' => [
-                'google_calendar_enabled' => \App\Models\Setting::get('google_calendar_enabled', true),
-            ],
+            'settings' => [],
         ];
     }
 }

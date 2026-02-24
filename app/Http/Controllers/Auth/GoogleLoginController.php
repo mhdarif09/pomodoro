@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Setting;
+
 use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,22 +18,11 @@ class GoogleLoginController extends Controller
      */
     public function redirectToGoogle()
     {
-
         if (request()->has('origin')) {
             session(['login_origin' => request('origin')]);
         }
         
-        $isCalendarEnabled = Setting::get('google_calendar_enabled', true);
-        
-        $driver = Socialite::driver('google');
-        
-        if ($isCalendarEnabled) {
-            $driver->scopes(['https://www.googleapis.com/auth/calendar.events']);
-        }
-        
-        return $driver
-            ->with(['access_type' => 'offline', 'prompt' => 'consent'])
-            ->redirect();
+        return Socialite::driver('google')->redirect();
     }
 
     /**
@@ -58,9 +47,6 @@ class GoogleLoginController extends Controller
             $user->update([
                 'name' => $googleUser->getName(),
                 'google_id' => $googleUser->getId(),
-                'google_access_token' => $googleUser->token,
-                'google_refresh_token' => $googleUser->refreshToken, // Only available if access_type=offline
-                'google_token_expires_at' => now()->addSeconds($googleUser->expiresIn),
             ]);
         } else {
             // Jika user belum ada, buat baru dengan password random
@@ -70,9 +56,6 @@ class GoogleLoginController extends Controller
                 'google_id' => $googleUser->getId(),
                 'password' => Hash::make(str()->random(24)),
                 'email_verified_at' => now(), // Auto verify email dari Google
-                'google_access_token' => $googleUser->token,
-                'google_refresh_token' => $googleUser->refreshToken,
-                'google_token_expires_at' => now()->addSeconds($googleUser->expiresIn),
             ]);
         }
         // ======================================================================

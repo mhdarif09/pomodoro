@@ -62,22 +62,8 @@ export default function PrivacyPolicy() {
                             </ul>
                             <p>Informasi ini digunakan untuk autentikasi dan identifikasi akun Anda.</p>
 
-                            <h3>b. Data Google Calendar</h3>
-                            <p>Jika Anda memberikan izin, SarangTumbuh dapat:</p>
-                            <ul>
-                                <li>Membuat event di Google Calendar Anda</li>
-                                <li>Mengelola event yang dibuat melalui SarangTumbuh</li>
-                                <li>Menyinkronkan tugas dengan jadwal Anda</li>
-                            </ul>
-                            <p>Kami <strong>TIDAK</strong>:</p>
-                            <ul>
-                                <li>Membaca seluruh isi kalender Anda di luar kebutuhan sinkronisasi</li>
-                                <li>Menghapus atau mengubah event yang tidak dibuat melalui SarangTumbuh</li>
-                                <li>Menjual atau membagikan data kalender Anda kepada pihak ketiga</li>
-                            </ul>
-                            <p>Akses ini menggunakan layanan resmi dari Google Calendar API.</p>
 
-                            <h3>c. Data Penggunaan Aplikasi</h3>
+                            <h3>b. Data Penggunaan Aplikasi</h3>
                             <p>Kami menyimpan:</p>
                             <ul>
                                 <li>To-do list</li>
@@ -91,7 +77,6 @@ export default function PrivacyPolicy() {
                             <p>Informasi Anda digunakan untuk:</p>
                             <ul>
                                 <li>Mengoperasikan dan memelihara layanan SarangTumbuh</li>
-                                <li>Menyinkronkan tugas dengan Google Calendar</li>
                                 <li>Menyediakan pengingat dan sistem manajemen produktivitas</li>
                                 <li>Meningkatkan fitur dan pengalaman pengguna</li>
                                 <li>Memberikan dukungan pengguna</li>
@@ -116,7 +101,6 @@ export default function PrivacyPolicy() {
                                 <li>Mengakses data pribadi Anda</li>
                                 <li>Memperbarui data</li>
                                 <li>Meminta penghapusan akun</li>
-                                <li>Mencabut akses Google kapan saja melalui pengaturan akun Google Anda</li>
                             </ul>
 
                             <h2>7. Layanan Pihak Ketiga</h2>

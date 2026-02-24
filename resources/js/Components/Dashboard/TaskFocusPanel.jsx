@@ -500,26 +500,6 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                 {activeFilter === 'all' && !hideHero && (
                     <div id="smart-focus-section" className="mb-8 pt-4">
 
-                        {/* Google Calendar Nudge (If not connected) */}
-                        {auth.settings?.google_calendar_enabled !== false && !auth.user.is_google_connected && (
-                            <div className="mb-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-2xl p-4 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-white dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                                        <CalendarIcon className="w-5 h-5 text-blue-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-blue-100 text-sm">Sinkronisasi Jadwal Otomatis?</h4>
-                                        <p className="text-xs text-slate-500 dark:text-blue-200/70">Hubungkan Google Calendar agar tugasmu langsung masuk ke jadwal.</p>
-                                    </div>
-                                </div>
-                                <a
-                                    href={route('login.google.redirect')}
-                                    className="whitespace-nowrap px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/20"
-                                >
-                                    Connect GCal
-                                </a>
-                            </div>
-                        )}
 
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
@@ -642,63 +622,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                         <div className="flex items-center justify-between pb-2">
                             <h3 className="font-black text-xl text-slate-900 dark:text-white tracking-tight">Kanban Board</h3>
 
-                            {/* GCal Status / Upsell */}
-                            <div className="flex items-center gap-2">
-                                {auth.settings?.google_calendar_enabled !== false && (
-                                    <>
-                                        {auth.user.is_premium && auth.user.is_google_connected && (
-                                            <button
-                                                onClick={() => {
-                                                    if (confirm('AI akan menyusun jadwal otomatis di Google Calendar berdasarkan prioritas tugas. Lanjutkan?')) {
-                                                        setProcessingId('auto-schedule');
-                                                        axios.post(route('api.smart-schedule'))
-                                                            .then(res => {
-                                                                let msg = res.data.message;
-                                                                if (res.data.new_badge) {
-                                                                    msg += `\n\n🏆 Badge Unlocked: ${res.data.new_badge.name} (+${res.data.new_badge.xp} XP)`;
-                                                                }
-                                                                alert(msg);
-                                                                router.reload({ only: ['tasks'] });
-                                                            })
-                                                            .catch(err => {
-                                                                alert(err.response?.data?.message || 'Gagal menyusun jadwal.');
-                                                            })
-                                                            .finally(() => setProcessingId(null));
-                                                    }
-                                                }}
-                                                disabled={processingId === 'auto-schedule'}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                                            >
-                                                {processingId === 'auto-schedule' ? (
-                                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                ) : (
-                                                    <span className="text-sm">✨</span>
-                                                )}
-                                                <span>Auto-Schedule</span>
-                                            </button>
-                                        )}
 
-                                        {auth.user.is_google_connected ? (
-                                            !auth.user.is_premium ? (
-                                                <button onClick={() => alert("Upgrade ke Pro untuk fitur Smart Scheduling AI!")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 text-[11px] font-bold border border-indigo-100 dark:border-indigo-800 transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/30">
-                                                    <span className="text-sm">✨</span>
-                                                    <span>Upgrade Smart Schedule</span>
-                                                </button>
-                                            ) : (
-                                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold border border-emerald-100 dark:border-emerald-800 opacity-60 hover:opacity-100 transition-opacity cursor-help" title="Google Calendar Connected & Smart Schedule Active">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                    <span>Sync Active</span>
-                                                </div>
-                                            )
-                                        ) : (
-                                            <a href={route('login.google.redirect')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[11px] font-bold hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
-                                                <CalendarIcon className="w-3.5 h-3.5" />
-                                                <span>Sync Calendar</span>
-                                            </a>
-                                        )}
-                                    </>
-                                )}
-                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

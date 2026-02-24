@@ -7,7 +7,7 @@ import StatCard from '@/Components/StatCard';
 import UserGrowthChart from '@/Components/UserGrowthChart';
 import SubscriptionPlanChart from '@/Components/SubscriptionPlanChart';
 
-import { UsersIcon, ShoppingCartIcon, BanknotesIcon, Cog6ToothIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { UsersIcon, ShoppingCartIcon, BanknotesIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 
 // Helper function untuk format mata uang Rupiah
@@ -20,18 +20,6 @@ const formatRupiah = (number) => {
 };
 
 export default function Dashboard({ auth, totalUsers, payingCustomers, totalRevenue, userGrowthData, subscriptionPlanData, settings }) {
-
-    const isGoogleCalendarEnabled = settings.google_calendar_enabled === 'true';
-
-    const toggleGoogleCalendar = (enabled) => {
-        router.post(route('admin.settings.update'), {
-            key: 'google_calendar_enabled',
-            value: enabled ? 'true' : 'false',
-            type: 'boolean'
-        }, {
-            preserveScroll: true
-        });
-    };
 
 
     const statCards = [
@@ -105,32 +93,6 @@ export default function Dashboard({ auth, totalUsers, payingCustomers, totalReve
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Google Calendar Toggle */}
-                            <div className="flex items-center justify-between p-6 rounded-3xl bg-white/50 dark:bg-slate-900/50 border border-white dark:border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-blue-100 dark:bg-blue-900/40 rounded-2xl text-blue-600 dark:text-blue-400">
-                                        <GlobeAltIcon className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-900 dark:text-white">Google Calendar Integration</h4>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">Aktifkan sinkronisasi tugas ke Google Calendar.</p>
-                                    </div>
-                                </div>
-
-                                <Switch
-                                    checked={isGoogleCalendarEnabled}
-                                    onChange={toggleGoogleCalendar}
-                                    className={`${isGoogleCalendarEnabled ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'
-                                        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2`}
-                                >
-                                    <span className="sr-only">Toggle Google Calendar</span>
-                                    <span
-                                        className={`${isGoogleCalendarEnabled ? 'translate-x-6' : 'translate-x-1'
-                                            } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                                    />
-                                </Switch>
-                            </div>
-
                             {/* Additional settings can be added here */}
                         </div>
                     </div>
