@@ -402,6 +402,7 @@ export default function Dashboard(props) {
 
     const [activeTask, setActiveTask] = useState(null);
     const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+    const [currentStreak, setCurrentStreak] = useState(auth.user?.current_streak || 0);
     const [isRunning, setIsRunning] = useState(false);
     const [startTime, setStartTime] = useState(null);
     const [totalDuration, setTotalDuration] = useState(25 * 60);
@@ -421,6 +422,17 @@ export default function Dashboard(props) {
             setCompanionState('idle');
         }
     }, [isRunning]);
+
+    // Fetch streak on mount
+    useEffect(() => {
+        axios.get(route('api.gamification.streak'))
+            .then(res => {
+                if (res.data.current_streak !== undefined) {
+                    setCurrentStreak(res.data.current_streak);
+                }
+            })
+            .catch(err => console.log('Streak fetch error:', err));
+    }, []);
 
     // Handle Task Completion (from TaskFocusPanel or QuickAdd) -> Celebrate
     const handleTaskCompleted = () => {
@@ -958,6 +970,7 @@ export default function Dashboard(props) {
                             setSecondsLeft(totalDuration);
                         }}
                         onClose={handleTimerClose}
+                        currentStreak={currentStreak}
                     />
                 )}
             </AnimatePresence>

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlayIcon, PauseIcon, ArrowPathIcon, XMarkIcon, ChevronUpIcon } from '@heroicons/react/24/solid'; // Changed imports
+import { PlayIcon, PauseIcon, ArrowPathIcon, XMarkIcon, ChevronUpIcon, FireIcon } from '@heroicons/react/24/solid';
 import BreakMode from './BreakMode';
 import MusicPlayer from './MusicPlayer';
+import axios from 'axios';
 
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -19,9 +20,12 @@ export default function PomodoroIsland({
     onReset,
     onClose,
     taskTitle,
-    onSessionComplete
+    onSessionComplete,
+    currentStreak = 0
 }) {
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true);
+    const [streak, setStreak] = useState(currentStreak);
+    const hasFetchedStreak = useRef(false);
 
     // Break State
     const [breakDuration, setBreakDuration] = useState(5); // 5 minutes default
@@ -61,6 +65,20 @@ export default function PomodoroIsland({
         }
         return () => clearInterval(interval);
     }, [isBreakActive, isBreakPaused, breakTimeLeft]);
+
+    // Fetch streak on mount
+    useEffect(() => {
+        if (!hasFetchedStreak.current) {
+            hasFetchedStreak.current = true;
+            axios.get(route('api.gamification.streak'))
+                .then(res => {
+                    if (res.data.current_streak !== undefined) {
+                        setStreak(res.data.current_streak);
+                    }
+                })
+                .catch(err => console.log('Streak fetch error:', err));
+        }
+    }, []);
 
     const handleStartBreak = () => {
         setBreakTimeLeft(breakDuration * 60);
@@ -196,9 +214,17 @@ export default function PomodoroIsland({
                     >
                         <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0 pr-4">
-                                <p className={`text-[10px] font-black ${isBreakActive ? 'text-emerald-400' : 'text-teal-400'} uppercase tracking-widest mb-1`}>
-                                    {isBreakActive ? 'Break Mode' : 'Focus Mode'}
-                                </p>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <p className={`text-[10px] font-black ${isBreakActive ? 'text-emerald-400' : 'text-teal-400'} uppercase tracking-widest`}>
+                                        {isBreakActive ? 'Break Mode' : 'Focus Mode'}
+                                    </p>
+                                    {streak > 0 && !isBreakActive && (
+                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-orange-500/20 rounded-full">
+                                            <FireIcon className="w-3 h-3 text-orange-400" />
+                                            <span className="text-[10px] font-black text-orange-400">{streak}</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <h3 className="text-sm font-bold text-white truncate">
                                     {isBreakActive ? 'Recharging...' : (taskTitle || 'Sesi Fokus')}
                                 </h3>

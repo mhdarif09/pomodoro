@@ -167,8 +167,9 @@ class KanbanController extends Controller
         $this->authorize('update', $task);
 
         $wasCompleted = $task->is_completed;
+        $gamificationData = null;
         
-        DB::transaction(function () use ($task, $wasCompleted) {
+        DB::transaction(function () use ($task, $wasCompleted, &$gamificationData) {
             $task->is_completed = !$task->is_completed;
             $task->status = $task->is_completed ? 'done' : 'todo';
             $task->save();
@@ -182,15 +183,29 @@ class KanbanController extends Controller
                     'Rendah', 'Low' => 20,
                     default => 25,
                 };
-                $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task);
-                $gamificationService->updateStreak($task->user);
-                $gamificationService->checkAchievements($task->user);
+                $xpResult = $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task);
+                $streakResult = $gamificationService->updateStreak($task->user);
+                $newAchievements = $gamificationService->checkAchievements($task->user);
+                
+                $gamificationData = [
+                    'xp_awarded' => $xpAmount,
+                    'current_streak' => $streakResult['current_streak'],
+                    'streak_updated' => $streakResult['streak_updated'],
+                    'level_up' => $xpResult['leveled_up'],
+                    'new_level' => $xpResult['new_level'],
+                    'achievements' => $newAchievements->map(fn($a) => [
+                        'id' => $a->id,
+                        'name' => $a->name,
+                        'icon' => $a->icon,
+                    ])->toArray(),
+                ];
             }
         });
 
         return response()->json([
             'message' => 'Task status toggled',
-            'task' => $task
+            'task' => $task,
+            'gamification' => $gamificationData,
         ]);
     }
 

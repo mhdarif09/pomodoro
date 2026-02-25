@@ -104,9 +104,21 @@ export default function MyTasks(props) {
     const [isRunning, setIsRunning] = useState(false);
     const [startTime, setStartTime] = useState(null);
     const [totalDuration, setTotalDuration] = useState(25 * 60);
+    const [currentStreak, setCurrentStreak] = useState(auth.user?.current_streak || 0);
 
     // Stagnant
     const [isStagnantModalOpen, setIsStagnantModalOpen] = useState(false);
+
+    // Fetch streak on mount
+    useEffect(() => {
+        axios.get(route('api.gamification.streak'))
+            .then(res => {
+                if (res.data.current_streak !== undefined) {
+                    setCurrentStreak(res.data.current_streak);
+                }
+            })
+            .catch(err => console.log('Streak fetch error:', err));
+    }, []);
 
     useEffect(() => {
         setLocalTasks(tasks);
@@ -563,6 +575,7 @@ export default function MyTasks(props) {
                             setSecondsLeft(totalDuration);
                         }}
                         onClose={handleTimerClose}
+                        currentStreak={currentStreak}
                     />
                 )}
             </AnimatePresence>

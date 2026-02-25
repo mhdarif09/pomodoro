@@ -6,6 +6,7 @@ import {
     AcademicCapIcon, RocketLaunchIcon, SparklesIcon,
     ChevronRightIcon, WalletIcon
 } from '@heroicons/react/24/outline';
+import WeeklyJourney from '@/Components/Gamification/WeeklyJourney';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -108,6 +109,9 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                         </div>
                     </BentoTile>
                 </div>
+
+                {/* Weekly Journey - Full Width */}
+                <WeeklyJourney auth={auth} />
 
                 {/* 2. MAIN ROW: Challenges & Leaderboard */}
                 <div className="grid grid-cols-12 gap-6">

@@ -365,6 +365,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/challenges/active', [\App\Http\Controllers\Api\ChallengeController::class, 'getActive'])->name('challenges.active');
         Route::get('/challenges/history', [\App\Http\Controllers\Api\ChallengeController::class, 'getHistory'])->name('challenges.history');
         
+        // Streak API
+        Route::get('/gamification/streak', [\App\Http\Controllers\Api\GamificationController::class, 'getStreak'])->name('gamification.streak');
+        Route::get('/gamification/weekly-journey', [\App\Http\Controllers\Api\GamificationController::class, 'getWeeklyJourney'])->name('gamification.weekly-journey');
+        
         Route::get('/points/balance', [\App\Http\Controllers\Api\PointsController::class, 'getBalance'])->name('points.balance');
         
         Route::post('/cashback/redeem', [\App\Http\Controllers\Api\CashbackController::class, 'redeemToPromoCode'])->name('cashback.redeem');
