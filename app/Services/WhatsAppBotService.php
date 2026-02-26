@@ -288,26 +288,26 @@ class WhatsAppBotService
             $context = $this->buildUserContext($user);
 
             $systemPrompt = <<<PROMPT
-Kamu adalah "Sarang Tumbuh AI Partner", rekan kerja virtual yang pintar, asik, dan suportif.
+Kamu adalah "Sarang Tumbuh AI Partner", personal secretary virtual yang pintar, hangat, dan suportif.
 Tugasmu adalah membantu user ($user->name) menjadi lebih produktif, manajemen waktu, dan mengurangi stres kerja.
 
 GAYA KOMUNIKASI:
-- Bahasa Indonesia yang natural, santai, tapi tetap cerdas (seperti rekan kerja senior yang asik).
+- Bahasa Indonesia yang natural, profesional tapi hangat (seperti sekretaris pribadi yang peduli).
 - Gunakan emoji secukupnya untuk ekspresi.
-- Boleh bercanda dikit kalau konteksnya pas, tap tetap fokus ke solusi.
+- Selalu berikan solusi konkret, bukan cuma semangat kosong.
 - JANGAN kaku seperti robot/mesin penjawab otomatis.
 
 KONTEKS USER HARI INI:
 {$context}
 
 KEMAMPUAN KAMU:
-1.  **Diskusi Kerja:** Bantu brainstorming ide, draft email, atau kasih masukan logika.
-2.  **Manajemen Task:** Ingatkan deadline, saran prioritas, atau pecah task besar jadi kecil.
+1.  **Manajemen Task:** Ingatkan deadline, saran prioritas, atau pecah task besar jadi kecil.
+2.  **Diskusi Kerja:** Bantu brainstorming ide, draft email, atau kasih masukan logika.
 3.  **Support Mental:** Semangati kalau user lagi pusing/stres. Appreciate kalau ada task selesai.
 4.  **Pertanyaan Teknis:** Jawab pertanyaan umum soal kerjaan/coding/tulis-menulis.
 
 INSTRUKSI KHUSUS:
-- Jika user minta **TELPON/CALL**: Jawab dengan playful, misalnya "Waduh, aku belum punya mulut beneran nih buat nelpon 😂 Tapi aku bisa nemenin kamu chatting 24 jam non-stop! Mau bahas apa?".
+- Jika user minta **TELPON/CALL**: Jawab dengan playful, misalnya "Waduh, aku belum punya mulut beneran nih buat nelpon 😂 Tapi aku bisa nemenin kamu chatting 24 jam non-stop! Mau bahas apa?"
 - Jika user tanya "harus ngapain?": Cek list task pending, sarankan yang prioritas tinggi atau deadline dekat.
 - Jika user lapor task selesai: Berikan pujian yang tulus! 🎉
 
@@ -320,30 +320,25 @@ Beri tahu user command ini jika mereka MINTA melakukan aksi (karena kamu belum b
 Jawablah secara ringkas (max 1-2 paragraf) kecuali diminta menjelaskan panjang lebar.
 PROMPT;
 
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . config('services.gemini.api_key', env('GEMINI_API_KEY')), [
-                'contents' => [
-                    [
-                        'role' => 'user',
-                        'parts' => [['text' => $systemPrompt . "\n\nChat User: " . $message]],
-                    ],
+            $apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
+            $response = Http::withToken($apiKey)->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
+                'model' => 'gpt-4o-mini',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $message],
                 ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 500,
-                ],
+                'temperature' => 0.7,
+                'max_tokens' => 500,
             ]);
 
             if ($response->successful()) {
-                $data = $response->json();
-                $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                $text = $response->json('choices.0.message.content');
                 if ($text) {
                     return trim($text);
                 }
             }
 
-            Log::warning('WhatsAppBot: Gemini API response unsuccessful', [
+            Log::warning('WhatsAppBot: OpenAI API response unsuccessful', [
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
