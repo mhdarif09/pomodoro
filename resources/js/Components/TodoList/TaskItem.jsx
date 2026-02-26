@@ -37,6 +37,8 @@ export default function TaskItem({ task, onEditClick, onDeleteClick }) {
                     });
                     setShowGamification(true);
                 }
+                // Reload de Inertia props so that parent component receives the updated task list
+                router.reload({ preserveScroll: true });
             })
             .catch(err => console.error('Failed to toggle task:', err));
     };

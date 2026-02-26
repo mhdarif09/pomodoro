@@ -31,7 +31,7 @@ export default function TaskCard({ task, onEdit }) {
 
     const handleToggleComplete = (e) => {
         e.stopPropagation();
-        router.post(route('api.tasks.toggle-complete', task.id), {}, {
+        router.patch(route('api.tasks.toggle-complete', task.id), {}, {
             preserveScroll: true,
         });
     };
