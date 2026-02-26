@@ -98,14 +98,28 @@ class PomodoroController extends Controller
         // Award XP
         $gamificationService = app(\App\Services\GamificationService::class);
         $xpAmount = max(1, floor($session->focus_minutes / 2.5));
-        $gamificationService->awardXP(auth()->user(), $xpAmount, 'pomodoro_focus', $session);
-        $gamificationService->updateStreak(auth()->user());
+        $xpResult = $gamificationService->awardXP(auth()->user(), $xpAmount, 'pomodoro_focus', $session);
+        $streakResult = $gamificationService->updateStreak(auth()->user());
+        $newAchievements = $gamificationService->checkAchievements(auth()->user());
 
         return response()->json([
             'success' => true,
             'message' => 'Session completed',
             'session' => $session,
-            'xp_awarded' => $xpAmount
+            'xp_awarded' => $xpAmount,
+            'gamification' => [
+                'xp_awarded' => $xpAmount,
+                'current_streak' => $streakResult['current_streak'],
+                'longest_streak' => $streakResult['longest_streak'],
+                'streak_updated' => $streakResult['streak_updated'],
+                'level_up' => $xpResult['leveled_up'],
+                'new_level' => $xpResult['new_level'],
+                'achievements' => $newAchievements->map(fn($a) => [
+                    'id' => $a->id,
+                    'name' => $a->name,
+                    'icon' => $a->icon,
+                ])->toArray(),
+            ]
         ]);
     }
     public function store(Request $request)

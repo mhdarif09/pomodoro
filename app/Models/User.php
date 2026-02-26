@@ -402,5 +402,21 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\TaskRecoveryHistory::class);
     }
+
+    // --- Cognitive Arena Relationships ---
+    public function cognitiveStat()
+    {
+        return $this->hasOne(UserCognitiveStat::class);
+    }
+
+    public function cognitiveSimulations()
+    {
+        return $this->hasMany(CognitiveSimulation::class);
+    }
+
+    public function cognitiveArenaMatches()
+    {
+        return $this->hasMany(CognitiveArenaMatch::class);
+    }
 }
 

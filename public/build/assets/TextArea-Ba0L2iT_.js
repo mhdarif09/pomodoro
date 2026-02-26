@@ -1,1 +1,0 @@
-import{r as e,j as f}from"./app-D3hqvRyi.js";const u=e.forwardRef(function({className:o="",isFocused:t=!1,...a},r){const s=r||e.useRef();return e.useEffect(()=>{t&&s.current.focus()},[]),f.jsx("textarea",{...a,className:"border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm "+o,ref:s})});export{u as T};

@@ -25,6 +25,7 @@ class ReflectionController extends Controller
         return Inertia::render('Journal/Index', [
             'reflections' => $reflections,
             'todayReflection' => $request->user()->reflections()->whereDate('reflection_date', today())->first(),
+            'prefilledPrompt' => $request->query('prefilled_prompt'),
         ]);
     }
 
