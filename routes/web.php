@@ -32,6 +32,17 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
+// TEMP ROUTE UNTUK DROP COGNITIVE ARENA TABLES
+Route::get('/drop-arena-tables', function () {
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+    \Illuminate\Support\Facades\Schema::dropIfExists('cognitive_arena_matches');
+    \Illuminate\Support\Facades\Schema::dropIfExists('cognitive_simulations');
+    \Illuminate\Support\Facades\Schema::dropIfExists('user_cognitive_stats');
+    \Illuminate\Support\Facades\DB::table('migrations')->where('migration', 'like', '%cognitive%')->delete();
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+    return "Tables and migrations dropped successfully. You can now run php artisan migrate again.";
+});
+
 // --- PUBLIC ROUTES ---
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -398,15 +409,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/cognitive-arena', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'index'])->name('cognitive-arena.index');
         Route::post('/cognitive-arena/generate', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'generate'])->name('cognitive-arena.generate');
         Route::post('/cognitive-arena/matches/{match}/submit', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'submit'])->name('cognitive-arena.submit');
-        Route::get('/cognitive-arena/drop-tables', function () {
-            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-            \Illuminate\Support\Facades\Schema::dropIfExists('cognitive_arena_matches');
-            \Illuminate\Support\Facades\Schema::dropIfExists('cognitive_simulations');
-            \Illuminate\Support\Facades\Schema::dropIfExists('user_cognitive_stats');
-            \Illuminate\Support\Facades\DB::table('migrations')->where('migration', 'like', '%cognitive%')->delete();
-            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-            return "Tables and migrations dropped successfully. You can now run php artisan migrate again.";
-        });
+        Route::post('/cognitive-arena/matches/{match}/submit', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'submit'])->name('cognitive-arena.submit');
     });
 
     // =========================================================================
