@@ -274,7 +274,7 @@ export default function KanbanBoard({ initialTasks }) {
                 }
             }
 
-            const response = await axios.post(route('tasks.store'), formData, {
+            const response = await axios.post(route('api.tasks.store'), formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 

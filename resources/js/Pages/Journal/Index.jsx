@@ -13,11 +13,11 @@ import 'dayjs/locale/id';
 
 dayjs.locale('id');
 
-export default function JournalIndex({ auth, reflections, todayReflection }) {
-    const [isWriting, setIsWriting] = useState(false);
+export default function JournalIndex({ auth, reflections, todayReflection, prefilledPrompt }) {
+    const [isWriting, setIsWriting] = useState(!!prefilledPrompt);
     const { data, setData, post, processing, reset, errors } = useForm({
         user_answer: '',
-        ai_question: 'Apa pencapaian terbesarmu hari ini dan apa yang bisa diperbaiki besok?',
+        ai_question: prefilledPrompt || 'Apa pencapaian terbesarmu hari ini dan apa yang bisa diperbaiki besok?',
     });
 
     const handleSubmit = (e) => {

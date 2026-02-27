@@ -365,6 +365,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/challenges/active', [\App\Http\Controllers\Api\ChallengeController::class, 'getActive'])->name('challenges.active');
         Route::get('/challenges/history', [\App\Http\Controllers\Api\ChallengeController::class, 'getHistory'])->name('challenges.history');
         
+        // Streak API
+        Route::get('/gamification/streak', [\App\Http\Controllers\Api\GamificationController::class, 'getStreak'])->name('gamification.streak');
+        Route::get('/gamification/weekly-journey', [\App\Http\Controllers\Api\GamificationController::class, 'getWeeklyJourney'])->name('gamification.weekly-journey');
+        
         Route::get('/points/balance', [\App\Http\Controllers\Api\PointsController::class, 'getBalance'])->name('points.balance');
         
         Route::post('/cashback/redeem', [\App\Http\Controllers\Api\CashbackController::class, 'redeemToPromoCode'])->name('cashback.redeem');
@@ -389,6 +393,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/productivity/trends', [App\Http\Controllers\Api\ProductivityController::class, 'trends'])->name('productivity.trends');
         Route::get('/productivity/insights', [App\Http\Controllers\Api\ProductivityController::class, 'insights'])->name('productivity.insights');
         Route::get('/productivity/report', [App\Http\Controllers\Api\ReportController::class, 'downloadWeeklyReport'])->name('productivity.report');
+        
+        // --- COGNITIVE ARENA API ---
+        Route::get('/cognitive-arena', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'index'])->name('cognitive-arena.index');
+        Route::post('/cognitive-arena/generate', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'generate'])->name('cognitive-arena.generate');
+        Route::post('/cognitive-arena/matches/{match}/submit', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'submit'])->name('cognitive-arena.submit');
+        Route::post('/cognitive-arena/matches/{match}/submit', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'submit'])->name('cognitive-arena.submit');
     });
 
     // =========================================================================
@@ -396,8 +406,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // =========================================================================
     Route::prefix('dashboard')->group(function() {
 
-        // --- Learning Hub (Pomodoro + Mini Modul) ---
-        Route::get('/learning', [LearningController::class, 'index'])->name('learning.index');
+        // --- Learning Hub (Now powered by Cognitive Arena) ---
+        Route::get('/learning', [\App\Http\Controllers\CognitiveArenaPageController::class, 'index'])->name('learning.index');
         
         // --- History / Transactions ---
         Route::get('/transactions', [SubscriptionController::class, 'history'])->name('transactions.history');
@@ -407,26 +417,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
         Route::get('/docs/{document}', [DocumentPageController::class, 'show'])->name('docs.show'); // Still needed for the main view wrapper
         Route::get('/docs/{document}/export', [DocumentPageController::class, 'exportDocx'])->name('docs.export');
-        
-
-
-        // Mini Moduls (Previously AI Assistant View was here, moved to premium)
-
-        // --- Mini Moduls ---
-        Route::prefix('mini-moduls')->name('mini-moduls.')->group(function () {
-            Route::get('/', [MiniModulController::class, 'index'])->name('index');
-            Route::get('/{miniModul:slug}', [MiniModulController::class, 'show'])->name('show');
-            Route::get('/{miniModul:slug}/{chapter:slug}', [MiniModulController::class, 'chapter'])->name('chapter');
-            
-            Route::post('/{miniModul}/{chapter}/complete', [MiniModulController::class, 'completeChapter'])->name('complete-chapter');
-            
-            Route::prefix('{miniModul}/{chapter}')->name('ai.')->group(function () {
-                Route::post('/ai/discuss', [MiniModulAiController::class, 'startDiscussion'])->name('discuss');
-                Route::get('/ai/discussions', [MiniModulAiController::class, 'getDiscussions'])->name('discussions');
-                Route::post('/ai/role-play', [MiniModulAiController::class, 'simulateRole'])->name('role-play');
-            });
-        });
-        
     });
 
     // --- GAMIFICATION ROUTES ---
@@ -456,11 +446,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/auth/spotify/redirect', [\App\Http\Controllers\Auth\SpotifyAuthController::class, 'redirect'])->name('spotify.redirect');
     Route::get('/auth/spotify/callback', [\App\Http\Controllers\Auth\SpotifyAuthController::class, 'callback'])->name('spotify.callback');
 
-    // Premium Routes moved or integrated
     Route::middleware(['premium'])->group(function () {
         // Handled via API or integrated in Dashboard
     });
-
 });
 
 // --- GUILD ROUTES ---

@@ -1,5 +1,7 @@
 import Companion from '@/Components/Companion';
 import TutorialGuide from '@/Components/TutorialGuide';
+import GamificationPopup from '@/Components/GamificationPopup';
+import WeeklyJourney from '@/Components/Gamification/WeeklyJourney';
 
 import React, { useState, useEffect } from 'react';
 import { Head, usePage, Link, router } from '@inertiajs/react';
@@ -272,6 +274,9 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
 
                 {/* 3. PERFORMANCE SIDEBAR (col-4) */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
+                    {/* Weekly Journey - Compact Widget */}
+                    <WeeklyJourney compact />
+
                     {/* Productivity Pulse (Trends) */}
                     <ProductivityPulse refreshTrigger={productivityRefreshTrigger} />
 
@@ -402,6 +407,7 @@ export default function Dashboard(props) {
 
     const [activeTask, setActiveTask] = useState(null);
     const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+    const [currentStreak, setCurrentStreak] = useState(auth.user?.current_streak || 0);
     const [isRunning, setIsRunning] = useState(false);
     const [startTime, setStartTime] = useState(null);
     const [totalDuration, setTotalDuration] = useState(25 * 60);
@@ -412,6 +418,10 @@ export default function Dashboard(props) {
 
     const [productivityRefreshTrigger, setProductivityRefreshTrigger] = useState(0);
 
+    // Gamification Popup State
+    const [showGamificationPopup, setShowGamificationPopup] = useState(false);
+    const [gamificationData, setGamificationData] = useState(null);
+
     // Effect to update companion mood based on activity
     useEffect(() => {
         if (isRunning) {
@@ -421,6 +431,17 @@ export default function Dashboard(props) {
             setCompanionState('idle');
         }
     }, [isRunning]);
+
+    // Fetch streak on mount
+    useEffect(() => {
+        axios.get(route('api.gamification.streak'))
+            .then(res => {
+                if (res.data.current_streak !== undefined) {
+                    setCurrentStreak(res.data.current_streak);
+                }
+            })
+            .catch(err => console.log('Streak fetch error:', err));
+    }, []);
 
     // Handle Task Completion (from TaskFocusPanel or QuickAdd) -> Celebrate
     const handleTaskCompleted = () => {
@@ -593,16 +614,26 @@ export default function Dashboard(props) {
             stopBackgroundTimer();
 
             // Use new stop endpoint for sync
-            await axios.post(route('api.pomodoro.stop'), {
+            const res = await axios.post(route('api.pomodoro.stop'), {
                 break_minutes: 0,
                 tab_switches: 0,
                 ai_questions_asked: 0,
             });
-            await axios.post(route('api.pomodoro.stop'), {
-                break_minutes: 0,
-                tab_switches: 0,
-                ai_questions_asked: 0,
-            });
+            
+            // Show gamification popup if session was completed (not manually stopped)
+            if (!manuallyStopped && res.data?.gamification) {
+                setGamificationData({
+                    xpAwarded: res.data.gamification.xp_awarded || 0,
+                    newStreak: res.data.gamification.current_streak || 0,
+                    levelUp: res.data.gamification.level_up || false,
+                    newLevel: res.data.gamification.new_level || 0,
+                    achievements: res.data.gamification.achievements || [],
+                    taskTitle: activeTask?.title || 'Pomodoro Session'
+                });
+                setShowGamificationPopup(true);
+                setCurrentStreak(res.data.gamification.current_streak || currentStreak);
+            }
+            
             setProductivityRefreshTrigger(prev => prev + 1); // Refresh stats
             router.reload({ only: ['tasks', 'taskStats'] });
         } catch (error) {
@@ -943,6 +974,13 @@ export default function Dashboard(props) {
             {/* Quick Notes Widget */}
             <DashboardNotes auth={auth} />
 
+            {/* Gamification Popup for Pomodoro Completion */}
+            <GamificationPopup
+                isOpen={showGamificationPopup}
+                onClose={() => setShowGamificationPopup(false)}
+                data={gamificationData}
+            />
+
 
             <AnimatePresence>
                 {activeTask && (
@@ -958,6 +996,7 @@ export default function Dashboard(props) {
                             setSecondsLeft(totalDuration);
                         }}
                         onClose={handleTimerClose}
+                        currentStreak={currentStreak}
                     />
                 )}
             </AnimatePresence>

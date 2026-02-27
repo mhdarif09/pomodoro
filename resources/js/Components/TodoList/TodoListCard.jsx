@@ -20,7 +20,7 @@ export default function TodoListCard({
     const handleAddNew = () => setView('adding');
     const handleEdit = (task) => { setView('editing'); setEditingTask(task); };
     const handleCancel = () => { setView(null); setEditingTask(null); };
-    const handleDelete = (taskId) => router.delete(route('tasks.destroy', taskId), { preserveScroll: true });
+    const handleDelete = (taskId) => router.delete(route('api.tasks.destroy', taskId), { preserveScroll: true });
 
     const showForm = view === 'adding' || view === 'editing';
 

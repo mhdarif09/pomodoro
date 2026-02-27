@@ -5,7 +5,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import {
     ChatBubbleLeftRightIcon, TrophyIcon, UserGroupIcon,
     BoltIcon, ArrowRightIcon, FireIcon, DocumentTextIcon, LockClosedIcon,
-    BanknotesIcon, CreditCardIcon, ExclamationTriangleIcon
+    BanknotesIcon, CreditCardIcon, ExclamationTriangleIcon, SparklesIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 
@@ -254,6 +254,41 @@ export default function GuildOverview({ auth, guild, members }) {
                                         +{guild.member_count - 5}
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Arena Leaderboard Widget */}
+                        <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl p-6 shadow-xl border border-indigo-800 text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <TrophyIcon className="w-32 h-32" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <SparklesIcon className="w-5 h-5 text-yellow-300" />
+                                    <h3 className="font-bold text-lg">Top Arena Thinkers</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    {(guild.arena_leaders || []).map((leader, index) => (
+                                        <div key={leader.id} className="flex items-center justify-between p-3 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-xs ring-2 ring-indigo-300">
+                                                    {leader.avatar ? <img src={leader.avatar} alt={leader.name} className="h-full w-full rounded-full object-cover" /> : leader.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-sm leading-tight">{leader.name}</p>
+                                                    <p className="text-[10px] text-indigo-300 font-medium">{leader.arena_rank || 'Novice'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-black text-yellow-300 text-base">{leader.arena_xp || 0}</p>
+                                                <p className="text-[9px] uppercase tracking-wider text-indigo-200">XP</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!guild.arena_leaders || guild.arena_leaders.length === 0) && (
+                                        <div className="text-center text-indigo-300 text-sm py-4">No arena data yet.</div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

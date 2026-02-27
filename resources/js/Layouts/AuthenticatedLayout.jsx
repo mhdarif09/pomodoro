@@ -285,8 +285,8 @@ export default function Authenticated({ children, header }) {
                                 {!isCollapsed && <span>Dashboard</span>}
                             </Link>
                             <Link id="learning-nav" href={route('learning.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('learning.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
-                                <BookOpenIcon className="h-4 w-4" />
-                                {!isCollapsed && <span>Learning</span>}
+                                <SparklesIcon className="h-4 w-4 text-amber-500" />
+                                {!isCollapsed && <span>Learning Hub</span>}
                             </Link>
                             {user.active_plan?.has_ai_genius_access && (
                                 <Link id="ai-genius-nav" href={route('ai-assistant.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('ai-assistant.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>

@@ -5,9 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PencilIcon, TrashIcon, ChevronDownIcon, CheckIcon } from '@heroicons/react/24/solid';
 import { CalendarDaysIcon as CalendarOutline } from '@heroicons/react/24/outline';
 import { router } from '@inertiajs/react';
+import axios from 'axios';
+import GamificationPopup from '@/Components/GamificationPopup';
 
 export default function TaskItem({ task, onEditClick, onDeleteClick }) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showGamification, setShowGamification] = useState(false);
+    const [gamificationData, setGamificationData] = useState(null);
 
     // --- KODE BARU: Mendefinisikan warna border untuk setiap prioritas ---
     const priorityBorderStyles = {
@@ -20,9 +24,23 @@ export default function TaskItem({ task, onEditClick, onDeleteClick }) {
 
     const handleToggleComplete = (e) => {
         e.stopPropagation();
-        router.patch(route('tasks.toggle-complete', task.id), {
-            preserveScroll: true,
-        });
+        axios.patch(route('api.tasks.toggle-complete', task.id))
+            .then(res => {
+                if (res.data.gamification) {
+                    setGamificationData({
+                        xpAwarded: res.data.gamification.xp_awarded || 0,
+                        newStreak: res.data.gamification.current_streak || 0,
+                        levelUp: res.data.gamification.level_up || false,
+                        newLevel: res.data.gamification.new_level || 0,
+                        achievements: res.data.gamification.achievements || [],
+                        taskTitle: task.title
+                    });
+                    setShowGamification(true);
+                }
+                // Reload de Inertia props so that parent component receives the updated task list
+                router.reload({ preserveScroll: true });
+            })
+            .catch(err => console.error('Failed to toggle task:', err));
     };
 
     const handleDelete = () => {
@@ -118,5 +136,11 @@ export default function TaskItem({ task, onEditClick, onDeleteClick }) {
                 )}
             </AnimatePresence>
         </motion.div>
+
+        <GamificationPopup
+            isOpen={showGamification}
+            onClose={() => setShowGamification(false)}
+            data={gamificationData}
+        />
     );
 }

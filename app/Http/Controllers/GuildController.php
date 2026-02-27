@@ -180,6 +180,13 @@ class GuildController extends Controller
             ],
             // Optimization: Only load TOP 5 members + Total Count (handled by member_count above)
             'members' => $guild->members()->limit(5)->get()->map(fn($m) => ['id' => $m->id, 'name' => $m->name, 'avatar' => $m->avatar]),
+            'arena_leaders' => $guild->members()
+                ->leftJoin('user_cognitive_stats', 'users.id', '=', 'user_cognitive_stats.user_id')
+                ->selectPivot('role', 'joined_at')
+                ->select('users.id', 'users.name', 'users.avatar', 'user_cognitive_stats.arena_xp', 'user_cognitive_stats.arena_rank')
+                ->orderByDesc('user_cognitive_stats.arena_xp')
+                ->limit(5)
+                ->get(),
             'enableAi' => $guild->leader && $guild->leader->is_premium,
         ]);
     }

@@ -20,7 +20,7 @@ export default function TaskForm({ existingTask, onCancel }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const url = isEditing ? route('tasks.update', existingTask.id) : route('tasks.store');
+        const url = isEditing ? route('api.tasks.update', existingTask.id) : route('api.tasks.store');
 
         const dataToSubmit = isEditing ? { ...data, _method: 'PUT' } : data;
 

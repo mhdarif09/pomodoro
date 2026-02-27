@@ -328,30 +328,25 @@ FORMAT JAWABAN:
 - Usahakan tidak terlalu panjang lebar (maksimal 2-3 paragraf) KECUALI user benar-benar meminta penjelasan terperinci.
 PROMPT;
 
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . config('services.gemini.api_key', env('GEMINI_API_KEY')), [
-                'contents' => [
-                    [
-                        'role' => 'user',
-                        'parts' => [['text' => $systemPrompt . "\n\nChat User: " . $message]],
-                    ],
+            $apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
+            $response = Http::withToken($apiKey)->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
+                'model' => 'gpt-4o-mini',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $message],
                 ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 500,
-                ],
+                'temperature' => 0.7,
+                'max_tokens' => 500,
             ]);
 
             if ($response->successful()) {
-                $data = $response->json();
-                $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                $text = $response->json('choices.0.message.content');
                 if ($text) {
                     return trim($text);
                 }
             }
 
-            Log::warning('WhatsAppBot: Gemini API response unsuccessful', [
+            Log::warning('WhatsAppBot: OpenAI API response unsuccessful', [
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);

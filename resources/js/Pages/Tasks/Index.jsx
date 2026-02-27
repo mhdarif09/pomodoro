@@ -8,6 +8,8 @@ import {
 } from '@heroicons/react/24/outline';
 import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
+import GamificationPopup from '@/Components/GamificationPopup';
+import WeeklyJourney from '@/Components/Gamification/WeeklyJourney';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -104,9 +106,25 @@ export default function MyTasks(props) {
     const [isRunning, setIsRunning] = useState(false);
     const [startTime, setStartTime] = useState(null);
     const [totalDuration, setTotalDuration] = useState(25 * 60);
+    const [currentStreak, setCurrentStreak] = useState(auth.user?.current_streak || 0);
 
     // Stagnant
     const [isStagnantModalOpen, setIsStagnantModalOpen] = useState(false);
+
+    // Gamification Popup State
+    const [showGamificationPopup, setShowGamificationPopup] = useState(false);
+    const [gamificationData, setGamificationData] = useState(null);
+
+    // Fetch streak on mount
+    useEffect(() => {
+        axios.get(route('api.gamification.streak'))
+            .then(res => {
+                if (res.data.current_streak !== undefined) {
+                    setCurrentStreak(res.data.current_streak);
+                }
+            })
+            .catch(err => console.log('Streak fetch error:', err));
+    }, []);
 
     useEffect(() => {
         setLocalTasks(tasks);
@@ -216,11 +234,26 @@ export default function MyTasks(props) {
         setIsRunning(false);
         try {
             stopBackgroundTimer();
-            await axios.post(route('api.pomodoro.stop'), {
+            const res = await axios.post(route('api.pomodoro.stop'), {
                 break_minutes: 0,
                 tab_switches: 0,
                 ai_questions_asked: 0,
             });
+            
+            // Show gamification popup if session was completed (not manually stopped)
+            if (!manuallyStopped && res.data?.gamification) {
+                setGamificationData({
+                    xpAwarded: res.data.gamification.xp_awarded || 0,
+                    newStreak: res.data.gamification.current_streak || 0,
+                    levelUp: res.data.gamification.level_up || false,
+                    newLevel: res.data.gamification.new_level || 0,
+                    achievements: res.data.gamification.achievements || [],
+                    taskTitle: activeTask?.title || 'Pomodoro Session'
+                });
+                setShowGamificationPopup(true);
+                setCurrentStreak(res.data.gamification.current_streak || currentStreak);
+            }
+            
             router.reload({ only: ['tasks', 'taskStats'] });
         } catch (error) {
             console.error("Failed to save session:", error);
@@ -326,6 +359,9 @@ export default function MyTasks(props) {
                     </div>
                 </motion.div>
 
+                {/* Weekly Journey Widget - Compact */}
+                <WeeklyJourney compact />
+
                 {/* 2. PERSISTENCE BANNERS (Resume & Momentum) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Resume Widget */}
@@ -424,8 +460,8 @@ export default function MyTasks(props) {
                         />
                     </div>
                 </div>
-            </div>
-            <AnimatePresence>
+                
+                <AnimatePresence>
                 {isQuickAddOpen && (
                     <QuickAddTaskModal
                         isOpen={isQuickAddOpen}
@@ -563,9 +599,18 @@ export default function MyTasks(props) {
                             setSecondsLeft(totalDuration);
                         }}
                         onClose={handleTimerClose}
+                        currentStreak={currentStreak}
                     />
                 )}
             </AnimatePresence>
-        </AuthenticatedLayout >
+
+            {/* Gamification Popup for Pomodoro Completion */}
+            <GamificationPopup
+                isOpen={showGamificationPopup}
+                onClose={() => setShowGamificationPopup(false)}
+                data={gamificationData}
+            />
+        </div>
+        </AuthenticatedLayout>
     );
 }

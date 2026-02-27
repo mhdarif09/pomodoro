@@ -31,7 +31,7 @@ export default function TaskCard({ task, onEdit }) {
 
     const handleToggleComplete = (e) => {
         e.stopPropagation();
-        router.post(route('tasks.toggle-complete', task.id), {}, {
+        router.patch(route('api.tasks.toggle-complete', task.id), {}, {
             preserveScroll: true,
         });
     };
@@ -40,7 +40,7 @@ export default function TaskCard({ task, onEdit }) {
         e.stopPropagation();
         if (confirm('Yakin ingin menghapus task ini?')) {
             setIsDeleting(true);
-            router.delete(route('tasks.destroy', task.id), {
+            router.delete(route('api.tasks.destroy', task.id), {
                 preserveScroll: true,
                 onFinish: () => setIsDeleting(false),
             });
