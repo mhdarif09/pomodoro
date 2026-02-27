@@ -193,7 +193,7 @@ class KanbanController extends Controller
                     'streak_updated' => $streakResult['streak_updated'],
                     'level_up' => $xpResult['leveled_up'],
                     'new_level' => $xpResult['new_level'],
-                    'achievements' => $newAchievements->map(fn($a) => [
+                    'achievements' => collect($newAchievements)->map(fn($a) => [
                         'id' => $a->id,
                         'name' => $a->name,
                         'icon' => $a->icon,
