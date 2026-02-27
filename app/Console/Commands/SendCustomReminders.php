@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Task;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +13,7 @@ class SendCustomReminders extends Command
     protected $signature = 'reminders:send-custom';
     protected $description = 'Send WhatsApp reminders for tasks with custom reminder_at times';
 
-    public function handle(FonnteService $fonnteService): int
+    public function handle(WhatsAppService $whatsAppService): int
     {
         $now = Carbon::now();
 
@@ -51,7 +51,7 @@ class SendCustomReminders extends Command
                 . "Yuk segera dikerjakan! 💪🚀\n\n"
                 . "Ketik /list untuk lihat semua task.";
 
-            $result = $fonnteService->sendReminder($user, $message);
+            $result = $whatsAppService->sendReminder($user, $message);
             
             // If limit reached, don't mark as sent (try again tomorrow)
             if (isset($result['limit_reached']) && $result['limit_reached']) {

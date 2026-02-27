@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use App\Services\WhatsAppBotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,12 +12,12 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppBotController extends Controller
 {
     protected WhatsAppBotService $botService;
-    protected FonnteService $fonnteService;
+    protected WhatsAppService $whatsAppService;
 
-    public function __construct(WhatsAppBotService $botService, FonnteService $fonnteService)
+    public function __construct(WhatsAppBotService $botService, WhatsAppService $whatsAppService)
     {
         $this->botService = $botService;
-        $this->fonnteService = $fonnteService;
+        $this->whatsAppService = $whatsAppService;
     }
 
     /**
@@ -61,7 +61,7 @@ class WhatsAppBotController extends Controller
                     . "2️⃣ Tambahkan nomor WhatsApp di profil kamu\n\n"
                     . "Setelah itu, kamu bisa manage task langsung dari WhatsApp! 🚀";
 
-                $this->fonnteService->sendMessage($phone, $reply);
+                $this->whatsAppService->sendMessage($phone, $reply);
 
                 return response()->json(['status' => 'ok']);
             }
@@ -70,7 +70,7 @@ class WhatsAppBotController extends Controller
             $reply = $this->botService->processMessage($user, $message);
 
             // Send reply via Fonnte
-            $this->fonnteService->sendMessage($phone, $reply);
+            $this->whatsAppService->sendMessage($phone, $reply);
 
             Log::info('WhatsApp bot reply sent', [
                 'user_id' => $user->id,

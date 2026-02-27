@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class FonnteService
+class WhatsAppService
 {
     protected $apiUrl = 'https://wa.muhammadarifrs.my.id/enqueue';
 

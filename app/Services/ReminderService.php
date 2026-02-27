@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\Log;
 
 class ReminderService
 {
-    protected $fonnteService;
+    protected $whatsAppService;
     protected $habitService;
     protected $smartReminder;
 
-    public function __construct(FonnteService $fonnteService, HabitService $habitService, SmartReminderService $smartReminder)
+    public function __construct(WhatsAppService $whatsAppService, HabitService $habitService, SmartReminderService $smartReminder)
     {
-        $this->fonnteService = $fonnteService;
+        $this->whatsAppService = $whatsAppService;
         $this->habitService = $habitService;
         $this->smartReminder = $smartReminder;
     }
@@ -275,7 +275,7 @@ class ReminderService
 
     private function sendAndLog(User $user, string $message): void
     {
-        $this->fonnteService->sendMessage($user->phone, $message);
+        $this->whatsAppService->sendMessage($user->phone, $message);
         $user->incrementWhatsAppReminderCount();
         Log::info("Reminder sent to {$user->id} ({$user->name}): " . mb_substr($message, 0, 80) . '...');
     }

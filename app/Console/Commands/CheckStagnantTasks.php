@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Task;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use Carbon\Carbon;
 
 class CheckStagnantTasks extends Command
@@ -26,7 +26,7 @@ class CheckStagnantTasks extends Command
     /**
      * Execute the console command.
      */
-    public function handle(FonnteService $fonnteService)
+    public function handle(WhatsAppService $whatsAppService)
     {
         $this->info('Checking for stagnant tasks...');
 
@@ -74,7 +74,7 @@ class CheckStagnantTasks extends Command
             
             try {
                 // Use rate-limited sender
-                $sent = $fonnteService->sendReminder($user, $message);
+                $sent = $whatsAppService->sendReminder($user, $message);
                 
                 if ($sent) {
                     $this->info("Message sent to {$user->name}.");

@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppBotService
 {
-    protected FonnteService $fonnteService;
+    protected WhatsAppService $whatsAppService;
 
-    public function __construct(FonnteService $fonnteService)
+    public function __construct(WhatsAppService $whatsAppService)
     {
-        $this->fonnteService = $fonnteService;
+        $this->whatsAppService = $whatsAppService;
     }
 
     /**

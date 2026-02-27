@@ -6,18 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Services\WhatsAppAIService;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
 {
     protected $aiService;
-    protected $fonnteService;
+    protected $whatsAppService;
 
-    public function __construct(WhatsAppAIService $aiService, FonnteService $fonnteService)
+    public function __construct(WhatsAppAIService $aiService, WhatsAppService $whatsAppService)
     {
         $this->aiService = $aiService;
-        $this->fonnteService = $fonnteService;
+        $this->whatsAppService = $whatsAppService;
     }
 
     /**
@@ -59,7 +59,7 @@ class WhatsAppWebhookController extends Controller
         $reply = $this->aiService->generateResponse($user, $message);
 
         // 3. Send Reply via Fonnte
-        $this->fonnteService->sendMessage($sender, $reply);
+        $this->whatsAppService->sendMessage($sender, $reply);
 
         return response()->json(['status' => true]);
     }

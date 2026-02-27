@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Task;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,18 +19,18 @@ class SendTaskDeadlineReminders implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(FonnteService $fonnteService): void
+    public function handle(WhatsAppService $whatsAppService): void
     {
         Log::info('🔔 Starting multi-stage deadline reminder job...');
 
         // Send H-1 day reminders
-        $this->sendOneDayReminders($fonnteService);
+        $this->sendOneDayReminders($whatsAppService);
         
         // Send 3-hour reminders
-        $this->sendThreeHourReminders($fonnteService);
+        $this->sendThreeHourReminders($whatsAppService);
         
         // Send 30-minute reminders
-        $this->sendThirtyMinuteReminders($fonnteService);
+        $this->sendThirtyMinuteReminders($whatsAppService);
 
         Log::info('✅ Multi-stage deadline reminder job completed');
     }
@@ -38,7 +38,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
     /**
      * Send reminders for tasks due tomorrow (H-1)
      */
-    private function sendOneDayReminders(FonnteService $fonnteService): void
+    private function sendOneDayReminders(WhatsAppService $whatsAppService): void
     {
         $tomorrow = Carbon::tomorrow();
         
@@ -56,7 +56,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
             
             if ($task->user->canSendWhatsAppReminder()) {
                 $message = $this->getOneDayMessage($task);
-                $fonnteService->sendMessage($task->user->phone, $message);
+                $whatsAppService->sendMessage($task->user->phone, $message);
                 
                 $task->update(['deadline_reminder_1day_sent' => true]);
                 $task->user->incrementWhatsAppReminderCount();
@@ -69,7 +69,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
     /**
      * Send reminders for tasks due in 3 hours
      */
-    private function sendThreeHourReminders(FonnteService $fonnteService): void
+    private function sendThreeHourReminders(WhatsAppService $whatsAppService): void
     {
         $threeHoursLater = Carbon::now()->addHours(3);
         
@@ -90,7 +90,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
             
             if ($task->user->canSendWhatsAppReminder()) {
                 $message = $this->getThreeHourMessage($task);
-                $fonnteService->sendMessage($task->user->phone, $message);
+                $whatsAppService->sendMessage($task->user->phone, $message);
                 
                 $task->update(['deadline_reminder_3hour_sent' => true]);
                 $task->user->incrementWhatsAppReminderCount();
@@ -103,7 +103,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
     /**
      * Send reminders for tasks due in 30 minutes
      */
-    private function sendThirtyMinuteReminders(FonnteService $fonnteService): void
+    private function sendThirtyMinuteReminders(WhatsAppService $whatsAppService): void
     {
         $thirtyMinutesLater = Carbon::now()->addMinutes(30);
         
@@ -124,7 +124,7 @@ class SendTaskDeadlineReminders implements ShouldQueue
             
             if ($task->user->canSendWhatsAppReminder()) {
                 $message = $this->getThirtyMinuteMessage($task);
-                $fonnteService->sendMessage($task->user->phone, $message);
+                $whatsAppService->sendMessage($task->user->phone, $message);
                 
                 $task->update(['deadline_reminder_30min_sent' => true]);
                 $task->user->incrementWhatsAppReminderCount();

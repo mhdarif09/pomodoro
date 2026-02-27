@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Services\ReminderService;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use App\Services\HabitService;
 use App\Models\User;
 use App\Models\Task;
@@ -17,17 +17,17 @@ class ReminderServiceTest extends TestCase
     use RefreshDatabase;
 
     private $reminderService;
-    private $fonnteMock;
+    private $whatsAppMock;
     private $habitMock;
 
     protected function setUp(): void
     {
         parent::setUp();
         
-        $this->fonnteMock = Mockery::mock(FonnteService::class);
+        $this->whatsAppMock = Mockery::mock(WhatsAppService::class);
         $this->habitMock = Mockery::mock(HabitService::class);
         
-        $this->reminderService = new ReminderService($this->fonnteMock, $this->habitMock);
+        $this->reminderService = new ReminderService($this->whatsAppMock, $this->habitMock, Mockery::mock(\App\Services\SmartReminderService::class));
     }
 
     public function test_it_sends_deadline_reminder()
@@ -44,7 +44,7 @@ class ReminderServiceTest extends TestCase
         $this->habitMock->shouldReceive('isPeakTime')->andReturn(false);
         
         // Expect sendMessage to be called
-        $this->fonnteMock->shouldReceive('sendMessage')
+        $this->whatsAppMock->shouldReceive('sendMessage')
             ->once()
             ->withArgs(function ($phone, $message) {
                 return $phone === '081234567890' && str_contains($message, 'You have 1 tasks due soon');
@@ -59,7 +59,7 @@ class ReminderServiceTest extends TestCase
         
         $this->habitMock->shouldReceive('isPeakTime')->andReturn(true);
         
-        $this->fonnteMock->shouldReceive('sendMessage')
+        $this->whatsAppMock->shouldReceive('sendMessage')
             ->once()
             ->withArgs(function ($phone, $message) {
                 return str_contains($message, "usually you're on fire at this time");
