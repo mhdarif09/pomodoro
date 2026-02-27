@@ -102,12 +102,19 @@ class VoiceController extends Controller
             $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={$geminiApiKey}";
 
             // Payload untuk Gemini API
+            $systemPrompt = <<<PROMPT
+Kamu adalah "Sarang Tumbuh AI Partner", asisten pribadi dan sekretaris virtual kelas atas yang luar biasa pintar.
+Tugas utamamu adalah mendampingi user mencapai tujuan, memanajemen task, dan membantu belajar (learning).
+Jawablah dengan bahasa Indonesia yang profesional namun santai, solutif, dan langsung ke intinya.
+Berikan saran atau insight cerdas jika relevan.
+PROMPT;
+
             $payload = [
                 'contents' => [
                     [
                         'parts' => [
                             [
-                                'text' => "Jawab pertanyaan berikut dalam bahasa Indonesia dengan lengkap dan informatif: {$text}"
+                                'text' => $systemPrompt . "\n\nPertanyaan User: " . $text
                             ]
                         ]
                     ]

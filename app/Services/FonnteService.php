@@ -7,12 +7,10 @@ use Illuminate\Support\Facades\Log;
 
 class FonnteService
 {
-    protected $apiUrl = 'https://api.fonnte.com/send';
-    protected $token;
+    protected $apiUrl = 'https://wa.muhammadarifrs.my.id/enqueue';
 
     public function __construct()
     {
-        $this->token = config('services.fonnte.token');
     }
 
     /**
@@ -25,12 +23,9 @@ class FonnteService
     public function sendMessage(string $phone, string $message): array
     {
         try {
-            $response = Http::withHeaders([
-                'Authorization' => $this->token,
-            ])->post($this->apiUrl, [
-                'target' => $phone,
+            $response = Http::post($this->apiUrl, [
+                'phone' => $phone,
                 'message' => $message,
-                'countryCode' => '62', // Indonesia country code
             ]);
 
             $result = $response->json();
