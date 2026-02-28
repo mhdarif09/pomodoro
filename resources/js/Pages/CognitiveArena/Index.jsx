@@ -97,7 +97,7 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
                             <LockClosedIcon className="w-16 h-16 mx-auto text-slate-400 mb-4" />
                             <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Arena is Locked</h3>
                             <p className="text-slate-500 dark:text-slate-400 mb-6">Complete at least one Smart Focus session today to unlock the Arena.</p>
-                            <Link href={route('dashboard')} className="px-6 py-3 bg-teal-500 text-white rounded-xl font-semibold hover:bg-teal-600 transition-colors inline-block">
+                            <Link href={route('dashboard')} className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors inline-block">
                                 Go to Dashboard
                             </Link>
                         </div>

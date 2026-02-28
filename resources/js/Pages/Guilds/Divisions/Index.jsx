@@ -67,11 +67,11 @@ export default function GuildDivisionsIndex({ auth, guild, divisions, members })
             <div className="max-w-7xl mx-auto p-4 sm:p-6 font-sans text-slate-900 dark:text-white">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <UserGroupIcon className="w-8 h-8 text-teal-500" />
+                        <UserGroupIcon className="w-8 h-8 text-emerald-500" />
                         Divisions & Roles
                     </h1>
                     {guild.leader?.id === auth.user.id && (
-                         <button onClick={openCreate} className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-bold hover:bg-teal-600 transition-colors flex items-center gap-2">
+                         <button onClick={openCreate} className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2">
                             <PlusIcon className="w-5 h-5" /> New Division
                         </button>
                     )}
@@ -86,7 +86,7 @@ export default function GuildDivisionsIndex({ auth, guild, divisions, members })
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="text-lg font-bold text-slate-800 dark:text-white">{division.name}</h3>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => openEdit(division)} className="p-1 text-slate-400 hover:text-teal-500"><PencilIcon className="w-4 h-4" /></button>
+                                            <button onClick={() => openEdit(division)} className="p-1 text-slate-400 hover:text-emerald-500"><PencilIcon className="w-4 h-4" /></button>
                                             <button onClick={() => handleDelete(division)} className="p-1 text-slate-400 hover:text-red-500"><TrashIcon className="w-4 h-4" /></button>
                                         </div>
                                     </div>
@@ -128,7 +128,7 @@ export default function GuildDivisionsIndex({ auth, guild, divisions, members })
                                         <select 
                                             value={currentDivisionId}
                                             onChange={(e) => handleAssignMember(member.id, e.target.value)}
-                                            className="text-xs border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 py-1 pl-2 pr-8 w-32 focus:ring-teal-500"
+                                            className="text-xs border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 py-1 pl-2 pr-8 w-32 focus:ring-emerald-500"
                                             disabled={auth.user.id !== guild.leader?.id && auth.user.id !== member.id /* Allow self-change? Maybe not. Only leader/admin usually. */}
                                         >
                                             <option value="">No Division</option>

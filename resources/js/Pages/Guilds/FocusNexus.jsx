@@ -51,7 +51,7 @@ export default function FocusNexus({ auth, guild, activeMembers }) {
             <div className="min-h-screen bg-slate-900 text-white font-sans relative overflow-hidden">
                 {/* Ambient Background Effects */}
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-600/20 rounded-full blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-600/20 rounded-full blur-[120px] animate-pulse delay-700"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-600/20 rounded-full blur-[120px] animate-pulse delay-700"></div>
 
                 <div className="max-w-7xl mx-auto p-6 relative z-10 flex flex-col h-screen max-h-screen">
 
@@ -125,7 +125,7 @@ export default function FocusNexus({ auth, guild, activeMembers }) {
                                 {activeMembers.map((member) => (
                                     <div key={member.id} className="group flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-transparent hover:border-white/10">
                                         <div className="relative">
-                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-lg font-bold shadow-lg">
+                                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-500 flex items-center justify-center text-lg font-bold shadow-lg">
                                                 {member.avatar ? <img src={member.avatar} className="w-full h-full rounded-xl object-cover" /> : member.name.charAt(0)}
                                             </div>
                                             <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-900 animate-bounce"></div>

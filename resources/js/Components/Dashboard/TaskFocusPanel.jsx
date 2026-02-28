@@ -58,7 +58,7 @@ function TaskCard({ task, onToggleComplete, onStartFocus, onToggleSubtask, onAdd
                         className={`mt-1 flex-shrink-0 w-6 h-6 rounded-xl border-2 transition-all flex items-center justify-center active:scale-90
                             ${task.is_completed
                                 ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                                : 'border-slate-200 dark:border-slate-700 hover:border-teal-500 bg-slate-50/50 dark:bg-slate-900/50'
+                                : 'border-slate-200 dark:border-slate-700 hover:border-emerald-500 bg-slate-50/50 dark:bg-slate-900/50'
                             }`}
                     >
                         {task.is_completed && <CheckIcon className="w-4 h-4 stroke-[3]" />}
@@ -111,7 +111,7 @@ function TaskCard({ task, onToggleComplete, onStartFocus, onToggleSubtask, onAdd
                                 <div className="flex items-center gap-1.5">
                                     <div className="flex -space-x-1">
                                         {[...Array(Math.min(5, task.subtasks.length))].map((_, i) => (
-                                            <div key={i} className={`w-1.5 h-1.5 rounded-full border border-white dark:border-slate-800 ${i < task.subtasks.filter(s => s.is_completed).length ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
+                                            <div key={i} className={`w-1.5 h-1.5 rounded-full border border-white dark:border-slate-800 ${i < task.subtasks.filter(s => s.is_completed).length ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
                                         ))}
                                     </div>
                                     <span className="text-[10px] font-bold text-slate-400">
@@ -120,7 +120,7 @@ function TaskCard({ task, onToggleComplete, onStartFocus, onToggleSubtask, onAdd
                                 </div>
                             )}
                             {task.estimated_minutes && (
-                                <div className="flex items-center gap-1 text-[10px] font-black text-teal-600/70 dark:text-teal-400/70 uppercase tracking-widest">
+                                <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest">
                                     <ClockIcon className="w-3 h-3" />
                                     {task.estimated_minutes}M
                                 </div>
@@ -184,7 +184,7 @@ function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, 
             {!task.is_completed && (
                 <button
                     onClick={() => onStartFocus(task)}
-                    className="apple-button w-full bg-slate-900 dark:bg-teal-500 text-white flex items-center justify-between p-4 shadow-xl active:scale-[0.98]"
+                    className="apple-button w-full bg-slate-900 dark:bg-emerald-500 text-white flex items-center justify-between p-4 shadow-xl active:scale-[0.98]"
                 >
                     <div className="flex items-center gap-3">
                         <PlayIcon className="w-5 h-5 fill-current" />
@@ -200,7 +200,7 @@ function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, 
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t('subtasks') || 'Sub-Tasks'}</h5>
-                    <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-900/20">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20">
                         {task.subtasks?.filter(s => s.is_completed).length || 0}/{task.subtasks?.length || 0}
                     </span>
                 </div>
@@ -208,7 +208,7 @@ function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, 
                     <div key={sub.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors group">
                         <button
                             onClick={() => onToggleSubtask(task.id, sub.id, sub.is_completed)}
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${sub.is_completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 group-hover:border-teal-500'}`}
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${sub.is_completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 group-hover:border-emerald-500'}`}
                         >
                             {sub.is_completed && <CheckIcon className="w-3.5 h-3.5" />}
                         </button>
@@ -218,8 +218,8 @@ function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, 
                 {!task.is_completed && (
                     <div className="mt-3 space-y-2">
                         <form onSubmit={(e) => { e.preventDefault(); onAddSubtask(task.id, e.target.subtask.value); e.target.subtask.value = ''; }} className="relative">
-                            <input name="subtask" type="text" placeholder={t('placeholder_add_subtask') || "Add step..."} className="w-full bg-slate-50 dark:bg-black/20 border-none rounded-2xl py-3 pl-4 pr-10 text-sm font-medium focus:ring-2 focus:ring-teal-500/10 placeholder-slate-400" />
-                            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-white dark:bg-slate-700 rounded-lg text-teal-500 shadow-sm"><PlusIcon className="w-4 h-4" /></button>
+                            <input name="subtask" type="text" placeholder={t('placeholder_add_subtask') || "Add step..."} className="w-full bg-slate-50 dark:bg-black/20 border-none rounded-2xl py-3 pl-4 pr-10 text-sm font-medium focus:ring-2 focus:ring-emerald-500/10 placeholder-slate-400" />
+                            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-white dark:bg-slate-700 rounded-lg text-emerald-500 shadow-sm"><PlusIcon className="w-4 h-4" /></button>
                         </form>
                         {/* AI Suggest - Premium Only */}
                         {auth.user?.is_premium && (
@@ -251,7 +251,7 @@ function TaskDetailContent({ task, onStartFocus, onToggleSubtask, onAddSubtask, 
                 <div className="flex items-center gap-2">
                     <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Notes</h5>
                 </div>
-                <div className="relative overflow-hidden rounded-[1.5rem] bg-slate-50 dark:bg-black/20 focus-within:ring-2 focus-within:ring-teal-500/10 transition-all border border-slate-100 dark:border-white/5">
+                <div className="relative overflow-hidden rounded-[1.5rem] bg-slate-50 dark:bg-black/20 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all border border-slate-100 dark:border-white/5">
                     <NotionEditor
                         content={task.notes}
                         onChange={(html) => updateNotes(html)}
@@ -506,7 +506,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
 
     const columns = [
         { id: 'todo-col', title: t('kanban_todo') || 'To Do', status: 'todo', color: 'bg-slate-300' },
-        { id: 'doing-col', title: t('kanban_inprogress') || 'In Progress', status: 'in_progress', color: 'bg-teal-500' },
+        { id: 'doing-col', title: t('kanban_inprogress') || 'In Progress', status: 'in_progress', color: 'bg-emerald-500' },
         { id: 'done-col', title: t('kanban_done') || 'Done', status: 'done', color: 'bg-emerald-500' }
     ];
 
@@ -522,7 +522,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                    <span className="bg-gradient-to-br from-indigo-500 to-purple-500 text-transparent bg-clip-text">Smart Focus 3</span>
+                                    <span className="bg-gradient-to-br from-indigo-500 to-purple-500 text-transparent bg-clip-text">Today's Focus</span>
                                     <span className="text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-700/50">
                                         {activeFocusTasks.length}/3
                                     </span>
@@ -539,7 +539,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                     exit={{ opacity: 0, y: -10, height: 0 }}
                                     className="mb-4"
                                 >
-                                    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
+                                    <div className="bg-gradient-to-r from-emerald-500/10 to-emerald-500/10 dark:from-emerald-900/30 dark:to-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
                                         <div className="text-2xl mb-1">🎉</div>
                                         <h4 className="text-lg font-black text-emerald-700 dark:text-emerald-300">Round {completedRounds} Complete!</h4>
                                         <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">+50 XP! Pilih 3 tugas baru untuk round selanjutnya.</p>
@@ -649,11 +649,11 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                 return (
                                     <div key={col.id} className="flex flex-col gap-4">
                                         <div className="flex items-center gap-3 px-4 py-2">
-                                            <div className={`w-3 h-3 rounded-full ${col.id === 'doing-col' ? 'bg-teal-500 animate-pulse' : col.color}`} />
+                                            <div className={`w-3 h-3 rounded-full ${col.id === 'doing-col' ? 'bg-emerald-500 animate-pulse' : col.color}`} />
                                             <h3 className="text-[13px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{col.title}</h3>
                                             <span className="ml-auto text-[11px] font-bold apple-glass border-none px-2.5 py-1 rounded-full text-slate-500">{colTasks.length}</span>
                                             {col.status === 'todo' && (
-                                                <button onClick={() => setAddingToColumn('todo')} className="p-1 text-slate-400 hover:text-teal-500"><PlusIcon className="w-5 h-5" /></button>
+                                                <button onClick={() => setAddingToColumn('todo')} className="p-1 text-slate-400 hover:text-emerald-500"><PlusIcon className="w-5 h-5" /></button>
                                             )}
                                         </div>
 
@@ -672,7 +672,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                                     />
                                                 ))}
                                                 {addingToColumn === col.status && (
-                                                    <div className="apple-glass p-5 rounded-[2rem] border-teal-500/30">
+                                                    <div className="apple-glass p-5 rounded-[2rem] border-emerald-500/30">
                                                         <form onSubmit={(e) => {
                                                             e.preventDefault(); const title = e.target.title.value;
                                                             if (!title.trim()) return;
@@ -684,7 +684,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                                             <input autoFocus name="title" placeholder={t('placeholder_quick_add') || "New Task..."} className="w-full bg-transparent border-none p-0 font-bold focus:ring-0" />
                                                             <div className="flex justify-end gap-2">
                                                                 <button type="button" onClick={() => setAddingToColumn(null)} className="text-xs">Cancel</button>
-                                                                <button type="submit" className="text-xs bg-teal-500 text-white px-3 py-1 rounded-lg">Add</button>
+                                                                <button type="submit" className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-lg">Add</button>
                                                             </div>
                                                         </form>
                                                     </div>

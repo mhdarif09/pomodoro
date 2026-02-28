@@ -94,7 +94,7 @@ const CashbackRedemptionModal = ({ isOpen, onClose, pointsBalance, onRedeemSucce
                                                 onChange={(e) => setAmountToRedeem(e.target.value)}
                                                 min="1000"
                                                 step="100"
-                                                className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border-dashed border-2 border-slate-300 dark:border-slate-700 p-3 text-center text-2xl font-black text-slate-900 dark:text-white focus:border-teal-500 focus:ring-0"
+                                                className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border-dashed border-2 border-slate-300 dark:border-slate-700 p-3 text-center text-2xl font-black text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-0"
                                             />
                                             <p className="text-xs text-center text-slate-500 mt-2">
                                                 Minimal 1,000 poin. Maksimal sesuai saldo.
@@ -118,7 +118,7 @@ const CashbackRedemptionModal = ({ isOpen, onClose, pointsBalance, onRedeemSucce
                                 </>
                             ) : (
                                 <div className="text-center">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-teal-500/20">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/20">
                                         <ClipboardDocumentCheckIcon className="w-8 h-8 text-white" />
                                     </div>
                                     <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Berhasil!</h2>

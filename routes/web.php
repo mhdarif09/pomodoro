@@ -284,6 +284,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/upgrade', [\App\Http\Controllers\UpgradePageController::class, 'index'])->name('upgrade.index');
     Route::post('/upgrade/redeem-xp', [\App\Http\Controllers\UpgradePageController::class, 'redeemXP'])->name('upgrade.redeem-xp');
     
+    Route::get('/profile/me', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -453,6 +454,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // --- GUILD ROUTES ---
 Route::middleware(['auth'])->group(function () {
+    Route::get('guilds/api/leaderboard', [\App\Http\Controllers\GuildController::class, 'leaderboard'])->name('api.guilds.leaderboard');
     Route::resource('guilds', \App\Http\Controllers\GuildController::class);
     Route::resource('guilds.tasks', \App\Http\Controllers\GuildTaskController::class)->shallow();
     Route::resource('guilds.members', \App\Http\Controllers\GuildMemberController::class)->shallow()->only(['index', 'update', 'destroy']);

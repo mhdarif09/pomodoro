@@ -576,13 +576,13 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                 </div>
 
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg gap-1">
-                    <button onClick={() => setViewMode('board')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${viewMode === 'board' ? 'bg-white dark:bg-slate-700 shadow-sm text-teal-600 dark:text-teal-400' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <button onClick={() => setViewMode('board')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${viewMode === 'board' ? 'bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700'}`}>
                         Board
                     </button>
-                    <button onClick={() => setViewMode('proposals')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${viewMode === 'proposals' ? 'bg-white dark:bg-slate-700 shadow-sm text-teal-600 dark:text-teal-400' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <button onClick={() => setViewMode('proposals')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${viewMode === 'proposals' ? 'bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700'}`}>
                         Proposal {pendingTasks.length > 0 && <span className="ml-1 text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full">{pendingTasks.length}</span>}
                     </button>
-                    <button onClick={() => setViewMode('inbox')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${viewMode === 'inbox' ? 'bg-white dark:bg-slate-700 shadow-sm text-teal-600 dark:text-teal-400' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <button onClick={() => setViewMode('inbox')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors ${viewMode === 'inbox' ? 'bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700'}`}>
                         Inbox <span className="ml-1 text-[10px] bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded-full">{completedTasks.length}</span>
                     </button>
                 </div>
@@ -597,11 +597,11 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                             className="mb-6"
                         >
                             <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-white/10 dark:to-white/5 rounded-[2rem] p-6 shadow-2xl relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-teal-500/30 transition-all duration-1000" />
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/30 transition-all duration-1000" />
 
                                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                                     <div>
-                                        <div className="flex items-center gap-2 mb-2 text-teal-400 font-bold uppercase tracking-wider text-xs">
+                                        <div className="flex items-center gap-2 mb-2 text-emerald-400 font-bold uppercase tracking-wider text-xs">
                                             <PlayIcon className="w-4 h-4" />
                                             <span>Resume Activation</span>
                                         </div>
@@ -652,7 +652,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                     exit={{ opacity: 0, y: -10, height: 0 }}
                                     className="mb-4"
                                 >
-                                    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
+                                    <div className="bg-gradient-to-r from-emerald-500/10 to-emerald-500/10 dark:from-emerald-900/30 dark:to-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
                                         <div className="text-2xl mb-1">🎉</div>
                                         <h4 className="text-lg font-black text-emerald-700 dark:text-emerald-300">Round {completedRounds} Complete!</h4>
                                         <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">+50 XP! Pilih 3 misi baru untuk round selanjutnya.</p>
@@ -758,11 +758,11 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                 ))}
                                 {/* Quick Add Button */}
                                 {!isCreateOpen ? (
-                                    <button onClick={() => setIsCreateOpen(true)} className="w-full py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-slate-400 hover:text-teal-500 hover:border-teal-300 transition-colors flex items-center justify-center gap-2 text-sm font-bold">
+                                    <button onClick={() => setIsCreateOpen(true)} className="w-full py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-slate-400 hover:text-emerald-500 hover:border-emerald-300 transition-colors flex items-center justify-center gap-2 text-sm font-bold">
                                         <PlusIcon className="w-4 h-4" /> Add Task
                                     </button>
                                 ) : (
-                                    <form onSubmit={quickAdd} className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-lg animate-in zoom-in-95 duration-200 space-y-2 border-2 border-teal-500/20">
+                                    <form onSubmit={quickAdd} className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-lg animate-in zoom-in-95 duration-200 space-y-2 border-2 border-emerald-500/20">
                                         {activeGoalId && (
                                             <div className="flex items-center gap-1 text-[9px] font-black text-emerald-500 uppercase tracking-tighter bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">
                                                 <FlagIcon className="w-3 h-3" /> Melengkapi Strategic Goal...
@@ -774,7 +774,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                         {guild.is_leader && (
                                             <div className="flex items-center gap-2 py-1">
                                                 <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input type="checkbox" checked={isMissionMode} onChange={(e) => setIsMissionMode(e.target.checked)} className="rounded text-teal-500 focus:ring-teal-500 w-3 h-3" />
+                                                    <input type="checkbox" checked={isMissionMode} onChange={(e) => setIsMissionMode(e.target.checked)} className="rounded text-emerald-500 focus:ring-emerald-500 w-3 h-3" />
                                                     <span className="text-[10px] font-bold text-slate-500 uppercase">Is Mission?</span>
                                                 </label>
                                                 {isMissionMode && (
@@ -835,7 +835,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                         )}
                                         <div className="flex justify-end gap-2 pt-2">
                                             <button type="button" onClick={() => { setIsCreateOpen(false); setActiveGoalId(null); }} className="text-xs text-slate-400 hover:text-slate-600">Cancel</button>
-                                            <button type="submit" className="text-xs bg-teal-500 text-white px-3 py-1 rounded-md font-bold">
+                                            <button type="submit" className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-md font-bold">
                                                 {isMissionMode ? 'Create Mission' : (activeGoalId || !guild.is_leader ? 'Ajukan Tugas' : 'Tambah Ke Board')}
                                             </button>
                                         </div>
@@ -844,7 +844,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                             </DroppableColumn>
 
                             {/* In Progress Column */}
-                            <DroppableColumn id="col-in_progress" title="In Progress" tasks={columns.in_progress} color="border-teal-500">
+                            <DroppableColumn id="col-in_progress" title="In Progress" tasks={columns.in_progress} color="border-emerald-500">
                                 {columns.in_progress.map(task => (
                                     <SortableTaskItem key={task.id} task={task} onClick={() => setSelectedTask(task)} onDelete={handleDelete} onToggleFocus={handleToggleFocus} />
                                 ))}
@@ -875,7 +875,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                     key={task.id}
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 shadow-xl relative group hover:border-teal-500/50 transition-all"
+                                    className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 shadow-xl relative group hover:border-emerald-500/50 transition-all"
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-2">
@@ -887,7 +887,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                         {guild.is_leader && (
                                             <button
                                                 onClick={() => { setTaskToApprove(task); setIsApproveModalOpen(true); }}
-                                                className="px-4 py-1.5 bg-teal-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-teal-500/20 hover:scale-[1.05] active:scale-95 transition-all flex items-center gap-2"
+                                                className="px-4 py-1.5 bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-500/20 hover:scale-[1.05] active:scale-95 transition-all flex items-center gap-2"
                                             >
                                                 <CheckCircleIcon className="w-4 h-4" /> ACC Misi
                                             </button>
@@ -920,7 +920,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                             </div>
                                             <button
                                                 onClick={() => { setSelectedTask(task); }}
-                                                className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
+                                                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
                                             >
                                                 Feedback &raquo;
                                             </button>
@@ -993,7 +993,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsApproveModalOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60]" />
                             <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="fixed inset-0 flex items-center justify-center z-[70] pointer-events-none p-4">
                                 <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 pointer-events-auto border border-white/10 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
                                     <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2 flex items-center gap-2">
                                         <span className="text-3xl">🎯</span> ACC Misi Guild
@@ -1005,22 +1005,22 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                             <div>
                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">XP REWARD (NEW MISSION)</label>
                                                 <div className="relative">
-                                                    <input name="xp_reward" type="number" defaultValue="50" min="10" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-2xl py-4 px-6 text-xl font-black text-teal-600 focus:ring-2 focus:ring-teal-500 transition-all" />
-                                                    <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-teal-500">XP</span>
+                                                    <input name="xp_reward" type="number" defaultValue="50" min="10" className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-2xl py-4 px-6 text-xl font-black text-emerald-600 focus:ring-2 focus:ring-emerald-500 transition-all" />
+                                                    <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-emerald-500">XP</span>
                                                 </div>
                                                 <p className="text-[10px] text-slate-400 mt-2 ml-1">Current Guild Balance: <b>{guild.xp_balance} XP</b></p>
                                             </div>
                                         ) : (
                                             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800">
                                                 <p className="text-sm font-bold text-slate-600 dark:text-slate-300 text-center">
-                                                    Ini adalah <span className="text-teal-500">Subtask</span>. XP akan diberikan otomatis saat Misi Utama selesai 100%.
+                                                    Ini adalah <span className="text-emerald-500">Subtask</span>. XP akan diberikan otomatis saat Misi Utama selesai 100%.
                                                 </p>
                                             </div>
                                         )}
 
                                         <div className="flex gap-4">
                                             <button type="button" onClick={() => setIsApproveModalOpen(false)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl font-bold hover:bg-slate-200 transition-all">Cancel</button>
-                                            <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-2xl font-black shadow-lg shadow-teal-500/30 hover:scale-[1.02] active:scale-98 transition-all uppercase">
+                                            <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-emerald-500 text-white rounded-2xl font-black shadow-lg shadow-emerald-500/30 hover:scale-[1.02] active:scale-98 transition-all uppercase">
                                                 {taskToApprove?.mission_id ? 'ACC Subtask' : 'APPROVE & ACC'}
                                             </button>
                                         </div>
@@ -1041,14 +1041,14 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                         <div className="space-y-6 pb-20">
                             <div className="flex gap-2">
                                 <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-xs font-bold text-slate-500 uppercase">{selectedTask.status || 'todo'}</span>
-                                <span className="px-2 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded text-xs font-bold uppercase">{selectedTask.priority}</span>
+                                <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded text-xs font-bold uppercase">{selectedTask.priority}</span>
                             </div>
 
                             {/* Start Focus Button */}
                             {selectedTask.approval_status === 'approved' && (
                                 <button
                                     onClick={() => { handleStartFocus(selectedTask); setSelectedTask(null); }}
-                                    className="w-full py-3 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
+                                    className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-500 hover:from-emerald-600 hover:to-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
                                 >
                                     <PlayIcon className="w-5 h-5" />
                                     Start Focus
@@ -1090,14 +1090,14 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                             {/* Task Comments Section */}
                             <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
                                 <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <ChatBubbleOvalLeftEllipsisIcon className="w-4 h-4 text-teal-500" /> FEEDBACK & KOMENTAR
+                                    <ChatBubbleOvalLeftEllipsisIcon className="w-4 h-4 text-emerald-500" /> FEEDBACK & KOMENTAR
                                 </h4>
 
                                 <div className="space-y-4 mb-6">
                                     {selectedTask.comments?.map(comment => (
                                         <div key={comment.id} className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                                             <div className="flex justify-between items-center mb-1">
-                                                <span className="text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-tighter">{comment.user?.name}</span>
+                                                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tighter">{comment.user?.name}</span>
                                                 <span className="text-[9px] text-slate-400">{dayjs(comment.created_at).fromNow()}</span>
                                             </div>
                                             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{comment.message}</p>
@@ -1113,12 +1113,12 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                         value={commentMessage}
                                         onChange={(e) => setCommentMessage(e.target.value)}
                                         placeholder="Tulis feedback atau pesan..."
-                                        className="w-full bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl p-4 text-xs focus:border-teal-500/50 focus:ring-0 transition-all resize-none h-24"
+                                        className="w-full bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl p-4 text-xs focus:border-emerald-500/50 focus:ring-0 transition-all resize-none h-24"
                                     />
                                     <button
                                         type="submit"
                                         disabled={isSubmittingComment || !commentMessage.trim()}
-                                        className="absolute bottom-4 right-4 p-2 bg-teal-500 text-white rounded-xl shadow-lg shadow-teal-500/20 hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
+                                        className="absolute bottom-4 right-4 p-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
                                     >
                                         {isSubmittingComment ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <PlayIcon className="w-4 h-4" />}
                                     </button>
@@ -1166,7 +1166,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                                                     </span>
                                                 </div>
                                                 <div className="flex gap-2 mt-3">
-                                                    <button onClick={() => { handleStartFocus(task); setIsStagnantModalOpen(false); }} className="flex-1 py-2 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 text-xs font-bold rounded-xl hover:bg-teal-100 transition-colors">🚀 Resume</button>
+                                                    <button onClick={() => { handleStartFocus(task); setIsStagnantModalOpen(false); }} className="flex-1 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-xl hover:bg-emerald-100 transition-colors">🚀 Resume</button>
                                                     <button onClick={() => { if (confirm('Archive/Delete?')) router.delete(route('guilds.tasks.destroy', [guild.id, task.id])); }} className="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors">🗑️ Archive</button>
                                                 </div>
                                             </div>

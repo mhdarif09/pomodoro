@@ -17,7 +17,7 @@ export default function XPBar({ currentXP, xpForNextLevel, level, animated = tru
                     initial={animated ? { width: 0 } : { width: `${percentage}%` }}
                     animate={{ width: `${percentage}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full shadow-sm"
+                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-full shadow-sm"
                 />
             </div>
         </div>

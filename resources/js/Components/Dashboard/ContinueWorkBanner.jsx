@@ -9,15 +9,15 @@ export default function ContinueWorkBanner({ task, onDismiss, onContinue }) {
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
-            className="group relative overflow-hidden bg-white dark:bg-[#202020] border border-teal-100 dark:border-teal-900/30 rounded-2xl p-6 mb-6 shadow-sm hover:shadow-md transition-shadow"
+            className="group relative overflow-hidden bg-white dark:bg-[#202020] border border-emerald-100 dark:border-emerald-900/30 rounded-2xl p-6 mb-6 shadow-sm hover:shadow-md transition-shadow"
         >
             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                <PlayIcon className="w-32 h-32 text-teal-500" />
+                <PlayIcon className="w-32 h-32 text-emerald-500" />
             </div>
 
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 border border-teal-100 dark:border-teal-800/30">
+                    <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 border border-emerald-100 dark:border-emerald-800/30">
                         <PlayIcon className="w-7 h-7 ml-1" />
                     </div>
                     <div>
@@ -38,7 +38,7 @@ export default function ContinueWorkBanner({ task, onDismiss, onContinue }) {
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <button
                         onClick={() => onContinue(task)}
-                        className="flex-1 md:flex-none bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-teal-500/20 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                        className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                     >
                         <PlayIcon className="w-5 h-5" />
                         Lanjut Fokus

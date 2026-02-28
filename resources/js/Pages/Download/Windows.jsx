@@ -94,7 +94,7 @@ function DownloadWindowsContent() {
                             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                             className="relative"
                         >
-                            <div className="relative aspect-[4/3] rounded-[2.5rem] bg-gradient-to-br from-emerald-500 to-teal-600 shadow-2xl p-1 overflow-hidden shadow-emerald-500/20">
+                            <div className="relative aspect-[4/3] rounded-[2.5rem] bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-2xl p-1 overflow-hidden shadow-emerald-500/20">
                                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
                                 <div className="relative h-full w-full bg-[#1C1C1E] rounded-[2.3rem] overflow-hidden border border-white/10 flex flex-col">
                                     {/* Fake Window Controls */}

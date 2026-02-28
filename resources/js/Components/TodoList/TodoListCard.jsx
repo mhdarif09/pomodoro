@@ -57,7 +57,7 @@ export default function TodoListCard({
                     <span className="ml-2 text-base font-medium text-slate-400">({tasks.total})</span>
                 </h3>
                 {!showForm && (
-                     <button onClick={handleAddNew} className="flex-shrink-0 flex items-center gap-1 text-sm font-semibold bg-teal-100 dark:bg-teal-800/50 text-teal-600 dark:text-teal-300 px-3 py-1.5 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-800 transition">
+                     <button onClick={handleAddNew} className="flex-shrink-0 flex items-center gap-1 text-sm font-semibold bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-300 px-3 py-1.5 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-800 transition">
                         <PlusIcon className="w-4 h-4"/> Tambah Tugas
                     </button>
                 )}

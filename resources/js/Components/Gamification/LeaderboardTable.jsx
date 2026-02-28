@@ -41,7 +41,7 @@ export default function LeaderboardTable({ users, currentUserId }) {
                                 </td>
                                 <td className="py-4 px-4">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 flex items-center justify-center text-white text-xs font-bold">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-400 flex items-center justify-center text-white text-xs font-bold">
                                             {user.name?.charAt(0).toUpperCase()}
                                         </div>
                                         <span className="text-slate-900 font-semibold">{user.name}</span>

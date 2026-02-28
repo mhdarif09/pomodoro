@@ -32,7 +32,7 @@ const reviews = [
         rating: 5,
         date: "Februari 2026",
         highlight: "Rutinitas Teratur",
-        gradient: "from-emerald-400 to-teal-500",
+        gradient: "from-emerald-400 to-emerald-500",
     },
     {
         name: "Demian",
@@ -88,7 +88,7 @@ const reviews = [
         rating: 5,
         date: "Februari 2026",
         highlight: "AI Powered",
-        gradient: "from-teal-400 to-emerald-500",
+        gradient: "from-emerald-400 to-emerald-500",
     },
     {
         name: "Fachmy Casofa",
@@ -120,7 +120,7 @@ export default function Reviews() {
                 <div className="mx-4 mt-3">
                     <nav className="container mx-auto px-6 py-3 flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-2xl border border-slate-200/50 shadow-sm shadow-slate-200/50">
                         <Link href="/" className="text-lg font-[800] text-slate-900 tracking-tight flex items-center gap-2">
-                            <span className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/25">S</span>
+                            <span className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-500 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/25">S</span>
                             Sarang Tumbuh
                         </Link>
                         <div className="flex items-center gap-3">
@@ -163,7 +163,7 @@ export default function Reviews() {
                             className="text-4xl md:text-6xl font-[900] tracking-[-0.04em] mb-6 leading-[1.1]"
                         >
                             <span className="text-slate-900">Apa kata mereka tentang</span><br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500">Sarang Tumbuh?</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-emerald-500 to-cyan-500">Sarang Tumbuh?</span>
                         </motion.h1>
 
                         <motion.p
@@ -322,7 +322,7 @@ export default function Reviews() {
                                             whileInView={{ width: feature.pct }}
                                             viewport={{ once: true }}
                                             transition={{ duration: 1.5, delay: 0.5 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                                            className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full"
+                                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-400 rounded-full"
                                         />
                                     </div>
                                     <div className="text-xs font-bold text-emerald-600 mt-1">{feature.pct} suka</div>
@@ -353,7 +353,7 @@ export default function Reviews() {
                                     Ribuan orang sudah menemukan ritme produktif mereka. Giliranmu sekarang.
                                 </p>
                                 <motion.a href="/register" whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}
-                                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-emerald-500/25">
+                                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-emerald-500/25">
                                     Mulai Gratis Sekarang <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </motion.a>
                             </div>

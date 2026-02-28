@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlayIcon, PauseIcon, ArrowPathIcon, XMarkIcon, ChevronUpIcon, FireIcon } from '@heroicons/react/24/solid';
+import { TvIcon } from '@heroicons/react/24/outline';
 import BreakMode from './BreakMode';
 import MusicPlayer from './MusicPlayer';
+import usePictureInPicture from '@/Hooks/usePictureInPicture';
+import { showIOSStyleNotification, requestNotificationPermission } from '@/Utils/NotificationHelper';
 import axios from 'axios';
 
 const formatTime = (seconds) => {
@@ -27,6 +30,9 @@ export default function PomodoroIsland({
     const [streak, setStreak] = useState(currentStreak);
     const hasFetchedStreak = useRef(false);
 
+    // Picture-in-Picture
+    const { isPiPActive, isPiPSupported, togglePiP, updateTimerState } = usePictureInPicture();
+
     // Break State
     const [breakDuration, setBreakDuration] = useState(5); // 5 minutes default
     const [breakTimeLeft, setBreakTimeLeft] = useState(5 * 60);
@@ -40,12 +46,31 @@ export default function PomodoroIsland({
     // Break Progress
     const breakProgress = (breakDuration * 60 - breakTimeLeft) / (breakDuration * 60);
 
-    // Auto-transition to break mode
+    // Sync PiP display with current timer state
+    useEffect(() => {
+        updateTimerState({
+            secondsLeft: isBreakActive ? breakTimeLeft : secondsLeft,
+            totalDuration: isBreakActive ? (breakDuration * 60) : totalDuration,
+            isRunning: isBreakActive ? !isBreakPaused : isRunning,
+            taskTitle: taskTitle || 'Pomodoro',
+            isBreak: isBreakActive,
+        });
+    }, [secondsLeft, isRunning, breakTimeLeft, isBreakActive, isBreakPaused, taskTitle]);
+
+    // Auto-transition to break mode + notification
     useEffect(() => {
         if (secondsLeft === 0 && isRunning) {
             handleStartBreak();
             onStop?.();
             onSessionComplete?.();
+            // Notify user even if in PiP or different tab
+            showIOSStyleNotification('🎉 Sesi Fokus Selesai!', {
+                body: `${taskTitle || 'Pomodoro'} — Saatnya istirahat!`,
+                tag: 'pomodoro-complete',
+                requireInteraction: true,
+            });
+            // Play completion sound
+            try { new Audio('/sounds/complete.mp3').play(); } catch (e) { }
         }
     }, [secondsLeft, isRunning]);
 
@@ -66,10 +91,11 @@ export default function PomodoroIsland({
         return () => clearInterval(interval);
     }, [isBreakActive, isBreakPaused, breakTimeLeft]);
 
-    // Fetch streak on mount
+    // Fetch streak on mount + request notification permission
     useEffect(() => {
         if (!hasFetchedStreak.current) {
             hasFetchedStreak.current = true;
+            requestNotificationPermission();
             axios.get(route('api.gamification.streak'))
                 .then(res => {
                     if (res.data.current_streak !== undefined) {
@@ -124,8 +150,8 @@ export default function PomodoroIsland({
     const activeTotal = isBreakActive ? (breakDuration * 60) : totalDuration;
     const activeProgress = isBreakActive ? breakProgress : progress;
     const activeIsRunning = isBreakActive ? !isBreakPaused : isRunning;
-    const themeColor = isBreakActive ? 'text-emerald-500' : 'text-teal-500';
-    const bgColor = isBreakActive ? 'bg-emerald-500' : 'bg-teal-500';
+    const themeColor = isBreakActive ? 'text-emerald-500' : 'text-emerald-500';
+    const bgColor = isBreakActive ? 'bg-emerald-500' : 'bg-emerald-500';
 
     return (
         <>
@@ -175,7 +201,7 @@ export default function PomodoroIsland({
                     {!isExpanded && (
                         <div className="flex items-center justify-between w-full px-2">
                             <div className="flex items-center gap-2">
-                                <div className={`w-5 h-5 rounded-full border-2 ${isBreakActive ? 'border-emerald-500/30' : 'border-teal-500/30'} flex items-center justify-center relative`}>
+                                <div className={`w-5 h-5 rounded-full border-2 ${isBreakActive ? 'border-emerald-500/30' : 'border-emerald-500/30'} flex items-center justify-center relative`}>
                                     <svg className="w-full h-full -rotate-90">
                                         <circle
                                             cx="10" cy="10" r="8"
@@ -215,7 +241,7 @@ export default function PomodoroIsland({
                         <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0 pr-4">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <p className={`text-[10px] font-black ${isBreakActive ? 'text-emerald-400' : 'text-teal-400'} uppercase tracking-widest`}>
+                                    <p className={`text-[10px] font-black ${isBreakActive ? 'text-emerald-400' : 'text-emerald-400'} uppercase tracking-widest`}>
                                         {isBreakActive ? 'Break Mode' : 'Focus Mode'}
                                     </p>
                                     {streak > 0 && !isBreakActive && (
@@ -255,6 +281,20 @@ export default function PomodoroIsland({
                         <div className="flex items-center justify-center gap-3 pt-2">
                             {/* Music Player */}
                             <MusicPlayer />
+
+                            {/* Picture-in-Picture Button */}
+                            {isPiPSupported && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); togglePiP(); }}
+                                    className={`p-3 rounded-2xl transition-all active:scale-95 border ${isPiPActive
+                                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                            : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/5'
+                                        }`}
+                                    title={isPiPActive ? 'Exit Picture-in-Picture' : 'Enter Picture-in-Picture'}
+                                >
+                                    <TvIcon className="w-5 h-5" />
+                                </button>
+                            )}
 
                             {!isBreakActive && (
                                 <button
@@ -297,7 +337,7 @@ export default function PomodoroIsland({
                                     {!isRunning ? (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onStart(); }}
-                                            className="flex-1 py-3 px-6 rounded-2xl bg-teal-500 hover:bg-teal-400 text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-500/20 active:scale-95"
+                                            className="flex-1 py-3 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
                                         >
                                             <PlayIcon className="w-4 h-4" />
                                             Mulai

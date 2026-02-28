@@ -73,7 +73,7 @@ export default function Index({ auth }) {
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         className="relative z-10 w-full max-w-md mx-4"
                     >
-                        <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
+                        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-indigo-600 rounded-[3rem] blur-2xl opacity-20 animate-pulse" />
                         <div className="relative bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-white/20 text-center">
                             <div className="w-24 h-24 mx-auto mb-8 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
                                 <LockClosedIcon className="w-10 h-10 text-white" />
@@ -111,19 +111,19 @@ export default function Index({ auth }) {
                     {/* Completion Rate Hero */}
                     <BentoTile
                         useGlass={false}
-                        className="col-span-12 lg:col-span-7 bg-gradient-to-br from-teal-600 to-emerald-700 text-white relative overflow-hidden group"
+                        className="col-span-12 lg:col-span-7 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white relative overflow-hidden group"
                     >
                         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000">
                             <CheckBadgeIcon className="w-64 h-64 -rotate-12" />
                         </div>
                         <div className="relative z-10 flex flex-col h-full justify-between min-h-[220px]">
                             <div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-100 opacity-80 mb-2 block">Task Efficiency</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-100 opacity-80 mb-2 block">Task Efficiency</span>
                                 <h1 className="text-6xl font-black tracking-tighter mb-4 leading-none">
                                     {completionRate}% <span className="text-2xl opacity-60">Selesai</span>
                                 </h1>
-                                <p className="text-teal-50 font-bold max-w-sm">
-                                    Kamu telah menyelesaikan <span className="underline decoration-teal-300 decoration-2">{totalCompleted}</span> tugas dari total <span className="underline decoration-teal-300 decoration-2">{totalTasks}</span> tugas yang direncanakan.
+                                <p className="text-emerald-50 font-bold max-w-sm">
+                                    Kamu telah menyelesaikan <span className="underline decoration-emerald-300 decoration-2">{totalCompleted}</span> tugas dari total <span className="underline decoration-emerald-300 decoration-2">{totalTasks}</span> tugas yang direncanakan.
                                 </p>
                             </div>
 
@@ -135,7 +135,7 @@ export default function Index({ auth }) {
                                         className="h-full bg-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.4)]"
                                     />
                                 </div>
-                                <span className="text-xs font-black text-teal-100 uppercase tracking-widest">{completionRate}/100</span>
+                                <span className="text-xs font-black text-emerald-100 uppercase tracking-widest">{completionRate}/100</span>
                             </div>
                         </div>
                     </BentoTile>
@@ -159,7 +159,7 @@ export default function Index({ auth }) {
                                 </p>
                             </div>
 
-                            <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-teal-500 uppercase tracking-widest">
+                            <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest">
                                 <ArrowTrendingUpIcon className="w-4 h-4" />
                                 <span>Steady Progress</span>
                             </div>
@@ -236,7 +236,7 @@ export default function Index({ auth }) {
                                 <CalendarIcon className="w-4 h-4 text-slate-400" />
                                 <span className="text-xs font-bold text-slate-500 italic">Task Rescheduled: <span className="text-indigo-500 font-black">{taskRescheduledCount}</span></span>
                             </div>
-                            <Link href="#" className="text-[10px] font-black text-teal-500 hover:text-teal-600 uppercase tracking-widest">Detailed Log</Link>
+                            <Link href="#" className="text-[10px] font-black text-emerald-500 hover:text-emerald-600 uppercase tracking-widest">Detailed Log</Link>
                         </div>
                     </BentoTile>
                 </div>
@@ -246,17 +246,17 @@ export default function Index({ auth }) {
                     useGlass={false}
                     className="bg-slate-900 dark:bg-black text-white p-10 relative overflow-hidden group"
                 >
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[100px] -mr-48 -mt-48 transition-transform duration-[3s] group-hover:scale-110" />
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px] -mr-48 -mt-48 transition-transform duration-[3s] group-hover:scale-110" />
                     <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] -ml-48 -mb-48" />
 
                     <div className="relative z-10">
                         <div className="flex items-center gap-5 mb-12">
-                            <div className="w-16 h-16 bg-gradient-to-tr from-teal-500 to-emerald-400 rounded-2xl flex items-center justify-center shadow-lg shadow-teal-500/20 text-white">
+                            <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-emerald-400 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
                                 <SparklesIcon className="w-8 h-8" />
                             </div>
                             <div>
                                 <h2 className="text-4xl font-black tracking-tighter leading-none">Analisis Strategis AI</h2>
-                                <p className="text-teal-400 text-sm font-black uppercase tracking-[0.2em] mt-2">Personal Growth Strategist</p>
+                                <p className="text-emerald-400 text-sm font-black uppercase tracking-[0.2em] mt-2">Personal Growth Strategist</p>
                             </div>
                         </div>
 
@@ -267,7 +267,7 @@ export default function Index({ auth }) {
                                     whileHover={{ x: 5 }}
                                     className="p-6 bg-white/5 border border-white/10 rounded-[2rem] flex gap-4 items-start transition-colors hover:bg-white/10"
                                 >
-                                    <div className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 flex-shrink-0 mt-1">
+                                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-1">
                                         <BoltIcon className="w-4 h-4" />
                                     </div>
                                     <p className="text-slate-300 font-bold leading-relaxed">{rec.text}</p>
@@ -302,7 +302,7 @@ export default function Index({ auth }) {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 bg-white/50 dark:bg-black/50 backdrop-blur-xl z-[100] flex items-center justify-center"
                     >
-                        <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                     </motion.div>
                 )}
             </AnimatePresence>

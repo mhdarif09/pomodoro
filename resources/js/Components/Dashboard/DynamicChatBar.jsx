@@ -83,11 +83,11 @@ export default function DynamicChatBar({ user }) {
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-teal-500/20 text-teal-400">
+                                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
                                     <SparklesIcon className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-teal-400/80 leading-none">Intelligence v2.0</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400/80 leading-none">Intelligence v2.0</p>
                                     <p className="text-xs font-bold text-white mt-0.5">GrowthBot Assist</p>
                                 </div>
                             </div>
@@ -110,7 +110,7 @@ export default function DynamicChatBar({ user }) {
                                 </p>
                                 <Link
                                     href={route('subscribe.index')}
-                                    className="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-2xl shadow-xl shadow-teal-500/20 transition-all active:scale-95"
+                                    className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
                                 >
                                     Upgrade ke Premium
                                 </Link>
@@ -121,7 +121,7 @@ export default function DynamicChatBar({ user }) {
                                 <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
                                     {messages.length === 0 && (
                                         <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
-                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-500 blur-2xl absolute opacity-20 animate-pulse" />
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-emerald-500 blur-2xl absolute opacity-20 animate-pulse" />
                                             <SparklesIcon className="w-8 h-8 text-white mb-4 relative" />
                                             <p className="text-sm font-bold text-white">Ada yang bisa dibantu, Bos?</p>
                                             <p className="text-[10px] text-white/40 mt-1 max-w-[200px]">GrowthBot siap jawab pertanyaan kilat seputar tugas atau produktivitas.</p>
@@ -132,7 +132,7 @@ export default function DynamicChatBar({ user }) {
                                             <div className={`
                                                 max-w-[85%] px-4 py-3 rounded-[1.5rem] text-[13px] leading-relaxed
                                                 ${m.role === 'user'
-                                                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
                                                     : 'bg-white/5 border border-white/10 text-white/90'}
                                             `}>
                                                 {m.content}
@@ -142,9 +142,9 @@ export default function DynamicChatBar({ user }) {
                                     {isLoading && (
                                         <div className="flex justify-start">
                                             <div className="bg-white/5 border border-white/10 rounded-full px-4 py-3 flex gap-1.5 items-center">
-                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                             </div>
                                         </div>
                                     )}
@@ -159,7 +159,7 @@ export default function DynamicChatBar({ user }) {
                                             value={input}
                                             onChange={(e) => setInput(e.target.value)}
                                             placeholder="Tulis pesan..."
-                                            className="flex-1 bg-white/5 border-white/10 border rounded-full px-6 py-4 text-xs text-white placeholder-white/20 focus:ring-1 focus:ring-teal-500/50"
+                                            className="flex-1 bg-white/5 border-white/10 border rounded-full px-6 py-4 text-xs text-white placeholder-white/20 focus:ring-1 focus:ring-emerald-500/50"
                                         />
                                         <button
                                             type="submit"
@@ -188,7 +188,7 @@ export default function DynamicChatBar({ user }) {
                     whileTap={{ scale: 0.9 }}
                     className="w-14 h-14 bg-black/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl pointer-events-auto flex items-center justify-center group relative overflow-hidden"
                 >
-                    <div className="absolute inset-0 bg-teal-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-emerald-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
                     {!hasAiAssistant && (
                         <div className="absolute top-0 right-0 p-1">
@@ -196,7 +196,7 @@ export default function DynamicChatBar({ user }) {
                         </div>
                     )}
 
-                    <SparklesIcon className="w-6 h-6 text-teal-400 group-hover:rotate-12 transition-transform" />
+                    <SparklesIcon className="w-6 h-6 text-emerald-400 group-hover:rotate-12 transition-transform" />
                 </motion.button>
             )}
         </div>

@@ -72,7 +72,7 @@ export default function SubscriptionTrialModal({ user, plan }) {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="bg-white dark:bg-slate-800 shadow-2xl rounded-2xl p-6 sm:p-8 w-full max-w-lg text-center"
             >
-                <ShieldCheckIcon className="h-16 w-16 text-teal-500 mx-auto" />
+                <ShieldCheckIcon className="h-16 w-16 text-emerald-500 mx-auto" />
 
                 <h1 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                     Satu Langkah Terakhir, {user.name}!
@@ -85,7 +85,7 @@ export default function SubscriptionTrialModal({ user, plan }) {
                 {/* Bagian yang menjelaskan detail penawaran trial */}
                 <div className="mt-8 bg-slate-100 dark:bg-slate-700/50 p-6 rounded-xl text-left space-y-4 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center gap-4">
-                        <CalendarDaysIcon className="w-8 h-8 text-teal-500 flex-shrink-0" />
+                        <CalendarDaysIcon className="w-8 h-8 text-emerald-500 flex-shrink-0" />
                         <div>
                             <h3 className="font-semibold text-slate-800 dark:text-slate-100">Coba Gratis 7 Hari</h3>
                             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -94,7 +94,7 @@ export default function SubscriptionTrialModal({ user, plan }) {
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <CreditCardIcon className="w-8 h-8 text-teal-500 flex-shrink-0" />
+                        <CreditCardIcon className="w-8 h-8 text-emerald-500 flex-shrink-0" />
                         <div>
                             <h3 className="font-semibold text-slate-800 dark:text-slate-100">
                                 {/* Menampilkan harga dinamis dari prop 'plan' */}
@@ -115,7 +115,7 @@ export default function SubscriptionTrialModal({ user, plan }) {
                 <button
                     onClick={startTrial}
                     disabled={isLoading}
-                    className="mt-6 w-full bg-teal-500 hover:bg-teal-600 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-bold py-3 sm:py-4 rounded-lg text-lg shadow-lg shadow-teal-500/30 transition-all transform hover:scale-105"
+                    className="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-bold py-3 sm:py-4 rounded-lg text-lg shadow-lg shadow-emerald-500/30 transition-all transform hover:scale-105"
                 >
                     {isLoading ? 'Memproses...' : 'Mulai Coba Gratis 7 Hari'}
                 </button>

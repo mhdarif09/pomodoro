@@ -174,31 +174,36 @@ class KanbanController extends Controller
             $task->status = $task->is_completed ? 'done' : 'todo';
             $task->save();
 
-            // Award XP for completing task
+            // Award XP for completing task (wrapped in try-catch so task toggle never fails)
             if ($task->is_completed && !$wasCompleted) {
-                $gamificationService = app(\App\Services\GamificationService::class);
-                $xpAmount = match ($task->priority) {
-                    'Tinggi', 'High' => 50,
-                    'Sedang', 'Medium' => 30,
-                    'Rendah', 'Low' => 20,
-                    default => 25,
-                };
-                $xpResult = $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task);
-                $streakResult = $gamificationService->updateStreak($task->user);
-                $newAchievements = $gamificationService->checkAchievements($task->user);
-                
-                $gamificationData = [
-                    'xp_awarded' => $xpAmount,
-                    'current_streak' => $streakResult['current_streak'],
-                    'streak_updated' => $streakResult['streak_updated'],
-                    'level_up' => $xpResult['leveled_up'],
-                    'new_level' => $xpResult['new_level'],
-                    'achievements' => collect($newAchievements)->map(fn($a) => [
-                        'id' => $a->id,
-                        'name' => $a->name,
-                        'icon' => $a->icon,
-                    ])->toArray(),
-                ];
+                try {
+                    $gamificationService = app(\App\Services\GamificationService::class);
+                    $xpAmount = match ($task->priority) {
+                        'Tinggi', 'High' => 50,
+                        'Sedang', 'Medium' => 30,
+                        'Rendah', 'Low' => 20,
+                        default => 25,
+                    };
+                    $xpResult = $gamificationService->awardXP($task->user, $xpAmount, 'task_completed', $task);
+                    $streakResult = $gamificationService->updateStreak($task->user);
+                    $newAchievements = $gamificationService->checkAchievements($task->user);
+                    
+                    $gamificationData = [
+                        'xp_awarded' => $xpAmount,
+                        'current_streak' => $streakResult['current_streak'] ?? 0,
+                        'streak_updated' => $streakResult['streak_updated'] ?? false,
+                        'level_up' => $xpResult['leveled_up'] ?? false,
+                        'new_level' => $xpResult['new_level'] ?? 0,
+                        'achievements' => collect($newAchievements)->map(fn($a) => [
+                            'id' => $a->id,
+                            'name' => $a->name,
+                            'icon' => $a->icon ?? '🏆',
+                        ])->toArray(),
+                    ];
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Gamification error on task toggle: ' . $e->getMessage());
+                    // Gamification fails silently — the task toggle still succeeds
+                }
             }
         });
 

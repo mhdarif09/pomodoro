@@ -620,10 +620,10 @@ Streak Bonus           → Bonus kumulatif sesuai hari` },
 ];
 
 const colorMap = {
-    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-500' },
+    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-emerald-500' },
     indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-violet-500' },
     rose: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200', gradient: 'from-rose-500 to-pink-500' },
-    teal: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200', gradient: 'from-teal-500 to-cyan-500' },
+    teal: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-cyan-500' },
     amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', gradient: 'from-amber-500 to-orange-500' },
     violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-500' },
     green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-500' },
@@ -724,7 +724,7 @@ export default function Learn() {
                 <div className="container mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href="/" className="text-lg font-[800] text-slate-900 tracking-tight flex items-center gap-2">
-                            <span className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/25">S</span>
+                            <span className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-500 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/25">S</span>
                             <span className="hidden md:inline">Sarang Tumbuh</span>
                         </Link>
                         <span className="text-slate-300 hidden sm:inline">|</span>

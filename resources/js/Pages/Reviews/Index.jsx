@@ -73,7 +73,7 @@ export default function ReviewsIndex() {
     const reviews = [
         { name: "Sarah M.", role: "Mahasiswa", text: "Jujur, awalnya skeptis sama 'Companion'. Tapi Kiko beneran ngebantu banget pas lagi suntuk revisian jam 2 pagi.", rating: 5, bg: "bg-emerald-50" },
         { name: "Budi Santoso", role: "Freelancer", text: "Fitur Guild mengubah cara kerja saya. Dulu kesepian kerja remote, sekarang punya temen 'ngantor' virtual yang asik.", rating: 5, bg: "bg-white" },
-        { name: "Jessica L.", role: "Desainer", text: "UI nya gila sih, cantik banget. Nggak bikin sakit mata kayak dashboard productivity lain yang kaku.", rating: 5, bg: "bg-teal-50" },
+        { name: "Jessica L.", role: "Desainer", text: "UI nya gila sih, cantik banget. Nggak bikin sakit mata kayak dashboard productivity lain yang kaku.", rating: 5, bg: "bg-emerald-50" },
         { name: "Dimas", role: "Developer", text: "Simple, to the point. Nggak kebanyakan fitur gimmick. Timer + Task list udah cukup buat saya.", rating: 4, bg: "bg-white" },
         { name: "Rina Kartika", role: "Writer", text: "Ambient sound 'Hujan' nya juara! Langsung fokus nulis berjam-jam tanpa sadar.", rating: 5, bg: "bg-slate-50" },
         { name: "Fauzan", role: "Entrepreneur", text: "Sistem leveling nya bikin ketagihan. Rasanya kayak main game RPG tapi yang naik level karir sendiri.", rating: 5, bg: "bg-white" },

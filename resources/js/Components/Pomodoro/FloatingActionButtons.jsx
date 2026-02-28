@@ -15,7 +15,7 @@ export default function FloatingActionButtons({ onAIChatClick }) {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                className="bg-teal-500 hover:bg-teal-600 text-white p-4 rounded-full shadow-2xl shadow-teal-500/30 flex items-center gap-3"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-full shadow-2xl shadow-emerald-500/30 flex items-center gap-3"
             >
                 <SparklesIcon className="h-6 w-6" />
                 <span className="font-semibold hidden sm:block pr-2">Asisten AI</span>

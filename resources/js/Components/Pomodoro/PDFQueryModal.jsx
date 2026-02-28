@@ -93,14 +93,14 @@ export default function PDFQueryModal({ isOpen, onClose }) {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">Upload PDF</label>
-                                <input type="file" accept="application/pdf" onChange={handlePdfFileChange} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" />
+                                <input type="file" accept="application/pdf" onChange={handlePdfFileChange} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
                                 {pdfFile && <p className="text-xs mt-2 text-slate-500 bg-slate-100 dark:bg-slate-700 p-2 rounded-md">File terpilih: {pdfFile.name}</p>}
                             </div>
                             <div>
                                 <label htmlFor="pdf-query" className="block text-sm font-medium mb-1">Pertanyaan Anda</label>
-                                <textarea id="pdf-query" value={pdfQuery} onChange={(e) => setPdfQuery(e.target.value)} rows="3" className="w-full rounded-md bg-slate-100 dark:bg-slate-700 border-transparent focus:border-teal-500 focus:ring-teal-500"></textarea>
+                                <textarea id="pdf-query" value={pdfQuery} onChange={(e) => setPdfQuery(e.target.value)} rows="3" className="w-full rounded-md bg-slate-100 dark:bg-slate-700 border-transparent focus:border-emerald-500 focus:ring-emerald-500"></textarea>
                             </div>
-                            <button onClick={handlePdfSubmit} disabled={loadingPdfAI || !pdfFile || !pdfQuery.trim()} className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2.5 px-4 rounded-lg disabled:bg-slate-400 dark:disabled:bg-slate-500 transition-colors flex items-center justify-center gap-2">
+                            <button onClick={handlePdfSubmit} disabled={loadingPdfAI || !pdfFile || !pdfQuery.trim()} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-lg disabled:bg-slate-400 dark:disabled:bg-slate-500 transition-colors flex items-center justify-center gap-2">
                                 {loadingPdfAI && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
                                 {loadingPdfAI ? 'Menganalisis...' : 'Tanya'}
                             </button>

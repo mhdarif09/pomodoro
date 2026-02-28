@@ -130,13 +130,13 @@ export default function BreakMode({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: isMinimized ? 0 : 1, scale: isMinimized ? 0.9 : 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className={`fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 scrollbar-hide ${isMinimized ? 'pointer-events-none' : ''}`}
+            className={`fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 scrollbar-hide ${isMinimized ? 'pointer-events-none' : ''}`}
         >
             <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
                 {/* Ambient Background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-0 left-0 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-emerald-400/20 rounded-full blur-[150px] animate-pulse"></div>
-                    <div className="absolute bottom-0 right-0 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-teal-400/20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+                    <div className="absolute bottom-0 right-0 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-emerald-400/20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '1s' }}></div>
                 </div>
 
                 <div className="relative z-10 max-w-4xl w-full">

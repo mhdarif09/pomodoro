@@ -49,9 +49,9 @@ export default function DashboardNotes({ auth }) {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-24 z-40 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 p-4 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 hover:border-teal-500 dark:hover:border-teal-400 group transition-all"
+                    className="fixed bottom-6 right-24 z-40 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 p-4 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-400 group transition-all"
                 >
-                    <PencilSquareIcon className="w-6 h-6 group-hover:text-teal-500 transition-colors" />
+                    <PencilSquareIcon className="w-6 h-6 group-hover:text-emerald-500 transition-colors" />
                     <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                         Catatan Cepat
                     </span>
@@ -92,8 +92,8 @@ export default function DashboardNotes({ auth }) {
                             {/* Header */}
                             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/50 cursor-grab active:cursor-grabbing">
                                 <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-teal-100 dark:bg-teal-500/20 rounded-md">
-                                        <PencilSquareIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                                    <div className="p-1.5 bg-emerald-100 dark:bg-emerald-500/20 rounded-md">
+                                        <PencilSquareIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <span className="font-bold text-slate-700 dark:text-slate-200">Catatan Cepat</span>
                                     {lastSaved && (

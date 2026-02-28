@@ -15,7 +15,7 @@ export default function GuildReport({ auth, guild, stats, topContributors }) {
                 <div className="mb-8 flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                            <ChartBarIcon className="w-8 h-8 text-teal-500" />
+                            <ChartBarIcon className="w-8 h-8 text-emerald-500" />
                             Guild Analytics
                         </h1>
                         <p className="text-slate-500 font-medium">Performance report for {guild.name}</p>
@@ -32,7 +32,7 @@ export default function GuildReport({ auth, guild, stats, topContributors }) {
                         title="Total Focus Hours"
                         value={stats.total_focus_hours}
                         unit="hrs"
-                        icon={<ClockIcon className="w-6 h-6 text-teal-500" />}
+                        icon={<ClockIcon className="w-6 h-6 text-emerald-500" />}
                         trend="+12%"
                         color="teal"
                     />
@@ -71,9 +71,9 @@ export default function GuildReport({ auth, guild, stats, topContributors }) {
                         <div className="h-64 flex items-end justify-between gap-2 px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                             {/* Mock Chart Bars */}
                             {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 50, 95].map((h, i) => (
-                                <div key={i} className="w-full bg-teal-50 dark:bg-teal-900/10 rounded-t-lg relative group">
+                                <div key={i} className="w-full bg-emerald-50 dark:bg-emerald-900/10 rounded-t-lg relative group">
                                     <div
-                                        className="absolute bottom-0 w-full bg-teal-500 rounded-t-lg transition-all duration-1000 group-hover:bg-teal-400"
+                                        className="absolute bottom-0 w-full bg-emerald-500 rounded-t-lg transition-all duration-1000 group-hover:bg-emerald-400"
                                         style={{ height: `${h}%` }}
                                     ></div>
                                 </div>

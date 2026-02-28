@@ -11,8 +11,11 @@ import {
     SparklesIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    ArrowRightIcon
+    ArrowRightIcon,
+    GlobeAltIcon
 } from '@heroicons/react/24/outline';
+import GlobalLeaderboard from '@/Components/Gamification/GlobalLeaderboard';
+import GuildLeaderboard from '@/Components/Gamification/GuildLeaderboard';
 
 export default function GuildIndex({ auth, guilds, userGuild, filters }) {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
@@ -23,6 +26,7 @@ export default function GuildIndex({ auth, guilds, userGuild, filters }) {
         is_private: false
     });
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [activeTab, setActiveTab] = useState('discover'); // 'discover', 'global_leaderboard', 'guild_leaderboard'
 
     // Debounce search
     const performSearch = useCallback(
@@ -79,7 +83,7 @@ export default function GuildIndex({ auth, guilds, userGuild, filters }) {
                     {/* Hero Section */}
                     <div className="relative overflow-hidden rounded-[2.5rem] bg-emerald-900 text-white shadow-2xl">
                         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
-                        <div className="absolute top-0 left-0 -ml-20 -mt-20 w-72 h-72 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+                        <div className="absolute top-0 left-0 -ml-20 -mt-20 w-72 h-72 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
                         <div className="relative p-10 sm:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
                             <div className="max-w-2xl">
@@ -101,7 +105,7 @@ export default function GuildIndex({ auth, guilds, userGuild, filters }) {
                                 ) : (
                                     <button
                                         onClick={() => setShowCreateModal(true)}
-                                        className="apple-button px-8 py-4 bg-teal-400 text-emerald-950 font-bold shadow-xl shadow-teal-400/20 hover:bg-teal-300"
+                                        className="apple-button px-8 py-4 bg-emerald-400 text-emerald-950 font-bold shadow-xl shadow-emerald-400/20 hover:bg-emerald-300"
                                     >
                                         <PlusIcon className="w-5 h-5 mr-2" />
                                         Create New Guild
@@ -117,96 +121,134 @@ export default function GuildIndex({ auth, guilds, userGuild, filters }) {
                         </div>
                     </div>
 
-                    {/* Search & Filter */}
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search guilds..."
-                                value={searchTerm}
-                                onChange={handleSearchChange}
-                                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
-                            />
-                        </div>
-
-                        {/* Join by Code */}
-                        {!userGuild && (
-                            <form onSubmit={(e) => {
-                                e.preventDefault();
-                                const code = e.target.elements.code.value;
-                                if (code) router.post(route('guilds.join-code'), { invite_code: code });
-                            }} className="relative sm:w-64">
-                                <input
-                                    name="code"
-                                    type="text"
-                                    placeholder="Enter Invite Code"
-                                    className="w-full pl-4 pr-12 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white uppercase tracking-widest font-mono"
-                                    maxLength={8}
-                                />
-                                <button type="submit" className="absolute right-2 top-2 bottom-2 aspect-square bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-xl flex items-center justify-center transition-colors">
-                                    <ArrowRightIcon className="w-5 h-5" />
-                                </button>
-                            </form>
-                        )}
+                    {/* Tabs */}
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl w-full max-w-2xl mx-auto shadow-inner">
+                        <button
+                            onClick={() => setActiveTab('discover')}
+                            className={`flex flex-1 items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${activeTab === 'discover' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <MagnifyingGlassIcon className="w-5 h-5" /> Discover Guilds
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('global_leaderboard')}
+                            className={`flex flex-1 items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${activeTab === 'global_leaderboard' ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <GlobeAltIcon className="w-5 h-5" /> Global Heroes
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('guild_leaderboard')}
+                            className={`flex flex-1 items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all ${activeTab === 'guild_leaderboard' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <TrophyIcon className="w-5 h-5" /> Guild Rankings
+                        </button>
                     </div>
 
-                    {/* Guild Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {guilds.data.map(guild => (
-                            <div key={guild.id} className="group bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                <div className="flex items-start justify-between mb-6">
-                                    <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-4xl shadow-inner">
-                                        {guild.emblem}
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Members</span>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${guild.is_full ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                            {guild.member_count}/{guild.max_members}
-                                        </span>
-                                    </div>
+                    {activeTab === 'discover' && (
+                        <>
+                            {/* Search & Filter */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1 relative">
+                                    <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search guilds..."
+                                        value={searchTerm}
+                                        onChange={handleSearchChange}
+                                        className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
+                                    />
                                 </div>
 
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{guild.name}</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2 min-h-[40px]">
-                                    {guild.description || 'No description provided.'}
-                                </p>
-
-                                <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-700">
-                                    <div className="flex items-center gap-2 text-amber-500 font-bold text-sm">
-                                        <TrophyIcon className="w-4 h-4" />
-                                        <span>{guild.total_xp} XP</span>
-                                    </div>
-
-                                    {!userGuild && !guild.is_full && (
-                                        <Link
-                                            href={route('guilds.join', guild.id)}
-                                            method="post"
-                                            as="button"
-                                            className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors"
-                                        >
-                                            Join Guild
-                                        </Link>
-                                    )}
-                                </div>
+                                {/* Join by Code */}
+                                {!userGuild && (
+                                    <form onSubmit={(e) => {
+                                        e.preventDefault();
+                                        const code = e.target.elements.code.value;
+                                        if (code) router.post(route('guilds.join-code'), { invite_code: code });
+                                    }} className="relative sm:w-64">
+                                        <input
+                                            name="code"
+                                            type="text"
+                                            placeholder="Enter Invite Code"
+                                            className="w-full pl-4 pr-12 py-4 rounded-2xl bg-white dark:bg-slate-800 border-none shadow-sm focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white uppercase tracking-widest font-mono"
+                                            maxLength={8}
+                                        />
+                                        <button type="submit" className="absolute right-2 top-2 bottom-2 aspect-square bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-xl flex items-center justify-center transition-colors">
+                                            <ArrowRightIcon className="w-5 h-5" />
+                                        </button>
+                                    </form>
+                                )}
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Pagination */}
-                    <div className="flex justify-between items-center mt-6">
-                        {guilds.prev_page_url ? (
-                            <Link href={guilds.prev_page_url} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 flex items-center gap-2">
-                                <ChevronLeftIcon className="w-4 h-4" /> Previous
-                            </Link>
-                        ) : <div></div>}
+                            {/* Guild Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {guilds.data.map(guild => (
+                                    <div key={guild.id} className="group bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                                        <div className="flex items-start justify-between mb-6">
+                                            <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-4xl shadow-inner">
+                                                {guild.emblem}
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Members</span>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${guild.is_full ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                    {guild.member_count}/{guild.max_members}
+                                                </span>
+                                            </div>
+                                        </div>
 
-                        {guilds.next_page_url && (
-                            <Link href={guilds.next_page_url} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 flex items-center gap-2">
-                                Next <ChevronRightIcon className="w-4 h-4" />
-                            </Link>
-                        )}
-                    </div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{guild.name}</h3>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2 min-h-[40px]">
+                                            {guild.description || 'No description provided.'}
+                                        </p>
+
+                                        <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-700">
+                                            <div className="flex items-center gap-2 text-amber-500 font-bold text-sm">
+                                                <TrophyIcon className="w-4 h-4" />
+                                                <span>{guild.total_xp} XP</span>
+                                            </div>
+
+                                            {!userGuild && !guild.is_full && (
+                                                <Link
+                                                    href={route('guilds.join', guild.id)}
+                                                    method="post"
+                                                    as="button"
+                                                    className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors"
+                                                >
+                                                    Join Guild
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Pagination */}
+                            <div className="flex justify-between items-center mt-6">
+                                {guilds.prev_page_url ? (
+                                    <Link href={guilds.prev_page_url} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 flex items-center gap-2">
+                                        <ChevronLeftIcon className="w-4 h-4" /> Previous
+                                    </Link>
+                                ) : <div></div>}
+
+                                {guilds.next_page_url && (
+                                    <Link href={guilds.next_page_url} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 flex items-center gap-2">
+                                        Next <ChevronRightIcon className="w-4 h-4" />
+                                    </Link>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {activeTab === 'global_leaderboard' && (
+                        <div className="max-w-4xl mx-auto">
+                            <GlobalLeaderboard />
+                        </div>
+                    )}
+
+                    {activeTab === 'guild_leaderboard' && (
+                        <div className="max-w-4xl mx-auto">
+                            <GuildLeaderboard />
+                        </div>
+                    )}
                 </div>
             </div>
 

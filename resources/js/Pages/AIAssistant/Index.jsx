@@ -34,11 +34,11 @@ const MessageBubble = ({ message }) => {
                 max-w-[85%] sm:max-w-[80%] rounded-[2rem] px-6 py-5 shadow-xl
                 ${isBot
                     ? 'apple-glass border-white/10 text-slate-800 dark:text-slate-200'
-                    : 'bg-teal-500 text-white shadow-teal-500/25'}
+                    : 'bg-emerald-500 text-white shadow-emerald-500/25'}
             `}>
                 {isBot && (
                     <div className="flex items-center gap-2 mb-3">
-                        <div className="w-6 h-6 rounded-lg bg-teal-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
+                        <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                             <SparklesIcon className="w-4 h-4 text-white" />
                         </div>
                         <span className="text-[11px] font-extrabold uppercase tracking-tight text-slate-500">GrowthBot</span>
@@ -74,7 +74,7 @@ const MessageBubble = ({ message }) => {
                                     href={source.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-3 py-1.5 rounded-full apple-glass border-none text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:bg-white/40 max-w-[180px] truncate transition-all"
+                                    className="px-3 py-1.5 rounded-full apple-glass border-none text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-white/40 max-w-[180px] truncate transition-all"
                                 >
                                     {source.title}
                                 </a>
@@ -270,7 +270,7 @@ export default function AIAssistantIndex() {
                         <button
                             onClick={createNewSession}
                             disabled={isLoading}
-                            className="apple-button w-full bg-slate-900 dark:bg-teal-500 text-white flex items-center justify-center gap-2 shadow-xl disabled:opacity-50"
+                            className="apple-button w-full bg-slate-900 dark:bg-emerald-500 text-white flex items-center justify-center gap-2 shadow-xl disabled:opacity-50"
                         >
                             <PlusIcon className="w-5 h-5 stroke-2" />
                             Diskusi Baru
@@ -290,7 +290,7 @@ export default function AIAssistantIndex() {
                                 `}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeSession?.id === s.id ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20 scale-110' : 'bg-slate-200/50 dark:bg-slate-700/50'}`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeSession?.id === s.id ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 scale-110' : 'bg-slate-200/50 dark:bg-slate-700/50'}`}>
                                         <SparklesIcon className="w-5 h-5" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -318,7 +318,7 @@ export default function AIAssistantIndex() {
                     {/* Header */}
                     <div className="h-20 border-b border-slate-200/30 dark:border-slate-800/50 flex items-center justify-between px-8 backdrop-blur-3xl z-10 sticky top-0">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                                 <CpuChipIcon className="w-6 h-6 text-white" />
                             </div>
                             <div>
@@ -341,7 +341,7 @@ export default function AIAssistantIndex() {
                                     animate={{ scale: 1, opacity: 1 }}
                                     className="w-24 h-24 rounded-[2rem] apple-glass flex items-center justify-center mb-8 shadow-2xl"
                                 >
-                                    <SparklesIcon className="w-12 h-12 text-teal-500" />
+                                    <SparklesIcon className="w-12 h-12 text-emerald-500" />
                                 </motion.div>
                                 <h3 className="text-3xl font-[900] text-slate-900 dark:text-white mb-4 tracking-tight">GrowthBot Intel</h3>
                                 <p className="text-[15px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed tracking-tight mb-8">
@@ -420,7 +420,7 @@ export default function AIAssistantIndex() {
                                         }
                                     }}
                                     disabled={isLoading}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed z-10"
                                     title="Upload Foto"
                                 >
                                     <PhotoIcon className="w-6 h-6 stroke-2" />
@@ -432,12 +432,12 @@ export default function AIAssistantIndex() {
                                     onChange={(e) => setInput(e.target.value)}
                                     disabled={isLoading}
                                     placeholder="Ketik soal atau upload foto..."
-                                    className="w-full pl-16 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all disabled:opacity-50"
+                                    className="w-full pl-16 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all disabled:opacity-50"
                                 />
                                 <button
                                     type="submit"
                                     disabled={(!input.trim() && !selectedImage) || isLoading}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-[1.3rem] shadow-xl shadow-teal-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[1.3rem] shadow-xl shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
                                 >
                                     <PaperAirplaneIcon className={`w-5 h-5 stroke-2 ${isLoading ? 'animate-pulse' : ''}`} />
                                 </button>
@@ -464,7 +464,7 @@ export default function AIAssistantIndex() {
                             <div className="flex flex-col gap-4">
                                 <Link
                                     href={route('subscribe.index')}
-                                    className="apple-button h-16 text-lg bg-teal-500 text-white shadow-2xl shadow-teal-500/20"
+                                    className="apple-button h-16 text-lg bg-emerald-500 text-white shadow-2xl shadow-emerald-500/20"
                                 >
                                     Buka Akses Sekarang
                                 </Link>

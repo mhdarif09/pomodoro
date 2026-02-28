@@ -80,7 +80,7 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                     {/* Agent Briefing Tile */}
                     <BentoTile className="col-span-12 lg:col-span-7 bg-white dark:bg-slate-900 group">
                         <div className="flex items-start gap-6">
-                            <div className="w-24 h-24 flex-shrink-0 bg-teal-50 dark:bg-teal-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden">
+                            <div className="w-24 h-24 flex-shrink-0 bg-emerald-50 dark:bg-emerald-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden">
                                 <motion.div
                                     animate={{ y: [0, -5, 0] }}
                                     transition={{ repeat: Infinity, duration: 3 }}
@@ -88,15 +88,15 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                                 >
                                     🤖
                                 </motion.div>
-                                <div className="absolute bottom-0 inset-x-0 h-1 bg-teal-500" />
+                                <div className="absolute bottom-0 inset-x-0 h-1 bg-emerald-500" />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black text-teal-500 uppercase tracking-[0.2em]">Kiko's Daily Intel</span>
+                                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Kiko's Daily Intel</span>
                                     <span className="text-[10px] font-bold text-slate-400">{dayjs().format('DD MMM YYYY')}</span>
                                 </div>
                                 <h4 className="text-xl font-black text-slate-900 dark:text-white mb-3">Siap beraksi hari ini?</h4>
-                                <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-4 border-teal-500 pl-4 bg-teal-50/50 dark:bg-teal-900/10 py-3 rounded-r-xl">
+                                <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-4 border-emerald-500 pl-4 bg-emerald-50/50 dark:bg-emerald-900/10 py-3 rounded-r-xl">
                                     {agentBriefing?.message || "Kiko sedang menganalisa data produktivitasmu. Tetap fokus!"}
                                 </p>
                                 <div className="mt-4 flex gap-3">
@@ -122,7 +122,7 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                                 <FireIcon className="w-6 h-6 text-orange-500" />
                                 Active Ops <span className="text-slate-400 text-sm font-bold ml-2">({challenges.length})</span>
                             </h3>
-                            <Link href={route('tasks.index')} className="text-xs font-black text-teal-500 hover:text-teal-600 flex items-center gap-1">
+                            <Link href={route('tasks.index')} className="text-xs font-black text-emerald-500 hover:text-emerald-600 flex items-center gap-1">
                                 View Missions <ChevronRightIcon className="w-4 h-4" />
                             </Link>
                         </div>
@@ -154,7 +154,7 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${challenge.progress}%` }}
-                                                className="h-full bg-teal-500"
+                                                className="h-full bg-emerald-500"
                                             />
                                         </div>
                                     </div>

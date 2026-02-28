@@ -43,7 +43,7 @@ export default function ChallengeCard({ challenge, progress = 0, completed = fal
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.5 }}
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-full"
                     />
                 </div>
             </div>

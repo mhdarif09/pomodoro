@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BookOpenIcon, PencilSquareIcon, SparklesIcon, CalendarIcon,
-    ChevronRightIcon, ChatBubbleLeftRightIcon
+    ChevronRightIcon, ChatBubbleLeftRightIcon, FaceSmileIcon
 } from '@heroicons/react/24/outline';
+import { FireIcon } from '@heroicons/react/24/solid';
 import NotionEditor from '@/Components/TodoList/NotionEditor';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
@@ -58,6 +59,35 @@ export default function JournalIndex({ auth, reflections, todayReflection, prefi
                                 : "Luangkan waktu sejenak untuk mencatat kemenangan kecil, pelajaran berharga, dan rasa syukur hari ini."
                             }
                         </p>
+
+                        {/* Journal Stats Row */}
+                        <div className="flex flex-wrap items-center gap-4 mb-8">
+                            {auth?.gamification && (
+                                <div className="flex bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-2.5 shadow-sm items-center gap-3">
+                                    <div className="p-1.5 rounded-lg bg-orange-500/20 text-orange-400">
+                                        <FireIcon className="w-5 h-5" />
+                                    </div>
+                                    <div className="pr-2">
+                                        <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Journal Streak</div>
+                                        <div className="text-lg font-black text-white leading-none">
+                                            {auth.gamification.journal_streak > 0 ? `${auth.gamification.journal_streak} Hari` : '0 Hari'}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {/* Static Mood Example (Could be dynamic later) */}
+                            <div className="flex bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-2.5 shadow-sm items-center gap-3">
+                                <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                                    <FaceSmileIcon className="w-5 h-5" />
+                                </div>
+                                <div className="pr-2">
+                                    <div className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Mood Tracker</div>
+                                    <div className="text-sm font-black text-white leading-tight">
+                                        Catat perasaanmu
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {!todayReflection ? (
                             <button

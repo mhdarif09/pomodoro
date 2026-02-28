@@ -104,7 +104,7 @@ export default function AboutUsPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-100/40 via-[#F5F5F7] to-[#F5F5F7]"></div>
         <div className="absolute top-0 left-0 w-full h-full bg-[url('/grid.svg')] opacity-[0.02]"></div>
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-200/20 rounded-full blur-[120px] -z-10"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-teal-200/20 rounded-full blur-[120px] -z-10"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-200/20 rounded-full blur-[120px] -z-10"></div>
       </div>
 
       {/* Navbar */}
@@ -154,7 +154,7 @@ export default function AboutUsPage() {
         {/* Hero Section */}
         <AnimatedSection className="pt-40 pb-20 text-center container mx-auto px-6">
           <motion.h1 variants={fadeInUp} className="text-5xl sm:text-7xl lg:text-8xl font-[900] tracking-tighter mb-8 text-slate-900 leading-[1.05]">
-            Kisah di Balik <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500">Sarang Tumbuh</span>
+            Kisah di Balik <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-emerald-500 to-green-500">Sarang Tumbuh</span>
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-xl text-slate-500 max-w-3xl mx-auto font-medium leading-relaxed">
             Kami adalah sekelompok pemimpi, pembuat, dan pembelajar seumur hidup yang percaya bahwa setiap individu memiliki potensi luar biasa yang menunggu untuk dibuka.
@@ -235,7 +235,7 @@ export default function AboutUsPage() {
             <motion.div variants={fadeInUp} className="relative p-12 md:p-16 rounded-[3rem] bg-emerald-900 overflow-hidden text-white shadow-2xl shadow-emerald-900/30">
               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
               <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-400/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-teal-400/30 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-400/30 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
 
               <div className="relative z-10">
                 <h2 className="text-4xl md:text-5xl font-[900] mb-6 tracking-tighter">Bangun Masa Depan Bersama Kami</h2>

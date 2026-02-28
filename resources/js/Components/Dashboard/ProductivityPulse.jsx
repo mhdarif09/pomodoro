@@ -45,7 +45,7 @@ export default function ProductivityPulse({ className = '', refreshTrigger = 0 }
                 <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700">
                     <p className="font-bold text-slate-800 dark:text-white mb-1">{label}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                        <span className="font-semibold text-teal-500">{payload[0].value} mins</span> focus
+                        <span className="font-semibold text-emerald-500">{payload[0].value} mins</span> focus
                     </p>
                 </div>
             );
@@ -57,7 +57,7 @@ export default function ProductivityPulse({ className = '', refreshTrigger = 0 }
         <div className={`space-y-6 ${className}`}>
             {/* Summary Card */}
             <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-3xl relative overflow-hidden group hover:border-teal-500/30 transition-colors">
+                <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-3xl relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                         <FireIcon className="w-12 h-12 text-orange-500" />
                     </div>
@@ -84,7 +84,7 @@ export default function ProductivityPulse({ className = '', refreshTrigger = 0 }
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 rounded-3xl relative overflow-hidden">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-black text-lg text-slate-800 dark:text-white flex items-center gap-2">
-                        <span className="text-teal-500">⚡</span> Focus Trends
+                        <span className="text-emerald-500">⚡</span> Focus Trends
                     </h3>
                     <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-500">LAST 7 DAYS</span>
                 </div>

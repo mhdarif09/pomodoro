@@ -128,7 +128,7 @@ export default function TaskItem({ task, onEditClick, onDeleteClick }) {
                         )}
 
                         {task.document_path && (
-                            <a href={`${baseUrl}/storage/${task.document_path}`} target="_blank" rel="noopener noreferrer" className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 mt-2">
+                            <a href={`${baseUrl}/storage/${task.document_path}`} target="_blank" rel="noopener noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 mt-2">
                                 Lihat Dokumen Terlampir
                             </a>
                         )}

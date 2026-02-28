@@ -12,7 +12,7 @@ export default function WalletIndex({ auth }) {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-[2.5rem] p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden"
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-[2.5rem] p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-12 opacity-10">
                         <WalletIcon className="w-64 h-64 rotate-12" />

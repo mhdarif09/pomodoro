@@ -11,7 +11,7 @@ const COLORS = [
     { name: 'Ungu', value: '#8B5CF6', bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-700 dark:text-violet-300' },
     { name: 'Pink', value: '#EC4899', bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-700 dark:text-pink-300' },
     { name: 'Oranye', value: '#F97316', bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-300' },
-    { name: 'Teal', value: '#14B8A6', bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-700 dark:text-teal-300' },
+    { name: 'Teal', value: '#14B8A6', bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-300' },
 ];
 
 export default function TagSelector({ selectedTags = [], onTagsChange }) {
@@ -86,7 +86,7 @@ export default function TagSelector({ selectedTags = [], onTagsChange }) {
 
     return (
         <div className="relative" ref={wrapperRef}>
-            <div className="flex flex-wrap gap-2 mb-2 p-2 border border-slate-300 dark:border-slate-600 rounded-md min-h-[42px] bg-white dark:bg-slate-800 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 cursor-text" onClick={() => setIsOpen(true)}>
+            <div className="flex flex-wrap gap-2 mb-2 p-2 border border-slate-300 dark:border-slate-600 rounded-md min-h-[42px] bg-white dark:bg-slate-800 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 cursor-text" onClick={() => setIsOpen(true)}>
                 {selectedTags.length > 0 ? (
                     selectedTags.map(tagId => {
                         const tag = availableTags.find(t => t.id === tagId);
@@ -118,7 +118,7 @@ export default function TagSelector({ selectedTags = [], onTagsChange }) {
                             value={query}
                             onChange={e => setQuery(e.target.value)}
                             placeholder="Cari atau buat tag baru..."
-                            className="w-full text-sm border-slate-300 dark:border-slate-700 rounded-md mb-2 focus:ring-teal-500 focus:border-teal-500 dark:bg-slate-700 dark:text-white"
+                            className="w-full text-sm border-slate-300 dark:border-slate-700 rounded-md mb-2 focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
                             autoFocus
                         />
 
@@ -133,7 +133,7 @@ export default function TagSelector({ selectedTags = [], onTagsChange }) {
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getTagStyle(tag.color)}`}>
                                         {tag.name}
                                     </span>
-                                    {selectedTags.includes(tag.id) && <span className="text-teal-500">✓</span>}
+                                    {selectedTags.includes(tag.id) && <span className="text-emerald-500">✓</span>}
                                 </button>
                             ))}
 
@@ -146,7 +146,7 @@ export default function TagSelector({ selectedTags = [], onTagsChange }) {
                                                 key={c.value}
                                                 type="button"
                                                 onClick={() => setSelectedColor(c.value)}
-                                                className={`w-5 h-5 rounded-full border ${selectedColor === c.value ? 'ring-2 ring-offset-2 ring-teal-500 border-transparent' : 'border-slate-200'}`}
+                                                className={`w-5 h-5 rounded-full border ${selectedColor === c.value ? 'ring-2 ring-offset-2 ring-emerald-500 border-transparent' : 'border-slate-200'}`}
                                                 style={{ backgroundColor: c.value }}
                                             />
                                         ))}
@@ -154,7 +154,7 @@ export default function TagSelector({ selectedTags = [], onTagsChange }) {
                                     <button
                                         type="button"
                                         onClick={handleCreateTag}
-                                        className="w-full py-1 bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded text-xs font-medium hover:bg-teal-100"
+                                        className="w-full py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 rounded text-xs font-medium hover:bg-emerald-100"
                                     >
                                         + Buat Tag Baru
                                     </button>

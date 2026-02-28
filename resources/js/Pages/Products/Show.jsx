@@ -518,7 +518,7 @@ export default function ProductShow({ product }) {
                         <div className="flex-1 space-y-4">
                             {[1, 2, 3].map((i) => (
                                 <div key={i} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100"></div>
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-100"></div>
                                     <div className="flex-1">
                                         <div className="h-2 w-24 bg-slate-100 rounded-full mb-2"></div>
                                         <div className="h-2 w-16 bg-slate-50 rounded-full"></div>
@@ -703,7 +703,7 @@ export default function ProductShow({ product }) {
             <nav className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
                 <div className="container mx-auto px-6 h-20 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 group">
-                        <span className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">S</span>
+                        <span className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-500 rounded-xl flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">S</span>
                         <span className="font-[800] text-slate-900 tracking-tight pl-1">Sarang Tumbuh</span>
                     </Link>
 
@@ -829,7 +829,7 @@ export default function ProductShow({ product }) {
                                         whileHover={{ y: -5 }}
                                         className={`relative group overflow-hidden p-8 rounded-[2rem] bg-white border border-slate-200 hover:border-transparent hover:shadow-2xl hover:shadow-emerald-500/10 transition-all ${feature.span || 'col-span-1'}`}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-teal-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                                         <div className="relative z-10 flex flex-col h-full justify-between">
                                             <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-6 group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-sm">

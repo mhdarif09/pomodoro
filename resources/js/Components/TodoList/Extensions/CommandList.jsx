@@ -64,13 +64,13 @@ export default forwardRef((props, ref) => {
                 return (
                     <button
                         className={`flex items-center gap-3 px-2 py-2 w-full text-left text-sm rounded-lg transition-colors ${index === selectedIndex
-                            ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                             : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
                             }`}
                         key={index}
                         onClick={() => selectItem(index)}
                     >
-                        <div className={`p-1 rounded-md ${index === selectedIndex ? 'bg-teal-100 dark:bg-teal-800' : 'bg-slate-100 dark:bg-slate-700'}`}>
+                        <div className={`p-1 rounded-md ${index === selectedIndex ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-slate-100 dark:bg-slate-700'}`}>
                             <Icon className="w-4 h-4" />
                         </div>
                         <div className="flex flex-col">

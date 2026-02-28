@@ -33,7 +33,7 @@ export default function WeeklyJourney({ auth, compact = false }) {
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl p-4 text-white shadow-lg"
+                className="bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-2xl p-4 text-white shadow-lg"
             >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -159,7 +159,7 @@ export default function WeeklyJourney({ auth, compact = false }) {
                             transition={{ delay: idx * 0.05 }}
                             className={`flex flex-col items-center p-3 rounded-2xl transition-all ${
                                 day.completed 
-                                    ? 'bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/20' 
+                                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
                                     : 'bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                             }`}
                         >

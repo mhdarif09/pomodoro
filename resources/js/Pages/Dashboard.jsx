@@ -6,6 +6,7 @@ import WeeklyJourney from '@/Components/Gamification/WeeklyJourney';
 import React, { useState, useEffect } from 'react';
 import { Head, usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { usePomodoroTimer } from '@/Contexts/PomodoroContext';
 
 import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel';
 import PriorityTaskWidget from '@/Components/Dashboard/PriorityTaskWidget';
@@ -19,7 +20,7 @@ import DashboardNotes from '@/Components/Dashboard/DashboardNotes';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     PlusIcon, XMarkIcon, ListBulletIcon, CalendarDaysIcon,
-    ExclamationTriangleIcon, CheckCircleIcon, PlayIcon
+    ExclamationTriangleIcon, CheckCircleIcon, PlayIcon, FireIcon, ShieldCheckIcon, BoltIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -95,7 +96,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="Apa yang mau dikerjakan?"
-                                        className="w-full text-lg font-bold bg-transparent border-0 border-b-2 border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-0 px-0 py-2 placeholder-slate-400 dark:text-white transition-colors"
+                                        className="w-full text-lg font-bold bg-transparent border-0 border-b-2 border-slate-200 dark:border-slate-700 focus:border-emerald-500 focus:ring-0 px-0 py-2 placeholder-slate-400 dark:text-white transition-colors"
                                         autoFocus
                                         disabled={loading}
                                     />
@@ -107,7 +108,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                             type="date"
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border-none text-sm focus:ring-2 focus:ring-teal-500 dark:text-slate-300"
+                                            className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border-none text-sm focus:ring-2 focus:ring-emerald-500 dark:text-slate-300"
                                             disabled={loading}
                                         />
                                     </div>
@@ -117,7 +118,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                             type="date"
                                             value={dueDate}
                                             onChange={(e) => setDueDate(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border-none text-sm focus:ring-2 focus:ring-teal-500 dark:text-slate-300"
+                                            className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border-none text-sm focus:ring-2 focus:ring-emerald-500 dark:text-slate-300"
                                             disabled={loading}
                                         />
                                     </div>
@@ -128,7 +129,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder="Catatan tambahan (opsional)..."
                                         rows="3"
-                                        className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl border-none p-4 text-sm focus:ring-2 focus:ring-teal-500 dark:text-slate-300 resize-none"
+                                        className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl border-none p-4 text-sm focus:ring-2 focus:ring-emerald-500 dark:text-slate-300 resize-none"
                                         disabled={loading}
                                     />
                                 </div>
@@ -145,7 +146,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
                                     <button
                                         type="submit"
                                         disabled={loading || !title}
-                                        className="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-bold shadow-lg shadow-teal-500/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                                        className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                                     >
                                         {loading ? (
                                             <>
@@ -197,22 +198,85 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="col-span-12 flex flex-col sm:flex-row sm:items-end justify-between gap-8 mb-4 border-b border-slate-100 dark:border-slate-800 pb-8"
+                    className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 mb-4 border-b border-slate-100 dark:border-slate-800 pb-8"
                 >
-                    <div className="relative group">
-                        <div className="absolute -inset-4 bg-teal-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                        <h1 className="text-4xl sm:text-7xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10">
-                            Halo, <br />
-                            <span className="bg-gradient-to-r from-teal-500 to-emerald-400 bg-clip-text text-transparent">
-                                {auth?.user?.name?.split(' ')[0] || 'Teman'}
-                            </span>
-                        </h1>
+                    <div className="flex-1 flex flex-col md:flex-row gap-8 items-start md:items-end">
+                        {/* Name & Greeting */}
+                        <div className="relative group shrink-0">
+                            <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                            <h1 className="text-4xl sm:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
+                                Halo, <br />
+                                <span className="bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">
+                                    {auth?.user?.name?.split(' ')[0] || 'Teman'}
+                                </span>
+                            </h1>
+
+                            {/* Rank Badge Indicator */}
+                            {auth?.gamification && (
+                                <div className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-800 px-3 py-1.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-700/50">
+                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-inner">
+                                        <ShieldCheckIcon className="w-3 h-3 text-white" />
+                                    </div>
+                                    <span className="text-xs font-bold text-white tracking-wide">
+                                        {auth.gamification.rank_title} <span className="text-slate-400">#{auth.gamification.rank_position}</span>
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Gamification Quick Stats - Horizontal Row */}
+                        <div className="flex flex-wrap gap-4 flex-1 w-full justify-start md:justify-end pb-1">
+                            {/* Streak Fire Widget */}
+                            {auth?.gamification && (
+                                <div className="flex bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow items-center gap-4 min-w-[140px]">
+                                    <div className={`p-2.5 rounded-xl ${auth.gamification.streak > 0 ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                        <FireIcon className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Streak</div>
+                                        <div className="text-xl font-black text-slate-800 dark:text-white leading-none">
+                                            {auth.gamification.streak > 0 ? `${auth.gamification.streak} Hari` : 'Mulai Hari Ini!'}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Identity Trigger Card (Urgent State) */}
+                            {auth?.gamification?.identity_trigger && auth.gamification.identity_trigger.urgency === 'high' && (
+                                <div className="flex bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-2xl p-3 shadow-sm items-center gap-3 animate-pulse-soft max-w-sm">
+                                    <div className="p-2 bg-red-100 dark:bg-red-500/30 rounded-full text-red-600 dark:text-red-400 shrink-0">
+                                        <BoltIcon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] font-black text-red-500 uppercase tracking-wider mb-0.5">WARNING</div>
+                                        <div className="text-xs font-semibold text-red-700 dark:text-red-300 leading-tight">
+                                            {auth.gamification.identity_trigger.context}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Identity Trigger Card (Medium State) */}
+                            {auth?.gamification?.identity_trigger && auth.gamification.identity_trigger.urgency === 'medium' && (
+                                <div className="flex bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-2xl p-3 shadow-sm items-center gap-3 max-w-sm">
+                                    <div className="p-2 bg-amber-100 dark:bg-amber-500/30 rounded-full text-amber-600 dark:text-amber-400 shrink-0">
+                                        <ShieldCheckIcon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] font-black text-amber-600 uppercase tracking-wider mb-0.5">NAIK RANK</div>
+                                        <div className="text-xs font-semibold text-amber-800 dark:text-amber-200 leading-tight">
+                                            {auth.gamification.identity_trigger.context}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="flex shrink-0">
+                    <div className="flex shrink-0 w-full lg:w-auto mt-4 lg:mt-0">
                         <button
                             onClick={() => window.dispatchEvent(new CustomEvent('open-quick-add-task'))}
-                            className="apple-button bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl flex items-center gap-2 py-4 px-8 rounded-2xl font-black active:scale-95 transition-all"
+                            className="w-full justify-center apple-button bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center gap-2 py-4 px-8 rounded-2xl font-black active:scale-95 transition-all outline-none"
                         >
                             <PlusIcon className="w-5 h-5 stroke-[3]" />
                             Tambah Tugas
@@ -230,7 +294,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                             className="apple-glass rounded-[2.5rem] p-6 shadow-xl border-white/5 bg-white dark:bg-slate-900 overflow-hidden group"
                         >
                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                                <div className="w-20 h-20 flex-shrink-0 bg-teal-50 dark:bg-teal-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                                <div className="w-20 h-20 flex-shrink-0 bg-emerald-50 dark:bg-emerald-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
                                     <motion.div
                                         animate={{ y: [0, -5, 0] }}
                                         transition={{ repeat: Infinity, duration: 3 }}
@@ -238,15 +302,15 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                                     >
                                         🤖
                                     </motion.div>
-                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-teal-500" />
+                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-emerald-500" />
                                 </div>
                                 <div className="flex-1 text-center sm:text-left">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                                        <span className="text-[10px] font-black text-teal-500 uppercase tracking-[0.2em]">Kiko's Briefing</span>
+                                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Kiko's Briefing</span>
                                         <span className="text-[10px] font-bold text-slate-400">STATUS: ACTIVE ANALYTICS</span>
                                     </div>
                                     <h4 className="text-xl font-black text-slate-900 dark:text-white mb-2 leading-tight">Siap beraksi hari ini?</h4>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-0 sm:border-l-4 border-teal-500 pl-0 sm:pl-4 bg-teal-50/50 dark:bg-teal-900/10 py-3 rounded-xl sm:rounded-l-none sm:rounded-r-xl">
+                                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-0 sm:border-l-4 border-emerald-500 pl-0 sm:pl-4 bg-emerald-50/50 dark:bg-emerald-900/10 py-3 rounded-xl sm:rounded-l-none sm:rounded-r-xl">
                                         {aiInsightSnippet ? `✨ "${aiInsightSnippet}"` : "Waktunya tumbuh dan lebih produktif hari ini. Tetap fokus pada targetmu! 🚀"}
                                     </p>
                                 </div>
@@ -287,15 +351,15 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                         className="space-y-4"
                     >
                         {/* Task Momentum Card */}
-                        <div className="apple-glass p-8 rounded-[2.5rem] border-white/5 shadow-xl relative overflow-hidden group bg-gradient-to-br from-white/80 to-teal-50/20 dark:from-slate-900/80 dark:to-teal-900/10">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-12 -mt-12" />
+                        <div className="apple-glass p-8 rounded-[2.5rem] border-white/5 shadow-xl relative overflow-hidden group bg-gradient-to-br from-white/80 to-emerald-50/20 dark:from-slate-900/80 dark:to-emerald-900/10">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-12 -mt-12" />
                             <div className="relative z-10">
-                                <span className="text-[10px] font-black text-teal-500 uppercase tracking-[0.2em] mb-4 block">Task Pipeline</span>
+                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-4 block">Task Pipeline</span>
                                 <div className="flex items-end justify-between mb-4">
                                     <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-none">
                                         {todayTaskStats.completed}<span className="text-slate-400 text-xl font-bold">/{Math.max(todayTaskStats.total, 3)}</span>
                                     </h3>
-                                    <div className="bg-teal-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
+                                    <div className="bg-emerald-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
                                         {Math.round((todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%
                                     </div>
                                 </div>
@@ -303,7 +367,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${Math.min(100, (todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%` }}
-                                        className="h-full bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+                                        className="h-full bg-emerald-500 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
                                     />
                                 </div>
                             </div>
@@ -405,22 +469,15 @@ export default function Dashboard(props) {
     const [showRecoveryModal, setShowRecoveryModal] = useState(false);
     const [showContinueBanner, setShowContinueBanner] = useState(true);
 
-    const [activeTask, setActiveTask] = useState(null);
-    const [secondsLeft, setSecondsLeft] = useState(25 * 60);
-    const [currentStreak, setCurrentStreak] = useState(auth.user?.current_streak || 0);
-    const [isRunning, setIsRunning] = useState(false);
-    const [startTime, setStartTime] = useState(null);
-    const [totalDuration, setTotalDuration] = useState(25 * 60);
+    // Use global Pomodoro timer from context (persists across page navigations)
+    const pomodoro = usePomodoroTimer();
+    const { activeTask, secondsLeft, isRunning, totalDuration, currentStreak, startFocus: handleStartFocus } = pomodoro;
 
     // --- Companion State ---
     const [companionState, setCompanionState] = useState('idle');
     const [companionMessage, setCompanionMessage] = useState(null);
 
     const [productivityRefreshTrigger, setProductivityRefreshTrigger] = useState(0);
-
-    // Gamification Popup State
-    const [showGamificationPopup, setShowGamificationPopup] = useState(false);
-    const [gamificationData, setGamificationData] = useState(null);
 
     // Effect to update companion mood based on activity
     useEffect(() => {
@@ -432,16 +489,7 @@ export default function Dashboard(props) {
         }
     }, [isRunning]);
 
-    // Fetch streak on mount
-    useEffect(() => {
-        axios.get(route('api.gamification.streak'))
-            .then(res => {
-                if (res.data.current_streak !== undefined) {
-                    setCurrentStreak(res.data.current_streak);
-                }
-            })
-            .catch(err => console.log('Streak fetch error:', err));
-    }, []);
+
 
     // Handle Task Completion (from TaskFocusPanel or QuickAdd) -> Celebrate
     const handleTaskCompleted = () => {
@@ -573,122 +621,7 @@ export default function Dashboard(props) {
         setNewlyCreatedTask(null);
     };
 
-    const handleStartFocus = async (task) => {
-        const duration = task.estimated_minutes || 25;
 
-        try {
-            // Start session on backend for sync
-            await axios.post(route('api.pomodoro.start'), {
-                task_id: task.id,
-                duration_minutes: duration
-            });
-
-            setActiveTask(task);
-            setSecondsLeft(duration * 60);
-            setTotalDuration(duration * 60);
-            setStartTime(dayjs());
-            setIsRunning(true);
-
-            // Start background timer for notifications
-            startBackgroundTimer({
-                taskId: task.id,
-                taskTitle: task.title,
-                totalSeconds: duration * 60,
-                remainingSeconds: duration * 60
-            });
-
-            if (auth.user.is_premium && task.auto_open_url) {
-                window.open(task.auto_open_url, '_blank');
-            }
-        } catch (err) {
-            console.error('Failed to start session:', err);
-        }
-    };
-
-    const stopSession = async (manuallyStopped = true) => {
-        if (!isRunning) return;
-        setIsRunning(false);
-
-        try {
-            // Stop background timer
-            stopBackgroundTimer();
-
-            // Use new stop endpoint for sync
-            const res = await axios.post(route('api.pomodoro.stop'), {
-                break_minutes: 0,
-                tab_switches: 0,
-                ai_questions_asked: 0,
-            });
-            
-            // Show gamification popup if session was completed (not manually stopped)
-            if (!manuallyStopped && res.data?.gamification) {
-                setGamificationData({
-                    xpAwarded: res.data.gamification.xp_awarded || 0,
-                    newStreak: res.data.gamification.current_streak || 0,
-                    levelUp: res.data.gamification.level_up || false,
-                    newLevel: res.data.gamification.new_level || 0,
-                    achievements: res.data.gamification.achievements || [],
-                    taskTitle: activeTask?.title || 'Pomodoro Session'
-                });
-                setShowGamificationPopup(true);
-                setCurrentStreak(res.data.gamification.current_streak || currentStreak);
-            }
-            
-            setProductivityRefreshTrigger(prev => prev + 1); // Refresh stats
-            router.reload({ only: ['tasks', 'taskStats'] });
-        } catch (error) {
-            console.error("Failed to save session:", error);
-        }
-    };
-
-    const handleTimerClose = () => {
-        if (isRunning) {
-            if (confirm('Timer masih berjalan. Berhenti dan simpan progres?')) {
-                stopSession(true);
-                setActiveTask(null);
-            }
-        } else {
-            setActiveTask(null);
-        }
-    };
-
-    // Check for active session on mount (for sync)
-    useEffect(() => {
-        const checkActiveSession = async () => {
-            try {
-                const res = await axios.get(route('api.pomodoro.active'));
-                if (res.data.session) {
-                    const session = res.data.session;
-                    const startedAt = dayjs(session.started_at);
-                    const elapsed = dayjs().diff(startedAt, 'seconds');
-                    const totalSecs = session.focus_minutes * 60;
-                    const remaining = Math.max(0, totalSecs - elapsed);
-
-                    if (remaining > 0) {
-                        setActiveTask(session.task || { id: session.task_id, title: 'Sesi Fokus' });
-                        setSecondsLeft(remaining);
-                        setTotalDuration(totalSecs);
-                        setStartTime(startedAt);
-                        setIsRunning(true);
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to check active session:', err);
-            }
-        };
-        checkActiveSession();
-    }, []);
-
-    useEffect(() => {
-        let timer;
-        if (isRunning && secondsLeft > 0) {
-            timer = setInterval(() => setSecondsLeft(prev => prev - 1), 1000);
-        } else if (secondsLeft === 0 && isRunning) {
-            stopSession(false);
-            alert('Waktu fokus selesai! 🎉');
-        }
-        return () => clearInterval(timer);
-    }, [isRunning, secondsLeft]);
 
     useEffect(() => {
         const checkUpgradeModal = () => {
@@ -928,7 +861,7 @@ export default function Dashboard(props) {
                                                         handleStartFocus(task);
                                                         setIsStagnantModalOpen(false);
                                                     }}
-                                                    className="flex-1 py-2 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 text-xs font-bold rounded-xl hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors"
+                                                    className="flex-1 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
                                                 >
                                                     🚀 Resume
                                                 </button>
@@ -974,32 +907,6 @@ export default function Dashboard(props) {
             {/* Quick Notes Widget */}
             <DashboardNotes auth={auth} />
 
-            {/* Gamification Popup for Pomodoro Completion */}
-            <GamificationPopup
-                isOpen={showGamificationPopup}
-                onClose={() => setShowGamificationPopup(false)}
-                data={gamificationData}
-            />
-
-
-            <AnimatePresence>
-                {activeTask && (
-                    <PomodoroIsland
-                        taskTitle={activeTask.title}
-                        secondsLeft={secondsLeft}
-                        isRunning={isRunning}
-                        totalDuration={totalDuration}
-                        onStart={() => setIsRunning(true)}
-                        onStop={() => setIsRunning(false)}
-                        onReset={() => {
-                            setIsRunning(false);
-                            setSecondsLeft(totalDuration);
-                        }}
-                        onClose={handleTimerClose}
-                        currentStreak={currentStreak}
-                    />
-                )}
-            </AnimatePresence>
         </AuthenticatedLayout>
     );
 }

@@ -36,7 +36,7 @@ export default function ShortcutsHelpModal({ isOpen, onClose }) {
                         {/* Content */}
                         <div className="p-6 space-y-6">
                             <div>
-                                <h3 className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     {t('shortcuts_nav')}
                                 </h3>
                                 <div className="grid grid-cols-1 gap-3">
@@ -73,7 +73,7 @@ export default function ShortcutsHelpModal({ isOpen, onClose }) {
 
 const ShortcutRow = ({ label, keys }) => (
     <div className="flex justify-between items-center group">
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-teal-600 transition-colors">{label}</span>
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 transition-colors">{label}</span>
         <div className="flex gap-1">
             {keys.map(k => (
                 <kbd key={k} className="px-2 py-1 min-w-[28px] text-center text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-[6px] dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 font-mono shadow-[0_2px_0_0_rgba(0,0,0,0.05)]">

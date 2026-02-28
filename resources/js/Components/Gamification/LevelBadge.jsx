@@ -10,7 +10,7 @@ export default function LevelBadge({ level, levelTitle, size = 'md' }) {
 
     const getBadgeColor = (level) => {
         if (level >= 50) return 'from-purple-500 to-pink-500';
-        if (level >= 40) return 'from-emerald-500 to-teal-500';
+        if (level >= 40) return 'from-emerald-500 to-emerald-500';
         if (level >= 30) return 'from-blue-500 to-cyan-500';
         if (level >= 20) return 'from-amber-400 to-orange-400';
         if (level >= 10) return 'from-green-400 to-emerald-400';

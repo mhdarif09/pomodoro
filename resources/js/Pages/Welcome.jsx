@@ -377,7 +377,22 @@ function LandingPageContent({ plans = [] }) {
 
     return (
         <div className="min-h-screen bg-[#FAFBFC] text-slate-900 antialiased overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-            <Head title="Sarang Tumbuh — Teman Produktifmu" />
+            <Head>
+                <title>Sarang Tumbuh — Teman Produktifmu</title>
+                <meta name="description" content="Sarang Tumbuh adalah platform produktivitas berbasis komunitas dengan gamifikasi. Fokus 3 tugas harian, Pomodoro timer, guild system, dan AI companion. Gratis selamanya." />
+                <meta name="keywords" content="produktivitas, to-do list, pomodoro, gamifikasi, guild, focus, sarang tumbuh, task manager, study app" />
+                <meta name="author" content="Sarang Tumbuh" />
+                <meta name="robots" content="index, follow" />
+                <meta name="theme-color" content="#10B981" />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="Sarang Tumbuh — Teman Produktifmu" />
+                <meta property="og:description" content="Fokus tanpa drama. Sendiri atau bareng. Platform produktivitas dengan gamifikasi dan guild system." />
+                <meta property="og:site_name" content="Sarang Tumbuh" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Sarang Tumbuh — Teman Produktifmu" />
+                <meta name="twitter:description" content="Fokus tanpa drama. Sendiri atau bareng. Platform produktivitas dengan gamifikasi dan guild system." />
+                <link rel="canonical" href={window.location.origin} />
+            </Head>
 
             {/* ═════════ NAV ═════════ */}
             <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
@@ -812,7 +827,7 @@ function LandingPageContent({ plans = [] }) {
             </main>
 
 
-        </div>
+        </div >
     );
 }
 

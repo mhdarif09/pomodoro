@@ -42,7 +42,7 @@ export default function SlideOver({ isOpen, onClose, title, children }) {
                                                 <div className="ml-3 flex h-7 items-center">
                                                     <button
                                                         type="button"
-                                                        className="rounded-full bg-slate-100 dark:bg-slate-800 p-1 text-slate-400 hover:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                                        className="rounded-full bg-slate-100 dark:bg-slate-800 p-1 text-slate-400 hover:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                                         onClick={onClose}
                                                     >
                                                         <span className="sr-only">Close panel</span>

@@ -22,10 +22,10 @@ export default function GuildDocumentsIndex({ auth, guild, documents }) {
             <div className="max-w-7xl mx-auto p-4 sm:p-6 font-sans text-slate-900 dark:text-white">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <DocumentTextIcon className="w-8 h-8 text-teal-500" />
+                        <DocumentTextIcon className="w-8 h-8 text-emerald-500" />
                         Guild Archives
                     </h1>
-                    <button onClick={createDocument} className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-bold hover:bg-teal-600 transition-colors flex items-center gap-2">
+                    <button onClick={createDocument} className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2">
                         <PlusIcon className="w-5 h-5" /> New Document
                     </button>
                 </div>
@@ -36,7 +36,7 @@ export default function GuildDocumentsIndex({ auth, guild, documents }) {
                             <Link href={route('guilds.documents.show', [guild.id, doc.id])} className="absolute inset-0 z-0" />
 
                             <div className="flex items-start justify-between mb-3 relative z-10 pointer-events-none">
-                                <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                                <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                                     <DocumentTextIcon className="w-6 h-6" />
                                 </div>
                                 {doc.user_id === auth.user.id && (
@@ -46,7 +46,7 @@ export default function GuildDocumentsIndex({ auth, guild, documents }) {
                                 )}
                             </div>
 
-                            <h3 className="font-bold text-slate-800 dark:text-white mb-1 line-clamp-1 group-hover:text-teal-500 transition-colors">{doc.title}</h3>
+                            <h3 className="font-bold text-slate-800 dark:text-white mb-1 line-clamp-1 group-hover:text-emerald-500 transition-colors">{doc.title}</h3>
                             <p className="text-xs text-slate-500 mb-4">
                                 Updated {format(new Date(doc.updated_at), 'MMM d, yyyy')}
                             </p>
@@ -61,7 +61,7 @@ export default function GuildDocumentsIndex({ auth, guild, documents }) {
                     ))}
 
                     {/* Create New Card Placeholder */}
-                    <button onClick={createDocument} className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-5 flex flex-col items-center justify-center text-slate-400 hover:text-teal-500 hover:border-teal-300 transition-all min-h-[180px]">
+                    <button onClick={createDocument} className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-5 flex flex-col items-center justify-center text-slate-400 hover:text-emerald-500 hover:border-emerald-300 transition-all min-h-[180px]">
                         <PlusIcon className="w-8 h-8 mb-2" />
                         <span className="text-sm font-bold">New Document</span>
                     </button>

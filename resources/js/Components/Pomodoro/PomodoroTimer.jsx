@@ -37,7 +37,7 @@ const ProgressCircle = ({ progress, size, strokeWidth }) => {
                 stroke="currentColor"
                 strokeWidth={strokeWidth}
                 strokeLinecap="round"
-                className="text-teal-500 dark:text-teal-400"
+                className="text-emerald-500 dark:text-emerald-400"
                 strokeDasharray={circumference}
                 initial={{ strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
@@ -78,7 +78,7 @@ export default function PomodoroTimer({ secondsLeft, isRunning, totalDuration, o
                         onClick={onStart}
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
-                        className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-12 rounded-full shadow-lg shadow-teal-500/30 transition-all duration-300"
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-12 rounded-full shadow-lg shadow-emerald-500/30 transition-all duration-300"
                     >
                         Mulai
                     </motion.button>

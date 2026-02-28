@@ -7,6 +7,23 @@
 
 /* Add this new keyframe and utility class */
 @layer utilities {
+
+    /* ── Emerald Green Design System ── */
+    :root {
+        --primary: #10B981;
+        --primary-dark: #059669;
+        --primary-glow: rgba(16, 185, 129, 0.15);
+        --primary-ring: rgba(16, 185, 129, 0.4);
+        --accent-warm: #F59E0B;
+        --accent-reward: #F97316;
+    }
+
+    /* Green selection everywhere — reinforces brand identity */
+    ::selection {
+        background-color: rgba(16, 185, 129, 0.2);
+        color: inherit;
+    }
+
     @keyframes float {
         0% {
             transform: translateY(0px) rotate(0deg);
@@ -37,13 +54,23 @@
         @apply bg-slate-900/40 backdrop-blur-3xl border border-white/5 shadow-2xl;
     }
 
-    /* Apple-style Soft Shapes */
+    /* Apple-style Soft Shapes — Emerald glow on hover */
     .apple-card {
-        @apply rounded-[2.5rem] p-8 apple-glass transition-all duration-500 hover:shadow-teal-500/10;
+        @apply rounded-[2.5rem] p-8 apple-glass transition-all duration-500 hover:shadow-emerald-500/10;
     }
 
     .apple-button {
         @apply px-6 py-3 rounded-2xl font-bold transition-all duration-300 active:scale-95;
+    }
+
+    /* Emerald glow for primary buttons */
+    .btn-primary-glow {
+        box-shadow: 0 0 20px var(--primary-glow), 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+
+    /* iOS safe area support */
+    .pb-safe {
+        padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
     }
 
     /* Slim, Apple-style scrollbars */

@@ -98,7 +98,7 @@ export default function AgentWidget({ briefing }) {
         switch (risk_level) {
             case 'HIGH': return 'from-red-500 to-pink-600 shadow-red-500/30';
             case 'MEDIUM': return 'from-amber-400 to-orange-500 shadow-amber-500/30';
-            default: return 'from-emerald-400 to-teal-500 shadow-emerald-500/30';
+            default: return 'from-emerald-400 to-emerald-500 shadow-emerald-500/30';
         }
     };
 
@@ -134,7 +134,7 @@ export default function AgentWidget({ briefing }) {
                     <div className="flex gap-2">
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className={`p-2 rounded-full backdrop-blur-sm transition ${isProcessing ? 'bg-white text-teal-600 animate-pulse' : 'bg-white/20 text-white hover:bg-white/30'}`}
+                            className={`p-2 rounded-full backdrop-blur-sm transition ${isProcessing ? 'bg-white text-emerald-600 animate-pulse' : 'bg-white/20 text-white hover:bg-white/30'}`}
                             title="Smart Scan (Upload Photo)"
                             disabled={isProcessing}
                         >

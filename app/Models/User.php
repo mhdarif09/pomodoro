@@ -233,6 +233,11 @@ class User extends Authenticatable
         return $this->guilds()->first();
     }
 
+    public function guildMember()
+    {
+        return $this->hasOne(GuildMember::class);
+    }
+
     public function guildMembers()
     {
         return $this->hasMany(GuildMember::class);
@@ -417,6 +422,26 @@ class User extends Authenticatable
     public function cognitiveArenaMatches()
     {
         return $this->hasMany(CognitiveArenaMatch::class);
+    }
+
+    // --- New SarangTumbuh Overhaul Relationships ---
+    
+    public function gamificationStats()
+    {
+        return $this->hasOne(UserGamificationStat::class);
+    }
+
+    public function notificationLogs()
+    {
+        return $this->hasMany(NotificationLog::class);
+    }
+    
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            // Auto-create gamification stats for new users
+            $user->gamificationStats()->create();
+        });
     }
 }
 

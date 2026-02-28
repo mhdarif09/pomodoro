@@ -29,11 +29,28 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $trigger = null;
+        if ($user && $user->gamificationStats) {
+            $trigger = app(\App\Services\GamificationEngine::class)->checkIdentityTrigger($user);
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user() ? $request->user()->load('guilds') : null,
+                'user' => $user ? $user->load('guilds') : null,
             ],
+            'gamification' => $user && $user->gamificationStats ? [
+                'streak'          => $user->gamificationStats->streak,
+                'highest_streak'  => $user->gamificationStats->highest_streak,
+                'rank_title'      => $user->gamificationStats->rank_title,
+                'rank_position'   => $user->gamificationStats->rank_position,
+                'rank_points'     => $user->gamificationStats->rank_points,
+                'last_rank_change'=> $user->gamificationStats->last_rank_change,
+                'total_xp'        => $user->gamificationStats->total_xp,
+                'identity_trigger'=> $trigger,
+            ] : null,
+            'unread_notifications' => 0, // Placeholder until notifications table is set
             'midtrans' => [
                 'client_key' => config('services.midtrans.client_key'),
                 'is_production' => config('services.midtrans.is_production'),

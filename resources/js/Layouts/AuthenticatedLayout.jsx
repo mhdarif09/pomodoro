@@ -17,6 +17,10 @@ import TutorialGuide from '@/Components/TutorialGuide';
 import ShortcutsHelpModal from '@/Components/ShortcutsHelpModal';
 import UpgradeModal from '@/Components/UpgradeModal';
 import InviteMemberModal from '@/Components/InviteMemberModal';
+import InAppNotificationPopup from '@/Components/InAppNotificationPopup';
+import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
+import GamificationPopup from '@/Components/GamificationPopup';
+import { PomodoroProvider, usePomodoroTimer } from '@/Contexts/PomodoroContext';
 import { useLanguage } from '@/Contexts/LanguageContext';
 import useKeyboardShortcuts from '@/Hooks/useKeyboardShortcuts';
 
@@ -128,7 +132,20 @@ export default function Authenticated({ children, header }) {
     };
 
     return (
-        <div className="flex h-screen bg-[#F5F5F7] dark:bg-[#000000] overflow-hidden text-slate-900 dark:text-white font-sans selection:bg-teal-500 selection:text-white">
+        <PomodoroProvider auth={auth}>
+            <AuthenticatedLayoutInner auth={auth} isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts} showUpgradeModal={showUpgradeModal} setShowUpgradeModal={setShowUpgradeModal} plans={plans} navStructure={navStructure} isRouteActive={isRouteActive} workspaceMode={workspaceMode} setWorkspaceMode={setWorkspaceMode} currentGuild={currentGuild} setCurrentGuild={setCurrentGuild} isLeader={isLeader} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} showInviteModal={showInviteModal} setShowInviteModal={setShowInviteModal} user={user} userGuilds={userGuilds}>
+                {children}
+            </AuthenticatedLayoutInner>
+        </PomodoroProvider>
+    );
+}
+
+function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, showShortcuts, setShowShortcuts, showUpgradeModal, setShowUpgradeModal, plans, navStructure, isRouteActive, workspaceMode, setWorkspaceMode, currentGuild, setCurrentGuild, isLeader, sidebarOpen, setSidebarOpen, showInviteModal, setShowInviteModal, user, userGuilds }) {
+    const pomodoro = usePomodoroTimer();
+
+    return (
+        <div className="flex h-screen bg-[#F5F5F7] dark:bg-[#000000] overflow-hidden text-slate-900 dark:text-white font-sans selection:bg-emerald-500 selection:text-white">
+            <InAppNotificationPopup />
             <WhatsAppWarningModal />
             <TutorialGuide setSidebarOpen={setSidebarOpen} />
             <ShortcutsHelpModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
@@ -155,7 +172,7 @@ export default function Authenticated({ children, header }) {
                 <div className="px-2 pt-3 pb-2">
                     <Menu as="div" className="relative">
                         <Menu.Button className="w-full hover:bg-black/5 dark:hover:bg-white/5 rounded-lg p-1.5 flex items-center gap-2 transition-colors text-left group">
-                            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-500 to-emerald-600 text-[10px] font-bold text-white shadow-sm ring-1 ring-black/5">
+                            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 text-[10px] font-bold text-white shadow-sm ring-1 ring-black/5">
                                 {workspaceMode === 'personal' ? user.name.charAt(0) : (currentGuild?.name?.charAt(0) || 'G')}
                             </div>
                             {!isCollapsed && (
@@ -195,7 +212,7 @@ export default function Authenticated({ children, header }) {
                                             >
                                                 <UserIcon className="mr-2 h-4 w-4 text-slate-400" />
                                                 {user.name}'s Notion
-                                                {workspaceMode === 'personal' && <CheckIcon className="ml-auto h-4 w-4 text-teal-500" />}
+                                                {workspaceMode === 'personal' && <CheckIcon className="ml-auto h-4 w-4 text-emerald-500" />}
                                             </button>
                                         )}
                                     </Menu.Item>
@@ -203,7 +220,7 @@ export default function Authenticated({ children, header }) {
                                 <div className="p-1">
                                     <div className="px-2 py-1 text-[10px] flex justify-between items-center text-slate-400 uppercase tracking-wider">
                                         <span>Guilds</span>
-                                        <Link href={route('guilds.index')} className="hover:text-teal-500"><PlusIcon className="h-3 w-3" /></Link>
+                                        <Link href={route('guilds.index')} className="hover:text-emerald-500"><PlusIcon className="h-3 w-3" /></Link>
                                     </div>
                                     {userGuilds.map((guild) => (
                                         <Menu.Item key={guild.id}>
@@ -303,11 +320,18 @@ export default function Authenticated({ children, header }) {
                             {!isCollapsed && <div className="px-2 mb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Private</div>}
                             <div className="space-y-0.5">
                                 <Link
+                                    href={route('dashboard')}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('dashboard') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                >
+                                    <HomeIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                    {!isCollapsed && <span>Home</span>}
+                                </Link>
+                                <Link
                                     href={route('tasks.index')}
                                     className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('tasks.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
                                     <DocumentTextIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
-                                    {!isCollapsed && <span>My Tasks</span>}
+                                    {!isCollapsed && <span>Tasks</span>}
                                 </Link>
                                 <Link
                                     href={route('journal.index')}
@@ -317,40 +341,18 @@ export default function Authenticated({ children, header }) {
                                     {!isCollapsed && <span>Journal</span>}
                                 </Link>
                                 <Link
-                                    href={route('transactions.history')}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('transactions.history') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                    href={route('guilds.index')}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('guilds.index') || route().current('guilds.*') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
-                                    <CreditCardIcon className="h-4 w-4" />
-                                    {!isCollapsed && <span>Wallet</span>}
+                                    <ShieldCheckIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                    {!isCollapsed && <span>Guilds</span>}
                                 </Link>
                                 <Link
-                                    id="gamification-nav"
-                                    href={route('gamification.dashboard')}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('gamification.dashboard') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                    href={route('profile.show')}
+                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('profile.show') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
                                 >
-                                    <TrophyIcon className="h-4 w-4" />
-                                    {!isCollapsed && <span>Gamification</span>}
-                                </Link>
-                                <Link
-                                    href={route('affiliate.dashboard')}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('affiliate.dashboard') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
-                                >
-                                    <TicketIcon className="h-4 w-4" />
-                                    {!isCollapsed && <span>Affiliate</span>}
-                                </Link>
-                                <Link
-                                    href={route('reports.index')}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('reports.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
-                                >
-                                    <ChartBarIcon className="h-4 w-4" />
-                                    {!isCollapsed && <span>Report</span>}
-                                </Link>
-                                <Link
-                                    href={route('upgrade.index')}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors group ${route().current('upgrade.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}
-                                >
-                                    <SparklesIcon className="h-4 w-4 text-amber-400 group-hover:text-amber-500" />
-                                    {!isCollapsed && <span>Upgrade Plan</span>}
+                                    <UserIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                    {!isCollapsed && <span>Profile</span>}
                                 </Link>
                             </div>
                         </div>
@@ -485,7 +487,7 @@ export default function Authenticated({ children, header }) {
                 {/* Collapse Button */}
                 <button
                     onClick={toggleSidebar}
-                    className="absolute -right-3 top-8 w-6 h-6 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-teal-500 transition-colors z-30 opacity-0 group-hover:opacity-100 dark:hover:bg-slate-700"
+                    className="absolute -right-3 top-8 w-6 h-6 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-emerald-500 transition-colors z-30 opacity-0 group-hover:opacity-100 dark:hover:bg-slate-700"
                 >
                     {isCollapsed ? <ChevronRightIcon className="w-3 h-3" /> : <ChevronLeftIcon className="w-3 h-3" />}
                 </button>
@@ -501,51 +503,79 @@ export default function Authenticated({ children, header }) {
                     </div>
                 </main>
 
-                {/* ═══════ MOBILE BOTTOM NAV BAR ═══════ */}
+                {/* Global Pomodoro Island — persists across all pages */}
+                <AnimatePresence>
+                    {pomodoro.activeTask && (
+                        <PomodoroIsland
+                            taskTitle={pomodoro.activeTask.title}
+                            secondsLeft={pomodoro.secondsLeft}
+                            isRunning={pomodoro.isRunning}
+                            totalDuration={pomodoro.totalDuration}
+                            onStart={() => pomodoro.setIsRunning(true)}
+                            onStop={() => pomodoro.stopSession(true)}
+                            onReset={pomodoro.resetTimer}
+                            onClose={pomodoro.closeTimer}
+                            currentStreak={pomodoro.currentStreak}
+                        />
+                    )}
+                </AnimatePresence>
+
+                {/* Gamification Popup for Pomodoro Completion */}
+                <GamificationPopup
+                    isOpen={pomodoro.showGamificationPopup}
+                    onClose={() => pomodoro.setShowGamificationPopup(false)}
+                    data={pomodoro.gamificationData}
+                />
+
+                {/* ═══════ MOBILE BOTTOM NAV BAR (iOS-style) ═══════ */}
                 <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden">
                     <div className="mx-3 mb-3">
-                        <div className="bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl rounded-[20px] border border-slate-200/50 dark:border-slate-700/50 shadow-xl shadow-black/10 dark:shadow-black/30 px-1.5 py-2">
+                        <div className="bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl rounded-[22px] border border-emerald-100/50 dark:border-emerald-900/30 shadow-xl shadow-emerald-900/5 dark:shadow-black/30 px-2 py-2">
                             {workspaceMode === 'personal' ? (
-                                <div className="flex items-center justify-around gap-1">
+                                <div className="flex items-center justify-around gap-0.5">
                                     {[
                                         { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard'), id: 'mobile-dashboard-nav' },
                                         { href: route('tasks.index'), icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('tasks.index'), id: 'mobile-tasks-nav' },
-                                        { href: route('gamification.dashboard'), icon: <TrophyIcon className="h-[22px] w-[22px]" />, label: 'Rewards', active: route().current('gamification.dashboard'), id: 'mobile-rewards-nav' },
-                                        { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guilds', active: route().current('guilds.index') || route().current('guilds.*'), id: 'mobile-guilds-nav' },
-                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit'), id: 'mobile-profile-nav' },
-                                    ].concat([
-                                        { href: route('logout'), icon: <ArrowRightOnRectangleIcon className="h-[22px] w-[22px]" />, label: 'Logout', active: false, id: 'mobile-logout-nav', method: 'post', as: 'button' }
-                                    ]).map((item, i) => (
-                                        <Link key={i} href={item.href} id={item.id} method={item.method} as={item.as}
-                                            className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
-                                                ? 'bg-teal-500/15 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 px-4 py-2.5 rounded-2xl'
-                                                : 'text-slate-400 dark:text-slate-500 p-2.5'
-                                                }`}>
-                                            {item.icon}
-                                            {item.active && (
-                                                <span className="text-[11px] font-bold tracking-tight">{item.label}</span>
-                                            )}
+                                        { href: route('journal.index'), icon: <BookOpenIcon className="h-[22px] w-[22px]" />, label: 'Journal', active: route().current('journal.index'), id: 'mobile-journal-nav' },
+                                        { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.index') || route().current('guilds.*'), id: 'mobile-guilds-nav' },
+                                        { href: route('profile.show'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.show'), id: 'mobile-profile-nav' },
+                                    ].map((item, i) => (
+                                        <Link key={i} href={item.href} id={item.id}
+                                            className={`relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 ${item.active
+                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                : 'text-slate-400 dark:text-slate-500'
+                                                } px-3 py-1.5 rounded-2xl`}>
+                                            <div className={`relative transition-transform duration-300 ${item.active ? 'scale-110 -translate-y-0.5' : ''}`}>
+                                                {item.icon}
+                                                {item.active && (
+                                                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-500" />
+                                                )}
+                                            </div>
+                                            <span className={`text-[10px] mt-0.5 font-semibold tracking-tight transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.label}</span>
                                         </Link>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-around gap-1">
+                                <div className="flex items-center justify-around gap-0.5">
                                     {[
                                         { href: currentGuild ? route('guilds.show', currentGuild.id) : route('guilds.index'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.show'), id: 'mobile-guild-home-nav' },
                                         { href: currentGuild ? route('guilds.tasks.index', currentGuild.id) : '#', icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('guilds.tasks.index'), id: 'mobile-guild-tasks-nav' },
                                         ...(isLeader ? [{ href: currentGuild ? route('guilds.challenges.index', currentGuild.id) : '#', icon: <FireIcon className="h-[22px] w-[22px]" />, label: 'Missions', active: route().current('guilds.challenges.index'), id: 'mobile-guild-missions-nav' }] : []),
                                         { href: currentGuild ? route('guilds.members.index', currentGuild.id) : '#', icon: <UserGroupIcon className="h-[22px] w-[22px]" />, label: 'Members', active: route().current('guilds.members.index'), id: 'mobile-guild-members-nav' },
-                                        { href: route('profile.edit'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.edit'), id: 'mobile-profile-nav-guild' },
+                                        { href: route('profile.show'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.show'), id: 'mobile-profile-nav-guild' },
                                     ].map((item, i) => (
                                         <Link key={i} href={item.href}
-                                            className={`relative flex items-center justify-center gap-1.5 transition-all duration-300 ease-out active:scale-95 ${item.active
-                                                ? 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-2.5 rounded-2xl'
-                                                : 'text-slate-400 dark:text-slate-500 p-2.5'
-                                                }`}>
-                                            {item.icon}
-                                            {item.active && (
-                                                <span className="text-[11px] font-bold tracking-tight">{item.label}</span>
-                                            )}
+                                            className={`relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 ${item.active
+                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                : 'text-slate-400 dark:text-slate-500'
+                                                } px-3 py-1.5 rounded-2xl`}>
+                                            <div className={`relative transition-transform duration-300 ${item.active ? 'scale-110 -translate-y-0.5' : ''}`}>
+                                                {item.icon}
+                                                {item.active && (
+                                                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-500" />
+                                                )}
+                                            </div>
+                                            <span className={`text-[10px] mt-0.5 font-semibold tracking-tight transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.label}</span>
                                         </Link>
                                     ))}
                                 </div>

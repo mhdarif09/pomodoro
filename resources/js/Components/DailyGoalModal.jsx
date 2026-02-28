@@ -30,7 +30,7 @@ export default function DailyGoalModal({ onSave, isProcessing, onClose }) {
                 className="relative bg-white dark:bg-slate-800 shadow-xl rounded-2xl p-8 w-full max-w-lg"
             >
                 <div className="flex items-center mb-4">
-                    <PencilSolidIcon className="h-6 w-6 text-teal-500 mr-3"/>
+                    <PencilSolidIcon className="h-6 w-6 text-emerald-500 mr-3"/>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Apa Goal Kamu Hari Ini?</h2>
                 </div>
                 <p className="text-slate-600 dark:text-slate-300 mb-6">Tentukan satu fokus utama untuk hari ini agar lebih produktif.</p>
@@ -40,14 +40,14 @@ export default function DailyGoalModal({ onSave, isProcessing, onClose }) {
                         value={goal}
                         onChange={(e) => setGoal(e.target.value)}
                         placeholder="Contoh: Menyelesaikan laporan kuartal ini"
-                        className="w-full p-3 rounded-lg bg-slate-100 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                        className="w-full p-3 rounded-lg bg-slate-100 dark:bg-slate-700 border-2 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                         autoFocus
                     />
                     <div className="mt-6 flex justify-end">
                          <button
                             type="submit"
                             disabled={!goal.trim() || isProcessing}
-                            className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-8 rounded-lg shadow-lg shadow-teal-500/20 transform hover:scale-105 transition"
+                            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-8 rounded-lg shadow-lg shadow-emerald-500/20 transform hover:scale-105 transition"
                         >
                             {isProcessing ? 'Menyimpan...' : 'Simpan Goal'}
                         </button>

@@ -41,6 +41,11 @@ class Kernel extends ConsoleKernel
         
         // Task Aging
         $schedule->command('tasks:check-stagnant')->weeklyOn(1, '09:00');
+
+        // SarangTumbuh Gamification Scheduled Tasks
+        $schedule->command('sarang:streak-reset')->dailyAt('00:01');
+        $schedule->command('sarang:daily-reminder')->dailyAt('18:00');
+        $schedule->command('sarang:sunday-report')->weeklyOn(0, '20:00');
     }
 
     /**

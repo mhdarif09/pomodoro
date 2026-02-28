@@ -113,7 +113,7 @@ const StepByStepSolution = ({ content }) => {
                     >
                         {/* Step Header */}
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-teal-500 text-white font-bold shadow-lg shadow-teal-500/30">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30">
                                 {currentStep + 1}
                             </div>
                             <div className="flex-1">
@@ -154,7 +154,7 @@ const StepByStepSolution = ({ content }) => {
                             setIsPlaying(false);
                         }}
                         className={`h-2 rounded-full transition-all ${idx === currentStep
-                                ? 'w-8 bg-teal-500'
+                                ? 'w-8 bg-emerald-500'
                                 : idx < currentStep
                                     ? 'w-2 bg-green-400'
                                     : 'w-2 bg-slate-300 dark:bg-slate-600'
@@ -177,7 +177,7 @@ const StepByStepSolution = ({ content }) => {
 
                 <button
                     onClick={isPlaying ? handlePause : handlePlay}
-                    className="px-6 py-3 rounded-2xl bg-teal-500 text-white font-bold shadow-lg shadow-teal-500/25 hover:bg-teal-600 transition-all flex items-center gap-2"
+                    className="px-6 py-3 rounded-2xl bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/25 hover:bg-emerald-600 transition-all flex items-center gap-2"
                 >
                     {isPlaying ? (
                         <>

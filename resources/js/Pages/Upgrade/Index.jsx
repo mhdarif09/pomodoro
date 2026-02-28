@@ -323,7 +323,7 @@ export default function UpgradeIndex() {
                     {is_premium && activeSubscription && (
                         <motion.div
                             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-                            className="mb-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-[2rem] p-6 shadow-xl shadow-emerald-500/20 text-white text-center"
+                            className="mb-8 bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-[2rem] p-6 shadow-xl shadow-emerald-500/20 text-white text-center"
                         >
                             <CheckIcon className="w-8 h-8 mx-auto mb-2" />
                             <h3 className="text-xl font-black">Kamu sudah Premium! 🎉</h3>

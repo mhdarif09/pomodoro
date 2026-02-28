@@ -127,7 +127,7 @@ export default function GuildChallengesIndex({ auth, guild, challenges }) {
                                             {!isLeader && (
                                                 <button
                                                     onClick={() => router.post(route('guilds.challenges.complete', [guild.id, challenge.id]))}
-                                                    className="px-3 py-1 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-xs font-bold transition-colors"
+                                                    className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold transition-colors"
                                                 >
                                                     Klaim Selesai
                                                 </button>

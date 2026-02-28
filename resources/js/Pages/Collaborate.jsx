@@ -41,7 +41,7 @@ export default function Collaborate() {
                 <div className="mx-4 mt-3">
                     <nav className="container mx-auto px-6 py-3 flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-2xl border border-slate-200/50 shadow-sm shadow-slate-200/50">
                         <Link href="/" className="text-lg font-[800] text-slate-900 tracking-tight flex items-center gap-2">
-                            <span className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/25">S</span>
+                            <span className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-500 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/25">S</span>
                             Sarang Tumbuh
                         </Link>
                         <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function Collaborate() {
 
                             <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl font-[900] tracking-[-0.04em] mb-6 leading-[1.1] text-slate-900">
                                 Mari Bertumbuh <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Bersama-sama.</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-500">Bersama-sama.</span>
                             </motion.h1>
 
                             <motion.p variants={fadeUp} className="text-lg text-slate-500 mb-8 leading-relaxed">
@@ -84,7 +84,7 @@ export default function Collaborate() {
 
                             <motion.div variants={fadeUp} className="space-y-6">
                                 <div className="flex gap-4 items-start">
-                                    <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100 text-teal-500">
+                                    <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100 text-emerald-500">
                                         <BuildingOfficeIcon className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -112,7 +112,7 @@ export default function Collaborate() {
                             className="bg-white rounded-[2rem] p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden"
                         >
                             {/* Decorative gradient */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 rounded-full -mr-16 -mt-16 pointer-events-none" />
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50/50 to-emerald-50/50 rounded-full -mr-16 -mt-16 pointer-events-none" />
 
                             {wasSuccessful && (
                                 <motion.div

@@ -168,7 +168,7 @@ export default function ModernEditor({ content, onChange, editable = true, enabl
             type="button"
             onClick={onClick}
             title={title}
-            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition ${isActive ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'text-slate-500 dark:text-slate-400'}`}
+            className={`p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition ${isActive ? 'bg-slate-200 dark:bg-slate-700 text-emerald-600' : 'text-slate-500 dark:text-slate-400'}`}
         >
             {children}
         </button>

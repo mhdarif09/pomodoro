@@ -32,7 +32,7 @@ export default function TaskForm({ existingTask, onCancel }) {
         });
     };
 
-    const inputStyle = "w-full bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 text-sm p-2";
+    const inputStyle = "w-full bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 text-sm p-2";
     const labelStyle = "block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1";
 
     return (
@@ -106,13 +106,13 @@ export default function TaskForm({ existingTask, onCancel }) {
 
                 <div>
                     <label htmlFor="document" className={labelStyle}>Dokumen Pendukung (Maks 2MB)</label>
-                    <input type="file" onChange={e => setData('document', e.target.files[0])} className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 dark:file:bg-teal-700 dark:file:text-teal-200" />
+                    <input type="file" onChange={e => setData('document', e.target.files[0])} className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-700 dark:file:text-emerald-200" />
                     {errors.document && <p className="text-rose-500 text-xs mt-1">{errors.document}</p>}
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
                     <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 rounded-md">Batal</button>
-                    <button type="submit" disabled={processing} className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md disabled:bg-teal-400 dark:disabled:bg-teal-500/50">
+                    <button type="submit" disabled={processing} className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md disabled:bg-emerald-400 dark:disabled:bg-emerald-500/50">
                         {processing ? 'Memproses...' : (isEditing ? 'Simpan Perubahan' : 'Buat Tugas')}
                     </button>
                 </div>

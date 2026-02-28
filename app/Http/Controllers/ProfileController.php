@@ -25,6 +25,55 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the user's gamification profile.
+     */
+    public function show(Request $request): Response
+    {
+        $user = $request->user();
+        $user->load(['gamificationStats']);
+
+        // Consistency Calendar (Heatmap data)
+        // Get completed tasks grouped by date for the last 6 months
+        $sixMonthsAgo = now()->subMonths(6)->startOfDay();
+        
+        $heatmapDataRaw = \App\Models\Task::where('user_id', $user->id)
+            ->where('is_completed', true)
+            ->where('updated_at', '>=', $sixMonthsAgo)
+            ->selectRaw('DATE(updated_at) as date, count(*) as count')
+            ->groupBy('date')
+            ->get();
+
+        $heatmapData = $heatmapDataRaw->map(function ($item) {
+            return [
+                'date' => $item->date,
+                'count' => $item->count,
+            ];
+        });
+
+        // Add today if not present to ensure the heatmap ends correctly
+        $todayStr = now()->toDateString();
+        if (!$heatmapData->contains('date', $todayStr)) {
+            $heatmapData->push(['date' => $todayStr, 'count' => 0]);
+        }
+
+        return Inertia::render('Profile/Show', [
+            'stats' => [
+                'name' => $user->name,
+                'avatar' => $user->avatar,
+                'email' => $user->email,
+                'rank_title' => $user->gamificationStats->rank_title ?? 'Novice',
+                'total_xp' => $user->gamificationStats->total_xp ?? 0,
+                'streak' => $user->gamificationStats->streak ?? 0,
+                'highest_streak' => $user->gamificationStats->highest_streak ?? 0,
+                'level' => $user->level,
+                'joined_at' => $user->created_at->format('M Y'),
+            ],
+            'achievements' => [], // To be implemented
+            'heatmapData' => $heatmapData,
+        ]);
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse

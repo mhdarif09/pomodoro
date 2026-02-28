@@ -51,7 +51,7 @@ const EmptyState = ({ onAttachmentClick }) => (
     <p className="text-sm mt-1 max-w-xs">Tanya apa saja, aktifkan mode Reviewer atau Writer untuk kebutuhan akademik.</p>
     <button
       onClick={onAttachmentClick}
-      className="mt-6 flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg shadow-teal-500/30 transition-all">
+      className="mt-6 flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg shadow-lg shadow-emerald-500/30 transition-all">
       <DocumentArrowUpIcon className="h-5 w-5" />
       Unggah Dokumen (PDF/Excel/CSV)
     </button>
@@ -226,13 +226,13 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
             {/* HEADER */}
             <header className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg">
               <div className="flex items-center gap-2">
-                <SparklesIcon className="h-6 w-6 text-teal-500" />
+                <SparklesIcon className="h-6 w-6 text-emerald-500" />
                 <span className="font-bold truncate">{modeLabel[mode]}</span>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
-                <button onClick={() => setMode('chat')} title="Chat Mode" className={`p-2 rounded ${mode === 'chat' ? 'bg-teal-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><SparklesIcon className="h-5 w-5" /></button>
-                <button onClick={() => setMode('reviewer')} title="Reviewer Mode" className={`p-2 rounded ${mode === 'reviewer' ? 'bg-teal-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><ClipboardDocumentListIcon className="h-5 w-5" /></button>
-                <button onClick={() => setMode('writer')} title="Writer Mode" className={`p-2 rounded ${mode === 'writer' ? 'bg-teal-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><AcademicCapIcon className="h-5 w-5" /></button>
+                <button onClick={() => setMode('chat')} title="Chat Mode" className={`p-2 rounded ${mode === 'chat' ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><SparklesIcon className="h-5 w-5" /></button>
+                <button onClick={() => setMode('reviewer')} title="Reviewer Mode" className={`p-2 rounded ${mode === 'reviewer' ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><ClipboardDocumentListIcon className="h-5 w-5" /></button>
+                <button onClick={() => setMode('writer')} title="Writer Mode" className={`p-2 rounded ${mode === 'writer' ? 'bg-emerald-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}><AcademicCapIcon className="h-5 w-5" /></button>
                 <div className="border-l h-6 border-slate-200 dark:border-slate-700 mx-1"></div>
                 <button onClick={toggleSize} className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hidden sm:inline-block" title={size === 'default' ? 'Perlebar' : 'Perkecil'}>
                   {size === 'default' ? <ArrowsPointingOutIcon className="h-5 w-5" /> : <ComputerDesktopIcon className="h-5 w-5" />}
@@ -252,12 +252,12 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
                       {fileType === 'excel' && tableHtml && (<div className="p-4 overflow-auto h-full"><div dangerouslySetInnerHTML={{ __html: sanitizeHtml(tableHtml) }} className="prose dark:prose-invert" /></div>)}
                     </div>
                   </Panel>
-                  <PanelResizeHandle className="h-2 w-full sm:h-full sm:w-2 bg-slate-300 dark:bg-slate-700 hover:bg-teal-500 transition-colors" />
+                  <PanelResizeHandle className="h-2 w-full sm:h-full sm:w-2 bg-slate-300 dark:bg-slate-700 hover:bg-emerald-500 transition-colors" />
                   <Panel defaultSize={45} minSize={20} className="flex flex-col bg-slate-100/50 dark:bg-slate-900/50">
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
                       {aiChatHistory.map((msg, index) => (
                         <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
+                          <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${msg.role === 'user' ? 'bg-emerald-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
                             {msg.isLoading ? <LoadingBubble /> : (
                               <div className="prose prose-sm dark:prose-invert max-w-none">
                                 <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
@@ -275,7 +275,7 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
                   {aiChatHistory.length === 0 ? <EmptyState onAttachmentClick={handleAttachmentClick} />
                     : aiChatHistory.map((msg, index) => (
                       <motion.div key={index} layout variants={messageVariants} initial="hidden" animate="visible" className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${msg.role === 'user' ? 'bg-teal-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
+                        <div className={`p-3 rounded-xl max-w-sm lg:max-w-md text-sm shadow ${msg.role === 'user' ? 'bg-emerald-500 text-white' : (msg.isError ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200')}`}>
                           {msg.isLoading ? <LoadingBubble /> : (
                             <div className="prose prose-sm dark:prose-invert max-w-none">
                               <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
@@ -292,17 +292,17 @@ export default function AIAssistantPanel({ isOpen, onClose, isPremium, onUpgrade
             {/* FOOTER */}
             <footer className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg flex-shrink-0 space-y-3">
               <form onSubmit={(e) => { e.preventDefault(); handleAIQuery(); }}>
-                <div className="flex items-end bg-slate-200 dark:bg-slate-700/50 rounded-lg overflow-hidden ring-2 ring-transparent focus-within:ring-teal-500 transition-shadow">
+                <div className="flex items-end bg-slate-200 dark:bg-slate-700/50 rounded-lg overflow-hidden ring-2 ring-transparent focus-within:ring-emerald-500 transition-shadow">
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.xlsx,.xls,.csv" className="hidden" />
-                  <button type="button" onClick={() => setIsWebSearchEnabled(prev => !prev)} disabled={!!uploadedFile} title={isWebSearchEnabled ? "Pencarian Web Aktif" : "Aktifkan Pencarian Web"} className={`p-3 transition-colors ${isWebSearchEnabled ? 'text-teal-500' : 'text-slate-500 hover:text-teal-500'} disabled:text-slate-400 disabled:hover:text-slate-400`}>
+                  <button type="button" onClick={() => setIsWebSearchEnabled(prev => !prev)} disabled={!!uploadedFile} title={isWebSearchEnabled ? "Pencarian Web Aktif" : "Aktifkan Pencarian Web"} className={`p-3 transition-colors ${isWebSearchEnabled ? 'text-emerald-500' : 'text-slate-500 hover:text-emerald-500'} disabled:text-slate-400 disabled:hover:text-slate-400`}>
                     <GlobeAltIcon className="h-5 w-5" />
                   </button>
-                  <button type="button" onClick={handleAttachmentClick} title="Unggah Dokumen" className="p-3 text-slate-500 hover:text-teal-500 transition-colors"><DocumentArrowUpIcon className="h-5 w-5" /></button>
+                  <button type="button" onClick={handleAttachmentClick} title="Unggah Dokumen" className="p-3 text-slate-500 hover:text-emerald-500 transition-colors"><DocumentArrowUpIcon className="h-5 w-5" /></button>
                   <TextareaAutosize value={aiQuery} onChange={(e) => setAiQuery(e.target.value)} onKeyDown={handleKeyDown}
                     placeholder={mode === 'writer' ? "Masukkan topik untuk ditulis..." : (mode === 'reviewer' ? "Unggah jurnal lalu klik kirim untuk dianalisis..." : "Tanya apa saja...")}
                     className="flex-1 p-3 bg-transparent focus:outline-none text-sm text-slate-900 dark:text-white resize-none" rows={1} maxRows={5}
                   />
-                  <button type="submit" disabled={isLoadingAI || !aiQuery.trim()} className="p-3 text-white bg-teal-500 hover:bg-teal-600 transition-colors m-1 rounded-md disabled:bg-teal-400/80 disabled:cursor-not-allowed">
+                  <button type="submit" disabled={isLoadingAI || !aiQuery.trim()} className="p-3 text-white bg-emerald-500 hover:bg-emerald-600 transition-colors m-1 rounded-md disabled:bg-emerald-400/80 disabled:cursor-not-allowed">
                     <PaperAirplaneIcon className="h-5 w-5" />
                   </button>
                 </div>
