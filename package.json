@@ -50,6 +50,7 @@
         "lucide-react": "^0.544.0",
         "mammoth": "^1.11.0",
         "peerjs": "^1.5.5",
+        "posthog-js": "^1.357.0",
         "quill": "^2.0.3",
         "react-icons": "^5.5.0",
         "react-intersection-observer": "^9.16.0",

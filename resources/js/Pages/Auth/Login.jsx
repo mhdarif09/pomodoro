@@ -58,6 +58,7 @@ export default function Login({ status }) {
         setErrors({});
 
         try {
+            await axios.get('/sanctum/csrf-cookie');
             const response = await axios.post(route('api.login'), {
                 email,
                 password

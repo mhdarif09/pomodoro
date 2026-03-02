@@ -60,8 +60,13 @@ return [
         ],
     ],
 
-    'openai' => [
-        'api_key' => env('OPENAI_API_KEY'),
+    'resend' => [
+        'key' => env('RESEND_KEY'),
+    ],
+
+    'posthog' => [
+        'key' => env('POSTHOG_KEY'),
+        'host' => env('POSTHOG_HOST'),
     ],
 
 ];

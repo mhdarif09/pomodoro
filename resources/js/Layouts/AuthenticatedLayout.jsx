@@ -20,7 +20,7 @@ import InviteMemberModal from '@/Components/InviteMemberModal';
 import InAppNotificationPopup from '@/Components/InAppNotificationPopup';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
 import GamificationPopup from '@/Components/GamificationPopup';
-import { PomodoroProvider, usePomodoroTimer } from '@/Contexts/PomodoroContext';
+import { usePomodoroTimer } from '@/Contexts/PomodoroContext';
 import { useLanguage } from '@/Contexts/LanguageContext';
 import useKeyboardShortcuts from '@/Hooks/useKeyboardShortcuts';
 
@@ -132,11 +132,9 @@ export default function Authenticated({ children, header }) {
     };
 
     return (
-        <PomodoroProvider auth={auth}>
-            <AuthenticatedLayoutInner auth={auth} isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts} showUpgradeModal={showUpgradeModal} setShowUpgradeModal={setShowUpgradeModal} plans={plans} navStructure={navStructure} isRouteActive={isRouteActive} workspaceMode={workspaceMode} setWorkspaceMode={setWorkspaceMode} currentGuild={currentGuild} setCurrentGuild={setCurrentGuild} isLeader={isLeader} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} showInviteModal={showInviteModal} setShowInviteModal={setShowInviteModal} user={user} userGuilds={userGuilds}>
-                {children}
-            </AuthenticatedLayoutInner>
-        </PomodoroProvider>
+        <AuthenticatedLayoutInner auth={auth} isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts} showUpgradeModal={showUpgradeModal} setShowUpgradeModal={setShowUpgradeModal} plans={plans} navStructure={navStructure} isRouteActive={isRouteActive} workspaceMode={workspaceMode} setWorkspaceMode={setWorkspaceMode} currentGuild={currentGuild} setCurrentGuild={setCurrentGuild} isLeader={isLeader} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} showInviteModal={showInviteModal} setShowInviteModal={setShowInviteModal} user={user} userGuilds={userGuilds}>
+            {children}
+        </AuthenticatedLayoutInner>
     );
 }
 

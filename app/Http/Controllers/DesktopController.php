@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Native\Laravel\Facades\Shell;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class DesktopController extends Controller
 {
@@ -43,9 +44,26 @@ class DesktopController extends Controller
             abort(401, 'Invalid or expired login token');
         }
 
+        $signature = $request->query('signature');
+        
+        // Ensure single-use: check if signature has been used
+        if (Cache::has('desktop_login_' . $signature)) {
+            Log::warning('Desktop login token reused attempt', ['ip' => $request->ip()]);
+            abort(401, 'Token already used');
+        }
+        
+        // Mark as used for 5 minutes (max signature validity)
+        Cache::put('desktop_login_' . $signature, true, now()->addMinutes(5));
+
         $user = \App\Models\User::findOrFail($request->user_id);
 
         \Illuminate\Support\Facades\Auth::login($user, true);
+        
+        Log::info('Successful desktop token login', ['user_id' => $user->id, 'ip' => $request->ip()]);
+
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard');
 
         return redirect()->route('dashboard');
     }

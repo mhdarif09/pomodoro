@@ -17,10 +17,14 @@ class StoreTaskRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000', // Max 2000 chars untuk security
             'start_date' => 'nullable|date',
-            'due_date' => 'nullable|date|after_or_equal:start_date',
-            'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:2048',
+            'due_date' => 'nullable|date',
+            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,csv,txt|max:10240',
             'status' => 'nullable|in:todo,in_progress,done', // Whitelist status values
             'estimated_minutes' => 'nullable|integer|min:0',
+            'priority' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
             'subtasks' => 'nullable|array',
             'subtasks.*.title' => 'required|string|max:255',
         ];

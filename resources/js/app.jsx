@@ -6,6 +6,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { LanguageProvider } from './Contexts/LanguageContext';
 import ErrorBoundary from './Components/ErrorBoundary';
+import { PomodoroProvider } from './Contexts/PomodoroContext';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -18,7 +19,9 @@ createInertiaApp({
         root.render(
             <ErrorBoundary>
                 <LanguageProvider>
-                    <App {...props} />
+                    <PomodoroProvider auth={props.initialPage.props.auth}>
+                        <App {...props} />
+                    </PomodoroProvider>
                 </LanguageProvider>
             </ErrorBoundary>
         );

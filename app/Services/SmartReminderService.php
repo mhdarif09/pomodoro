@@ -82,11 +82,8 @@ class SmartReminderService
         // Ensure user has phone
         if (!$user->phone) return false;
         
-        // return app(WhatsAppService::class)->sendMessage($user->phone, $message);
-        
-        // Simulating success for now
-        Log::info("WA to {$user->name}: {$message}");
-        return true;
+        $result = app(WhatsAppService::class)->sendMessage($user->phone, $message);
+        return $result['success'] ?? false;
     }
 
     /**

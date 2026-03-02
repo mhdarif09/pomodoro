@@ -80,6 +80,11 @@ class OpenAIController extends Controller
             'query' => 'required|string|max:4000',
         ]);
         
+        $mimeType = $request->file('file')->getMimeType();
+        if ($mimeType !== 'application/pdf') {
+            return response()->json(['error' => 'Format file tidak valid. Hanya PDF yang diperbolehkan.'], 422);
+        }
+        
         try {
             set_time_limit(0); 
             $textContent = $this->extractTextFromPdf($request->file('file'));
@@ -93,7 +98,7 @@ class OpenAIController extends Controller
 
         } catch(Exception $e) {
             Log::error('PDF Processing Error in askFromPdf(): ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Terjadi kesalahan internal saat memproses dokumen PDF.'], 500);
         }
     }
     
@@ -102,6 +107,17 @@ class OpenAIController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
             'query' => 'required|string|max:4000',
         ]);
+        
+        $mimeType = $request->file('file')->getMimeType();
+        $allowedSpreadsheetMimes = [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'text/csv',
+            'text/plain'
+        ];
+        if (!in_array($mimeType, $allowedSpreadsheetMimes)) {
+            return response()->json(['error' => 'Format file tidak valid. Hanya Excel atau CSV yang diperbolehkan.'], 422);
+        }
         try {
             set_time_limit(0);
             $markdownTable = $this->extractTableFromSheet($request->file('file'));
@@ -128,7 +144,7 @@ PROMPT;
 
         } catch(Exception $e) {
             Log::error('Spreadsheet Processing Error in askFromSheet(): ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Terjadi kesalahan internal saat memproses spreadsheet.'], 500);
         }
     }
 
@@ -519,6 +535,14 @@ PROMPT;
         foreach ($results as $result) {
             $url = $result['link'] ?? null;
             if (!$url || filter_var($url, FILTER_VALIDATE_URL) === false) continue;
+            
+            // SSRF Protection: block local IPs
+            $host = parse_url($url, PHP_URL_HOST);
+            if ($host && filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false && filter_var(gethostbyname($host), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                Log::warning('Blocked potential SSRF attempt', ['url' => $url]);
+                continue;
+            }
+
             $content = $this->scrapeUrlContent($url);
             if(!empty(trim($content))) { $scrapedResults[] = [ 'title' => $result['title'] ?? 'Tanpa Judul', 'url' => $url, 'content' => $content ]; }
         }

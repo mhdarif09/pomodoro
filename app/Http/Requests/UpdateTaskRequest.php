@@ -25,11 +25,14 @@ class UpdateTaskRequest extends FormRequest
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string|max:2000',
             'start_date' => 'nullable|date',
-            'due_date' => 'nullable|date|after_or_equal:start_date',
-            'document' => 'nullable|file|mimes:pdf,jpg,png,doc,docx|max:2048',
+            'due_date' => 'nullable|date',
+            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,csv,txt|max:10240',
             'status' => 'nullable|in:todo,in_progress,done',
+            'priority' => 'nullable|string',
             'estimated_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
             'auto_open_url' => 'nullable|url',
         ];
     }

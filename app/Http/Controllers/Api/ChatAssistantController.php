@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ChatSession;
 use App\Models\ChatMessage;  
+use App\Http\Requests\StoreChatSessionRequest;
+use App\Http\Requests\SendChatMessageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -26,13 +28,9 @@ class ChatAssistantController extends Controller
         return response()->json($messages);
     }
 
-    public function storeSession(Request $request)
+    public function storeSession(StoreChatSessionRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'type' => 'nullable|string|in:general,pdf,web,youtube',
-            'metadata' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         $session = $request->user()->chatSessions()->create([
             'title' => $validated['title'] ?? 'Chat Baru',
@@ -44,7 +42,7 @@ class ChatAssistantController extends Controller
         return response()->json($session);
     }
 
-    public function sendMessage(Request $request, ChatSession $session)
+    public function sendMessage(SendChatMessageRequest $request, ChatSession $session)
     {
         $this->authorize('update', $session);
 
@@ -84,13 +82,7 @@ class ChatAssistantController extends Controller
             }
         }
         
-        $validated = $request->validate([
-            'message' => 'nullable|string|max:10000',
-            'history' => 'nullable|array',
-            'webSearch' => 'nullable|boolean',
-            'tools' => 'nullable|array',
-            'image' => 'nullable|image|max:10240', // Max 10MB
-        ]);
+        $validated = $request->validated();
 
         $message = $validated['message'] ?? 'Analyze this image.';
         $imageData = null;

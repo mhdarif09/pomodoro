@@ -7,6 +7,10 @@ use App\Models\AiSubtaskUsage;
 use App\Services\TaskAIService;
 
 Route::get('/debug-sys', function () {
+    if (!app()->environment('local')) {
+        abort(404);
+    }
+
     // Force display errors for debug
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);

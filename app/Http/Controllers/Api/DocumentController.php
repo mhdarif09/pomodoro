@@ -10,13 +10,7 @@ use Illuminate\Support\Str;
 
 class DocumentController extends Controller
 {
-    private function canAccess(Document $document, User $user)
-    {
-        if ($document->user_id === $user->id) {
-            return true;
-        }
-        return $document->collaborators()->where('user_id', $user->id)->exists();
-    }
+
 
     public function search(Request $request)
     {
@@ -68,9 +62,7 @@ class DocumentController extends Controller
 
     public function show(Document $document)
     {
-        if (!$this->canAccess($document, auth()->user())) {
-             return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $this->authorize('view', $document);
         
         $document->load('collaborators', 'user');
         $document->share_url = $document->is_public && $document->share_token ? route('docs.share', $document->share_token) : null;
@@ -82,9 +74,7 @@ class DocumentController extends Controller
 
     public function update(Request $request, Document $document)
     {
-        if (!$this->canAccess($document, auth()->user())) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $this->authorize('update', $document);
 
         $validatedData = $request->validate([
             'title' => 'nullable|string|max:255',
@@ -105,18 +95,14 @@ class DocumentController extends Controller
 
     public function destroy(Document $document)
     {
-        if (auth()->user()->id !== $document->user_id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $this->authorize('delete', $document);
         $document->delete();
         return response()->json(['message' => 'Document deleted successfully']);
     }
 
     public function toggleSharing(Request $request, Document $document)
     {
-        if (auth()->user()->id !== $document->user_id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $this->authorize('toggleSharing', $document);
 
         $document->is_public = !$document->is_public;
         if ($document->is_public && !$document->share_token) {
@@ -137,9 +123,7 @@ class DocumentController extends Controller
 
     public function invite(Request $request, Document $document)
     {
-        if ($request->user()->id !== $document->user_id) {
-            return response()->json(['message' => 'Hanya pemilik yang bisa mengundang.'], 403);
-        }
+        $this->authorize('invite', $document);
 
         $request->validate([
             'email' => 'required|email|exists:users,email',

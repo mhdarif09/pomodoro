@@ -18,9 +18,12 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // [ PENAMBAHAN 2: Daftarkan TaskPolicy di sini ]
-        Task::class => TaskPolicy::class,
-        Document::class => DocumentPolicy::class,
+        \App\Models\Task::class => \App\Policies\TaskPolicy::class,
+        \App\Models\Document::class => \App\Policies\DocumentPolicy::class,
+        \App\Models\Guild::class => \App\Policies\GuildPolicy::class,
+        \App\Models\Subtask::class => \App\Policies\SubtaskPolicy::class,
+        \App\Models\Reflection::class => \App\Policies\ReflectionPolicy::class,
+        \App\Models\ChatSession::class => \App\Policies\ChatSessionPolicy::class,
     ];
 
     /**

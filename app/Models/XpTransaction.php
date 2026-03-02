@@ -9,7 +9,7 @@ class XpTransaction extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['user_id', 'amount', 'source_type', 'source_id', 'description', 'type'];
 
     public function user()
     {

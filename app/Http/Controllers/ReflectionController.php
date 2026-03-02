@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reflection;
+use App\Http\Requests\StoreReflectionRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Helpers\SecurityHelper;
@@ -32,12 +33,9 @@ class ReflectionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreReflectionRequest $request)
     {
-        $request->validate([
-            'user_answer' => 'required|string',
-            'ai_question' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Check journal limit
         if (!$request->user()->canCreateReflection()) {
@@ -62,9 +60,7 @@ class ReflectionController extends Controller
      */
     public function show(Reflection $reflection)
     {
-        if ($reflection->user_id !== auth()->id()) {
-            abort(403);
-        }
+        $this->authorize('view', $reflection);
         
         return Inertia::render('Journal/Show', [
             'reflection' => $reflection,

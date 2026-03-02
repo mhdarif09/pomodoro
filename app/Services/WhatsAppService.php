@@ -23,7 +23,7 @@ class WhatsAppService
     public function sendMessage(string $phone, string $message): array
     {
         try {
-            $response = Http::post($this->apiUrl, [
+            $response = Http::asForm()->post($this->apiUrl, [
                 'phone' => $phone,
                 'message' => $message,
             ]);

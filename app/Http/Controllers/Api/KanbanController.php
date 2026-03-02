@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use App\Services\TaskAIService;
 use Carbon\Carbon;
 use App\Helpers\SecurityHelper;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 
 class KanbanController extends Controller
 {
@@ -32,21 +34,9 @@ class KanbanController extends Controller
         return response()->json($tasks);
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'due_date' => 'nullable|date',
-            'priority' => 'nullable|string',
-            'status' => 'nullable|string|in:todo,in_progress,done',
-            'estimated_minutes' => 'nullable|integer',
-            'document' => 'nullable|file|max:10240',
-            'notes' => 'nullable|string', // Rich text notes
-            'tags' => 'nullable|array',   // Array of tag IDs
-            'tags.*' => 'exists:tags,id',
-        ]);
+        $validated = $request->validated();
         
         $estimatedMinutes = $request->input('estimated_minutes', 25);
 
@@ -97,23 +87,11 @@ class KanbanController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
         $this->authorize('update', $task);
         
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'due_date' => 'nullable|date',
-            'priority' => 'nullable|string',
-            'status' => 'nullable|string',
-            'estimated_minutes' => 'nullable|integer',
-            'notes' => 'nullable|string',
-            'auto_open_url' => 'nullable|url',
-            'document' => 'nullable|file|max:10240',
-            'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id',
-        ]);
+        $validated = $request->validated();
 
         $estimatedMinutes = $request->input('estimated_minutes', $task->estimated_minutes);
 

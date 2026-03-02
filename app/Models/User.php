@@ -18,8 +18,7 @@ class User extends Authenticatable
         'phone',
         'password',
         'google_id',
-        'role',
-        'banned_at',
+
         'growth_goals',
         'learning_style',
         'focus_time',
@@ -28,11 +27,7 @@ class User extends Authenticatable
         'personality_summary',
         'affiliate_code',
         'referred_by_id',
-        'affiliate_balance',
-        'whatsapp_reminders_sent_this_month',
-        'whatsapp_reminders_reset_at',
-        'subscription_status',
-        'subscription_plan_id',
+
         'whatsapp_verified_at',
         'referred_by',
         'timezone',
@@ -40,7 +35,7 @@ class User extends Authenticatable
         'daily_task_limit',
         'anti_overplanning_enabled',
         'last_recovery_date',
-        'redeemable_xp',
+
     ];
 
     protected $appends = [
