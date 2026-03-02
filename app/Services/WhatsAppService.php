@@ -7,10 +7,11 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
-    protected $apiUrl = 'https://wa.muhammadarifrs.my.id/enqueue';
+    protected $apiUrl;
 
     public function __construct()
     {
+        $this->apiUrl = env('WHATSAPP_API_URL', 'https://wa.muhammadarifrs.my.id/enqueue');
     }
 
     /**
@@ -23,6 +24,14 @@ class WhatsAppService
     public function sendMessage(string $phone, string $message): array
     {
         try {
+            // Normalize phone number: remove non-numeric chars
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            
+            // Format phone to start with 62 instead of 0
+            if (str_starts_with($phone, '0')) {
+                $phone = '62' . substr($phone, 1);
+            }
+            
             $response = Http::asForm()->post($this->apiUrl, [
                 'phone' => $phone,
                 'message' => $message,

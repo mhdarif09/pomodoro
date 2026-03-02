@@ -15,5 +15,6 @@ class VerifyCsrfToken extends Middleware
         'api/midtrans/webhook',
         '/webhook/midtrans',
         '/webhook/fonnte',
+        '/webhook/whatsapp',
     ];
 }
