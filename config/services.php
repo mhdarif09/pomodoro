@@ -69,4 +69,8 @@ return [
         'host' => env('POSTHOG_HOST'),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+
 ];
