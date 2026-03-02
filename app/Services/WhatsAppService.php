@@ -32,32 +32,19 @@ class WhatsAppService
                 $phone = '62' . substr($phone, 1);
             }
             
-            $response = Http::asForm()->post($this->apiUrl, [
+            // Dispatch the job to the queue
+            \App\Jobs\SendWhatsAppMessageJob::dispatch($phone, $message);
+
+            Log::info('WhatsApp message dispatched to queue', [
                 'phone' => $phone,
-                'message' => $message,
             ]);
 
-            $result = $response->json();
-
-            if ($response->successful()) {
-                Log::info('WhatsApp message sent successfully', [
-                    'phone' => $phone,
-                    'response' => $result,
-                ]);
-            } else {
-                Log::error('Failed to send WhatsApp message', [
-                    'phone' => $phone,
-                    'response' => $result,
-                    'status' => $response->status(),
-                ]);
-            }
-
             return [
-                'success' => $response->successful(),
-                'data' => $result,
+                'success' => true,
+                'data' => ['status' => 'queued', 'message' => 'Message queued for sending']
             ];
         } catch (\Exception $e) {
-            Log::error('Exception while sending WhatsApp message', [
+            Log::error('Exception while queueing WhatsApp message', [
                 'phone' => $phone,
                 'error' => $e->getMessage(),
             ]);
