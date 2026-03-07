@@ -66,7 +66,8 @@ class WhatsAppWebhookController extends Controller
             'message' => $message,
             'sender' => 'user',
             'type' => 'chat',
-            'status' => 'received'
+            'status' => 'received',
+            'sent_at' => now(),
         ]);
 
         $reply = $this->aiService->generateResponse($user, $message);

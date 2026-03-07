@@ -16,6 +16,7 @@ class ReminderLog extends Model
         'message',
         'type',
         'status',
+        'sent_at',
     ];
 
     public function user()

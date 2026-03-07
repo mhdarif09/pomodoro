@@ -80,7 +80,8 @@ class WhatsAppBotController extends Controller
                 'message' => $message,
                 'sender' => 'user',
                 'type' => 'chat',
-                'status' => 'received'
+                'status' => 'received',
+                'sent_at' => now(),
             ]);
 
             // Process the message through bot service
