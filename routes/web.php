@@ -266,7 +266,7 @@ Route::get('/login/google/redirect', [GoogleLoginController::class, 'redirectToG
 Route::get('/login/google/callback', [GoogleLoginController::class, 'handleGoogleCallback'])->name('login.google.callback');
 
 Route::get('/pricing', [SubscriptionController::class, 'index'])->name('subscribe.index');
-Route::post('/webhook/whatsapp', [\App\Http\Controllers\WhatsAppBotController::class, 'handle'])->name('whatsapp.webhook');
+Route::post('/api/wa/incoming', [\App\Http\Controllers\WhatsAppBotController::class, 'handle'])->name('whatsapp.incoming');
 
 // --- PUBLIC API ROUTES ---
 Route::prefix('dashboard/api')->name('api.')->group(function() {
