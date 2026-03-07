@@ -21,9 +21,9 @@ class WhatsAppBotController extends Controller
     }
 
     /**
-     * Handle incoming Fonnte webhook.
+     * Handle incoming WhatsApp webhook.
      *
-     * Fonnte sends POST with: sender, message, name, device, timestamp, etc.
+     * WA Service sends POST with: sender, pushName, message, timestamp, isGroup.
      * We must always return 200 OK.
      */
     public function handle(Request $request): JsonResponse
@@ -32,13 +32,20 @@ class WhatsAppBotController extends Controller
             set_time_limit(0); 
             $sender = $request->input('sender');
             $message = $request->input('message');
-            $name = $request->input('name');
+            $pushName = $request->input('pushName');
+            $isGroup = $request->input('isGroup', false);
 
             Log::info('WhatsApp webhook received', [
                 'sender' => $sender,
                 'message' => $message,
-                'name' => $name,
+                'pushName' => $pushName,
+                'isGroup' => $isGroup,
             ]);
+
+            // Skip group messages
+            if ($isGroup) {
+                return response()->json(['status' => 'ok']);
+            }
 
             // Validate required fields
             if (empty($sender) || empty($message)) {
@@ -54,7 +61,8 @@ class WhatsAppBotController extends Controller
 
             if (!$user) {
                 // User not found → send registration info
-                $reply = "👋 Hai {$name}!\n\n"
+                $displayName = $pushName ?? 'Kak';
+                $reply = "👋 Hai {$displayName}!\n\n"
                     . "Nomor kamu belum terdaftar di *Sarang Tumbuh*.\n\n"
                     . "Untuk menggunakan bot ini, silakan:\n"
                     . "1️⃣ Daftar di app Sarang Tumbuh\n"
@@ -66,10 +74,19 @@ class WhatsAppBotController extends Controller
                 return response()->json(['status' => 'ok']);
             }
 
+            // Log incoming user message
+            \App\Models\ReminderLog::create([
+                'user_id' => $user->id,
+                'message' => $message,
+                'sender' => 'user',
+                'type' => 'chat',
+                'status' => 'received'
+            ]);
+
             // Process the message through bot service
             $reply = $this->botService->processMessage($user, $message);
 
-            // Send reply via Fonnte
+            // Send reply via WhatsApp API
             $this->whatsAppService->sendMessage($phone, $reply);
 
             Log::info('WhatsApp bot reply sent', [
@@ -84,7 +101,7 @@ class WhatsAppBotController extends Controller
             ]);
         }
 
-        // Always return 200 OK for Fonnte
+        // Always return 200 OK for webhook
         return response()->json(['status' => 'ok']);
     }
 

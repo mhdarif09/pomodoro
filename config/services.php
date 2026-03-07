@@ -43,8 +43,8 @@ return [
     'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1'),
 ],
 
-'fonnte' => [
-    'token' => env('FONNTE_API_TOKEN'),
+'whatsapp' => [
+    'api_url' => env('WHATSAPP_API_URL', 'https://wa.muhammadarifrs.my.id/enqueue'),
 ],
 
     'ses' => [

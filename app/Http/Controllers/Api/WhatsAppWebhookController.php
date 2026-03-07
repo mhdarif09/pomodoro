@@ -21,27 +21,40 @@ class WhatsAppWebhookController extends Controller
     }
 
     /**
-     * Handle incoming WhatsApp messages from Fonnte
+     * Handle incoming WhatsApp messages from WA Service webhook
      */
     public function handle(Request $request)
     {
-        // Fonnte sends: sender, message, name, etc.
-        $sender = $request->input('sender'); // Phone number (e.g., 62812...)
+        // WA Service sends: sender, pushName, message, timestamp, isGroup
+        $sender = $request->input('sender'); // Phone number (e.g., 6281234567890)
         $message = $request->input('message');
+        $isGroup = $request->input('isGroup', false);
         
         // Basic validation
         if (!$sender || !$message) {
             return response()->json(['status' => false, 'reason' => 'Invalid payload'], 400);
         }
 
-        // 1. Check if user exists
-        // We might need to normalize phone number if stored differently
-        $user = User::where('phone', $sender)->first();
+        // Skip group messages
+        if ($isGroup) {
+            return response()->json(['status' => true]);
+        }
 
-        // If user not found, IGNORE (as per requirements)
+        // 1. Check if user exists (try multiple phone formats)
+        $phone = preg_replace('/[^0-9]/', '', $sender);
+        $user = User::where('phone', $phone)->first();
+
+        // Try alternate formats: 62xxx ↔ 0xxx
+        if (!$user && str_starts_with($phone, '62')) {
+            $user = User::where('phone', '0' . substr($phone, 2))->first();
+        }
+        if (!$user && str_starts_with($phone, '0')) {
+            $user = User::where('phone', '62' . substr($phone, 1))->first();
+        }
+
+        // If user not found, IGNORE
         if (!$user) {
             Log::info("WhatsApp Webhook: Ignored unregistered number", ['sender' => $sender]);
-            // Still return 200 to tell Fonnte we received it, otherwise it might retry
             return response()->json(['status' => true]); 
         }
 
@@ -58,7 +71,7 @@ class WhatsAppWebhookController extends Controller
 
         $reply = $this->aiService->generateResponse($user, $message);
 
-        // 3. Send Reply via Fonnte
+        // 3. Send Reply via WhatsApp API
         $this->whatsAppService->sendMessage($sender, $reply);
 
         return response()->json(['status' => true]);

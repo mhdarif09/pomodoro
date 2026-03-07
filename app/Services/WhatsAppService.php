@@ -15,11 +15,11 @@ class WhatsAppService
     }
 
     /**
-     * Send WhatsApp message via Fonnte API
+     * Send WhatsApp message via WA Service API (wa.muhammadarifrs.my.id)
      *
      * @param string $phone Phone number in international format (e.g., 628123456789)
      * @param string $message Message content
-     * @return array Response from Fonnte API
+     * @return array Response from WhatsApp API
      */
     public function sendMessage(string $phone, string $message): array
     {

@@ -37,7 +37,7 @@ class SendWhatsAppMessageJob implements ShouldQueue
         $apiUrl = env('WHATSAPP_API_URL', 'https://wa.muhammadarifrs.my.id/enqueue');
 
         try {
-            $response = Http::asForm()
+            $response = Http::asJson()
                 ->timeout(10)
                 ->connectTimeout(5)
                 ->post($apiUrl, [
