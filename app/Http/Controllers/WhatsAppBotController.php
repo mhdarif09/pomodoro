@@ -21,9 +21,9 @@ class WhatsAppBotController extends Controller
     }
 
     /**
-     * Handle incoming WhatsApp webhook.
+     * Handle incoming Fonnte webhook.
      *
-     * WA Service sends POST with: sender, pushName, message, timestamp, isGroup.
+     * Fonnte sends POST with: sender, message, name, device, timestamp, etc.
      * We must always return 200 OK.
      */
     public function handle(Request $request): JsonResponse
@@ -32,20 +32,13 @@ class WhatsAppBotController extends Controller
             set_time_limit(0); 
             $sender = $request->input('sender');
             $message = $request->input('message');
-            $pushName = $request->input('pushName');
-            $isGroup = $request->input('isGroup', false);
+            $name = $request->input('name');
 
             Log::info('WhatsApp webhook received', [
                 'sender' => $sender,
                 'message' => $message,
-                'pushName' => $pushName,
-                'isGroup' => $isGroup,
+                'name' => $name,
             ]);
-
-            // Skip group messages
-            if ($isGroup) {
-                return response()->json(['status' => 'ok']);
-            }
 
             // Validate required fields
             if (empty($sender) || empty($message)) {
@@ -53,15 +46,14 @@ class WhatsAppBotController extends Controller
                 return response()->json(['status' => 'ok']);
             }
 
-            // Normalize phone number (remove + prefix, spaces, dashes)
+            // Normalize phone number
             $phone = preg_replace('/[^0-9]/', '', $sender);
 
-            // Try to find user by phone (check various formats)
+            // Try to find user by phone
             $user = $this->findUserByPhone($phone);
 
             if (!$user) {
-                // User not found → send registration info
-                $displayName = $pushName ?? 'Kak';
+                $displayName = $name ?? 'Kak';
                 $reply = "👋 Hai {$displayName}!\n\n"
                     . "Nomor kamu belum terdaftar di *Sarang Tumbuh*.\n\n"
                     . "Untuk menggunakan bot ini, silakan:\n"
@@ -87,7 +79,7 @@ class WhatsAppBotController extends Controller
             // Process the message through bot service
             $reply = $this->botService->processMessage($user, $message);
 
-            // Send reply via WhatsApp API
+            // Send reply via Fonnte
             $this->whatsAppService->sendMessage($phone, $reply);
 
             Log::info('WhatsApp bot reply sent', [
@@ -102,7 +94,7 @@ class WhatsAppBotController extends Controller
             ]);
         }
 
-        // Always return 200 OK for webhook
+        // Always return 200 OK for Fonnte
         return response()->json(['status' => 'ok']);
     }
 
@@ -111,18 +103,15 @@ class WhatsAppBotController extends Controller
      */
     protected function findUserByPhone(string $phone): ?User
     {
-        // Direct match
         $user = User::where('phone', $phone)->first();
         if ($user) return $user;
 
-        // If starts with 62, also try with 0
         if (str_starts_with($phone, '62')) {
             $withZero = '0' . substr($phone, 2);
             $user = User::where('phone', $withZero)->first();
             if ($user) return $user;
         }
 
-        // If starts with 0, also try with 62
         if (str_starts_with($phone, '0')) {
             $with62 = '62' . substr($phone, 1);
             $user = User::where('phone', $with62)->first();

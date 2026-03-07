@@ -20,7 +20,7 @@ class SendReminders extends Command
      *
      * @var string
      */
-    protected $description = 'Send WhatsApp productivity reminders to users via WhatsApp API';
+    protected $description = 'Send WhatsApp productivity reminders to users via Fonnte';
 
     /**
      * Execute the console command.

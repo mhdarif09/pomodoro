@@ -57,7 +57,7 @@ class SmartReminderService
             
         } // achievement is unlimited, so no check.
 
-        // 2. Send via WhatsApp API
+        // 2. Send via Fonnte/WhatsApp
         $isSent = $this->sendWhatsAppMessage($user, $message);
 
         // 3. Log
@@ -74,11 +74,11 @@ class SmartReminderService
     }
 
     /**
-     * Send WhatsApp message via WhatsApp API
+     * Send WhatsApp message via Fonnte
      */
     protected function sendWhatsAppMessage(User $user, string $message): bool
     {
-        // Integration with WhatsApp Service
+        // Integration with WhatsApp sender (Fonnte)
         // Ensure user has phone
         if (!$user->phone) return false;
         

@@ -20,55 +20,49 @@ class SendWhatsAppMessageJob implements ShouldQueue
     protected string $phone;
     protected string $message;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(string $phone, string $message)
     {
         $this->phone = $phone;
         $this->message = $message;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        $apiUrl = env('WHATSAPP_API_URL', 'https://wa.muhammadarifrs.my.id/enqueue');
+        $token = config('services.fonnte.token');
 
         try {
-            $response = Http::asJson()
+            $response = Http::withHeaders([
+                    'Authorization' => $token,
+                ])
                 ->timeout(10)
                 ->connectTimeout(5)
-                ->post($apiUrl, [
-                    'phone' => $this->phone,
+                ->post('https://api.fonnte.com/send', [
+                    'target' => $this->phone,
                     'message' => $this->message,
                 ]);
 
             if ($response->successful()) {
-                Log::info('WhatsApp message sent via Job', [
+                Log::info('WhatsApp message sent via Fonnte', [
                     'phone' => $this->phone,
                     'response' => $response->json(),
                 ]);
             } else {
-                Log::error('Failed to send WhatsApp message via Job', [
+                Log::error('Failed to send WhatsApp message via Fonnte', [
                     'phone' => $this->phone,
                     'status' => $response->status(),
                     'response' => $response->body(),
                 ]);
-                
-                // If the API returns a 5xx error, release back to the queue to try again
+
                 if ($response->serverError()) {
-                    $this->release(10); // Wait 10 seconds before retrying
+                    $this->release(10);
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Exception sending WhatsApp message via Job', [
+            Log::error('Exception sending WhatsApp message via Fonnte', [
                 'phone' => $this->phone,
                 'error' => $e->getMessage(),
             ]);
-            
-            // Release the job back to the queue to retry
+
             $this->release(10);
         }
     }

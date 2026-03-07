@@ -7,19 +7,19 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
-    protected $apiUrl;
+    protected $token;
 
     public function __construct()
     {
-        $this->apiUrl = env('WHATSAPP_API_URL', 'https://wa.muhammadarifrs.my.id/enqueue');
+        $this->token = config('services.fonnte.token');
     }
 
     /**
-     * Send WhatsApp message via WA Service API (wa.muhammadarifrs.my.id)
+     * Send WhatsApp message via Fonnte API
      *
-     * @param string $phone Phone number in international format (e.g., 628123456789)
+     * @param string $phone Phone number
      * @param string $message Message content
-     * @return array Response from WhatsApp API
+     * @return array
      */
     public function sendMessage(string $phone, string $message): array
     {
@@ -58,9 +58,6 @@ class WhatsAppService
 
     /**
      * Send bulk WhatsApp messages
-     *
-     * @param array $recipients Array of ['phone' => '628xxx', 'message' => 'text']
-     * @return array Results for each recipient
      */
     public function sendBulkMessages(array $recipients): array
     {
@@ -77,12 +74,7 @@ class WhatsAppService
     }
 
     /**
-     * Send a reminder message with rate limiting for free users.
-     * Limit: 10 reminders per day for free users. Unlimited for premium.
-     *
-     * @param \App\Models\User $user
-     * @param string $message
-     * @return array
+     * Send a reminder message with rate limiting.
      */
     public function sendReminder(\App\Models\User $user, string $message, $taskId = null): array
     {
@@ -125,9 +117,10 @@ class WhatsAppService
                 'user_id' => $user->id,
                 'task_id' => $taskId,
                 'message' => $message,
-                'sender' => 'assistant', // Reminders are sent by the assistant/system
+                'sender' => 'assistant',
                 'type' => 'reminder',
-                'status' => 'sent'
+                'status' => 'sent',
+                'sent_at' => now(),
             ]);
         }
 

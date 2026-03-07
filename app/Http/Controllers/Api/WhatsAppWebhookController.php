@@ -21,30 +21,23 @@ class WhatsAppWebhookController extends Controller
     }
 
     /**
-     * Handle incoming WhatsApp messages from WA Service webhook
+     * Handle incoming WhatsApp messages from Fonnte
      */
     public function handle(Request $request)
     {
-        // WA Service sends: sender, pushName, message, timestamp, isGroup
-        $sender = $request->input('sender'); // Phone number (e.g., 6281234567890)
+        // Fonnte sends: sender, message, name, etc.
+        $sender = $request->input('sender');
         $message = $request->input('message');
-        $isGroup = $request->input('isGroup', false);
         
         // Basic validation
         if (!$sender || !$message) {
             return response()->json(['status' => false, 'reason' => 'Invalid payload'], 400);
         }
 
-        // Skip group messages
-        if ($isGroup) {
-            return response()->json(['status' => true]);
-        }
-
-        // 1. Check if user exists (try multiple phone formats)
+        // Normalize phone and find user
         $phone = preg_replace('/[^0-9]/', '', $sender);
         $user = User::where('phone', $phone)->first();
 
-        // Try alternate formats: 62xxx ↔ 0xxx
         if (!$user && str_starts_with($phone, '62')) {
             $user = User::where('phone', '0' . substr($phone, 2))->first();
         }
@@ -52,13 +45,12 @@ class WhatsAppWebhookController extends Controller
             $user = User::where('phone', '62' . substr($phone, 1))->first();
         }
 
-        // If user not found, IGNORE
         if (!$user) {
             Log::info("WhatsApp Webhook: Ignored unregistered number", ['sender' => $sender]);
             return response()->json(['status' => true]); 
         }
 
-        // 2. Log User Message & Generate Response
+        // Log User Message & Generate Response
         Log::info("WhatsApp Webhook: Processing message from registered user", ['user' => $user->name]);
         
         \App\Models\ReminderLog::create([
@@ -72,7 +64,7 @@ class WhatsAppWebhookController extends Controller
 
         $reply = $this->aiService->generateResponse($user, $message);
 
-        // 3. Send Reply via WhatsApp API
+        // Send Reply via Fonnte
         $this->whatsAppService->sendMessage($sender, $reply);
 
         return response()->json(['status' => true]);
