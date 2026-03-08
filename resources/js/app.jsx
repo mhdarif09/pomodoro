@@ -4,6 +4,9 @@ import '../css/app.css';
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { LanguageProvider } from './Contexts/LanguageContext';
+import ErrorBoundary from './Components/ErrorBoundary';
+import { PomodoroProvider } from './Contexts/PomodoroContext';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -13,7 +16,15 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        root.render(
+            <ErrorBoundary>
+                <LanguageProvider>
+                    <PomodoroProvider auth={props.initialPage.props.auth}>
+                        <App {...props} />
+                    </PomodoroProvider>
+                </LanguageProvider>
+            </ErrorBoundary>
+        );
     },
     progress: {
         color: '#4B5563',

@@ -1,90 +1,152 @@
-import { useState } from 'react';
+// File: resources/js/Pages/Subscribe/Index.jsx
 import { Head, usePage } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import axios from 'axios';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+    CheckIcon,
+    SparklesIcon,
+    RocketLaunchIcon,
+    ShieldCheckIcon,
+    ArrowLeftIcon
+} from '@heroicons/react/24/outline';
+import clsx from 'clsx';
+import UpgradeModal from '@/Components/UpgradeModal';
 
-export default function Subscribe({ auth, plans }) {
-    const [isRedirecting, setIsRedirecting] = useState(false);
-    const [loadingPlanId, setLoadingPlanId] = useState(null);
+export default function SubscribeIndex() {
+    const { message, plans } = usePage().props;
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [targetPlan, setTargetPlan] = useState(null);
 
-    const pay = async (plan) => {
-        try {
-            setLoadingPlanId(plan.id);
-
-            const response = await axios.post('/subscribe', { plan: plan.name }, {
-                headers: {
-                    'X-Inertia': false // <- FIX agar tidak dianggap Inertia request
-                }
-            });
-
-            const snapToken = response.data.snap_token;
-
-            window.snap.pay(snapToken, {
-                onSuccess: function (result) {
-                    console.log('Success', result);
-                    setIsRedirecting(true);
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 3000);
-                },
-                onPending: function (result) {
-                    alert('Pembayaran sedang diproses...');
-                    window.location.href = '/dashboard';
-                },
-                onError: function (result) {
-                    alert('Terjadi kesalahan saat pembayaran.');
-                    console.error(result);
-                },
-                onClose: function () {
-                    console.log('Snap closed by user');
-                    setLoadingPlanId(null);
-                },
-            });
-        } catch (error) {
-            console.error('Checkout failed', error);
-            alert('Gagal memproses pembayaran.');
-            setLoadingPlanId(null);
-        }
+    const handleSubscribe = (plan) => {
+        setTargetPlan(plan);
+        setShowUpgradeModal(true);
     };
 
     return (
-        <AuthenticatedLayout user={auth.user}>
-            <Head title="Langganan Premium" />
+        <div className="min-h-screen bg-[#F5F5F7] dark:bg-[#000000] selection:bg-blue-500/30 font-sans antialiased overflow-x-hidden">
+            <Head title="Premium - Sarang Tumbuh" />
 
-            <div className="p-6 text-white">
-                <h1 className="text-2xl font-bold mb-6">Pilih Paket Premium</h1>
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                plans={plans}
+                initialPlan={targetPlan}
+            />
 
-                {isRedirecting ? (
-                    <div className="text-center mt-10">
-                        <p className="text-lg">✅ Pembayaran berhasil! Mengarahkan ke dashboard...</p>
-                        <div className="mt-4">
-                            <svg className="animate-spin h-8 w-8 mx-auto text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                        </div>
+            {/* Background Decorative Elements */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/20 blur-[120px] rounded-full" />
+            </div>
+
+            <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 md:py-24">
+                {/* Header Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-center mb-16 md:mb-24"
+                >
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-md border border-white/50 dark:border-white/5 shadow-sm mb-6">
+                        <SparklesIcon className="h-4 w-4 text-amber-500" />
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">Upgrade ke Premium</span>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        {plans.map(plan => (
-                            <div key={plan.id} className="bg-gray-800 p-6 rounded-xl shadow-md">
-                                <h2 className="text-xl font-semibold capitalize mb-2">{plan.name}</h2>
-                                <p className="text-2xl font-bold mb-4">Rp {plan.price.toLocaleString()}</p>
+                    <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-6 tracking-tight leading-tight">
+                        Fokus Lebih Tajam,<br />
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Hasil Lebih Maksimal.</span>
+                    </h1>
+                    <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-500 dark:text-slate-400 font-medium">
+                        {message || "Bebaskan potensi penuhmu dengan fitur eksklusif yang dirancang untuk meningkatkan produktivitas setiap hari."}
+                    </p>
+                </motion.div>
+
+                {/* Pricing Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+                    {(plans || []).map((plan, index) => (
+                        <motion.div
+                            key={plan.id}
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                            className={clsx(
+                                "group relative flex flex-col p-1 rounded-[2.5rem] transition-all",
+                                plan.name.toLowerCase().includes('pro')
+                                    ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 shadow-2xl shadow-purple-500/20"
+                                    : "bg-white/40 dark:bg-white/5 backdrop-blur-2xl border border-white/50 dark:border-white/10"
+                            )}
+                        >
+                            <div className="flex-grow bg-white/90 dark:bg-black/80 backdrop-blur-2xl rounded-[2.3rem] p-8 md:p-10 flex flex-col items-center text-center">
+                                {plan.name.toLowerCase().includes('pro') && (
+                                    <div className="absolute top-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                                        Paling Populer
+                                    </div>
+                                )}
+
+                                <div className={clsx(
+                                    "p-4 rounded-3xl mb-6 shadow-inner",
+                                    plan.name.toLowerCase().includes('pro') ? "bg-purple-50 dark:bg-purple-950/30 text-purple-600" : "bg-slate-50 dark:bg-slate-900 text-slate-600"
+                                )}>
+                                    {plan.name.toLowerCase().includes('annual') ? <RocketLaunchIcon className="h-8 w-8" /> : <ShieldCheckIcon className="h-8 w-8" />}
+                                </div>
+
+                                <h3 className="text-2xl font-black text-slate-800 dark:text-neutral-200 mb-2">{plan.name}</h3>
+
+                                <div className="flex items-baseline gap-1 mb-6">
+                                    <span className="text-sm font-black text-slate-400">RP</span>
+                                    <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                        {Number(plan.price).toLocaleString('id-ID')}
+                                    </span>
+                                    <span className="text-sm font-bold text-slate-400">/{plan.duration === 'monthly' ? 'bln' : 'thn'}</span>
+                                </div>
+
+                                <div className="w-full space-y-4 mb-10 flex-grow">
+                                    {(plan.features || []).map((feature, idx) => (
+                                        <div key={idx} className="flex items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                                            <div className="flex-shrink-0 h-5 w-5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                                                <CheckIcon className="h-3 w-3 text-emerald-500" />
+                                            </div>
+                                            <span className="text-left">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
 
                                 <button
-                                    onClick={() => pay(plan)}
-                                    className={`w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition ${
-                                        loadingPlanId === plan.id ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                    disabled={loadingPlanId === plan.id}
+                                    onClick={() => handleSubscribe(plan)}
+                                    className={clsx(
+                                        "w-full py-5 rounded-[1.5rem] font-black text-lg transition-all active:scale-95 disabled:opacity-50 relative overflow-hidden group",
+                                        plan.name.toLowerCase().includes('pro')
+                                            ? "bg-slate-900 dark:bg-white text-white dark:text-black shadow-xl hover:shadow-2xl"
+                                            : "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-white/20"
+                                    )}
                                 >
-                                    {loadingPlanId === plan.id ? 'Memproses...' : 'Bayar Sekarang'}
+                                    <span className="relative z-10">
+                                        Dapatkan Sekarang
+                                    </span>
+                                    {plan.name.toLowerCase().includes('pro') && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                    )}
                                 </button>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </AuthenticatedLayout>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* Footer Link */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="mt-16 text-center"
+                >
+                    <button
+                        onClick={() => window.history.back()}
+                        className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold transition-all"
+                    >
+                        <ArrowLeftIcon className="h-4 w-4" />
+                        Kembali ke Dashboard
+                    </button>
+                </motion.div>
+            </main>
+        </div>
     );
 }

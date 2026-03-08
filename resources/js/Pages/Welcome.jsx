@@ -1,315 +1,840 @@
-import { Link, Head } from '@inertiajs/react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import { Head, Link } from '@inertiajs/react';
+import Lenis from '@studio-freight/lenis';
+import {
+    CheckIcon, ArrowRightIcon, StarIcon, UserGroupIcon, SparklesIcon,
+    ClockIcon, ChevronDownIcon, GlobeAltIcon, BoltIcon, ShieldCheckIcon,
+    HeartIcon, FireIcon, AcademicCapIcon, TrophyIcon, ChatBubbleLeftEllipsisIcon,
+    BookOpenIcon, ClipboardDocumentCheckIcon, BanknotesIcon, DocumentTextIcon
+} from '@heroicons/react/24/outline';
+import { useLanguage, LanguageProvider } from '@/Contexts/LanguageContext';
 
-export default function Welcome({ auth, laravelVersion, phpVersion }) {
+const FaTwitter = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>;
+const FaInstagram = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.024.048-1.378.06-3.808.06s-2.784-.012-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.08 2.525c.636-.247 1.363-.416 2.427-.465C9.53 2.013 9.884 2 12.315 2z" clipRule="evenodd" /></svg>;
+
+// ── Animated Section ──
+const AnimatedSection = ({ children, className = '', id = '' }) => {
+    const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.08 });
     return (
-        <>
-            <Head title="Welcome" />
-            <div className="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
-                <div className="sm:fixed sm:top-0 sm:right-0 p-6 text-end">
-                    {auth.user ? (
-                        <Link
-                            href={route('dashboard')}
-                            className="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                        >
-                            Dashboard
-                        </Link>
-                    ) : (
-                        <>
-                            <Link
-                                href={route('login')}
-                                className="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                            >
-                                Log in
-                            </Link>
+        <motion.section id={id} ref={ref} initial="hidden" animate={inView ? "visible" : "hidden"}
+            variants={{ visible: { transition: { staggerChildren: 0.12 } } }} className={className}>
+            {children}
+        </motion.section>
+    );
+};
 
-                            <Link
-                                href={route('register')}
-                                className="ms-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                            >
-                                Register
-                            </Link>
-                        </>
-                    )}
+const fadeUp = {
+    hidden: { opacity: 0, y: 40 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } }
+};
+
+const scaleIn = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
+};
+
+// ── Animated Counter ──
+const Counter = ({ target, suffix = '', prefix = '' }) => {
+    const [count, setCount] = useState(0);
+    const { ref, inView } = useInView({ triggerOnce: true });
+    useEffect(() => {
+        if (!inView) return;
+        let start = 0;
+        const end = parseInt(target);
+        if (isNaN(end)) return;
+        const step = Math.max(1, Math.floor(end / 40));
+        const timer = setInterval(() => {
+            start += step;
+            if (start >= end) { setCount(end); clearInterval(timer); }
+            else setCount(start);
+        }, 30);
+        return () => clearInterval(timer);
+    }, [inView, target]);
+    return <span ref={ref}>{prefix}{count.toLocaleString('id')}{suffix}</span>;
+};
+
+// ── FAQ ──
+const FAQItem = ({ question, answer }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <motion.div variants={fadeUp} className="border-b border-slate-100 last:border-0">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center py-5 text-left focus:outline-none group">
+                <span className="text-[15px] font-semibold text-slate-800 pr-8 group-hover:text-emerald-600 transition-colors">{question}</span>
+                <motion.div animate={{ rotate: isOpen ? 180 : 0 }} className="flex-shrink-0">
+                    <ChevronDownIcon className="w-5 h-5 text-slate-300" />
+                </motion.div>
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                        <p className="pb-5 text-slate-500 text-sm leading-relaxed">{answer}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+};
+
+// ── Marquee ──
+const Marquee = ({ children, direction = 'left', speed = 35, className = '' }) => (
+    <div className={`relative flex w-full overflow-hidden ${className}`}>
+        <motion.div className="flex min-w-full shrink-0 items-center justify-around gap-6"
+            animate={{ x: direction === 'left' ? ['0%', '-50%'] : ['-50%', '0%'] }}
+            transition={{ ease: 'linear', duration: speed, repeat: Infinity }}>{children}</motion.div>
+        <motion.div className="flex min-w-full shrink-0 items-center justify-around gap-6"
+            animate={{ x: direction === 'left' ? ['0%', '-50%'] : ['-50%', '0%'] }}
+            transition={{ ease: 'linear', duration: speed, repeat: Infinity }}>{children}</motion.div>
+        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#FAFBFC] to-transparent z-10"></div>
+        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FAFBFC] to-transparent z-10"></div>
+    </div>
+);
+
+// ── Floating Orb ──
+const Orb = ({ className, delay = 0 }) => (
+    <motion.div className={`absolute rounded-full blur-3xl ${className}`}
+        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 8, delay, repeat: Infinity, ease: 'easeInOut' }} />
+);
+
+// ── Smart Companion Preview ──
+const SmartCompanionPreview = () => {
+    const messages = [
+        { text: "Rina, tugas 'Laporan' belum selesai loh! 📝", type: "reminder", color: "bg-amber-100 text-amber-700 border-amber-200" },
+        { text: "Jangan buka IG dulu! Fokus 20 menit lagi. 🛡️", type: "focus", color: "bg-red-100 text-red-700 border-red-200" },
+        { text: "Yeay! Level up ke Level 12! 🎉", type: "celebrate", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+    ];
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % messages.length);
+        }, 3500);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="relative w-full h-full flex items-center justify-center">
+            {/* Chat Bubble */}
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 z-20">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                        transition={{ duration: 0.3 }}
+                        className={`p-3 rounded-2xl border-2 shadow-lg text-xs font-bold text-center relative ${messages[index].color}`}
+                    >
+                        {messages[index].text}
+                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-b-2 border-r-2 bg-inherit ${messages[index].color.split(' ')[2]}`}></div>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* Avatar */}
+            <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="w-32 h-32 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-3xl shadow-xl shadow-emerald-500/30 flex items-center justify-center relative border-4 border-white"
+            >
+                <div className="text-6xl filter drop-shadow-md">🦉</div>
+
+                {/* Status Indicator */}
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full border-4 border-white flex items-center justify-center shadow-sm">
+                    <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+// ── Competitor Battle Layout ──
+const CompetitorBattle = () => {
+    return (
+        <AnimatedSection className="py-24 px-6 bg-slate-50 border-y border-slate-200 overflow-hidden" id="comparison">
+            <div className="container mx-auto max-w-6xl">
+                <div className="text-center mb-16">
+                    <motion.p variants={fadeUp} className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-3">Tinggalkan Masa Lalu</motion.p>
+                    <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-[900] tracking-tight mb-4">Mending Fokus daripada Ribet.</motion.h2>
+                    <motion.p variants={fadeUp} className="text-slate-400">Stop managing tools. Start finishing tasks.</motion.p>
                 </div>
 
-                <div className="max-w-7xl mx-auto p-6 lg:p-8">
-                    <div className="flex justify-center">
-                        <svg
-                            viewBox="0 0 62 65"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-16 w-auto bg-gray-100 dark:bg-gray-900"
-                        >
-                            <path
-                                d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z"
-                                fill="#FF2D20"
-                            />
-                        </svg>
-                    </div>
+                {/* COMPETITORS ROW */}
+                <div className="grid md:grid-cols-3 gap-6 mb-12">
+                    {/* NOTION */}
+                    <motion.div variants={fadeUp} className="p-8 rounded-3xl bg-white border border-slate-200 text-center hover:shadow-lg transition-all group">
+                        <div className="h-12 flex items-center justify-center mb-6 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" alt="Notion" className="h-10 w-10 object-contain" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">Notion</h3>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Too much setup</p>
+                        <p className="text-slate-500 text-sm">"Canvas kosong" yang bikin kamu habis waktu buat menghias, bukan kerja.</p>
+                    </motion.div>
 
-                    <div className="mt-16">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                            <a
-                                href="https://laravel.com/docs"
-                                className="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500"
-                            >
-                                <div>
-                                    <div className="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth="1.5"
-                                            className="w-7 h-7 stroke-red-500"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                                            />
-                                        </svg>
-                                    </div>
+                    {/* JIRA */}
+                    <motion.div variants={fadeUp} className="p-8 rounded-3xl bg-white border border-slate-200 text-center hover:shadow-lg transition-all group">
+                        <div className="h-12 flex items-center justify-center mb-6 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            <img src="https://cdn.worldvectorlogo.com/logos/jira-3.svg" alt="Jira" className="h-10 w-auto object-contain" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">Jira</h3>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Too complex</p>
+                        <p className="text-slate-500 text-sm">Dibuat untuk tim 500 orang. Terlalu banyak form dan tombol untuk satu orang.</p>
+                    </motion.div>
 
-                                    <h2 className="mt-6 text-xl font-semibold text-gray-900 dark:text-white">
-                                        Documentation
-                                    </h2>
+                    {/* CLICKUP */}
+                    <motion.div variants={fadeUp} className="p-8 rounded-3xl bg-white border border-slate-200 text-center hover:shadow-lg transition-all group">
+                        <div className="h-12 flex items-center justify-center mb-6 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            <img src="https://cdn.worldvectorlogo.com/logos/clickup.svg" alt="ClickUp" className="h-10 w-auto object-contain" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">ClickUp</h3>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Overwhelming</p>
+                        <p className="text-slate-500 text-sm">"The Everything App" yang malah bikin bingung mau mulai dari mana.</p>
+                    </motion.div>
+                </div>
 
-                                    <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                        Laravel has wonderful documentation covering every aspect of the framework.
-                                        Whether you are a newcomer or have prior experience with Laravel, we recommend
-                                        reading our documentation from beginning to end.
-                                    </p>
+                {/* SARANG TUMBUH - THE HERO */}
+                <motion.div variants={scaleIn} className="relative z-10">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 blur-3xl opacity-50"></div>
+                    <div className="relative p-10 md:p-14 rounded-[2.5rem] bg-white border-2 border-emerald-500/10 shadow-2xl shadow-emerald-500/10 flex flex-col md:flex-row items-center gap-10 overflow-hidden transform transition-transform hover:scale-[1.01] duration-500">
+                        {/* DECORATION */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full -mr-20 -mt-20 blur-3xl opacity-50"></div>
+
+                        {/* CONTENT */}
+                        <div className="flex-1 text-center md:text-left relative z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+                                <SparklesIcon className="w-3.5 h-3.5" /> The Winner
+                            </div>
+                            <h3 className="text-3xl md:text-5xl font-[900] text-slate-900 mb-4 leading-tight">
+                                The First <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">Productivity Companion</span>,<br /> <span className="text-slate-400 text-2xl md:text-4xl">not just a tool.</span>
+                            </h3>
+                            <p className="text-slate-500 text-lg leading-relaxed mb-8 max-w-xl">
+                                Sarang Tumbuh tidak memintamu mengatur segalanya. Dia menemanimu fokus, memberimu XP saat selesai, dan mengingatkanmu saat lupa.
+                            </p>
+                            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-sm font-semibold text-slate-700">
+                                    <CheckIcon className="w-5 h-5 text-emerald-500" /> Max 3 Tugas
                                 </div>
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    className="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                    />
-                                </svg>
-                            </a>
-
-                            <a
-                                href="https://laracasts.com"
-                                className="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500"
-                            >
-                                <div>
-                                    <div className="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth="1.5"
-                                            className="w-7 h-7 stroke-red-500"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <h2 className="mt-6 text-xl font-semibold text-gray-900 dark:text-white">
-                                        Laracasts
-                                    </h2>
-
-                                    <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                        Laracasts offers thousands of video tutorials on Laravel, PHP, and JavaScript
-                                        development. Check them out, see for yourself, and massively level up your
-                                        development skills in the process.
-                                    </p>
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-sm font-semibold text-slate-700">
+                                    <CheckIcon className="w-5 h-5 text-emerald-500" /> RPG Gamification
                                 </div>
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    className="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                    />
-                                </svg>
-                            </a>
-
-                            <a
-                                href="https://laravel-news.com"
-                                className="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500"
-                            >
-                                <div>
-                                    <div className="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth="1.5"
-                                            className="w-7 h-7 stroke-red-500"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <h2 className="mt-6 text-xl font-semibold text-gray-900 dark:text-white">
-                                        Laravel News
-                                    </h2>
-
-                                    <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                        Laravel News is a community driven portal and newsletter aggregating all of the
-                                        latest and most important news in the Laravel ecosystem, including new package
-                                        releases and tutorials.
-                                    </p>
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-sm font-semibold text-slate-700">
+                                    <CheckIcon className="w-5 h-5 text-emerald-500" /> Guild Community
                                 </div>
+                            </div>
+                        </div>
 
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    className="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                    />
-                                </svg>
-                            </a>
-
-                            <div className="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                                <div>
-                                    <div className="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth="1.5"
-                                            className="w-7 h-7 stroke-red-500"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M6.115 5.19l.319 1.913A6 6 0 008.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 002.288-4.042 1.087 1.087 0 00-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 01-.98-.314l-.295-.295a1.125 1.125 0 010-1.591l.13-.132a1.125 1.125 0 011.3-.21l.603.302a.809.809 0 001.086-1.086L14.25 7.5l1.256-.837a4.5 4.5 0 001.528-1.732l.146-.292M6.115 5.19A9 9 0 1017.18 4.64M6.115 5.19A8.965 8.965 0 0112 3c1.929 0 3.716.607 5.18 1.64"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <h2 className="mt-6 text-xl font-semibold text-gray-900 dark:text-white">
-                                        Vibrant Ecosystem
-                                    </h2>
-
-                                    <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                        Laravel's robust library of first-party tools and libraries, such as{' '}
-                                        <a
-                                            href="https://forge.laravel.com"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Forge
-                                        </a>
-                                        ,{' '}
-                                        <a
-                                            href="https://vapor.laravel.com"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Vapor
-                                        </a>
-                                        ,{' '}
-                                        <a
-                                            href="https://nova.laravel.com"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Nova
-                                        </a>
-                                        , and{' '}
-                                        <a
-                                            href="https://envoyer.io"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Envoyer
-                                        </a>{' '}
-                                        help you take your projects to the next level. Pair them with powerful open
-                                        source libraries like{' '}
-                                        <a
-                                            href="https://laravel.com/docs/billing"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Cashier
-                                        </a>
-                                        ,{' '}
-                                        <a
-                                            href="https://laravel.com/docs/dusk"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Dusk
-                                        </a>
-                                        ,{' '}
-                                        <a
-                                            href="https://laravel.com/docs/broadcasting"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Echo
-                                        </a>
-                                        ,{' '}
-                                        <a
-                                            href="https://laravel.com/docs/horizon"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Horizon
-                                        </a>
-                                        ,{' '}
-                                        <a
-                                            href="https://laravel.com/docs/sanctum"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Sanctum
-                                        </a>
-                                        ,{' '}
-                                        <a
-                                            href="https://laravel.com/docs/telescope"
-                                            className="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                                        >
-                                            Telescope
-                                        </a>
-                                        , and more.
-                                    </p>
+                        {/* VISUAL */}
+                        <div className="w-48 h-48 md:w-64 md:h-64 flex-shrink-0 relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full blur-2xl opacity-20 animate-pulse"></div>
+                            <div className="relative w-full h-full bg-gradient-to-br from-emerald-50 to-teal-50 rounded-[2rem] border border-emerald-100 flex items-center justify-center shadow-inner">
+                                <div className="w-32 h-32 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 transform rotate-3">
+                                    <span className="text-6xl font-black">S</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </motion.div>
+            </div>
+        </AnimatedSection>
+    );
+};
 
-                    <div className="flex justify-center mt-16 px-6 sm:items-center sm:justify-between">
-                        <div className="text-center text-sm sm:text-start">&nbsp;</div>
+// ════════// ── Navbar Components ──
+const FlyoutLink = ({ children, href, FlyoutContent }) => {
+    const [open, setOpen] = useState(false);
+    const showFlyout = FlyoutContent && open;
 
-                        <div className="text-center text-sm text-gray-500 dark:text-gray-400 sm:text-end sm:ms-0">
-                            Laravel v{laravelVersion} (PHP v{phpVersion})
+    return (
+        <div
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+            className="relative h-fit w-fit"
+        >
+            <a href={href} className="relative text-slate-500 hover:text-emerald-600 font-semibold uppercase tracking-widest text-[13px] py-3 transition-colors">
+                {children}
+                <span
+                    style={{ transform: showFlyout ? "scaleX(1)" : "scaleX(0)" }}
+                    className="absolute -bottom-2 -left-2 -right-2 h-1 origin-left scale-x-0 rounded-full bg-emerald-500 transition-transform duration-300 ease-out"
+                />
+            </a>
+            <AnimatePresence>
+                {showFlyout && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 15 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="absolute left-1/2 top-12 -translate-x-1/2 bg-white rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 min-w-[300px] z-50 overflow-hidden"
+                    >
+                        <div className="absolute -top-6 left-0 right-0 h-6 bg-transparent" />
+                        <div className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white border-l border-t border-slate-100" />
+                        <FlyoutContent />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+const ProductContent = () => (
+    <div className="grid grid-cols-2 gap-4 w-[500px]">
+        {[
+            { title: "Learning Hub", desc: "Akses materi pembelajaran premium.", href: "/products/learning-hub", icon: <BookOpenIcon className="w-5 h-5 text-blue-500" /> },
+            { title: "To-Do List", desc: "Kelola tugas harianmu.", href: "/products/todo-list", icon: <ClipboardDocumentCheckIcon className="w-5 h-5 text-emerald-500" /> },
+            { title: "Affiliate", desc: "Dapatkan penghasilan tambahan.", href: "/products/affiliate", icon: <BanknotesIcon className="w-5 h-5 text-amber-500" /> },
+            { title: "Pomodoro", desc: "Fokus tanpa gangguan.", href: "/products/focus-timer", icon: <ClockIcon className="w-5 h-5 text-rose-500" /> },
+            { title: "Document Hub", desc: "Simpan & kelola dokumen.", href: "/products/document-hub", icon: <DocumentTextIcon className="w-5 h-5 text-indigo-500" /> },
+        ].map((item, i) => (
+            <a key={i} href={item.href} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                <div className="mt-0.5 p-2 bg-slate-50 rounded-lg group-hover:bg-white border boundary-slate-100 group-hover:shadow-sm transition-all">
+                    {item.icon}
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">{item.title}</h3>
+                    <p className="text-xs text-slate-400">{item.desc}</p>
+                </div>
+            </a>
+        ))}
+    </div>
+);
+
+const ResourceContent = () => (
+    <div className="grid grid-cols-1 gap-2">
+        <a href="/learn" className="block p-3 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-700 hover:text-emerald-600">
+            📚 Learn (Cara Kerja)
+        </a>
+        <a href="/reviews" className="block p-3 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-700 hover:text-emerald-600">
+            ⭐ Customer Reviews
+        </a>
+        <a href="/collaborate" className="block p-3 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-700 hover:text-emerald-600">
+            🤝 Collaboration & Demo
+        </a>
+        <div className="p-3 rounded-xl text-sm font-bold text-slate-400 flex justify-between items-center cursor-not-allowed opacity-60">
+            <span>🎉 Event</span>
+            <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">Soon</span>
+        </div>
+        <div className="p-3 rounded-xl text-sm font-bold text-slate-400 flex justify-between items-center cursor-not-allowed opacity-60">
+            <span>📰 Blog</span>
+            <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">Soon</span>
+        </div>
+    </div>
+);
+
+// ══════════════════════════════════════════════════
+// MAIN LANDING PAGE
+// ══════════════════════════════════════════════════
+function LandingPageContent({ plans = [] }) {
+    const { t, language, toggleLanguage } = useLanguage();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const lenis = new Lenis({ duration: 1.2 });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+    }, []);
+
+    useEffect(() => { document.body.style.overflow = isMenuOpen ? 'hidden' : 'auto'; }, [isMenuOpen]);
+
+    const heroRef = useRef(null);
+    const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+    const heroTextY = useTransform(scrollYProgress, [0, 1], ['0%', '35%']);
+    const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
+    const pricingPlans = useMemo(() => {
+        if (!plans || plans.length === 0) {
+            return [
+                { plan: 'Starter', price: { monthly: 'Gratis' }, desc: 'Untuk memulai kebiasaan baru', features: ['3 tugas fokus harian', 'Timer Pomodoro', 'Kanban pribadi', 'Bergabung 1 Guild', 'Companion pixel art'] },
+                { plan: 'Pro', price: { monthly: 20000 }, desc: 'Untuk produktivitas serius', features: ['Semua fitur Starter', 'AI Smart Focus', 'Guild tanpa batas', 'WhatsApp reminder', 'Laporan mingguan', 'Badge eksklusif'], highlighted: true },
+            ];
+        }
+        return plans.map(p => ({
+            plan: p.name, price: { monthly: p.price }, features: p.features || [],
+            highlighted: p.name.toLowerCase().includes('navigator') || p.name.toLowerCase().includes('pro') || p.name.toLowerCase().includes('premium'),
+            id: p.id
+        }));
+    }, [plans]);
+
+    const testimonials = [
+        { quote: "Sarang Tumbuh bikin rutinitas belajar jadi teratur banget. Companion-nya lucu, bikin semangat terus!", name: "Jessie", role: "Pengguna Aktif", avatar: null },
+        { quote: "Guild system-nya keren! Bisa ngerjain tugas bareng temen, jadi ada accountability partner.", name: "Demian", role: "Pengguna Aktif", avatar: null },
+        { quote: "Fitur fokus 3 tugas harian itu game changer sih. Nggak lagi overwhelm lihat to-do list panjang.", name: "Muhammad Salman Al Fikri", role: "Pengguna Aktif", avatar: null },
+        { quote: "Suka banget sama Pomodoro timer-nya! Kerja jadi lebih produktif dan terukur.", name: "Putri Qomara", role: "Pengguna Aktif", avatar: null },
+        { quote: "Akhirnya nemu app produktivitas yang simpel tapi powerful. Kanban board-nya juga bagus!", name: "Rommy Sulistiori N.S.", role: "Pengguna Aktif", avatar: null },
+        { quote: "Interface-nya clean dan enak dipake. Nggak ribet, langsung bisa fokus kerja.", name: "Eclairs R", role: "Pengguna Aktif", avatar: null },
+        { quote: "XP system-nya bikin nagih buat terus produktif. Berasa main game tapi beneran ngerjain tugas!", name: "Indahome", role: "Pengguna Aktif", avatar: null },
+        { quote: "Smart Focus-nya paham banget tugas mana yang harus dikerjain duluan. Recommended!", name: "Nebukadnezar Ahmad", role: "Pengguna Aktif", avatar: null },
+        { quote: "Pake ini buat ngatur kerjaan sehari-hari. Simpel, efektif, dan bikin konsisten!", name: "Fachmy Casofa", role: "Pengguna Aktif", avatar: null },
+    ];
+
+    const faqData = [
+        { question: "Apa bedanya dengan to-do list biasa?", answer: "Sarang Tumbuh hanya menampilkan 3 tugas fokus harian supaya kamu tidak overwhelm, ditambah companion virtual yang menemani sesi kerjamu dan sistem guild untuk berkolaborasi." },
+        { question: "Apa itu Guild?", answer: "Guild adalah tim kecil tempat kamu dan teman-teman saling support. Kalian bisa berbagi tugas, melihat progress satu sama lain, dan berlomba di leaderboard bersama." },
+        { question: "Apakah gratis?", answer: "Ya! Paket Starter sepenuhnya gratis dengan fitur inti lengkap. Paket Pro membuka fitur AI, guild tanpa batas, dan WhatsApp reminder." },
+        { question: "Bisa dipakai untuk kerja tim?", answer: "Tentu. Gunakan fitur Guild untuk kolaborasi. Setiap guild punya Kanban board, dokumen bersama, dan challenge harian." },
+    ];
+
+    return (
+        <div className="min-h-screen bg-[#FAFBFC] text-slate-900 antialiased overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+            <Head>
+                <title>Sarang Tumbuh — Teman Produktifmu</title>
+                <meta name="description" content="Sarang Tumbuh adalah platform produktivitas berbasis komunitas dengan gamifikasi. Fokus 3 tugas harian, Pomodoro timer, guild system, dan AI companion. Gratis selamanya." />
+                <meta name="keywords" content="produktivitas, to-do list, pomodoro, gamifikasi, guild, focus, sarang tumbuh, task manager, study app" />
+                <meta name="author" content="Sarang Tumbuh" />
+                <meta name="robots" content="index, follow" />
+                <meta name="theme-color" content="#10B981" />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="Sarang Tumbuh — Teman Produktifmu" />
+                <meta property="og:description" content="Fokus tanpa drama. Sendiri atau bareng. Platform produktivitas dengan gamifikasi dan guild system." />
+                <meta property="og:site_name" content="Sarang Tumbuh" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Sarang Tumbuh — Teman Produktifmu" />
+                <meta name="twitter:description" content="Fokus tanpa drama. Sendiri atau bareng. Platform produktivitas dengan gamifikasi dan guild system." />
+                <link rel="canonical" href={window.location.origin} />
+            </Head>
+
+            {/* ═════════ NAV ═════════ */}
+            <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="fixed top-0 left-0 right-0 z-50">
+                <div className="mx-4 mt-3">
+                    <nav className="container mx-auto px-6 py-3 flex items-center justify-between rounded-2xl bg-white/80 backdrop-blur-2xl border border-slate-200/50 shadow-sm shadow-slate-200/50">
+                        <Link href="/" className="text-lg font-[800] text-slate-900 tracking-tight flex items-center gap-2">
+                            <span className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/25">S</span>
+                            Sarang Tumbuh
+                        </Link>
+
+                        {/* Desktop Menu */}
+                        <div className="hidden md:flex items-center gap-8">
+                            <FlyoutLink href="#" FlyoutContent={ProductContent}>Product</FlyoutLink>
+                            <FlyoutLink href="#" FlyoutContent={ResourceContent}>Resources</FlyoutLink>
+                            <a href="#harga" className="text-slate-500 hover:text-emerald-600 font-semibold uppercase tracking-widest text-[13px] transition-colors">Pricing</a>
+                        </div>
+
+                        <div className="hidden md:flex items-center gap-2">
+                            <button onClick={toggleLanguage} className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-slate-600 text-xs font-bold uppercase transition-colors">
+                                {language === 'id' ? '🇮🇩' : '🇬🇧'}
+                            </button>
+                            <a href="/login" className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors">Masuk</a>
+                            <motion.a href="/register" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                                className="px-5 py-2 rounded-xl font-bold text-sm bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-md">
+                                Coba Gratis
+                            </motion.a>
+                        </div>
+
+                        {/* Mobile Toggle */}
+                        <div className="md:hidden flex items-center gap-2">
+                            <button onClick={toggleLanguage} className="px-2 py-1 text-xs font-bold">{language === 'id' ? '🇮🇩' : '🇬🇧'}</button>
+                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2">
+                                <div className="flex flex-col gap-1.5">
+                                    <motion.span animate={{ rotate: isMenuOpen ? 45 : 0, y: isMenuOpen ? 6 : 0 }} className="w-5 h-0.5 bg-slate-900 block rounded-full" />
+                                    <motion.span animate={{ opacity: isMenuOpen ? 0 : 1 }} className="w-5 h-0.5 bg-slate-900 block rounded-full" />
+                                    <motion.span animate={{ rotate: isMenuOpen ? -45 : 0, y: isMenuOpen ? -6 : 0 }} className="w-5 h-0.5 bg-slate-900 block rounded-full" />
+                                </div>
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+            </motion.header>
+
+            <AnimatePresence>
+                {isMenuOpen && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-white/98 backdrop-blur-3xl md:hidden flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-5">
+                            {['Cara Kerja', 'Fitur', 'Guild', 'Harga'].map(item => (
+                                <a key={item} href={`#${item.toLowerCase().replace(' ', '-')}`} onClick={() => setIsMenuOpen(false)} className="text-2xl font-bold text-slate-900">{item}</a>
+                            ))}
+                            <a href="/register" className="mt-4 px-8 py-4 rounded-2xl font-bold text-lg bg-slate-900 text-white">Coba Gratis</a>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <main className="relative z-10">
+                {/* ═════════ HERO ═════════ */}
+                <section ref={heroRef} className="min-h-[100vh] flex items-center justify-center relative pt-32 pb-24 overflow-hidden">
+                    <Orb className="w-[600px] h-[600px] bg-emerald-300/30 top-1/4 -right-40" />
+                    <Orb className="w-[400px] h-[400px] bg-teal-300/20 bottom-20 -left-20" delay={2} />
+                    <Orb className="w-[300px] h-[300px] bg-sky-200/20 top-40 left-1/3" delay={4} />
+
+                    <div className="container mx-auto px-6 text-center relative z-10">
+                        <motion.div style={{ y: heroTextY, opacity: heroOpacity }}>
+                            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                                className="inline-flex items-center gap-2 mb-8 px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50 text-emerald-700 text-xs font-bold uppercase tracking-widest">
+                                <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}>
+                                    <SparklesIcon className="w-3.5 h-3.5" />
+                                </motion.div>
+                                Productivity Companion
+                            </motion.div>
+
+                            <motion.h1 initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                                className="text-[clamp(2.8rem,8vw,6rem)] font-[900] tracking-[-0.04em] mb-6 leading-[1.05] max-w-4xl mx-auto">
+                                <span className="text-slate-900">Fokus tanpa drama.</span><br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500">Sendiri atau bareng.</span>
+                            </motion.h1>
+
+                            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                                className="text-base md:text-lg text-slate-400 max-w-md mx-auto mb-10 leading-relaxed">
+                                Cuma 3 tugas setiap hari. Companion yang menemani. Guild untuk saling support. Produktif tanpa overwhelm.
+                            </motion.p>
+
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
+                                className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                                <motion.a href="/register" whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}
+                                    className="group px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl font-bold text-white transition-all shadow-xl shadow-emerald-500/25 flex items-center gap-2">
+                                    Mulai Gratis <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </motion.a>
+                                <Link href={route('download.windows')}
+                                    className="px-7 py-4 bg-white hover:bg-slate-50 rounded-2xl font-semibold text-slate-600 border border-slate-200 flex items-center gap-2 shadow-sm transition-all">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1V11.55H0V3.449zm0 8.851h9.75v9.45L0 20.401V12.3zm10.75-10.45l13.25-1.85V11.55h-13.25V1.85zM24 12.3v10.15l-13.25-1.85V12.3H24z" /></svg>
+                                    Windows App
+                                </Link>
+                            </motion.div>
+
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
+                                className="mt-14 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-slate-400 font-medium">
+                                <span className="flex items-center gap-1.5"><ShieldCheckIcon className="w-4 h-4 text-emerald-400" /> Gratis Selamanya</span>
+                                <span className="flex items-center gap-1.5"><BoltIcon className="w-4 h-4 text-amber-400" /> Setup 30 Detik</span>
+                                <span className="flex items-center gap-1.5"><HeartIcon className="w-4 h-4 text-rose-400" /> Tanpa Iklan</span>
+                            </motion.div>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* ═════════ SOCIAL PROOF STRIP ═════════ */}
+                <AnimatedSection className="py-12 border-y border-slate-100 bg-white/60" id="stats">
+                    <motion.div variants={fadeUp} className="container mx-auto px-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                            {[
+                                { val: 10, suffix: 'K+', label: 'Pengguna Aktif', color: 'from-emerald-500 to-teal-500' },
+                                { val: 500, suffix: 'K+', label: 'Tugas Diselesaikan', color: 'from-blue-500 to-cyan-500' },
+                                { val: 50, suffix: '+', label: 'Achievements', color: 'from-amber-500 to-orange-500' },
+                                { val: 24, suffix: '/7', label: 'Kompetisi Guild', color: 'from-violet-500 to-purple-500' },
+                            ].map((s, i) => (
+                                <div key={i}>
+                                    <div className={`text-3xl md:text-4xl font-[900] text-transparent bg-clip-text bg-gradient-to-r ${s.color} mb-1`}>
+                                        <Counter target={s.val} suffix={s.suffix} />
+                                    </div>
+                                    <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                </AnimatedSection>
+
+                {/* ═════════ HOW IT WORKS ═════════ */}
+                <AnimatedSection id="cara-kerja" className="py-28 px-6 relative">
+                    <div className="container mx-auto max-w-5xl">
+                        <div className="text-center mb-20">
+                            <motion.p variants={fadeUp} className="text-xs font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Sesimpel itu</motion.p>
+                            <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-[900] tracking-tight mb-4">Tiga langkah. Nol ribet.</motion.h2>
+                            <motion.p variants={fadeUp} className="text-slate-400 max-w-md mx-auto">Tidak perlu setup rumit. Langsung produktif dari menit pertama.</motion.p>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {[
+                                { step: '01', icon: <SparklesIcon className="w-6 h-6" />, title: 'Pilih 3 Tugas', desc: 'Setiap hari, pilih 3 tugas terpenting. AI kami bisa bantu merekomendasikan.', gradient: 'from-indigo-500 to-violet-500' },
+                                { step: '02', icon: <ClockIcon className="w-6 h-6" />, title: 'Fokus & Kerjakan', desc: 'Mulai timer Pomodoro, companion menemanimu. Cuma kamu dan tugasmu.', gradient: 'from-emerald-500 to-teal-500' },
+                                { step: '03', icon: <TrophyIcon className="w-6 h-6" />, title: 'Rayakan & Ulang', desc: 'Selesaikan tugas, raih XP, naik level. Besok ulangi lagi.', gradient: 'from-amber-500 to-orange-500' },
+                            ].map((item) => (
+                                <motion.div key={item.step} variants={scaleIn}
+                                    className="relative p-8 rounded-3xl bg-white border border-slate-100 hover:border-emerald-200 shadow-sm hover:shadow-xl transition-all duration-500 group overflow-hidden">
+                                    <div className="absolute top-4 right-5 text-[72px] font-[900] text-slate-50 leading-none select-none group-hover:text-emerald-50 transition-colors duration-500">{item.step}</div>
+                                    <div className="relative z-10">
+                                        <div className={`w-12 h-12 mb-5 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>{item.icon}</div>
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
+                                        <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
-                </div>
-            </div>
+                </AnimatedSection>
 
-            <style>{`
-                .bg-dots-darker {
-                    background-image: url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(0,0,0,0.07)'/%3E%3C/svg%3E");
-                }
-                @media (prefers-color-scheme: dark) {
-                    .dark\\:bg-dots-lighter {
-                        background-image: url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(255,255,255,0.07)'/%3E%3C/svg%3E");
-                    }
-                }
-            `}</style>
-        </>
+                {/* ═════════ FEATURES — BENTO GRID ═════════ */}
+                <AnimatedSection id="fitur" className="py-28 px-6 bg-white/40 border-y border-slate-100 relative overflow-hidden">
+                    <Orb className="w-[500px] h-[500px] bg-indigo-200/15 -top-40 -right-40" delay={1} />
+                    <div className="container mx-auto max-w-6xl relative z-10">
+                        <div className="text-center mb-20">
+                            <motion.p variants={fadeUp} className="text-xs font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Fitur Inti</motion.p>
+                            <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-[900] tracking-tight mb-4">Semua yang kamu butuhkan,<br className="hidden md:block" /> tidak lebih.</motion.h2>
+                            <motion.p variants={fadeUp} className="text-slate-400 max-w-lg mx-auto">Dirancang supaya kamu fokus ke yang penting, bukan terjebak di fitur yang nggak perlu.</motion.p>
+                        </div>
+
+                        {/* Bento Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                            {/* Large: Smart Focus */}
+                            <motion.div variants={scaleIn} className="md:col-span-4 p-8 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white relative overflow-hidden group shadow-xl shadow-indigo-500/15">
+                                <Orb className="w-[200px] h-[200px] bg-white/10 -top-10 -right-10" />
+                                <div className="relative z-10">
+                                    <SparklesIcon className="w-8 h-8 mb-4 opacity-80" />
+                                    <h3 className="text-2xl font-[800] mb-2">Smart Focus 3</h3>
+                                    <p className="text-indigo-100 max-w-sm text-sm leading-relaxed">AI memilihkan 3 tugas terbaik setiap hari berdasarkan deadline, prioritas, dan kebiasaanmu. Cukup pilih, mulai, selesai.</p>
+                                    <div className="mt-6 flex gap-3">
+                                        {['Tugas A', 'Tugas B', 'Tugas C'].map((t, i) => (
+                                            <div key={i} className="px-4 py-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-xs font-bold">{t}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Small: Pomodoro */}
+                            <motion.div variants={scaleIn} className="md:col-span-2 p-7 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
+                                <div className="w-11 h-11 mb-4 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white shadow-lg">
+                                    <ClockIcon className="w-5 h-5" /></div>
+                                <h3 className="text-lg font-bold text-slate-900 mb-1">Pomodoro Timer</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">Timer terintegrasi. Klik dan langsung mulai fokus.</p>
+                                <div className="mt-4 text-3xl font-mono font-[900] text-slate-200">25:00</div>
+                            </motion.div>
+
+                            {/* Small: Guild */}
+                            <motion.div variants={scaleIn} className="md:col-span-2 p-7 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
+                                <div className="w-11 h-11 mb-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
+                                    <UserGroupIcon className="w-5 h-5" /></div>
+                                <h3 className="text-lg font-bold text-slate-900 mb-1">Guild System</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">Bentuk tim, selesaikan misi bersama. Akuntabilitas tanpa tekanan.</p>
+                            </motion.div>
+
+                            {/* Medium: Streak & XP */}
+                            <motion.div variants={scaleIn} className="md:col-span-2 p-7 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xl shadow-amber-500/15 relative overflow-hidden">
+                                <Orb className="w-[150px] h-[150px] bg-white/10 -bottom-10 -right-10" />
+                                <div className="relative z-10">
+                                    <FireIcon className="w-7 h-7 mb-3 opacity-80" />
+                                    <h3 className="text-lg font-[800] mb-1">Streak & XP</h3>
+                                    <p className="text-amber-100 text-sm">Kumpulkan XP, pertahankan streak harian, naik level!</p>
+                                    <div className="mt-4 text-3xl font-[900]">🔥 14 hari</div>
+                                </div>
+                            </motion.div>
+
+                            {/* Small: Kanban */}
+                            <motion.div variants={scaleIn} className="md:col-span-2 p-7 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-lg transition-all">
+                                <div className="w-11 h-11 mb-4 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white shadow-lg">
+                                    <AcademicCapIcon className="w-5 h-5" /></div>
+                                <h3 className="text-lg font-bold text-slate-900 mb-1">Kanban Board</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">Atur tugas visual. Drag, drop, selesai.</p>
+                            </motion.div>
+
+                            {/* Wide: WhatsApp */}
+                            <motion.div variants={scaleIn} className="md:col-span-4 p-8 rounded-3xl bg-gradient-to-br from-green-600 to-emerald-600 text-white relative overflow-hidden shadow-xl shadow-green-500/15">
+                                <Orb className="w-[200px] h-[200px] bg-white/10 top-0 -right-20" />
+                                <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
+                                    <div className="flex-1">
+                                        <ChatBubbleLeftEllipsisIcon className="w-8 h-8 mb-3 opacity-80" />
+                                        <h3 className="text-xl font-[800] mb-2">WhatsApp Reminder</h3>
+                                        <p className="text-green-100 text-sm leading-relaxed max-w-sm">Pengingat otomatis ke WhatsApp-mu. Tugas yang terlupakan akan mengirim notifikasi supaya kamu tetap on track.</p>
+                                    </div>
+                                    <div className="flex-shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                                        <div className="text-xs font-mono text-green-100 space-y-1">
+                                            <div>📱 Hai! Tugas "Design UI" belum</div>
+                                            <div>dikerjakan 3 hari. Yuk lanjut!</div>
+                                            <div className="text-green-300 mt-2">→ Lanjut Kerjakan</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Small: Companion */}
+                            <motion.div variants={scaleIn} className="md:col-span-2 p-7 rounded-3xl bg-slate-900 text-white shadow-xl relative overflow-hidden">
+                                <Orb className="w-[120px] h-[120px] bg-indigo-500/20 -bottom-10 -right-10" />
+                                <div className="relative z-10">
+                                    <div className="text-3xl mb-3">🎮</div>
+                                    <h3 className="text-lg font-[800] mb-1">Pixel Companion</h3>
+                                    <p className="text-slate-400 text-sm">Karakter retro 16-bit yang menemani fokusmu.</p>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                </AnimatedSection>
+
+                {/* ═════════ GUILD SECTION ═════════ */}
+                <AnimatedSection id="guild" className="py-28 px-6 relative overflow-hidden">
+                    <Orb className="w-[500px] h-[500px] bg-teal-200/15 bottom-0 -left-40" delay={3} />
+                    <div className="container mx-auto max-w-6xl relative z-10">
+                        <div className="grid lg:grid-cols-2 gap-16 items-center">
+                            <motion.div variants={scaleIn} className="order-last lg:order-first">
+                                <div className="relative p-10 rounded-[2.5rem] bg-gradient-to-br from-emerald-500 to-teal-600 overflow-hidden shadow-2xl shadow-emerald-500/25">
+                                    <Orb className="w-[250px] h-[250px] bg-white/10 -top-20 -right-20" />
+                                    <div className="relative z-10 text-white">
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl border border-white/30">🛡️</div>
+                                            <div><div className="text-[10px] font-bold uppercase tracking-widest text-emerald-200">Guild</div><div className="text-xl font-[900]">Squad Produktif</div></div>
+                                        </div>
+                                        <div className="space-y-2 mb-5">
+                                            {[{ n: "Rina", s: "3/3 selesai ✅" }, { n: "Fikri", s: "sedang fokus 🔥" }, { n: "Sari", s: "1/3 tugas" }].map((m, i) => (
+                                                <motion.div key={i} variants={fadeUp} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 text-sm">
+                                                    <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">{m.n[0]}</div>
+                                                    <span className="font-medium">{m.n} — {m.s}</span>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[{ v: "12", l: "Anggota" }, { v: "🔥 8", l: "Streak" }, { v: "#3", l: "Ranking" }].map((s, i) => (
+                                                <div key={i} className="p-3 rounded-xl bg-white/10 text-center"><div className="text-lg font-black">{s.v}</div><div className="text-[10px] text-emerald-200 uppercase tracking-wider">{s.l}</div></div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            <motion.div variants={fadeUp}>
+                                <p className="text-xs font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Lebih Kuat Bersama</p>
+                                <h2 className="text-3xl md:text-5xl font-[900] tracking-tight mb-5 leading-tight">Produktif itu<br />nggak harus sendirian.</h2>
+                                <p className="text-slate-400 mb-8 leading-relaxed">Buat guild, ajak teman atau rekan kerja. Lihat progress satu sama lain, selesaikan challenge bareng.</p>
+                                <div className="space-y-3">
+                                    {[
+                                        { icon: '🎯', title: 'Challenge Harian', desc: 'Misi bersama yang mendorong semua anggota tetap produktif.' },
+                                        { icon: '📊', title: 'Leaderboard Guild', desc: 'Kompetisi sehat. Siapa paling rajin minggu ini?' },
+                                        { icon: '📝', title: 'Dokumen Bersama', desc: 'Kanban board dan catatan yang bisa diakses semua anggota.' },
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex gap-3 items-start p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-lg flex-shrink-0">{item.icon}</div>
+                                            <div><h3 className="font-bold text-slate-900 text-sm mb-0.5">{item.title}</h3><p className="text-slate-400 text-xs">{item.desc}</p></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                </AnimatedSection>
+
+                {/* ═════════ COMPETITOR BATTLE ═════════ */}
+                <CompetitorBattle />
+
+                {/* ═════════ TESTIMONIALS ═════════ */}
+                <AnimatedSection id="cerita" className="py-28 bg-white/40 border-y border-slate-100">
+                    <div className="container mx-auto">
+                        <motion.div variants={fadeUp} className="text-center mb-14 px-6">
+                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Kata Mereka</p>
+                            <h2 className="text-3xl md:text-5xl font-[900] tracking-tight">Bukan cuma kami yang bilang.</h2>
+                        </motion.div>
+                        <motion.div variants={fadeUp} className="space-y-6">
+                            {[[0, 3, 'left', 45, 'from-emerald-400 to-teal-500'], [3, 6, 'right', 50, 'from-indigo-400 to-violet-500'], [6, 9, 'left', 40, 'from-amber-400 to-orange-500']].map(([start, end, dir, spd, gradient], ri) => (
+                                <Marquee key={ri} direction={dir} speed={spd}>
+                                    {testimonials.slice(start, end).map((t, i) => (
+                                        <div key={i} className="w-[360px] flex-shrink-0 p-6 rounded-3xl bg-white border border-slate-100 shadow-sm flex flex-col h-full mx-3">
+                                            <div className="flex gap-0.5 mb-4">{[...Array(5)].map((_, si) => <StarIcon key={si} className="h-4 w-4 fill-amber-400 text-amber-400" />)}</div>
+                                            <p className="text-slate-600 mb-5 flex-grow text-sm leading-relaxed">"{t.quote}"</p>
+                                            <div className="flex items-center gap-3 border-t border-slate-50 pt-4 mt-auto">
+                                                <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-sm font-bold shadow-sm`}>{t.name.charAt(0)}</div>
+                                                <div><div className="font-bold text-slate-900 text-sm">{t.name}</div><div className="text-xs text-slate-400">{t.role}</div></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </Marquee>
+                            ))}
+                        </motion.div>
+                    </div>
+                </AnimatedSection>
+
+                {/* ═════════ PRICING ═════════ */}
+                <AnimatedSection id="harga" className="py-28 px-6 relative">
+                    <div className="container mx-auto max-w-4xl">
+                        <div className="text-center mb-16">
+                            <motion.p variants={fadeUp} className="text-xs font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Harga</motion.p>
+                            <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-[900] tracking-tight mb-4">Mulai gratis, upgrade kapan saja.</motion.h2>
+                            <motion.p variants={fadeUp} className="text-slate-400">Tidak ada biaya tersembunyi. Tidak ada trial yang expire.</motion.p>
+                        </div>
+                        <div className={`grid ${pricingPlans.length <= 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : 'lg:grid-cols-3'} gap-6`}>
+                            {pricingPlans.map((plan) => (
+                                <motion.div key={plan.plan} variants={scaleIn}
+                                    className={`relative p-8 rounded-3xl ${plan.highlighted ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/20 ring-1 ring-slate-700' : 'bg-white border border-slate-200 shadow-sm'} transition-all hover:shadow-xl`}>
+                                    {plan.highlighted && (
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] font-bold rounded-full uppercase tracking-widest shadow-lg">Populer</div>
+                                    )}
+                                    <h3 className={`text-lg font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'} mb-0.5`}>{plan.plan}</h3>
+                                    {plan.desc && <p className={`text-xs ${plan.highlighted ? 'text-slate-400' : 'text-slate-400'} mb-4`}>{plan.desc}</p>}
+                                    <div className={`text-4xl font-[900] mb-6 ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
+                                        {typeof plan.price.monthly === 'number' ? (<>Rp{(plan.price.monthly / 1000).toLocaleString('id')}k<span className={`text-base font-medium ${plan.highlighted ? 'text-slate-500' : 'text-slate-400'}`}>/bln</span></>) : plan.price.monthly}
+                                    </div>
+                                    <ul className="space-y-2.5 mb-8">
+                                        {plan.features.map(f => <li key={f} className={`flex gap-2 text-sm ${plan.highlighted ? 'text-slate-300' : 'text-slate-500'}`}><CheckIcon className={`w-4 h-4 flex-shrink-0 ${plan.highlighted ? 'text-emerald-400' : 'text-emerald-500'}`} /> {f}</li>)}
+                                    </ul>
+                                    <a href="/register" className={`block py-3 px-6 rounded-xl text-center font-bold text-sm transition-all ${plan.highlighted ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:opacity-90' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+                                        {plan.highlighted ? 'Upgrade Sekarang' : 'Mulai Gratis'}
+                                    </a>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </AnimatedSection>
+
+                {/* ═════════ FAQ ═════════ */}
+                <AnimatedSection id="faq" className="py-28 px-6 bg-white/40 border-t border-slate-100">
+                    <div className="container mx-auto max-w-2xl">
+                        <div className="text-center mb-14">
+                            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-[900] tracking-tight mb-3">Ada pertanyaan?</motion.h2>
+                            <motion.p variants={fadeUp} className="text-slate-400">Jawaban untuk hal-hal yang sering ditanyakan.</motion.p>
+                        </div>
+                        <motion.div variants={fadeUp} className="bg-white rounded-3xl border border-slate-100 shadow-sm px-8">
+                            {faqData.map((faq, i) => <FAQItem key={i} question={faq.question} answer={faq.answer} />)}
+                        </motion.div>
+                    </div>
+                </AnimatedSection>
+
+                {/* ═════════ FINAL CTA ═════════ */}
+                <section className="py-24 px-6">
+                    <div className="container mx-auto max-w-3xl text-center">
+                        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                            className="relative p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden shadow-2xl">
+                            <Orb className="w-[400px] h-[400px] bg-emerald-500/15 -top-20 -right-20" />
+                            <Orb className="w-[300px] h-[300px] bg-teal-500/10 -bottom-20 -left-20" delay={2} />
+                            <div className="relative z-10">
+                                <h2 className="text-3xl md:text-5xl font-[900] tracking-tight mb-4 leading-tight">Siap fokus tanpa drama?</h2>
+                                <p className="text-slate-400 mb-8 max-w-sm mx-auto text-sm">Ribuan orang sudah menemukan ritme produktif mereka. Giliranmu sekarang.</p>
+                                <motion.a href="/register" whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}
+                                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-emerald-500/25">
+                                    Mulai Gratis Sekarang <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </motion.a>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* ═════════ FOOTER ═════════ */}
+                <footer className="py-10 border-t border-slate-100 bg-white/50">
+                    <div className="container mx-auto px-6">
+                        <div className="grid md:grid-cols-4 gap-8 mb-8">
+                            <div className="md:col-span-2">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-md flex items-center justify-center text-white text-[10px] font-black">S</span>
+                                    <span className="text-sm font-[800] text-slate-900">Sarang Tumbuh</span>
+                                </div>
+                                <p className="text-slate-400 text-xs mb-3 max-w-xs leading-relaxed">Teman produktifmu. Fokus sendiri atau bareng guild, tanpa overwhelm.</p>
+                                <div className="flex gap-3 text-slate-300 hover:text-slate-500"><FaTwitter /><FaInstagram /></div>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-xs text-slate-900 mb-2 uppercase tracking-widest">Produk</h4>
+                                <ul className="space-y-1.5 text-xs text-slate-400">
+                                    <li><a href="#fitur" className="hover:text-emerald-600 transition-colors">Fitur</a></li>
+                                    <li><a href="#guild" className="hover:text-emerald-600 transition-colors">Guild</a></li>
+                                    <li><a href="#harga" className="hover:text-emerald-600 transition-colors">Harga</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-xs text-slate-900 mb-2 uppercase tracking-widest">Lainnya</h4>
+                                <ul className="space-y-1.5 text-xs text-slate-400">
+                                    <li><a href="#faq" className="hover:text-emerald-600 transition-colors">FAQ</a></li>
+                                    <li><a href="/login" className="hover:text-emerald-600 transition-colors">Masuk</a></li>
+                                    <li><Link href="/privacy-policy" className="hover:text-emerald-600 transition-colors">Privacy Policy</Link></li>
+                                    <li><Link href="/terms-of-service" className="hover:text-emerald-600 transition-colors">Terms of Service</Link></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="text-center text-slate-300 text-[11px] pt-6 border-t border-slate-100">
+                            &copy; {new Date().getFullYear()} Sarang Tumbuh. Hak cipta dilindungi.
+                        </div>
+                    </div>
+                </footer>
+            </main>
+
+
+        </div >
+    );
+}
+
+export default function OdysseyLandingPage(props) {
+    return (
+        <LanguageProvider>
+            <LandingPageContent {...props} />
+        </LanguageProvider>
     );
 }

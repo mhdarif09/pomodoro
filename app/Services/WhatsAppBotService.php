@@ -1,0 +1,497 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Task;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class WhatsAppBotService
+{
+    protected WhatsAppService $whatsAppService;
+
+    public function __construct(WhatsAppService $whatsAppService)
+    {
+        $this->whatsAppService = $whatsAppService;
+    }
+
+    /**
+     * Process an incoming WhatsApp message and return a response.
+     */
+    public function processMessage(User $user, string $message): string
+    {
+        $message = trim($message);
+
+        // Layer 1: Slash Commands
+        if (str_starts_with($message, '/')) {
+            return $this->handleCommand($user, $message);
+        }
+
+        // Layer 2: AI Natural Language Understanding
+        return $this->handleNaturalLanguage($user, $message);
+    }
+
+    /**
+     * Handle slash commands.
+     */
+    protected function handleCommand(User $user, string $message): string
+    {
+        $parts = explode(' ', $message, 2);
+        $command = strtolower($parts[0]);
+        $args = $parts[1] ?? '';
+
+        return match ($command) {
+            '/help', '/bantuan' => $this->cmdHelp(),
+            '/list', '/tugas' => $this->cmdList($user),
+            '/tambah', '/add' => $this->cmdAdd($user, $args),
+            '/selesai', '/done' => $this->cmdDone($user, $args),
+            '/hapus', '/delete' => $this->cmdDelete($user, $args),
+            '/detail' => $this->cmdDetail($user, $args),
+            '/reminder' => $this->cmdReminder($user, $args),
+            default => "❓ Command tidak dikenal.\n\nKetik /help untuk melihat daftar command.",
+        };
+    }
+
+    // =========================================================================
+    // SLASH COMMANDS
+    // =========================================================================
+
+    protected function cmdHelp(): string
+    {
+        return "📋 *Sarang Tumbuh — WhatsApp Bot*\n\n"
+            . "Berikut command yang tersedia:\n\n"
+            . "📌 */tambah [judul] - [deadline]*\n"
+            . "   Buat task baru\n"
+            . "   Contoh: /tambah Belajar Kalkulus - 2026-02-15\n\n"
+            . "📄 */list* atau */tugas*\n"
+            . "   Lihat semua pending tasks\n\n"
+            . "✅ */selesai [nomor]*\n"
+            . "   Tandai task selesai\n"
+            . "   Contoh: /selesai 1\n\n"
+            . "🗑️ */hapus [nomor]*\n"
+            . "   Hapus task\n"
+            . "   Contoh: /hapus 2\n\n"
+            . "📎 */detail [nomor]*\n"
+            . "   Lihat detail + subtask\n\n"
+            . "⏰ */reminder [nomor] [waktu]*\n"
+            . "   Set reminder custom\n"
+            . "   Contoh: /reminder 1 2026-02-11 08:00\n\n"
+            . "💬 Atau kirim pesan biasa (natural language) dan AI kami akan membantu!\n"
+            . "   Contoh: \"besok deadline apa ya?\"";
+    }
+
+    protected function cmdList(User $user): string
+    {
+        $tasks = $user->tasks()
+            ->where('is_completed', false)
+            ->orderBy('due_date', 'asc')
+            ->get();
+
+        if ($tasks->isEmpty()) {
+            return "🎉 Tidak ada task pending. Kamu sudah menyelesaikan semuanya!\n\nGunakan /tambah untuk buat task baru.";
+        }
+
+        $msg = "📋 *Daftar Task Kamu* ({$tasks->count()} pending)\n\n";
+        foreach ($tasks->values() as $i => $task) {
+            $num = $i + 1;
+            $priority = $this->priorityEmoji($task->priority);
+            $due = $task->due_date ? Carbon::parse($task->due_date)->format('d M Y') : 'Tanpa deadline';
+            $status = $this->statusLabel($task->status);
+            $msg .= "{$num}. {$priority} *{$task->title}*\n";
+            $msg .= "   📅 {$due} | {$status}\n\n";
+        }
+
+        $msg .= "Gunakan /selesai [nomor] untuk menandai selesai.";
+        return $msg;
+    }
+
+    protected function cmdAdd(User $user, string $args): string
+    {
+        if (empty($args)) {
+            return "⚠️ Format: /tambah [judul] - [deadline]\n\nContoh: /tambah Belajar Kalkulus - 2026-02-15";
+        }
+
+        // Parse title and deadline
+        $parts = explode(' - ', $args, 2);
+        $title = trim($parts[0]);
+        $deadline = isset($parts[1]) ? trim($parts[1]) : null;
+
+        if (empty($title)) {
+            return "⚠️ Judul task tidak boleh kosong.";
+        }
+
+        $taskData = [
+            'title' => $title,
+            'status' => 'todo',
+            'is_completed' => false,
+            'created_via' => 'whatsapp',
+        ];
+
+        if ($deadline) {
+            try {
+                $dueDate = Carbon::parse($deadline);
+                $taskData['due_date'] = $dueDate->format('Y-m-d');
+            } catch (\Exception $e) {
+                return "⚠️ Format tanggal tidak valid. Gunakan format: YYYY-MM-DD\nContoh: 2026-02-15";
+            }
+        }
+
+        // Auto-determine priority
+        $taskData['priority'] = $this->determinePriority($taskData['due_date'] ?? null);
+
+        $task = $user->tasks()->create($taskData);
+
+        $response = "✅ *Task berhasil dibuat!*\n\n"
+            . "📋 {$task->title}\n"
+            . "🎯 Priority: {$task->priority}\n";
+
+        if ($task->due_date) {
+            $response .= "📅 Deadline: " . Carbon::parse($task->due_date)->format('d M Y') . "\n";
+        }
+
+        $response .= "\nGunakan /list untuk melihat semua task.";
+        return $response;
+    }
+
+    protected function cmdDone(User $user, string $args): string
+    {
+        $num = (int) trim($args);
+        if ($num < 1) {
+            return "⚠️ Format: /selesai [nomor]\nContoh: /selesai 1\n\nGunakan /list untuk melihat daftar task.";
+        }
+
+        $task = $this->getTaskByNumber($user, $num);
+        if (!$task) {
+            return "⚠️ Task #{$num} tidak ditemukan. Gunakan /list untuk melihat daftar task.";
+        }
+
+        $task->update([
+            'is_completed' => true,
+            'status' => 'done',
+        ]);
+
+        return "✅ *Task selesai!*\n\n"
+            . "📋 ~~{$task->title}~~ ✔️\n\n"
+            . "Keren! Satu langkah lebih dekat ke tujuanmu! 🚀";
+    }
+
+    protected function cmdDelete(User $user, string $args): string
+    {
+        $num = (int) trim($args);
+        if ($num < 1) {
+            return "⚠️ Format: /hapus [nomor]\nContoh: /hapus 2";
+        }
+
+        $task = $this->getTaskByNumber($user, $num);
+        if (!$task) {
+            return "⚠️ Task #{$num} tidak ditemukan. Gunakan /list untuk melihat daftar task.";
+        }
+
+        $title = $task->title;
+        $task->delete();
+
+        return "🗑️ Task *{$title}* berhasil dihapus.";
+    }
+
+    protected function cmdDetail(User $user, string $args): string
+    {
+        $num = (int) trim($args);
+        if ($num < 1) {
+            return "⚠️ Format: /detail [nomor]\nContoh: /detail 1";
+        }
+
+        $task = $this->getTaskByNumber($user, $num);
+        if (!$task) {
+            return "⚠️ Task #{$num} tidak ditemukan.";
+        }
+
+        $msg = "📎 *Detail Task #{$num}*\n\n"
+            . "📋 *{$task->title}*\n"
+            . "🎯 Priority: {$task->priority}\n"
+            . "📊 Status: {$this->statusLabel($task->status)}\n";
+
+        if ($task->due_date) {
+            $msg .= "📅 Deadline: " . Carbon::parse($task->due_date)->format('d M Y') . "\n";
+        }
+
+        if ($task->description) {
+            $msg .= "📝 Deskripsi: {$task->description}\n";
+        }
+
+        if ($task->notes) {
+            $msg .= "🗒️ Notes: {$task->notes}\n";
+        }
+
+        if ($task->reminder_at) {
+            $msg .= "⏰ Reminder: " . Carbon::parse($task->reminder_at)->format('d M Y H:i') . "\n";
+        }
+
+        // Subtasks
+        $subtasks = $task->subtasks;
+        if ($subtasks && $subtasks->isNotEmpty()) {
+            $msg .= "\n📌 *Subtasks:*\n";
+            foreach ($subtasks as $sub) {
+                $check = $sub->is_completed ? '✅' : '⬜';
+                $msg .= "   {$check} {$sub->title}\n";
+            }
+        }
+
+        return $msg;
+    }
+
+    protected function cmdReminder(User $user, string $args): string
+    {
+        $parts = preg_split('/\s+/', trim($args), 2);
+        $num = (int) ($parts[0] ?? 0);
+        $timeStr = $parts[1] ?? '';
+
+        if ($num < 1 || empty($timeStr)) {
+            return "⚠️ Format: /reminder [nomor] [waktu]\nContoh: /reminder 1 2026-02-11 08:00";
+        }
+
+        $task = $this->getTaskByNumber($user, $num);
+        if (!$task) {
+            return "⚠️ Task #{$num} tidak ditemukan.";
+        }
+
+        try {
+            $reminderAt = Carbon::parse($timeStr);
+        } catch (\Exception $e) {
+            return "⚠️ Format waktu tidak valid.\nGunakan: YYYY-MM-DD HH:MM\nContoh: 2026-02-11 08:00";
+        }
+
+        if ($reminderAt->isPast()) {
+            return "⚠️ Waktu reminder harus di masa depan.";
+        }
+
+        $task->update([
+            'reminder_at' => $reminderAt,
+            'reminder_sent' => false,
+        ]);
+
+        return "⏰ *Reminder di-set!*\n\n"
+            . "📋 {$task->title}\n"
+            . "🔔 Kamu akan diingatkan pada: " . $reminderAt->format('d M Y H:i') . "\n\n"
+            . "Kami akan kirim notif WhatsApp tepat waktu! 🚀";
+    }
+
+    // =========================================================================
+    // AI NATURAL LANGUAGE UNDERSTANDING (Layer 2)
+    // =========================================================================
+
+    protected function handleNaturalLanguage(User $user, string $message): string
+    {
+        try {
+            // Build context from user's tasks
+            $context = $this->buildUserContext($user);
+
+            $systemPrompt = <<<PROMPT
+Kamu adalah "Sarang Tumbuh AI Partner", asisten pribadi dan sekretaris virtual kelas atas yang luar biasa pintar, proaktif, dan selalu selangkah lebih maju.
+Karaktermu: Cerdas, asik, sangat suportif, dan memiliki pemahaman mendalam tentang manajemen waktu, produktivitas, serta proses belajar (learning).
+Tugas utamamu adalah mendampingi user ($user->name) mencapai tujuan-tujuannya, memastikan semua task terkelola dengan sempurna, dan meminimalisir stres.
+
+GAYA KOMUNIKASI:
+- Bahasa Indonesia yang natural, profesional namun santai (seperti partner kerja senior yang brilian dan asik).
+- Responsif, solutif, dan analitis. Jangan hanya mengiyakan, berikan insight atau sudut pandang baru jika diperlukan.
+- Gunakan emoji secukupnya untuk menghidupkan percakapan.
+- Boleh bercanda cerdas jika konteksnya tepat, tapi selalu berorientasi pada hasil (solution-oriented).
+- JANGAN kaku seperti robot. Berikan kesan kamu benar-benar paham konteks kehidupan pengguna.
+
+KONTEKS USER HARI INI:
+{$context}
+
+KEMAMPUAN SUPER KAMU SEBAGAI SEKRETARIS:
+1. **Analisis & Diskusi Mendalam:** Kamu sangat paham cara memecahkan masalah kompleks, brainstorming ide brilian, mereview draf tulisan, atau mengurai logika sistem.
+2. **Manajemen Task Master:** Kamu tahu persis mana task yang harus diprioritaskan. Kamu jago memecah task raksasa menjadi langkah-langkah kecil (micro-steps) yang mudah dieksekusi. Ingatkan deadline dengan cara yang memotivasi, bukan menekan.
+3. **Teman Belajar (Learning Companion):** Kalau user sedang belajar sesuatu yang baru, berikan kerangka berpikir, analogi yang mudah dipahami, atau teknik belajar efektif (seperti Feynman Technique, Pomodoro, dll).
+4. **Support Mental & Motivator:** Jadilah pendengar yang baik kalau user sedang burn out. Berikan perspektif positif, sarankan istirahat jika perlu, dan berikan apresiasi tinggi bahkan untuk progres sekecil apapun.
+5. **Menjawab Segalanya:** Dari pertanyaan teknis coding, strategi bisnis, sampai tips menulis—jawablah dengan akurat, ringkas, dan langsung ke intinya.
+
+INSTRUKSI KHUSUS & BATASAN:
+- Jika user meminta **TELPON/CALL**: Jawab dengan cerdik dan playful, misalnya "Wah, pita suaraku lagi di-upgrade nih 😂 Tapi tenang, aku standby 24 jam via chat dengan otak yang sudah 100% siap bantu kamu! Mau bahas strategi apa kita sekarang?".
+- Jika user bertanya "harus ngapain?": Analisis daftar 'PENDING TASK' di atas. Jangan cuma menyebutkan ulang daftarnya. Pilihkan 1 atau 2 task yang paling mendesak atau paling strategis untuk diselesaikan sekarang, dan jelaskan *kenapa* itu yang terbaik.
+- Jika user melapor ada task yang selesai: Berikan pujian yang spesifik dan tulus! 🎉 Katakan bahwa itu adalah progres yang hebat.
+
+UNTUK AKSI NYATA (MANIPULASI DATABASE):
+PENTING: Saat ini kamu belum memiliki akses API langsung untuk mengubah database secara otomatis lewat percakapan AI biasa.
+JIKA user secara eksplisit memintamu untuk membuat, menyelesaikan, menghapus, atau melihat task,
+ARAHKAN mereka untuk menggunakan command slash ini agar tersimpan di sistem:
+- Ketik `/tambah [judul] - [deadline]` (contoh: /tambah Bikin Proposal - 2026-03-01) untuk menambahkan task baru.
+- Ketik `/selesai [nomor_task]` untuk mencoret task yang sudah beres.
+- Ketik `/hapus [nomor_task]` untuk menghapus task.
+- Ketik `/list` untuk melihat semua task secara rapi.
+
+FORMAT JAWABAN:
+- Jawablah secara efisien, terstruktur, dan enak dibaca (gunakan bullet points jika perlu).
+- Usahakan tidak terlalu panjang lebar (maksimal 2-3 paragraf) KECUALI user benar-benar meminta penjelasan terperinci.
+PROMPT;
+
+            $apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
+            $response = Http::withToken($apiKey)->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
+                'model' => 'gpt-4o-mini',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $message],
+                ],
+                'temperature' => 0.7,
+                'max_tokens' => 500,
+            ]);
+
+            if ($response->successful()) {
+                $text = $response->json('choices.0.message.content');
+                if ($text) {
+                    return trim($text);
+                }
+            }
+
+            Log::warning('WhatsAppBot: OpenAI API response unsuccessful', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $this->fallbackResponse($user, $message);
+
+        } catch (\Exception $e) {
+            Log::error('WhatsAppBot: AI processing error', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+
+            return $this->fallbackResponse($user, $message);
+        }
+    }
+
+    /**
+     * Build context string from user's tasks.
+     */
+    protected function buildUserContext(User $user): string
+    {
+        // 1. Pending Tasks
+        $tasks = $user->tasks()
+            ->where('is_completed', false)
+            ->orderBy('due_date', 'asc')
+            ->limit(10)
+            ->get();
+        
+        // 2. Completed Tasks Today
+        $completedToday = $user->tasks()
+            ->where('is_completed', true)
+            ->whereDate('updated_at', Carbon::today())
+            ->get();
+
+        $context = "TANGGAL HARI INI: " . $this->today() . "\n\n";
+
+        if ($completedToday->isNotEmpty()) {
+            $context .= "✅ SELESAI HARI INI (Kasih apresiasi!):\n";
+            foreach ($completedToday as $task) {
+                $context .= "- {$task->title}\n";
+            }
+            $context .= "\n";
+        }
+
+        if ($tasks->isEmpty()) {
+            $context .= "📝 PENDING TASK: Tidak ada task pending. User bebas!\n";
+        } else {
+            $context .= "📝 PENDING TASK (Urut deadline):\n";
+            foreach ($tasks as $i => $task) {
+                $num = $i + 1;
+                $due = $task->due_date ? Carbon::parse($task->due_date)->format('Y-m-d') : 'kapan aja';
+                $notes = $task->notes ? "(Note: " . substr(strip_tags($task->notes), 0, 30) . "...)" : "";
+                $context .= "{$num}. [{$task->priority}] {$task->title} (Deadline: {$due}) {$notes}\n";
+            }
+        }
+
+        return $context;
+    }
+
+    /**
+     * Fallback response when AI is unavailable.
+     */
+    protected function fallbackResponse(User $user, string $message): string
+    {
+        $lowerMsg = strtolower($message);
+
+        // Simple keyword matching
+        if (str_contains($lowerMsg, 'deadline') || str_contains($lowerMsg, 'besok') || str_contains($lowerMsg, 'hari ini')) {
+            $tasks = $user->tasks()
+                ->where('is_completed', false)
+                ->whereBetween('due_date', [Carbon::today(), Carbon::today()->addDays(2)])
+                ->orderBy('due_date', 'asc')
+                ->get();
+
+            if ($tasks->isEmpty()) {
+                return "🎉 Tidak ada deadline dalam 2 hari ke depan. Santai dulu!\n\nGunakan /list untuk lihat semua task.";
+            }
+
+            $msg = "📅 *Task dengan deadline dekat:*\n\n";
+            foreach ($tasks as $task) {
+                $due = Carbon::parse($task->due_date)->format('d M Y');
+                $msg .= "• {$task->title} — {$due}\n";
+            }
+            return $msg;
+        }
+
+        if (str_contains($lowerMsg, 'list') || str_contains($lowerMsg, 'tugas') || str_contains($lowerMsg, 'task')) {
+            return $this->cmdList($user);
+        }
+
+        return "👋 Hai {$user->name}! Aku bot Sarang Tumbuh.\n\n"
+            . "Kamu bisa tanya aku soal task-mu, atau gunakan command untuk manage task.\n\n"
+            . "Ketik /help untuk melihat daftar command yang tersedia! 📋";
+    }
+
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+
+    /**
+     * Get a task by its display number (1-based index of pending tasks).
+     */
+    protected function getTaskByNumber(User $user, int $number): ?Task
+    {
+        $tasks = $user->tasks()
+            ->where('is_completed', false)
+            ->orderBy('due_date', 'asc')
+            ->get();
+
+        return $tasks->values()->get($number - 1);
+    }
+
+    protected function priorityEmoji(?string $priority): string
+    {
+        return match ($priority) {
+            'Tinggi' => '🔴',
+            'Sedang' => '🟡',
+            'Rendah' => '🟢',
+            default => '⚪',
+        };
+    }
+
+    protected function statusLabel(?string $status): string
+    {
+        return match ($status) {
+            'todo' => '📝 To Do',
+            'in_progress' => '🔄 In Progress',
+            'done' => '✅ Done',
+            default => '📝 To Do',
+        };
+    }
+
+    protected function determinePriority(?string $dueDate): string
+    {
+        if (!$dueDate) return 'Sedang';
+
+        $daysUntil = Carbon::today()->diffInDays(Carbon::parse($dueDate), false);
+
+        if ($daysUntil <= 1) return 'Tinggi';
+        if ($daysUntil <= 3) return 'Sedang';
+        return 'Rendah';
+    }
+
+    protected function today(): string
+    {
+        return Carbon::now()->format('Y-m-d H:i (l)');
+    }
+}

@@ -24,11 +24,27 @@ return [
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
+    
+    'google' => [
+    'client_id' => env('GOOGLE_CLIENT_ID'),
+    'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    'redirect' => rtrim(env('APP_URL'), '/') . '/login/google/callback',
+],
 
     'midtrans' => [
     'server_key' => env('MIDTRANS_SERVER_KEY'),
     'client_key' => env('MIDTRANS_CLIENT_KEY'),
-    'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+    'is_production' => env('MIDTRANS_IS_PRODUCTION', TRUE),
+],
+
+'gemini' => [
+    'api_key' => env('GEMINI_API_KEY'),
+    'model' => env('GEMINI_MODEL', 'gemini-pro'),
+    'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1'),
+],
+
+'fonnte' => [
+    'token' => env('FONNTE_API_TOKEN'),
 ],
 
 'gemini' => [
@@ -41,6 +57,26 @@ return [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    ],
+
+    'slack' => [
+        'notifications' => [
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+        ],
+    ],
+
+    'resend' => [
+        'key' => env('RESEND_KEY'),
+    ],
+
+    'posthog' => [
+        'key' => env('POSTHOG_KEY'),
+        'host' => env('POSTHOG_HOST'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
     ],
 
 ];
