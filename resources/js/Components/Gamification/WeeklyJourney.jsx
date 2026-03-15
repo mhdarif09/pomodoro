@@ -13,7 +13,7 @@ export default function WeeklyJourney({ auth, compact = false }) {
 
     const fetchWeeklyJourney = async () => {
         try {
-            const res = await axios.get(route('api.gamification.weekly-journey'));
+            const res = await axios.get('/api/dashboard/gamification/weekly-journey');
             setJourneyData(res.data);
         } catch (err) {
             console.error('Failed to fetch weekly journey:', err);

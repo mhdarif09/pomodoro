@@ -36,7 +36,7 @@ export function PomodoroProvider({ children, auth }) {
 
         const checkActiveSession = async () => {
             try {
-                const res = await axios.get(route('api.pomodoro.active'));
+                const res = await axios.get('/api/dashboard/pomodoro/active');
                 if (res.data.session) {
                     const session = res.data.session;
                     const startedAt = dayjs(session.started_at);
@@ -76,7 +76,7 @@ export function PomodoroProvider({ children, auth }) {
         const duration = durationOverride || task.estimated_minutes || 25;
 
         try {
-            await axios.post(route('api.pomodoro.start'), {
+            await axios.post('/api/dashboard/pomodoro/start', {
                 task_id: task.id,
                 duration_minutes: duration
             });
@@ -110,7 +110,7 @@ export function PomodoroProvider({ children, auth }) {
         try {
             stopBackgroundTimer();
 
-            const res = await axios.post(route('api.pomodoro.stop'), {
+            const res = await axios.post('/api/dashboard/pomodoro/stop', {
                 break_minutes: 0,
                 tab_switches: 0,
                 ai_questions_asked: 0,

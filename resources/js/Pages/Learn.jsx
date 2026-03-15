@@ -598,25 +598,6 @@ Streak Bonus           → Bonus kumulatif sesuai hari` },
             },
         ],
     },
-    {
-        id: 'learning-hub', icon: BookOpenIcon, title: 'Learning Hub', color: 'cyan',
-        items: [
-            {
-                id: 'mini-modul', title: 'Mini Modul',
-                content: [
-                    { type: 'text', value: 'Learning Hub berisi perpustakaan materi produktivitas, manajemen waktu, dan skill development. Konten dikurasi dan di-update berkala.' },
-                    {
-                        type: 'features', value: [
-                            { name: '📖 Modul Terstruktur', desc: 'Materi dipecah jadi chapter-chapter yang mudah dicerna' },
-                            { name: '🧠 AI Explanation', desc: 'Butuh penjelasan lebih? AI bisa menjelaskan materi dengan bahasa yang lebih simpel' },
-                            { name: '📂 Kategori', desc: 'Modul dikelompokkan berdasarkan topik: Produktivitas, Study Tips, dll' },
-                            { name: '📝 Quiz', desc: 'Uji pemahaman setelah membaca modul' },
-                        ]
-                    },
-                ],
-            },
-        ],
-    },
 ];
 
 const colorMap = {

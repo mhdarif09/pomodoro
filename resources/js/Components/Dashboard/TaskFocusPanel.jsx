@@ -34,8 +34,7 @@ import NotionEditor from '../TodoList/NotionEditor';
 // Import SlideOver
 import SlideOver from '../SlideOver';
 
-// Import GamificationPopup
-import GamificationPopup from '../GamificationPopup';
+// Gamification is handled globally by PomodoroContext -> AuthenticatedLayout
 
 // 1. Task Card (Pure UI)
 function TaskCard({ task, onToggleComplete, onStartFocus, onToggleSubtask, onAddSubtask, onUpdateTask, onDeleteTask, onToggleFocus, auth, t, isOverlay, listeners, attributes, style, setNodeRef, onClick, ...props }) {
@@ -314,8 +313,6 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
     const [activeId, setActiveId] = useState(null); // Dragging ID
     const [xpToast, setXpToast] = useState(null); // XP celebration toast
     const [roundClaiming, setRoundClaiming] = useState(false);
-    const [showGamification, setShowGamification] = useState(false);
-    const [gamificationData, setGamificationData] = useState(null);
 
     useEffect(() => { setLocalTasks(resolveTasks(tasks)); }, [tasks]);
     useEffect(() => { setLocalFocusTasks(focusTasks || []); }, [focusTasks]);
@@ -439,17 +436,8 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
 
         axios.patch(route('api.tasks.toggle-complete', task.id))
             .then(res => {
-                if (res.data.gamification) {
-                    setGamificationData({
-                        xpAwarded: res.data.gamification.xp_awarded || 0,
-                        newStreak: res.data.gamification.current_streak || 0,
-                        levelUp: res.data.gamification.level_up || false,
-                        newLevel: res.data.gamification.new_level || 0,
-                        achievements: res.data.gamification.achievements || [],
-                        taskTitle: task.title
-                    });
-                    setShowGamification(true);
-                }
+                // Gamification handled globally by PomodoroContext -> AuthenticatedLayout
+                // We just reload Inertia props so that parent component receives the updated task list
             })
             .then(() => router.reload({ only: ['tasks', 'focusTasks'] }))
             .catch(() => router.reload({ only: ['tasks', 'focusTasks'] }));

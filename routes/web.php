@@ -5,7 +5,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Admin\PlanController;
-use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\VoiceController;
@@ -16,13 +15,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ReflectionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\MiniModulCategoryController;
-use App\Http\Controllers\Admin\MiniModulController as AdminMiniModulController;
-use App\Http\Controllers\Admin\MiniModulChapterController;
-use App\Http\Controllers\MiniModulController;
-use App\Http\Controllers\Api\MiniModulAiController;
 use App\Http\Controllers\DocumentPageController;
-use App\Http\Controllers\LearningController;
 use App\Http\Controllers\GamificationController;
 use Inertia\Inertia;
 
@@ -421,15 +414,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('promos', PromoController::class)->except(['create', 'edit', 'show']);
     Route::patch('/promos/{promo}/toggle-status', [PromoController::class, 'toggleStatus'])->name('promos.toggle-status');
     
-    // Admin Mini Moduls Management
-    Route::resource('mini-modul-categories', MiniModulCategoryController::class);
-    Route::resource('mini-moduls', AdminMiniModulController::class);
-    
-    Route::prefix('mini-moduls/{miniModul}')->name('mini-moduls.')->group(function () {
-        Route::resource('chapters', MiniModulChapterController::class);
-        Route::post('chapters/reorder', [MiniModulChapterController::class, 'reorder'])->name('chapters.reorder');
-    });
-
     // Admin Cashouts Management
     Route::resource('cashouts', \App\Http\Controllers\Admin\AdminCashoutController::class)->only(['index', 'update']);
     Route::resource('collaborations', \App\Http\Controllers\Admin\CollaborationController::class)->only(['index', 'update']);

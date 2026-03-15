@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
-import { SparklesIcon, LockClosedIcon, CheckCircleIcon, ChartBarIcon, ClockIcon, TrophyIcon } from '@heroicons/react/24/outline'; // Re-verify icons
+import { SparklesIcon, LockClosedIcon, CheckCircleIcon, ChartBarIcon, ClockIcon, TrophyIcon, FireIcon } from '@heroicons/react/24/outline'; // Re-verify icons
 
 export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMatch }) {
     const [stats, setStats] = useState(initialStats);
@@ -29,7 +29,7 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
     const handleEnterArena = async () => {
         setIsGenerating(true);
         try {
-            const resp = await axios.post(route('cognitive-arena.generate'));
+            const resp = await axios.post(route('api.cognitive-arena.generate'));
             setSimulation(resp.data.simulation);
             setMatch({ id: resp.data.match_id });
             setViewState('simulation');
@@ -46,7 +46,7 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
         if (!answer.trim()) return;
         setIsSubmitting(true);
         try {
-            const resp = await axios.post(route('cognitive-arena.submit', match.id), {
+            const resp = await axios.post(route('api.cognitive-arena.submit', match.id), {
                 user_answer: answer,
                 time_taken_seconds: 120,
             });
@@ -96,7 +96,7 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
                         <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-700">
                             <LockClosedIcon className="w-16 h-16 mx-auto text-slate-400 mb-4" />
                             <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Arena is Locked</h3>
-                            <p className="text-slate-500 dark:text-slate-400 mb-6">Complete at least one Smart Focus session today to unlock the Arena.</p>
+                            <p className="text-slate-500 dark:text-slate-400 mb-6">Complete a Pomodoro session or finish a task today to unlock the Arena.</p>
                             <Link href={route('dashboard')} className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors inline-block">
                                 Go to Dashboard
                             </Link>
@@ -107,28 +107,28 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-2 space-y-6">
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
-                                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Your Daily Challenge</h3>
+                                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Tantangan Harianmu</h3>
                                     <p className="text-slate-600 dark:text-slate-300 mb-6">
-                                        You have unlocked today's simulation! The Game Master has prepared a unique scenario based on your current cognitive level.
+                                        Kamu telah membuka simulasi hari ini! Game Master telah menyiapkan skenario unik berdasarkan tingkat kognitifmu saat ini.
                                     </p>
                                     <button
                                         onClick={handleEnterArena}
                                         disabled={isGenerating}
                                         className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-75"
                                     >
-                                        {isGenerating ? 'Generating Scenario...' : '⚔️ Enter The Arena'}
+                                        {isGenerating ? 'Menyiapkan Skenario...' : '⚔️ Mulai Simulasi'}
                                     </button>
                                 </div>
                             </div>
                             <div className="space-y-6">
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
                                     <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                        <ChartBarIcon className="w-5 h-5 text-indigo-500" /> Cognitive Stats
+                                        <ChartBarIcon className="w-5 h-5 text-indigo-500" /> Statistik Kognitif
                                     </h3>
                                     <div className="space-y-4">
                                         <div>
                                             <div className="flex justify-between text-sm mb-1 text-slate-600 dark:text-slate-400">
-                                                <span>Critical Thinking</span>
+                                                <span>Berpikir Kritis</span>
                                                 <span className="font-bold">{stats.critical_thinking_level}</span>
                                             </div>
                                             <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -137,7 +137,7 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
                                         </div>
                                         <div>
                                             <div className="flex justify-between text-sm mb-1 text-slate-600 dark:text-slate-400">
-                                                <span>Communication</span>
+                                                <span>Komunikasi</span>
                                                 <span className="font-bold">{stats.communication_level}</span>
                                             </div>
                                             <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -146,7 +146,7 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
                                         </div>
                                         <div>
                                             <div className="flex justify-between text-sm mb-1 text-slate-600 dark:text-slate-400">
-                                                <span>Decision Speed</span>
+                                                <span>Kecepatan Keputusan</span>
                                                 <span className="font-bold">{stats.decision_speed}</span>
                                             </div>
                                             <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -176,27 +176,37 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
                                     {simulation.type.replace('_', ' ')}
                                 </span>
                                 <span className="flex items-center gap-1 text-slate-500 text-sm font-medium">
-                                    <ClockIcon className="w-4 h-4" /> Take your time
+                                    <ClockIcon className="w-4 h-4" /> Luangkan waktumu
                                 </span>
                             </div>
                             <h2 className="text-xl leading-relaxed text-slate-800 dark:text-slate-200 mb-8 whitespace-pre-wrap">
                                 {simulation.scenario_text}
                             </h2>
                             <div className="space-y-4">
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Your Action / Response</label>
-                                <textarea
-                                    value={answer}
-                                    onChange={e => setAnswer(e.target.value)}
-                                    placeholder="I would choose to..."
-                                    className="w-full h-40 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                                />
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Pilih Tindakanmu (A, B, atau C)</label>
+                                
+                                {simulation.options && Object.entries(simulation.options).map(([key, text]) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setAnswer(key)}
+                                        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${answer === key ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 ring-2 ring-indigo-200 dark:ring-indigo-700' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-900'}`}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-bold ${answer === key ? 'bg-indigo-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                                                {key}
+                                            </span>
+                                            <span className="text-slate-800 dark:text-slate-200 mt-1">{text}</span>
+                                        </div>
+                                    </button>
+                                ))}
+
                                 <div className="flex justify-end pt-4">
                                     <button
                                         onClick={handleSubmitAnswer}
-                                        disabled={isSubmitting || !answer.trim()}
+                                        disabled={isSubmitting || !answer}
                                         className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                     >
-                                        {isSubmitting ? 'Evaluating...' : 'Submit Decision'}
+                                        {isSubmitting ? 'Mengevaluasi...' : 'Kirim Jawaban'}
                                     </button>
                                 </div>
                             </div>
@@ -204,35 +214,73 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, todayMa
                     )}
 
                     {viewState === 'result' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-slate-100 dark:border-slate-700">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <CheckCircleIcon className="w-8 h-8 text-emerald-500" />
-                                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Match Evaluated</h2>
+                        <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
+                            {/* Celebration Header */}
+                            <div className="text-center py-8">
+                                <div className="inline-flex items-center justify-center w-24 h-24 bg-emerald-100 dark:bg-emerald-900/50 rounded-full mb-6 relative">
+                                    <div className="absolute inset-0 bg-emerald-400 dark:bg-emerald-500 rounded-full animate-ping opacity-20"></div>
+                                    <CheckCircleIcon className="w-12 h-12 text-emerald-500 dark:text-emerald-400" />
                                 </div>
-                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap mb-6">
-                                    {feedback || "Great thinking! The Game Master has no additional feedback at this time."}
-                                </p>
-                                <div className="p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center gap-4">
-                                    <div className="flex-1">
-                                        <p className="text-emerald-800 dark:text-emerald-400 font-bold">Earned {xpEarned} XP!</p>
-                                        <p className="text-xs text-emerald-600 dark:text-emerald-500">Your cognitive stats have grown.</p>
+                                <h2 className="text-4xl font-black text-slate-800 dark:text-white mb-2">Simulasi Selesai!</h2>
+                                <p className="text-lg text-slate-600 dark:text-slate-400">Pikiranmu semakin tajam dan berkembang hari ini.</p>
+                            </div>
+
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border-b-4 border-emerald-200 dark:border-emerald-900/50 text-center shadow-sm relative overflow-hidden">
+                                    <div className="absolute -right-4 -top-4 opacity-10">
+                                        <TrophyIcon className="w-24 h-24 text-emerald-500" />
                                     </div>
-                                    <TrophyIcon className="w-8 h-8 text-emerald-500" />
+                                    <span className="uppercase text-xs font-bold text-emerald-500 tracking-wider mb-2 block relative z-10">XP Diperoleh</span>
+                                    <div className="text-4xl font-black text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-2 relative z-10">
+                                        +{xpEarned} <span className="text-2xl">XP</span>
+                                    </div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border-b-4 border-orange-200 dark:border-orange-900/50 text-center shadow-sm relative overflow-hidden">
+                                    <div className="absolute -right-4 -top-4 opacity-10">
+                                        <FireIcon className="w-24 h-24 text-orange-500" />
+                                    </div>
+                                    <span className="uppercase text-xs font-bold text-orange-500 tracking-wider mb-2 block relative z-10">SarangTumbuh Streak</span>
+                                    <div className="text-4xl font-black text-orange-600 dark:text-orange-400 flex items-center justify-center gap-2 relative z-10">
+                                        <FireIcon className="w-8 h-8 text-orange-500 animate-pulse" /> Aktif!
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-8 text-white flex flex-col justify-center">
-                                <h3 className="text-xl font-bold mb-2">Reflect on your thought process</h3>
-                                <p className="text-indigo-100 mb-8 italic">
-                                    "{reflectionPrompt || 'How will you apply this lesson today?'}"
+                            {/* Feedback Section */}
+                            <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-slate-100 dark:border-slate-700 mt-6 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500"></div>
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                    <SparklesIcon className="w-6 h-6 text-indigo-500" /> Masukan Game Master
+                                </h3>
+                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
+                                    {feedback || "Pemikiran yang luar biasa! Insting dan analisamu sangat tajam."}
                                 </p>
-                                <Link
-                                    href={route('journal.index')}
-                                    data={{ prefilled_prompt: reflectionPrompt }}
-                                    className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold text-center hover:bg-slate-50 transition-colors"
-                                >
-                                    Write in Journal
+                            </div>
+
+                            {/* Reflection */}
+                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-8 text-white mt-6 text-center shadow-lg relative overflow-hidden">
+                                <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
+                                    <ChartBarIcon className="w-48 h-48 -mt-8 -mr-8" />
+                                </div>
+                                <div className="relative z-10">
+                                    <h3 className="text-xl font-bold mb-4">Renungkan Keputusanmu</h3>
+                                    <p className="text-indigo-100 mb-8 italic text-lg max-w-xl mx-auto">
+                                        "{reflectionPrompt || 'Bagaimana kamu akan mengaplikasikan cara berpikir ini di dunia nyata?'}"
+                                    </p>
+                                    <Link
+                                        href={route('journal.index')}
+                                        data={{ prefilled_prompt: reflectionPrompt }}
+                                        className="inline-block px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold hover:bg-slate-50 transition-all hover:scale-105 transform duration-200 shadow-md"
+                                    >
+                                        Tulis di Jurnal
+                                    </Link>
+                                </div>
+                            </div>
+                            
+                            <div className="text-center pt-8 pb-12">
+                                <Link href={route('dashboard')} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold transition-colors uppercase tracking-wider text-sm">
+                                    Kembali ke Dashboard
                                 </Link>
                             </div>
                         </div>

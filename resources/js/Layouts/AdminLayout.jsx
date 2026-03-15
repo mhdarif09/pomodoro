@@ -52,7 +52,6 @@ export default function Authenticated({ children, header }) {
         { routeName: 'admin.settings.index', label: 'Feature Access', icon: ShieldCheckIcon, for: 'admin' },
         { routeName: 'admin.users.index', label: 'Manajemen User', icon: UserGroupIcon, for: 'admin' },
         { routeName: 'admin.cashouts.index', label: 'Cashouts', icon: BanknotesIcon, for: 'admin' },
-        { routeName: 'admin.mini-moduls.index', label: 'Manajemen Modul', icon: DocumentTextIcon, for: 'admin' },
         { routeName: 'admin.plans.index', label: 'Manajemen Plan', icon: CreditCardIcon, for: 'admin' },
         { routeName: 'admin.promos.index', label: 'Manajemen Promo', icon: TicketIcon, for: 'admin' }
     ];

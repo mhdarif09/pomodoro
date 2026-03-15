@@ -1,4 +1,4 @@
-import Companion from '@/Components/Companion';
+
 import TutorialGuide from '@/Components/TutorialGuide';
 import GamificationPopup from '@/Components/GamificationPopup';
 import WeeklyJourney from '@/Components/Gamification/WeeklyJourney';
@@ -473,30 +473,13 @@ export default function Dashboard(props) {
     const pomodoro = usePomodoroTimer();
     const { activeTask, secondsLeft, isRunning, totalDuration, currentStreak, startFocus: handleStartFocus } = pomodoro;
 
-    // --- Companion State ---
-    const [companionState, setCompanionState] = useState('idle');
-    const [companionMessage, setCompanionMessage] = useState(null);
-
     const [productivityRefreshTrigger, setProductivityRefreshTrigger] = useState(0);
-
-    // Effect to update companion mood based on activity
-    useEffect(() => {
-        if (isRunning) {
-            setCompanionState('focusing');
-            setCompanionMessage("Mode fokus aktif. Semangat! 🤫");
-        } else {
-            setCompanionState('idle');
-        }
-    }, [isRunning]);
 
 
 
     // Handle Task Completion (from TaskFocusPanel or QuickAdd) -> Celebrate
     const handleTaskCompleted = () => {
-        setCompanionState('celebrating');
-        setCompanionMessage("Hebat! Satu tugas selesai! 🎉");
         setProductivityRefreshTrigger(prev => prev + 1); // Refresh stats
-        setTimeout(() => setCompanionState(isRunning ? 'focusing' : 'idle'), 3000);
     };
 
     // Passed to TaskFocusPanel to trigger celebration
@@ -683,21 +666,8 @@ export default function Dashboard(props) {
         >
             <Head title="Dashboard" />
 
-            {/* Companion Character */}
-            <Companion
-                tasks={localTasks}
-                isTimerRunning={isRunning}
-                user={auth.user}
-                state={companionState}
-                message={companionMessage}
-                activeTask={activeTask} // Pass active task for context analysis
-                onClick={() => setCompanionMessage("Ada yang bisa kubantu? 😊")}
-            />
-
             <TutorialGuide
                 setSidebarOpen={() => { }}
-                setCompanionMessage={setCompanionMessage}
-                setCompanionState={setCompanionState}
             />
 
             <div className={`transition-all duration-500 ${anyModalActive ? 'blur-md' : ''}`}>

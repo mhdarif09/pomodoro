@@ -18,9 +18,9 @@ export default function ProductivityPulse({ className = '', refreshTrigger = 0 }
             try {
                 // Now using web routes (session based) to avoid 401
                 const [summaryRes, trendsRes, insightsRes] = await Promise.all([
-                    axios.get(route('api.productivity.summary')),
-                    axios.get(route('api.productivity.trends')),
-                    axios.get(route('api.productivity.insights')).catch(() => ({ data: { insights: null } }))
+                    axios.get('/api/dashboard/productivity/summary'),
+                    axios.get('/api/dashboard/productivity/trends'),
+                    axios.get('/api/dashboard/productivity/insights').catch(() => ({ data: { insights: null } }))
                 ]);
 
                 setSummary(summaryRes.data);

@@ -92,6 +92,9 @@ Route::middleware(['auth:sanctum'])->prefix('dashboard')->name('api.')->group(fu
     Route::get('/cognitive-arena', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'index'])->name('cognitive-arena.index');
     Route::post('/cognitive-arena/generate', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'generate'])->name('cognitive-arena.generate');
     Route::post('/cognitive-arena/matches/{match}/submit', [\App\Http\Controllers\Api\CognitiveArenaController::class, 'submit'])->name('cognitive-arena.submit');
+
+    // --- STREAK SHARE API ---
+    Route::get('/gamification/streak-summary', [\App\Http\Controllers\Api\StreakShareController::class, 'summary'])->name('gamification.streak-summary');
 });
 
 // ==========================

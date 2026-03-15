@@ -8,6 +8,7 @@ use App\Models\UserCognitiveStat;
 use App\Models\CognitiveSimulation;
 use App\Models\CognitiveArenaMatch;
 use App\Models\PomodoroSession;
+use App\Models\Task;
 use App\Services\CognitiveArenaService;
 use Carbon\Carbon;
 
@@ -35,17 +36,13 @@ class CognitiveArenaController extends Controller
             ]
         );
 
-        $hasCompletedFocusTask = PomodoroSession::where('user_id', $user->id)
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
-
         $todayMatch = CognitiveArenaMatch::where('user_id', $user->id)
             ->whereDate('created_at', Carbon::today())
             ->first();
 
         return response()->json([
             'stats' => $stats,
-            'is_unlocked' => $hasCompletedFocusTask,
+            'is_unlocked' => true,
             'today_match' => $todayMatch ? $todayMatch->load('simulation') : null
         ]);
     }
@@ -54,14 +51,6 @@ class CognitiveArenaController extends Controller
     {
         $user = $request->user();
         $stats = $user->cognitiveStat;
-
-        $hasCompletedFocusTask = PomodoroSession::where('user_id', $user->id)
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
-
-        if (!$hasCompletedFocusTask) {
-            return response()->json(['error' => 'Cognitive Arena is locked. Complete a focus task first.'], 403);
-        }
 
         $todayMatch = CognitiveArenaMatch::where('user_id', $user->id)
             ->whereDate('created_at', Carbon::today())
@@ -73,6 +62,9 @@ class CognitiveArenaController extends Controller
 
         $scenarioData = $this->arenaService->generateScenario($stats);
         if (!$scenarioData) {
+            \Illuminate\Support\Facades\Log::error('Cognitive Arena Generation Failed: AI service returned null.', [
+                'user_id' => $user->id,
+            ]);
             return response()->json(['error' => 'Failed to generate scenario.'], 500);
         }
 
@@ -81,6 +73,8 @@ class CognitiveArenaController extends Controller
             'type' => $scenarioData['type'],
             'difficulty_level' => $scenarioData['difficulty_level'],
             'scenario_text' => $scenarioData['scenario_text'],
+            'options' => $scenarioData['options'] ?? [],
+            'correct_option' => $scenarioData['correct_option'] ?? '',
         ]);
 
         $match = CognitiveArenaMatch::create([
@@ -108,6 +102,8 @@ class CognitiveArenaController extends Controller
         $stats = $user->cognitiveStat;
         $evalData = $this->arenaService->evaluateAnswer(
             $match->simulation->scenario_text,
+            $match->simulation->options ?? [],
+            $match->simulation->correct_option ?? '',
             $request->user_answer,
             $request->time_taken_seconds,
             $stats

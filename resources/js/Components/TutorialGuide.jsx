@@ -4,7 +4,7 @@ import 'driver.js/dist/driver.css';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 
-export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, setCompanionState }) {
+export default function TutorialGuide({ setSidebarOpen }) {
     const user = usePage().props.auth.user;
 
     useEffect(() => {
@@ -22,9 +22,6 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                         description: 'Selamat datang di Markas Pusat! Di sini kita atur semua strategi dan pantau misi harianmu.',
                         side: "right",
                         align: 'start',
-                        onPopoverRender: () => {
-                            if (setCompanionMessage) setCompanionMessage("Halo! Salam kenal ya! 👋");
-                        }
                     }
                 },
                 {
@@ -34,10 +31,6 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                         description: 'Bingung mau mulai dari mana? Aku akan pilihkan 3 tugas prioritas buatmu. Fokus selesaikan ini dulu ya!',
                         side: "bottom",
                         align: 'center',
-                        onPopoverRender: () => {
-                            if (setCompanionMessage) setCompanionMessage("Aku bantu pilihkan tugas ya! 🤖");
-                            if (setCompanionState) setCompanionState('focusing');
-                        }
                     }
                 },
                 {
@@ -83,9 +76,6 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                         description: 'Simpan catatan, dokumen, dan template di sini. Semuanya terorganisir rapi.',
                         side: "right",
                         align: 'start',
-                        onPopoverRender: () => {
-                            if (setCompanionState) setCompanionState('idle');
-                        }
                     }
                 }
             ];
@@ -98,9 +88,6 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                         description: 'Selamat datang di SarangTumbuh! Yuk, aku ajak keliling sebentar.',
                         side: "bottom",
                         align: 'center',
-                        onPopoverRender: () => {
-                            if (setCompanionMessage) setCompanionMessage("Halo! Salam kenal ya! 👋");
-                        }
                     }
                 },
                 {
@@ -173,10 +160,6 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                             if (isMobile && setSidebarOpen) setSidebarOpen(false);
                             localStorage.setItem('tutorial_seen', 'true');
                             axios.post(route('profile.tutorial-seen')).catch(err => console.error(err));
-
-                            if (setCompanionMessage) setCompanionMessage("Oke, ayo mulai kerja! Semangat! 🔥");
-                            if (setCompanionState) setCompanionState('celebrating');
-                            setTimeout(() => { if (setCompanionState) setCompanionState('idle'); }, 3000);
                         }
                     },
                 });
@@ -186,7 +169,7 @@ export default function TutorialGuide({ setSidebarOpen, setCompanionMessage, set
                 style.innerHTML = `
                 .driver-theme-green .driver-popover-next-btn,
                 .driver-theme-green .driver-popover-done-btn {
-                    background-color: #6366f1 !important; /* Indigo 500 for Companion vibe */
+                    background-color: #6366f1 !important; /* Indigo 500 */
                     color: white !important;
                     border: none !important;
                     border-radius: 12px !important;

@@ -3,8 +3,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { TrophyIcon, FireIcon, StarIcon, ChartBarIcon, CalendarIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import Heatmap from '@uiw/react-heat-map';
+import StreakShareModal from '@/Components/Gamification/StreakShareModal';
+import { useState } from 'react';
 
 export default function ProfileShow({ auth, stats, achievements, heatmapData }) {
+    const [showStreakModal, setShowStreakModal] = useState(false);
+
     // Format heatmap data to match the component's expected format (YYYY/MM/DD)
     const formattedHeatmap = heatmapData.map(d => ({
         date: d.date.replace(/-/g, '/'),
@@ -22,10 +26,16 @@ export default function ProfileShow({ auth, stats, achievements, heatmapData }) 
             header={
                 <div className="flex items-center justify-between">
                     <h2 className="font-black text-2xl text-slate-800 dark:text-neutral-200 tracking-tight">Gamification Profile</h2>
-                    <Link href={route('profile.edit')} className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition-colors flex items-center gap-2 text-sm font-bold">
-                        <Cog6ToothIcon className="w-4 h-4" />
-                        Settings
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setShowStreakModal(true)} className="px-4 py-2 bg-gradient-to-r from-orange-400 to-amber-500 rounded-xl shadow-sm text-white hover:opacity-90 transition-opacity flex items-center gap-2 text-sm font-bold">
+                            <FireIcon className="w-4 h-4" />
+                            Share Streak
+                        </button>
+                        <Link href={route('profile.edit')} className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition-colors flex items-center gap-2 text-sm font-bold">
+                            <Cog6ToothIcon className="w-4 h-4" />
+                            Settings
+                        </Link>
+                    </div>
                 </div>
             }
         >
@@ -153,6 +163,11 @@ export default function ProfileShow({ auth, stats, achievements, heatmapData }) 
                     </div>
                 </div>
             </div>
+
+            <StreakShareModal
+                isOpen={showStreakModal}
+                onClose={() => setShowStreakModal(false)}
+            />
         </AuthenticatedLayout>
     );
 }

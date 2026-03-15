@@ -7,6 +7,7 @@ use Inertia\Inertia;
 
 use App\Models\PomodoroSession;
 use App\Models\CognitiveArenaMatch;
+use App\Models\Task;
 use Carbon\Carbon;
 
 class CognitiveArenaPageController extends Controller
@@ -26,10 +27,6 @@ class CognitiveArenaPageController extends Controller
             ]
         );
 
-        $hasCompletedFocusTask = PomodoroSession::where('user_id', $user->id)
-            ->whereDate('created_at', Carbon::today())
-            ->exists();
-
         $todayMatch = CognitiveArenaMatch::where('user_id', $user->id)
             ->whereDate('created_at', Carbon::today())
             ->with('simulation')
@@ -37,7 +34,7 @@ class CognitiveArenaPageController extends Controller
 
         return Inertia::render('CognitiveArena/Index', [
             'initialStats' => $stats,
-            'isUnlocked' => $hasCompletedFocusTask,
+            'isUnlocked' => true,
             'todayMatch' => $todayMatch
         ]);
     }

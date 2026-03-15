@@ -129,6 +129,31 @@ export const translations = {
         // Misc
         shortcut_space: "Spasi: Play/Pause",
         shortcut_esc: "Esc: Kecilkan",
+
+        // Gamification Popup
+        psychological_messages: [
+            "Wow! Dopamin alami langsung mengalir di otakmu. Rasakan kemenangannya!",
+            "Konsistensi itu mahal. Kamu sudah lebih maju dari 80% orang yang menyerah di hari pertama.",
+            "Pohon SarangTumbuh-mu makin rindang! Absen 1 hari bisa bikin dia layu lho.",
+            "Bagus sekali! Jangan biarkan api semangat ini padam besok, sepakat?",
+            "Ini bukti nyata bahwa kamu bisa diandalkan oleh dirimu sendiri. Pertahankan!",
+            "Luar biasa! Guild-mu pasti bangga melihat pencapaianmu hari ini.",
+            "Satu persinggahan kecil menuju mimpimu. Besok kita rutinkan lagi ya!",
+            "Disiplin terbukti mengalahkan motivasi yang angin-anginan. GGWP!"
+        ],
+        share_achievement: "Bagikan Pencapaian 📸",
+        share_title: "SarangTumbuh Progress!",
+        share_text_1: "Saya baru menyelesaikan",
+        share_text_2: "dan Streak",
+        share_text_3: "Hari di SarangTumbuh. Yuk produktif bareng! 🔥🚀",
+        share_success: "Berhasil Dibagikan! ✨",
+        share_copied: "Teks disalin ke Clipboard! 📋",
+        share_failed: "Gagal menyalin 😢",
+        good_job: "Kerja Bagus!",
+        focus_session: "Sesi Fokus",
+        streak: "Streak",
+        level_up: "Naik Level:",
+        continue_button: "LANJUTKAN",
     },
     en: {
         // Navigation (Sidebar)
@@ -260,5 +285,30 @@ export const translations = {
         // Misc
         shortcut_space: "Space: Play/Pause",
         shortcut_esc: "Esc: Minimize",
+
+        // Gamification Popup
+        psychological_messages: [
+            "Wow! Natural dopamine is flowing in your brain. Feel the win!",
+            "Consistency is expensive. You're already ahead of the 80% who give up on day one.",
+            "Your SarangTumbuh tree is growing! Skipping 1 day might make it wither.",
+            "Great job! Don't let this fire go out tomorrow, deal?",
+            "Tangible proof that you can rely on yourself. Keep it up!",
+            "Awesome! Your Guild must be proud of today's achievement.",
+            "One small step towards your dream. Let's make it a routine tomorrow!",
+            "Discipline beats fleeting motivation. GGWP!"
+        ],
+        share_achievement: "Share Progress 📸",
+        share_title: "SarangTumbuh Progress!",
+        share_text_1: "I just completed",
+        share_text_2: "and a",
+        share_text_3: "Day Streak on SarangTumbuh. Let's be productive together! 🔥🚀",
+        share_success: "Shared Successfully! ✨",
+        share_copied: "Copied to Clipboard! 📋",
+        share_failed: "Failed to copy 😢",
+        good_job: "Great Job!",
+        focus_session: "Focus Session",
+        streak: "Streak",
+        level_up: "Level Up:",
+        continue_button: "CONTINUE",
     }
 };

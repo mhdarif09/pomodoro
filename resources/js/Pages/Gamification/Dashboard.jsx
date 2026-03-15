@@ -7,6 +7,8 @@ import {
     ChevronRightIcon, WalletIcon
 } from '@heroicons/react/24/outline';
 import WeeklyJourney from '@/Components/Gamification/WeeklyJourney';
+import StreakShareModal from '@/Components/Gamification/StreakShareModal';
+import { useState } from 'react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -27,6 +29,7 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
     const user = auth.user;
     const currentXp = user?.xp || 0;
     const progressToNextLevel = (currentXp % 1000) / 10; // Assuming 1000 XP per level for simplicity
+    const [showStreakModal, setShowStreakModal] = useState(false);
 
     return (
         <AuthenticatedLayout header={<h2 className="font-[1000] text-2xl text-slate-900 dark:text-white tracking-tight">Pusat Gamifikasi</h2>}>
@@ -51,9 +54,18 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-black leading-tight">Elite Achiever</h3>
-                                    <div className="flex items-center gap-2 text-indigo-100 font-bold text-sm">
-                                        <ChartBarIcon className="w-4 h-4" />
-                                        <span>Rank #{userRank.rank || 'N/A'} of {userRank.total || '0'}</span>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        <div className="flex items-center gap-1 text-indigo-100 font-bold text-sm bg-white/10 px-2 py-0.5 rounded-full">
+                                            <ChartBarIcon className="w-4 h-4" />
+                                            <span>Rank #{userRank.rank || 'N/A'} of {userRank.total || '0'}</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => setShowStreakModal(true)}
+                                            className="flex items-center gap-1 text-orange-400 hover:text-orange-300 font-bold text-xs bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 px-2 py-[3px] rounded-full transition-colors cursor-pointer"
+                                        >
+                                            <FireIcon className="w-3.5 h-3.5" />
+                                            <span>Share Streak</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -251,6 +263,11 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                     </div>
                 </BentoTile>
             </div>
+
+            <StreakShareModal
+                isOpen={showStreakModal}
+                onClose={() => setShowStreakModal(false)}
+            />
         </AuthenticatedLayout>
     );
 }

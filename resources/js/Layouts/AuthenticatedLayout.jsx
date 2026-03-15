@@ -20,6 +20,7 @@ import InviteMemberModal from '@/Components/InviteMemberModal';
 import InAppNotificationPopup from '@/Components/InAppNotificationPopup';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
 import GamificationPopup from '@/Components/GamificationPopup';
+import StreakShareModal from '@/Components/Gamification/StreakShareModal';
 import { usePomodoroTimer } from '@/Contexts/PomodoroContext';
 import { useLanguage } from '@/Contexts/LanguageContext';
 import useKeyboardShortcuts from '@/Hooks/useKeyboardShortcuts';
@@ -45,6 +46,7 @@ export default function Authenticated({ children, header }) {
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
+    const [showStreakModal, setShowStreakModal] = useState(false);
     const { guild: activeGuild } = usePage().props; // Get active guild from Inertia props if available
     const user = auth.user;
     const { t, toggleLanguage, language } = useLanguage();
@@ -132,13 +134,13 @@ export default function Authenticated({ children, header }) {
     };
 
     return (
-        <AuthenticatedLayoutInner auth={auth} isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts} showUpgradeModal={showUpgradeModal} setShowUpgradeModal={setShowUpgradeModal} plans={plans} navStructure={navStructure} isRouteActive={isRouteActive} workspaceMode={workspaceMode} setWorkspaceMode={setWorkspaceMode} currentGuild={currentGuild} setCurrentGuild={setCurrentGuild} isLeader={isLeader} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} showInviteModal={showInviteModal} setShowInviteModal={setShowInviteModal} user={user} userGuilds={userGuilds}>
+        <AuthenticatedLayoutInner auth={auth} isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts} showUpgradeModal={showUpgradeModal} setShowUpgradeModal={setShowUpgradeModal} plans={plans} navStructure={navStructure} isRouteActive={isRouteActive} workspaceMode={workspaceMode} setWorkspaceMode={setWorkspaceMode} currentGuild={currentGuild} setCurrentGuild={setCurrentGuild} isLeader={isLeader} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} showInviteModal={showInviteModal} setShowInviteModal={setShowInviteModal} user={user} userGuilds={userGuilds} showStreakModal={showStreakModal} setShowStreakModal={setShowStreakModal}>
             {children}
         </AuthenticatedLayoutInner>
     );
 }
 
-function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, showShortcuts, setShowShortcuts, showUpgradeModal, setShowUpgradeModal, plans, navStructure, isRouteActive, workspaceMode, setWorkspaceMode, currentGuild, setCurrentGuild, isLeader, sidebarOpen, setSidebarOpen, showInviteModal, setShowInviteModal, user, userGuilds }) {
+function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, showShortcuts, setShowShortcuts, showUpgradeModal, setShowUpgradeModal, plans, navStructure, isRouteActive, workspaceMode, setWorkspaceMode, currentGuild, setCurrentGuild, isLeader, sidebarOpen, setSidebarOpen, showInviteModal, setShowInviteModal, user, userGuilds, showStreakModal, setShowStreakModal }) {
     const pomodoro = usePomodoroTimer();
 
     return (
@@ -156,6 +158,10 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                 isOpen={showInviteModal}
                 onClose={() => setShowInviteModal(false)}
                 guild={currentGuild}
+            />
+            <StreakShareModal
+                isOpen={showStreakModal}
+                onClose={() => setShowStreakModal(false)}
             />
 
             {/* Desktop Sidebar */}
@@ -309,6 +315,10 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                     {!isCollapsed && <span>AI Genius</span>}
                                 </Link>
                             )}
+                            <button onClick={() => setShowStreakModal(true)} className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 group">
+                                <FireIcon className="h-4 w-4 text-orange-500 group-hover:animate-pulse" />
+                                {!isCollapsed && <span className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">Share Streak</span>}
+                            </button>
                         </div>
                     </div>
 

@@ -27,15 +27,23 @@ class CognitiveArenaService
 Generate a 3-5 minute interactive simulation scenario to test critical thinking, decision-making, or ethical reasoning.
 The user's current overall cognitive level is {$level} (out of 100).
 Difficulty should be proportional to their level.
+The language should be primarily Indonesian, but you can use English if the context demands it.
 
 Scenario Types: Logical Fallacy Detection, Ethical Dilemma, Career Decision, Bias Awareness, Argument Analysis.
 Select one type randomly.
 
+You must provide exactly 3 multiple choice options (A, B, C) for the user to choose from.
 Return ONLY a raw JSON strictly adhering to the following structure, with no markdown code blocks:
 {
     \"type\": \"string (e.g., ethical_dilemma)\",
     \"difficulty_level\": \"string (Beginner/Intermediate/Advanced/Expert)\",
-    \"scenario_text\": \"The full scenario description (100-200 words), ending with a question prompting the user's decision or analysis.\"
+    \"scenario_text\": \"The full scenario description (100-200 words), ending with a question prompting the user's decision.\",
+    \"options\": {
+        \"A\": \"Option A text\",
+        \"B\": \"Option B text\",
+        \"C\": \"Option C text\"
+    },
+    \"correct_option\": \"A, B, or C (The best or most logical choice)\"
 }";
 
         $response = $this->callOpenAI($prompt);
@@ -48,17 +56,22 @@ Return ONLY a raw JSON strictly adhering to the following structure, with no mar
     /**
      * Evaluate the user's answer
      */
-    public function evaluateAnswer(string $scenarioText, string $userAnswer, int $timeTaken, UserCognitiveStat $stats)
+    public function evaluateAnswer(string $scenarioText, array $options, string $correctOption, string $userAnswer, int $timeTaken, UserCognitiveStat $stats)
     {
         $prompt = "You are the Game Master of the Cognitive Arena.
-Read the following scenario and the user's answer.
+Read the following scenario, the given options, and the user's chosen answer.
 Scenario:
 {$scenarioText}
-User's Answer:
-{$userAnswer}
+
+Options:
+" . json_encode($options) . "
+
+Correct Option: {$correctOption}
+User's Answer (Chosen Option): {$userAnswer}
 Time taken: {$timeTaken} seconds.
 
-Evaluate their answer based on critical thinking, communication, and decision speed. Provide reasoning-based feedback (not just right/wrong).
+Evaluate their choice based on critical thinking, communication, and decision speed. Provide reasoning-based feedback (not just right/wrong).
+Write the feedback in Indonesian.
 Return ONLY a raw JSON strictly adhering to the following structure, with no markdown code blocks:
 {
     \"feedback_text\": \"Your reasoning-based feedback (100-150 words).\",

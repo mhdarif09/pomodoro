@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import StreakShareModal from '@/Components/Gamification/StreakShareModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -31,6 +32,7 @@ const BentoTile = ({ children, className = "", delay = 0, useGlass = true }) => 
 export default function Index({ auth }) {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showStreakModal, setShowStreakModal] = useState(false);
 
     const isPremium = auth.user.premium_features && auth.user.premium_features.productivity_report;
 
@@ -158,6 +160,13 @@ export default function Index({ auth }) {
                                     {streak >= 3 ? "🔥 Momentum luar biasa! Teruskan produktivitasmu." : "Ayo bangun momentum! Fokus setiap hari untuk streak lebih panjang."}
                                 </p>
                             </div>
+
+                            <button 
+                                onClick={() => setShowStreakModal(true)}
+                                className="mt-4 w-full py-3 bg-orange-500 hover:bg-orange-400 text-white rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
+                            >
+                                <FireIcon className="w-4 h-4" /> Share Streak Card
+                            </button>
 
                             <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest">
                                 <ArrowTrendingUpIcon className="w-4 h-4" />
@@ -306,6 +315,11 @@ export default function Index({ auth }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <StreakShareModal
+                isOpen={showStreakModal}
+                onClose={() => setShowStreakModal(false)}
+            />
         </AuthenticatedLayout>
     );
 }
