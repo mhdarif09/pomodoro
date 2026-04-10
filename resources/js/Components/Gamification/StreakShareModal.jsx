@@ -36,17 +36,19 @@ export default function StreakShareModal({ isOpen, onClose }) {
         try {
             setIsGenerating(true);
             const canvas = await html2canvas(cardRef.current, {
-                scale: 3, 
+                scale: 1, // Card is already 1080px wide, so scale 1 is perfect
                 useCORS: true,
                 allowTaint: true,
-                backgroundColor: '#0f172a', // slate-900 background matches card
+                backgroundColor: '#020617', // slate-950
                 logging: false,
-                width: cardRef.current.offsetWidth,
-                height: cardRef.current.offsetHeight,
-                scrollX: 0,
-                scrollY: -window.scrollY,
-                windowWidth: document.documentElement.offsetWidth,
-                windowHeight: document.documentElement.offsetHeight
+                width: 1080,
+                height: format === 'square' ? 1080 : 1920,
+                onclone: (clonedDoc) => {
+                    const el = clonedDoc.querySelector('.share-card-capture');
+                    if (el) {
+                        el.style.transform = 'none';
+                    }
+                }
             });
             
             return new Promise(resolve => {
@@ -213,7 +215,7 @@ export default function StreakShareModal({ isOpen, onClose }) {
                                             <p className="font-medium animate-pulse">Memuat data...</p>
                                         </div>
                                     ) : (
-                                        <div className="relative shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 scale-75 md:scale-90 lg:scale-100 transform origin-center">
+                                        <div className="relative shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 scale-[0.25] sm:scale-[0.35] md:scale-[0.3] lg:scale-[0.4] transform origin-center flex-shrink-0">
                                             {/* Render the actual card that html2canvas will capture */}
                                             <StreakShareCard ref={cardRef} data={data} format={format} />
                                             

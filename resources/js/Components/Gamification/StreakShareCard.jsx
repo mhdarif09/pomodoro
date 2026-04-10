@@ -23,91 +23,111 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
         <div 
             ref={ref}
             // Add a specific class to ensure html2canvas can target a clean node
-            className={`share-card-capture relative overflow-hidden bg-slate-900 flex flex-col justify-between p-6 text-white`}
+            className={`share-card-capture relative overflow-hidden bg-slate-950 flex flex-col justify-between p-8 text-white`}
             style={{ 
-                width: isSquare ? '400px' : '360px',
-                height: isSquare ? '400px' : '640px',
-                fontFamily: "'Inter', sans-serif" 
+                width: isSquare ? '1080px' : '1080px',
+                height: isSquare ? '1080px' : '1920px',
+                fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+                // Explicitly use large pixels for capture node to ensure high quality
+                // and avoid scaling issues with smaller relative units
             }}
         >
-            {/* Background elements */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${getGradient(data.user.rank_title)} opacity-30`} />
-            <div className="absolute -top-32 -right-32 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+            {/* Background elements - using more robust gradients */}
+            <div className={`absolute inset-0 bg-slate-950`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${getGradient(data.user.rank_title)} opacity-40`} />
             
-            {/* Noise overlay for texture */}
-            <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=\"0 0 200 200\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noiseFilter\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.65\" numOctaves=\"3\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noiseFilter)\"/%3E%3C/svg%3E')" }} />
+            {/* Decorative Orbs - use simple divs with background colors instead of complex blurs if possible */}
+            <div className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px]" />
+            <div className="absolute -bottom-1/4 -left-1/4 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px]" />
+            
+            {/* Texture overlay - simplify to avoid rendering issues */}
+            <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
 
-            {/* Header: User Info */}
-            <div className="relative z-10 flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-black uppercase tracking-wider">{data.user.name}</h2>
-                    <p className="text-white/70 font-medium text-sm">
-                        {data.user.rank_title} • Lvl {data.user.level}
-                    </p>
-                </div>
-                {/* Minimal Logo */}
-                <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
-                    <span className="font-bold text-sm tracking-tight">SarangTumbuh</span>
-                </div>
-            </div>
-
-            {/* Center: The big streak number */}
-            <div className="relative z-10 flex flex-col items-center justify-center flex-1 my-2">
-                <div className="relative">
-                    {/* Glowing background for the fire icon */}
-                    <div className="absolute inset-0 bg-orange-500 blur-2xl opacity-50 rounded-full scale-150" />
-                    <FireIcon className="w-16 h-16 text-orange-400 relative z-10 drop-shadow-2xl mb-1" />
-                </div>
+            {/* Content Container to ensure padding and alignment */}
+            <div className="relative z-10 flex flex-col h-full justify-between">
                 
-                <h1 className="text-7xl font-black tracking-tighter text-white drop-shadow-lg leading-none mb-1">
-                    {data.streak.current}
-                </h1>
-                <p className="text-xl font-bold uppercase tracking-widest text-orange-200">
-                    Day Streak
-                </p>
-                
-                {data.streak.current === data.streak.longest && data.streak.current > 0 && (
-                    <div className="mt-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-semibold text-yellow-300">
-                        🏆 New Personal Best!
+                {/* Header: User Info */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-5xl font-black uppercase tracking-tighter mb-1 leading-tight">{data.user.name}</h2>
+                        <div className="flex items-center gap-3">
+                            <span className="px-4 py-1.5 bg-white/10 rounded-full text-xl font-bold border border-white/20">
+                                {data.user.rank_title}
+                            </span>
+                            <span className="text-2xl font-medium text-white/70">Level {data.user.level}</span>
+                        </div>
                     </div>
-                )}
-            </div>
-
-            {/* Bottom: Stats Grid */}
-            <div className="relative z-10 grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 flex flex-col items-center text-center">
-                    <ClockIcon className="w-5 h-5 text-emerald-400 mb-1" />
-                    <span className="text-xl font-black">{data.this_week.focus_hours}h</span>
-                    <span className="text-[9px] uppercase font-bold text-white/60 tracking-wider">Jam Fokus<br/>Minggu Ini</span>
+                    {/* Minimal Logo */}
+                    <div className="bg-white/20 px-6 py-3 rounded-2xl border border-white/30">
+                        <span className="font-extrabold text-2xl tracking-tight">SarangTumbuh.site</span>
+                    </div>
                 </div>
-                
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 flex flex-col items-center text-center">
-                    <CheckCircleIcon className="w-5 h-5 text-emerald-400 mb-1" />
-                    <span className="text-xl font-black">{data.this_week.tasks_completed}</span>
-                    <span className="text-[9px] uppercase font-bold text-white/60 tracking-wider">Tugas Selesai<br/>Minggu Ini</span>
-                </div>
-            </div>
 
-            {/* Heatmap (only visible in Story mode as it takes space) */}
-            {!isSquare && (
-                <div className="relative z-10 bg-white/5 backdrop-blur-md rounded-xl p-3 border border-white/10 mb-4">
-                    <p className="text-[9px] uppercase font-bold text-white/60 tracking-wider text-center mb-2">Aktivitas 7 Hari Terakhir</p>
-                    <div className="flex justify-between items-center px-1">
-                        {data.last_7_days.map((day, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-1.5">
-                                <div className={`w-5 h-5 rounded-md ${day.active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-white/10'} border border-white/5`} />
-                                <span className="text-[9px] text-white/50 uppercase font-bold">{day.day_short}</span>
+                {/* Center: The big streak number */}
+                <div className="flex flex-col items-center justify-center py-20">
+                    <div className="relative mb-8">
+                        {/* Glowing background for the fire icon */}
+                        <div className="absolute inset-0 bg-orange-500 blur-[80px] opacity-60 rounded-full scale-150" />
+                        <FireIcon className="w-48 h-48 text-orange-400 relative z-10 drop-shadow-[0_0_30px_rgba(251,146,60,0.8)]" />
+                    </div>
+                    
+                    <div className="text-center">
+                        <h1 className="text-[280px] font-[1000] tracking-tighter text-white leading-none mb-4 drop-shadow-2xl">
+                            {data.streak.current}
+                        </h1>
+                        <p className="text-5xl font-black uppercase tracking-[0.2em] text-orange-300 drop-shadow-md">
+                            Day Streak
+                        </p>
+                    </div>
+                    
+                    {data.streak.current === data.streak.longest && data.streak.current > 0 && (
+                        <div className="mt-12 bg-gradient-to-r from-amber-400 to-orange-500 px-8 py-3 rounded-2xl shadow-xl text-2xl font-black text-slate-900 uppercase tracking-wider animate-pulse">
+                            🏆 Rekor Baru!
+                        </div>
+                    )}
+                </div>
+
+                {/* Bottom Section */}
+                <div className="space-y-8">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="bg-white/15 rounded-3xl p-8 border border-white/20 flex flex-col items-center text-center shadow-lg">
+                            <ClockIcon className="w-12 h-12 text-emerald-400 mb-3" />
+                            <span className="text-6xl font-black mb-1">{data.this_week.focus_hours}h</span>
+                            <span className="text-xl uppercase font-bold text-white/60 tracking-widest leading-tight">Focus Time<br/>This Week</span>
+                        </div>
+                        
+                        <div className="bg-white/15 rounded-3xl p-8 border border-white/20 flex flex-col items-center text-center shadow-lg">
+                            <CheckCircleIcon className="w-12 h-12 text-emerald-400 mb-3" />
+                            <span className="text-6xl font-black mb-1">{data.this_week.tasks_completed}</span>
+                            <span className="text-xl uppercase font-bold text-white/60 tracking-widest leading-tight">Tasks Done<br/>This Week</span>
+                        </div>
+                    </div>
+
+                    {/* Heatmap (only visible in Story mode) */}
+                    {!isSquare && (
+                        <div className="bg-white/10 rounded-3xl p-8 border border-white/15">
+                            <p className="text-xl uppercase font-black text-white/70 tracking-[0.3em] text-center mb-8">Activity Last 7 Days</p>
+                            <div className="flex justify-between items-center px-4">
+                                {data.last_7_days.map((day, idx) => (
+                                    <div key={idx} className="flex flex-col items-center gap-4">
+                                        <div className={`w-14 h-14 rounded-2xl ${day.active ? 'bg-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.6)] border-white/20' : 'bg-white/10 border-white/5'} border-2 transition-all`} />
+                                        <span className={`text-xl ${day.active ? 'text-emerald-400 font-black' : 'text-white/40 font-bold'} uppercase`}>
+                                            {day.day_short}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        </div>
+                    )}
+
+                    {/* Footer Message */}
+                    <div className="pt-8 text-center">
+                        <p className="text-2xl font-bold text-white/40 tracking-wide">✨ Start your journey at <span className="text-white/70 font-black">sarangtumbuh.site</span></p>
                     </div>
                 </div>
-            )}
-
-            {/* Footer */}
-            <div className="relative z-10 text-center opacity-60">
-                <p className="text-xs font-medium">✨ Build your focus habit at sarangtumbuh.site</p>
             </div>
+        </div>
         </div>
     );
 });

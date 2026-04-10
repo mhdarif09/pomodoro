@@ -24,6 +24,7 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import SlideOver from '@/Components/SlideOver';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
+import { usePomodoroTimer } from '@/Contexts/PomodoroContext';
 import { requestNotificationPermission, registerServiceWorker, startBackgroundTimer, stopBackgroundTimer } from '@/Utils/NotificationHelper';
 
 dayjs.extend(relativeTime);
@@ -171,12 +172,9 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
     // --- DnD state ---
     const [activeTaskDnd, setActiveTaskDnd] = useState(null);
 
-    // --- Pomodoro state ---
-    const [pomodoroTask, setPomodoroTask] = useState(null);
-    const [secondsLeft, setSecondsLeft] = useState(25 * 60);
-    const [isRunning, setIsRunning] = useState(false);
-    const [startTime, setStartTime] = useState(null);
-    const [totalDuration, setTotalDuration] = useState(25 * 60);
+    // --- Pomodoro state (GLOBAL) ---
+    const pomodoro = usePomodoroTimer();
+    const { activeTask: pomodoroTask, secondsLeft, isRunning, totalDuration } = pomodoro;
 
     // --- Stagnant modal state ---
     const [isStagnantModalOpen, setIsStagnantModalOpen] = useState(false);
@@ -257,99 +255,10 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
         }
     };
 
-    // --- Pomodoro Handlers ---
-    const handleStartFocus = async (task) => {
-        const duration = task.estimated_minutes || 25;
-
-        try {
-            await axios.post(route('api.pomodoro.start'), {
-                task_id: task.id,
-                duration_minutes: duration
-            });
-
-            setPomodoroTask(task);
-            setSecondsLeft(duration * 60);
-            setTotalDuration(duration * 60);
-            setStartTime(dayjs());
-            setIsRunning(true);
-
-            startBackgroundTimer({
-                taskId: task.id,
-                taskTitle: task.title,
-                totalSeconds: duration * 60,
-                remainingSeconds: duration * 60
-            });
-        } catch (err) {
-            console.error('Failed to start session:', err);
-        }
-    };
-
-    const stopSession = async (manuallyStopped = true) => {
-        if (!isRunning) return;
-        setIsRunning(false);
-
-        try {
-            stopBackgroundTimer();
-            await axios.post(route('api.pomodoro.stop'), {
-                break_minutes: 0,
-                tab_switches: 0,
-                ai_questions_asked: 0,
-            });
-            router.reload({ only: ['tasks'] });
-        } catch (error) {
-            console.error("Failed to save session:", error);
-        }
-    };
-
-    const handleTimerClose = () => {
-        if (isRunning) {
-            if (confirm('Timer masih berjalan. Berhenti dan simpan progres?')) {
-                stopSession(true);
-                setPomodoroTask(null);
-            }
-        } else {
-            setPomodoroTask(null);
-        }
-    };
-
-    // Check for active session on mount
-    useEffect(() => {
-        const checkActiveSession = async () => {
-            try {
-                const res = await axios.get(route('api.pomodoro.active'));
-                if (res.data.session) {
-                    const session = res.data.session;
-                    const startedAt = dayjs(session.started_at);
-                    const elapsed = dayjs().diff(startedAt, 'seconds');
-                    const totalSecs = session.focus_minutes * 60;
-                    const remaining = Math.max(0, totalSecs - elapsed);
-
-                    if (remaining > 0) {
-                        setPomodoroTask(session.task || { id: session.task_id, title: 'Sesi Fokus' });
-                        setSecondsLeft(remaining);
-                        setTotalDuration(totalSecs);
-                        setStartTime(startedAt);
-                        setIsRunning(true);
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to check active session:', err);
-            }
-        };
-        checkActiveSession();
-    }, []);
-
-    // Timer countdown
-    useEffect(() => {
-        let timer;
-        if (isRunning && secondsLeft > 0) {
-            timer = setInterval(() => setSecondsLeft(prev => prev - 1), 1000);
-        } else if (secondsLeft === 0 && isRunning) {
-            stopSession(false);
-            alert('Waktu fokus selesai! 🎉');
-        }
-        return () => clearInterval(timer);
-    }, [isRunning, secondsLeft]);
+    // --- Pomodoro Handlers (Wrapped Global) ---
+    const handleStartFocus = (task) => pomodoro.startFocus(task);
+    const stopSession = (manual) => pomodoro.stopSession(manual);
+    const handleTimerClose = () => pomodoro.closeTimer();
 
     // DnD sensors
     const sensors = useSensors(
@@ -1182,21 +1091,7 @@ export default function GuildToDo({ auth, guild, tasks, pendingTasks = [], focus
                     )}
                 </AnimatePresence>
 
-                {/* ========== POMODORO ISLAND ========== */}
-                <AnimatePresence>
-                    {pomodoroTask && (
-                        <PomodoroIsland
-                            taskTitle={pomodoroTask.title}
-                            secondsLeft={secondsLeft}
-                            isRunning={isRunning}
-                            totalDuration={totalDuration}
-                            onStart={() => setIsRunning(true)}
-                            onStop={() => setIsRunning(false)}
-                            onReset={() => { setIsRunning(false); setSecondsLeft(totalDuration); }}
-                            onClose={handleTimerClose}
-                        />
-                    )}
-                </AnimatePresence>
+
 
                 {/* XP Toast */}
                 <AnimatePresence>
