@@ -13,7 +13,7 @@ import PriorityTaskWidget from '@/Components/Dashboard/PriorityTaskWidget';
 import ContinueWorkBanner from '@/Components/Dashboard/ContinueWorkBanner';
 import DailyLimitIndicator from '@/Components/Dashboard/DailyLimitIndicator';
 import TaskRecoveryModal from '@/Components/Dashboard/TaskRecoveryModal';
-import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
+// PomodoroIsland is mounted globally in AuthenticatedLayout — do not import here
 import ProductivityPulse from '@/Components/Dashboard/ProductivityPulse';
 import UpgradeModal from '@/Components/UpgradeModal';
 import DashboardNotes from '@/Components/Dashboard/DashboardNotes';
@@ -170,7 +170,7 @@ const QuickAddTaskModal = ({ isOpen, onClose, onTaskAdded }) => {
     );
 };
 
-const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, aiInsightSnippet, filters = {}, onStartFocus, focusTasks, suggestedFocusTasks, resumeTask, onTaskComplete, productivityRefreshTrigger }) => {
+const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, aiInsightSnippet, filters = {}, onStartFocus, focusTasks, suggestedFocusTasks, resumeTask, onTaskComplete, productivityRefreshTrigger, continueWorkTask, onDismissContinue }) => {
     const activeFilter = filters.filter || 'all';
 
     const handleFilterChange = (newFilter) => {
@@ -190,7 +190,6 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
 
     return (
         <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-            {/* --- BEN TO GRID --- */}
             <div className="grid grid-cols-12 gap-6 items-start">
 
                 {/* 1. HERO AREA: Welcome & Header (col-12) */}
@@ -198,10 +197,9 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 mb-4 border-b border-slate-100 dark:border-slate-800 pb-8"
+                    className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8"
                 >
                     <div className="flex-1 flex flex-col md:flex-row gap-8 items-start md:items-end">
-                        {/* Name & Greeting */}
                         <div className="relative group shrink-0">
                             <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                             <h1 className="text-4xl sm:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
@@ -210,8 +208,6 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                                     {auth?.user?.name?.split(' ')[0] || 'Teman'}
                                 </span>
                             </h1>
-
-                            {/* Rank Badge Indicator */}
                             {auth?.gamification && (
                                 <div className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-800 px-3 py-1.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-700/50">
                                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-inner">
@@ -224,47 +220,41 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                             )}
                         </div>
 
-                        {/* Gamification Quick Stats - Horizontal Row */}
-                        <div className="flex flex-wrap gap-4 flex-1 w-full justify-start md:justify-end pb-1">
-                            {/* Streak Fire Widget */}
+                        <div className="flex flex-wrap gap-3 flex-1 w-full justify-start md:justify-end pb-1">
                             {auth?.gamification && (
-                                <div className="flex bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow items-center gap-4 min-w-[140px]">
+                                <div className="flex bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow items-center gap-4 min-w-[130px]">
                                     <div className={`p-2.5 rounded-xl ${auth.gamification.streak > 0 ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                                        <FireIcon className="w-6 h-6" />
+                                        <FireIcon className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Streak</div>
-                                        <div className="text-xl font-black text-slate-800 dark:text-white leading-none">
-                                            {auth.gamification.streak > 0 ? `${auth.gamification.streak} Hari` : 'Mulai Hari Ini!'}
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Streak</div>
+                                        <div className="text-lg font-black text-slate-800 dark:text-white leading-none">
+                                            {auth.gamification.streak > 0 ? `${auth.gamification.streak} Hari` : 'Mulai!'}
                                         </div>
                                     </div>
                                 </div>
                             )}
-
-                            {/* Identity Trigger Card (Urgent State) */}
                             {auth?.gamification?.identity_trigger && auth.gamification.identity_trigger.urgency === 'high' && (
-                                <div className="flex bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-2xl p-3 shadow-sm items-center gap-3 animate-pulse-soft max-w-sm">
+                                <div className="flex bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-2xl p-3 shadow-sm items-center gap-3 max-w-xs">
                                     <div className="p-2 bg-red-100 dark:bg-red-500/30 rounded-full text-red-600 dark:text-red-400 shrink-0">
-                                        <BoltIcon className="w-5 h-5" />
+                                        <BoltIcon className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <div className="text-[10px] font-black text-red-500 uppercase tracking-wider mb-0.5">WARNING</div>
-                                        <div className="text-xs font-semibold text-red-700 dark:text-red-300 leading-tight">
+                                        <div className="text-[10px] font-black text-red-500 uppercase tracking-wider mb-0.5">Perhatian</div>
+                                        <div className="text-xs font-semibold text-red-700 dark:text-red-300 leading-tight line-clamp-2">
                                             {auth.gamification.identity_trigger.context}
                                         </div>
                                     </div>
                                 </div>
                             )}
-
-                            {/* Identity Trigger Card (Medium State) */}
                             {auth?.gamification?.identity_trigger && auth.gamification.identity_trigger.urgency === 'medium' && (
-                                <div className="flex bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-2xl p-3 shadow-sm items-center gap-3 max-w-sm">
+                                <div className="flex bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-2xl p-3 shadow-sm items-center gap-3 max-w-xs">
                                     <div className="p-2 bg-amber-100 dark:bg-amber-500/30 rounded-full text-amber-600 dark:text-amber-400 shrink-0">
-                                        <ShieldCheckIcon className="w-5 h-5" />
+                                        <ShieldCheckIcon className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <div className="text-[10px] font-black text-amber-600 uppercase tracking-wider mb-0.5">NAIK RANK</div>
-                                        <div className="text-xs font-semibold text-amber-800 dark:text-amber-200 leading-tight">
+                                        <div className="text-[10px] font-black text-amber-600 uppercase tracking-wider mb-0.5">Naik Rank</div>
+                                        <div className="text-xs font-semibold text-amber-800 dark:text-amber-200 leading-tight line-clamp-2">
                                             {auth.gamification.identity_trigger.context}
                                         </div>
                                     </div>
@@ -273,7 +263,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                         </div>
                     </div>
 
-                    <div className="flex shrink-0 w-full lg:w-auto mt-4 lg:mt-0">
+                    <div className="flex shrink-0 w-full lg:w-auto mt-2 lg:mt-0">
                         <button
                             onClick={() => window.dispatchEvent(new CustomEvent('open-quick-add-task'))}
                             className="w-full justify-center apple-button bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl flex items-center gap-2 py-4 px-8 rounded-2xl font-black active:scale-95 transition-all outline-none"
@@ -284,39 +274,53 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                     </div>
                 </motion.div>
 
-                {/* 2. MAIN HUB (SMART FOCUS) - col-8 */}
-                <div className="col-span-12 lg:col-span-8 space-y-6">
-                    {/* Agent Briefing Tile - Kiko */}
-                    {(auth.user.is_premium || auth.user.is_admin) && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="apple-glass rounded-[2.5rem] p-6 shadow-xl border-white/5 bg-white dark:bg-slate-900 overflow-hidden group"
-                        >
-                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                                <div className="w-20 h-20 flex-shrink-0 bg-emerald-50 dark:bg-emerald-900/20 rounded-[2rem] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                                    <motion.div
-                                        animate={{ y: [0, -5, 0] }}
-                                        transition={{ repeat: Infinity, duration: 3 }}
-                                        className="text-4xl"
-                                    >
-                                        🤖
-                                    </motion.div>
-                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-emerald-500" />
-                                </div>
-                                <div className="flex-1 text-center sm:text-left">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Kiko's Briefing</span>
-                                        <span className="text-[10px] font-bold text-slate-400">STATUS: ACTIVE ANALYTICS</span>
-                                    </div>
-                                    <h4 className="text-xl font-black text-slate-900 dark:text-white mb-2 leading-tight">Siap beraksi hari ini?</h4>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed italic border-l-0 sm:border-l-4 border-emerald-500 pl-0 sm:pl-4 bg-emerald-50/50 dark:bg-emerald-900/10 py-3 rounded-xl sm:rounded-l-none sm:rounded-r-xl">
-                                        {aiInsightSnippet ? `✨ "${aiInsightSnippet}"` : "Waktunya tumbuh dan lebih produktif hari ini. Tetap fokus pada targetmu! 🚀"}
-                                    </p>
-                                </div>
+                {/* MOBILE-FIRST: WeeklyJourney + Stats visible FIRST on mobile (col-12, then pushed to sidebar on lg) */}
+                <div className="col-span-12 lg:hidden space-y-4">
+                    <WeeklyJourney compact />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="apple-glass p-4 rounded-2xl border-white/5 shadow-sm relative overflow-hidden bg-white dark:bg-slate-900">
+                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-1">Selesai Hari Ini</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-black text-slate-900 dark:text-white">{todayTaskStats.completed}</span>
+                                <span className="text-xs text-slate-400 font-bold">/{Math.max(todayTaskStats.total, 3)} task</span>
                             </div>
-                        </motion.div>
+                        </div>
+                        <div className="apple-glass p-4 rounded-2xl border-white/5 shadow-sm relative overflow-hidden bg-white dark:bg-slate-900">
+                            <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest block mb-1">Sesi Fokus</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-black text-slate-900 dark:text-white">{dailyStats.current}</span>
+                                <span className="text-xs text-slate-400 font-bold">/{dailyStats.limit} sesi</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Continue Work Banner — mobile */}
+                {continueWorkTask && (
+                    <div className="col-span-12 lg:hidden">
+                        <ContinueWorkBanner
+                            task={continueWorkTask}
+                            onDismiss={onDismissContinue}
+                            onContinue={() => { onStartFocus(continueWorkTask); onDismissContinue(); }}
+                        />
+                    </div>
+                )}
+
+                {/* 2. SMART FOCUS + KANBAN (col-12 on mobile, col-8 on desktop) */}
+                <div className="col-span-12 lg:col-span-8 space-y-6">
+
+                    {/* Continue Work Banner — desktop */}
+                    {continueWorkTask && (
+                        <div className="hidden lg:block">
+                            <ContinueWorkBanner
+                                task={continueWorkTask}
+                                onDismiss={onDismissContinue}
+                                onContinue={() => { onStartFocus(continueWorkTask); onDismissContinue(); }}
+                            />
+                        </div>
                     )}
+
+                    {/* Smart Focus 3 */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -330,112 +334,90 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                             onStartFocus={onStartFocus}
                             auth={auth}
                             onTaskComplete={onTaskComplete}
-                            hideHero={false} // Show Smart Focus here
-                            hideList={true} // Hide the redundant list
+                            hideHero={false}
+                            hideList={true}
                         />
                     </motion.div>
+
+                    {/* Full Kanban Board */}
+                    <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Semua Tugas 📖</h2>
+                            <div className="flex gap-2 overflow-x-auto max-w-full pb-1 scrollbar-hide">
+                                {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => handleFilterChange(key)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all whitespace-nowrap flex-shrink-0
+                                            ${activeFilter === key
+                                                ? `${colorClass} text-white shadow-md`
+                                                : 'bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-100 dark:border-slate-700'
+                                            }`}
+                                    >
+                                        <Icon className="w-3.5 h-3.5" />
+                                        <span>{title}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="apple-glass rounded-[2rem] p-4 shadow-xl mb-10"
+                        >
+                            <TaskFocusPanel
+                                tasks={allTasks}
+                                focusTasks={focusTasks}
+                                activeFilter={activeFilter}
+                                onStartFocus={onStartFocus}
+                                auth={auth}
+                                onTaskComplete={onTaskComplete}
+                                hideHero={true}
+                                hideList={false}
+                            />
+                        </motion.div>
+                    </div>
                 </div>
 
-                {/* 3. PERFORMANCE SIDEBAR (col-4) */}
-                <div className="col-span-12 lg:col-span-4 space-y-6">
-                    {/* Weekly Journey - Compact Widget */}
+                {/* 3. PERFORMANCE SIDEBAR — desktop only (col-4) */}
+                <div className="hidden lg:flex col-span-4 flex-col space-y-5">
+                    {/* Weekly Journey full */}
                     <WeeklyJourney compact />
 
-                    {/* Productivity Pulse (Trends) */}
-                    <ProductivityPulse refreshTrigger={productivityRefreshTrigger} />
-
-                    {/* Momentum Stats Group */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="space-y-4"
-                    >
-                        {/* Task Momentum Card */}
-                        <div className="apple-glass p-8 rounded-[2.5rem] border-white/5 shadow-xl relative overflow-hidden group bg-gradient-to-br from-white/80 to-emerald-50/20 dark:from-slate-900/80 dark:to-emerald-900/10">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-12 -mt-12" />
-                            <div className="relative z-10">
-                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-4 block">Task Pipeline</span>
-                                <div className="flex items-end justify-between mb-4">
-                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-none">
-                                        {todayTaskStats.completed}<span className="text-slate-400 text-xl font-bold">/{Math.max(todayTaskStats.total, 3)}</span>
-                                    </h3>
-                                    <div className="bg-emerald-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
-                                        {Math.round((todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%
-                                    </div>
-                                </div>
-                                <div className="h-3 bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner border border-white/5">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${Math.min(100, (todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%` }}
-                                        className="h-full bg-emerald-500 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
-                                    />
-                                </div>
+                    {/* Today stats pair */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="apple-glass p-5 rounded-[1.5rem] border-white/5 shadow-md relative overflow-hidden bg-gradient-to-br from-white to-emerald-50/30 dark:from-slate-900 dark:to-emerald-900/10">
+                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block mb-2">Task Selesai</span>
+                            <div className="flex items-baseline gap-1 mb-3">
+                                <span className="text-4xl font-black text-slate-900 dark:text-white leading-none">{todayTaskStats.completed}</span>
+                                <span className="text-sm text-slate-400 font-bold">/{Math.max(todayTaskStats.total, 3)}</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${Math.min(100, (todayTaskStats.completed / Math.max(todayTaskStats.total, 3)) * 100)}%` }}
+                                    className="h-full bg-emerald-500"
+                                />
                             </div>
                         </div>
-
-                        {/* Focus Momentum Card */}
-                        <div className="apple-glass p-8 rounded-[2.5rem] border-white/5 shadow-xl relative overflow-hidden group bg-gradient-to-br from-white/80 to-orange-50/20 dark:from-slate-900/80 dark:to-orange-900/10">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-12 -mt-12" />
-                            <div className="relative z-10">
-                                <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-4 block">Deep Work Flow</span>
-                                <div className="flex items-end justify-between mb-4">
-                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-none">
-                                        {dailyStats.current}<span className="text-slate-400 text-xl font-bold">/{dailyStats.limit}</span>
-                                    </h3>
-                                    <div className="bg-orange-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
-                                        {Math.round((dailyStats.current / dailyStats.limit) * 100)}%
-                                    </div>
-                                </div>
-                                <div className="h-3 bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner border border-white/5">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${Math.min(100, (dailyStats.current / dailyStats.limit) * 100)}%` }}
-                                        className="h-full bg-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]"
-                                    />
-                                </div>
+                        <div className="apple-glass p-5 rounded-[1.5rem] border-white/5 shadow-md relative overflow-hidden bg-gradient-to-br from-white to-orange-50/30 dark:from-slate-900 dark:to-orange-900/10">
+                            <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest block mb-2">Fokus Hari Ini</span>
+                            <div className="flex items-baseline gap-1 mb-3">
+                                <span className="text-4xl font-black text-slate-900 dark:text-white leading-none">{dailyStats.current}</span>
+                                <span className="text-sm text-slate-400 font-bold">/{dailyStats.limit}</span>
                             </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* 4. LOWER ROW: BACKLOG & FILTERS (col-12 or col-8) */}
-                <div className="col-span-12">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Semua Tugas 📖</h2>
-                        <div className="flex gap-2 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                            {filterCards.map(({ key, title, icon: Icon, colorClass }) => (
-                                <button
-                                    key={key}
-                                    onClick={() => handleFilterChange(key)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex-shrink-0
-                                        ${activeFilter === key
-                                            ? `${colorClass} text-white shadow-lg`
-                                            : 'bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-100 dark:border-slate-700'
-                                        }`}
-                                >
-                                    <Icon className="w-4 h-4" />
-                                    <span>{title}</span>
-                                </button>
-                            ))}
+                            <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${Math.min(100, (dailyStats.current / dailyStats.limit) * 100)}%` }}
+                                    className="h-full bg-orange-500"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="apple-glass rounded-[2rem] p-4 shadow-xl mb-10"
-                    >
-                        <TaskFocusPanel
-                            tasks={allTasks}
-                            focusTasks={focusTasks}
-                            activeFilter={activeFilter}
-                            onStartFocus={onStartFocus}
-                            auth={auth}
-                            onTaskComplete={onTaskComplete}
-                            hideHero={true} // Hide Smart Focus here as it's already shown above
-                            hideList={false} // Always show list here
-                        />
-                    </motion.div>
+                    {/* Productivity Pulse */}
+                    <ProductivityPulse refreshTrigger={productivityRefreshTrigger} />
                 </div>
             </div>
         </div>
@@ -701,35 +683,17 @@ export default function Dashboard(props) {
                     </div>
                 )}
 
-                {/* Productivity Features Container */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-                    {/* Daily Limit Indicator - Top Right */}
-                    <div className="flex justify-end mb-4">
-                        <DailyLimitIndicator current={dailyStats.current} limit={dailyStats.limit} />
+                {/* Priority Task Agent Widget */}
+                {priorityTasks.length > 0 && (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+                        <PriorityTaskWidget tasks={priorityTasks} />
                     </div>
-
-                    {/* Continue Work Banner */}
-                    {continueWorkTask && showContinueBanner && (
-                        <ContinueWorkBanner
-                            task={continueWorkTask}
-                            onDismiss={() => setShowContinueBanner(false)}
-                            onContinue={() => {
-                                handleStartFocus(continueWorkTask);
-                                setShowContinueBanner(false);
-                            }}
-                        />
-                    )}
-
-                    {/* Priority Task Widget */}
-                    {priorityTasks.length > 0 && (
-                        <div className="mb-6">
-                            <PriorityTaskWidget tasks={priorityTasks} />
-                        </div>
-                    )}
-                </div>
+                )}
 
                 <MainDashboard
                     {...mainDashboardProps}
+                    continueWorkTask={continueWorkTask && showContinueBanner ? continueWorkTask : null}
+                    onDismissContinue={() => setShowContinueBanner(false)}
                     onTaskComplete={onTaskComplete}
                 />
             </div>
