@@ -23,10 +23,10 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
         <div 
             ref={ref}
             // Add a specific class to ensure html2canvas can target a clean node
-            className={`share-card-capture relative overflow-hidden bg-slate-900 flex flex-col justify-between p-8 text-white ${isSquare ? 'aspect-square w-[400px]' : 'aspect-[9/16] w-[360px]'}`}
+            className={`share-card-capture relative overflow-hidden bg-slate-900 flex flex-col justify-between p-6 text-white`}
             style={{ 
-                // We use fixed widths for the DOM node so the canvas renders consistently,
-                // but we will scale it up during export for high-res.
+                width: isSquare ? '400px' : '360px',
+                height: isSquare ? '400px' : '640px',
                 fontFamily: "'Inter', sans-serif" 
             }}
         >
@@ -53,14 +53,14 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
             </div>
 
             {/* Center: The big streak number */}
-            <div className="relative z-10 flex flex-col items-center justify-center flex-1 my-8">
+            <div className="relative z-10 flex flex-col items-center justify-center flex-1 my-2">
                 <div className="relative">
                     {/* Glowing background for the fire icon */}
                     <div className="absolute inset-0 bg-orange-500 blur-2xl opacity-50 rounded-full scale-150" />
-                    <FireIcon className="w-20 h-20 text-orange-400 relative z-10 drop-shadow-2xl mb-2" />
+                    <FireIcon className="w-16 h-16 text-orange-400 relative z-10 drop-shadow-2xl mb-1" />
                 </div>
                 
-                <h1 className="text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 drop-shadow-lg leading-none mb-2">
+                <h1 className="text-7xl font-black tracking-tighter text-white drop-shadow-lg leading-none mb-1">
                     {data.streak.current}
                 </h1>
                 <p className="text-xl font-bold uppercase tracking-widest text-orange-200">
@@ -68,35 +68,35 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
                 </p>
                 
                 {data.streak.current === data.streak.longest && data.streak.current > 0 && (
-                    <div className="mt-4 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 text-sm font-semibold text-yellow-300">
+                    <div className="mt-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-semibold text-yellow-300">
                         🏆 New Personal Best!
                     </div>
                 )}
             </div>
 
             {/* Bottom: Stats Grid */}
-            <div className="relative z-10 grid grid-cols-2 gap-3 mb-6">
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-col items-center text-center">
-                    <ClockIcon className="w-6 h-6 text-emerald-400 mb-2" />
-                    <span className="text-2xl font-black">{data.this_week.focus_hours}h</span>
-                    <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider">Jam Fokus<br/>Minggu Ini</span>
+            <div className="relative z-10 grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 flex flex-col items-center text-center">
+                    <ClockIcon className="w-5 h-5 text-emerald-400 mb-1" />
+                    <span className="text-xl font-black">{data.this_week.focus_hours}h</span>
+                    <span className="text-[9px] uppercase font-bold text-white/60 tracking-wider">Jam Fokus<br/>Minggu Ini</span>
                 </div>
                 
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex flex-col items-center text-center">
-                    <CheckCircleIcon className="w-6 h-6 text-emerald-400 mb-2" />
-                    <span className="text-2xl font-black">{data.this_week.tasks_completed}</span>
-                    <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider">Tugas Selesai<br/>Minggu Ini</span>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 flex flex-col items-center text-center">
+                    <CheckCircleIcon className="w-5 h-5 text-emerald-400 mb-1" />
+                    <span className="text-xl font-black">{data.this_week.tasks_completed}</span>
+                    <span className="text-[9px] uppercase font-bold text-white/60 tracking-wider">Tugas Selesai<br/>Minggu Ini</span>
                 </div>
             </div>
 
             {/* Heatmap (only visible in Story mode as it takes space) */}
             {!isSquare && (
-                <div className="relative z-10 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 mb-6">
-                    <p className="text-[10px] uppercase font-bold text-white/60 tracking-wider text-center mb-3">Aktivitas 7 Hari Terakhir</p>
-                    <div className="flex justify-between items-center px-2">
+                <div className="relative z-10 bg-white/5 backdrop-blur-md rounded-xl p-3 border border-white/10 mb-4">
+                    <p className="text-[9px] uppercase font-bold text-white/60 tracking-wider text-center mb-2">Aktivitas 7 Hari Terakhir</p>
+                    <div className="flex justify-between items-center px-1">
                         {data.last_7_days.map((day, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-2">
-                                <div className={`w-6 h-6 rounded-md ${day.active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-white/10'} border border-white/5`} />
+                            <div key={idx} className="flex flex-col items-center gap-1.5">
+                                <div className={`w-5 h-5 rounded-md ${day.active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-white/10'} border border-white/5`} />
                                 <span className="text-[9px] text-white/50 uppercase font-bold">{day.day_short}</span>
                             </div>
                         ))}
@@ -106,7 +106,7 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
 
             {/* Footer */}
             <div className="relative z-10 text-center opacity-60">
-                <p className="text-xs font-medium">✨ Build your focus habit at sarangtumbuh.com</p>
+                <p className="text-xs font-medium">✨ Build your focus habit at sarangtumbuh.site</p>
             </div>
         </div>
     );

@@ -18,7 +18,7 @@ export default function StreakShareModal({ isOpen, onClose }) {
     useEffect(() => {
         if (isOpen && !data) {
             setLoading(true);
-            axios.get(route('gamification.streak-summary'))
+            axios.get(route('api.gamification.streak-summary'))
                 .then(res => {
                     setData(res.data);
                     setLoading(false);
@@ -35,14 +35,18 @@ export default function StreakShareModal({ isOpen, onClose }) {
         
         try {
             setIsGenerating(true);
-            
-            // We scale up the canvas resolution by 3x so it looks crisp on social media
             const canvas = await html2canvas(cardRef.current, {
                 scale: 3, 
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#0f172a', // slate-900 background matches card
-                logging: false
+                logging: false,
+                width: cardRef.current.offsetWidth,
+                height: cardRef.current.offsetHeight,
+                scrollX: 0,
+                scrollY: -window.scrollY,
+                windowWidth: document.documentElement.offsetWidth,
+                windowHeight: document.documentElement.offsetHeight
             });
             
             return new Promise(resolve => {

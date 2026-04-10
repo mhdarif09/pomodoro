@@ -240,7 +240,7 @@ export default function AboutUsPage() {
               <div className="relative z-10">
                 <h2 className="text-4xl md:text-5xl font-[900] mb-6 tracking-tighter">Bangun Masa Depan Bersama Kami</h2>
                 <p className="text-xl text-emerald-50 mb-10 max-w-2xl mx-auto font-medium">Kami selalu mencari individu berbakat yang bersemangat about produktivitas, AI, dan pertumbuhan pribadi. Jika Anda ingin membuat dampak, kami ingin mendengar dari Anda.</p>
-                <motion.a href="mailto:karir@sarangtumbuh.com" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-white text-emerald-900 rounded-full font-bold text-lg transition-all shadow-2xl">
+                <motion.a href="mailto:karir@sarangtumbuh.site" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-white text-emerald-900 rounded-full font-bold text-lg transition-all shadow-2xl">
                   Lihat Posisi Terbuka <ArrowRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </motion.a>
               </div>

@@ -21,6 +21,7 @@ import InAppNotificationPopup from '@/Components/InAppNotificationPopup';
 import PomodoroIsland from '@/Components/Pomodoro/PomodoroIsland';
 import GamificationPopup from '@/Components/GamificationPopup';
 import StreakShareModal from '@/Components/Gamification/StreakShareModal';
+import CompanionWidget from '@/Components/CompanionWidget';
 import { usePomodoroTimer } from '@/Contexts/PomodoroContext';
 import { useLanguage } from '@/Contexts/LanguageContext';
 import useKeyboardShortcuts from '@/Hooks/useKeyboardShortcuts';
@@ -593,7 +594,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                 </nav>
             </div>
 
-
+            <CompanionWidget />
         </div>
     );
 }

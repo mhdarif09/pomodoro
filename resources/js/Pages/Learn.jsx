@@ -25,7 +25,7 @@ const sections = [
                     },
                     {
                         type: 'steps', value: [
-                            'Buka sarangtumbuh.com dan klik "Coba Gratis" atau "Mulai Gratis"',
+                            'Buka sarangtumbuh.site dan klik "Coba Gratis" atau "Mulai Gratis"',
                             'Pilih metode: isi form email/password ATAU klik "Login with Google"',
                             'Jika via Google, pilih akun Google-mu, sistem otomatis membuat akun',
                             'Kamu langsung masuk ke Dashboard dan bisa mulai produktif!',
