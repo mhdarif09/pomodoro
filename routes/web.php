@@ -254,6 +254,7 @@ Route::get('/reviews', function () {
 Route::get('/terms-of-service', fn() => Inertia::render('TermsOfService'))->name('terms.show');
 Route::get('/privacy-policy', fn() => Inertia::render('PrivacyPolicy'))->name('policy.show');
 Route::get("/about", fn() => Inertia::render('About'))->name('about');
+Route::get('/roadmap', fn() => Inertia::render('Roadmap'))->name('roadmap');
 
 Route::get('/login/google/redirect', [GoogleLoginController::class, 'redirectToGoogle'])->name('login.google.redirect');
 Route::get('/login/google/callback', [GoogleLoginController::class, 'handleGoogleCallback'])->name('login.google.callback');

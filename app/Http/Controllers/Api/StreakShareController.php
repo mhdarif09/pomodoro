@@ -68,6 +68,9 @@ class StreakShareController extends Controller
             ];
         }
 
+        // --- Cognitive Arena Stats ---
+        $cogStat = $user->cognitiveStat;
+
         return response()->json([
             'streak' => [
                 'current' => $currentStreak,
@@ -94,6 +97,13 @@ class StreakShareController extends Controller
                 'member_since' => $user->created_at->format('M Y'),
             ],
             'last_7_days' => $last7Days,
+            'cognitive' => $cogStat ? [
+                'critical_thinking_level' => $cogStat->critical_thinking_level,
+                'communication_level' => $cogStat->communication_level,
+                'decision_speed' => $cogStat->decision_speed,
+                'arena_rank' => $cogStat->arena_rank,
+                'arena_xp' => $cogStat->arena_xp,
+            ] : null,
         ]);
     }
 }

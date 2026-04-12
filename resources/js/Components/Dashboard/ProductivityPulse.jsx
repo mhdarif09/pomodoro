@@ -110,36 +110,6 @@ export default function ProductivityPulse({ className = '', refreshTrigger = 0 }
                 </div>
             </div>
 
-            {/* Insights (Premium or Admin) */}
-            {(isPremium || auth.user.is_admin) && insights && (
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white relative overflow-hidden">
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-4">
-                            <h4 className="font-bold text-sm opacity-80 uppercase tracking-wider">💡 AI Insights</h4>
-                            <a
-                                href="/api/productivity/report"
-                                target="_blank"
-                                className="bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 backdrop-blur-sm"
-                            >
-                                <span>📄</span> Download Report
-                            </a>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-xs opacity-70 mb-1">Hari Paling Produktif</p>
-                                <p className="font-black text-2xl">{insights.best_day}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs opacity-70 mb-1">Golden Hour</p>
-                                <p className="font-bold text-lg">{insights.most_productive_time_desc}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Decorative Circles */}
-                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-                    <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl" />
-                </div>
-            )}
         </div>
     );
 }

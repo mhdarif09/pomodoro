@@ -12,6 +12,8 @@ class CognitiveArenaMatch extends Model
         'user_id',
         'simulation_id',
         'user_answer',
+        'user_answers',
+        'score',
         'time_taken_seconds',
         'ai_feedback_text',
         'stat_changes',
@@ -20,6 +22,7 @@ class CognitiveArenaMatch extends Model
     ];
 
     protected $casts = [
+        'user_answers' => 'array',
         'stat_changes' => 'array',
         'completed' => 'boolean',
     ];

@@ -13,6 +13,14 @@ class CognitiveSimulation extends Model
         'type',
         'difficulty_level',
         'scenario_text',
+        'questions',
+        'options',
+        'correct_option',
+    ];
+
+    protected $casts = [
+        'questions' => 'array',
+        'options' => 'array',
     ];
 
     public function user()

@@ -14,22 +14,15 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+  serif: ['Instrument Serif', 'Georgia', 'serif'],
+  sans: ['DM Sans', 'system-ui', 'sans-serif'],
             },
             colors: {
-                green: {
-                    50: '#eafff3',
-                    100: '#ccffe3',
-                    200: '#99ffc7',
-                    300: '#59ffaa',
-                    400: '#00e680',
-                    500: '#00522a', // User requested color as Primary
-                    600: '#004222',
-                    700: '#00331a',
-                    800: '#002613',
-                    900: '#001a0d',
-                    950: '#000d07',
-                },
+  forest: '#2D6A4F',
+  mint: '#D8F3DC',
+  'light-green': '#74C69D',
+  ink: '#1A1F1C',
+  muted: '#6B7C74',
             },
         },
     },

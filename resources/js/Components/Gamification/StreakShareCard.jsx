@@ -90,7 +90,7 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
                 {/* Bottom Section */}
                 <div className="space-y-8">
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-3 gap-6">
                         <div className="bg-white/15 rounded-3xl p-8 border border-white/20 flex flex-col items-center text-center shadow-lg">
                             <ClockIcon className="w-12 h-12 text-emerald-400 mb-3" />
                             <span className="text-6xl font-black mb-1">{data.this_week.focus_hours}h</span>
@@ -102,7 +102,36 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
                             <span className="text-6xl font-black mb-1">{data.this_week.tasks_completed}</span>
                             <span className="text-xl uppercase font-bold text-white/60 tracking-widest leading-tight">Tasks Done<br/>This Week</span>
                         </div>
+
+                        {data.cognitive && (
+                            <div className="bg-white/15 rounded-3xl p-8 border border-white/20 flex flex-col items-center text-center shadow-lg">
+                                <span className="text-5xl mb-3">🧠</span>
+                                <span className="text-6xl font-black mb-1">{data.cognitive.arena_rank}</span>
+                                <span className="text-xl uppercase font-bold text-white/60 tracking-widest leading-tight">Arena<br/>Rank</span>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Cognitive Arena Stats */}
+                    {data.cognitive && (
+                        <div className="bg-white/10 rounded-3xl p-8 border border-white/15">
+                            <p className="text-xl uppercase font-black text-white/70 tracking-[0.3em] text-center mb-6">🧠 Learning Hub Stats</p>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="bg-white/10 rounded-2xl p-5 text-center">
+                                    <p className="text-white/50 text-lg uppercase font-bold tracking-wider mb-1">Critical</p>
+                                    <p className="text-4xl font-black">{data.cognitive.critical_thinking_level}</p>
+                                </div>
+                                <div className="bg-white/10 rounded-2xl p-5 text-center">
+                                    <p className="text-white/50 text-lg uppercase font-bold tracking-wider mb-1">Arena XP</p>
+                                    <p className="text-4xl font-black">{data.cognitive.arena_xp}</p>
+                                </div>
+                                <div className="bg-white/10 rounded-2xl p-5 text-center">
+                                    <p className="text-white/50 text-lg uppercase font-bold tracking-wider mb-1">Rank</p>
+                                    <p className="text-4xl font-black leading-tight">{data.cognitive.arena_rank}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Heatmap (only visible in Story mode) */}
                     {!isSquare && (
@@ -127,7 +156,6 @@ const StreakShareCard = forwardRef(({ data, format = 'story' }, ref) => {
                     </div>
                 </div>
             </div>
-        </div>
         </div>
     );
 });

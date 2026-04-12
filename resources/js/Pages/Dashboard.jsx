@@ -13,6 +13,8 @@ import ContinueWorkBanner from '@/Components/Dashboard/ContinueWorkBanner';
 import TaskRecoveryModal from '@/Components/Dashboard/TaskRecoveryModal';
 // PomodoroIsland is mounted globally in AuthenticatedLayout — do not import here
 import ProductivityPulse from '@/Components/Dashboard/ProductivityPulse';
+import DashboardNotes from '@/Components/Dashboard/DashboardNotes';
+import DigitalCompanion from '@/Components/Dashboard/DigitalCompanion';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     PlusIcon, XMarkIcon, ListBulletIcon, CalendarDaysIcon,
@@ -196,24 +198,27 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                     className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8"
                 >
                     <div className="flex-1 flex flex-col md:flex-row gap-8 items-start md:items-end">
-                        <div className="relative group shrink-0">
-                            <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                            <h1 className="text-4xl sm:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
-                                Halo, <br />
-                                <span className="bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">
-                                    {auth?.user?.name?.split(' ')[0] || 'Teman'}
-                                </span>
-                            </h1>
-                            {auth?.gamification && (
-                                <div className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-800 px-3 py-1.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-700/50">
-                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-inner">
-                                        <ShieldCheckIcon className="w-3 h-3 text-white" />
-                                    </div>
-                                    <span className="text-xs font-bold text-white tracking-wide">
-                                        {auth.gamification.rank_title} <span className="text-slate-400">#{auth.gamification.rank_position}</span>
+                        <div className="relative group shrink-0 flex gap-6 items-center">
+                            <DigitalCompanion todayTaskStats={todayTaskStats} dailyStats={dailyStats} auth={auth} />
+                            <div>
+                                <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                                <h1 className="text-4xl sm:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
+                                    Halo, <br />
+                                    <span className="bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">
+                                        {auth?.user?.name?.split(' ')[0] || 'Teman'}
                                     </span>
-                                </div>
-                            )}
+                                </h1>
+                                {auth?.gamification && (
+                                    <div className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-800 px-3 py-1.5 rounded-full shadow-sm border border-slate-200 dark:border-slate-700/50">
+                                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-inner">
+                                            <ShieldCheckIcon className="w-3 h-3 text-white" />
+                                        </div>
+                                        <span className="text-xs font-bold text-white tracking-wide">
+                                            {auth.gamification.rank_title} <span className="text-slate-400">#{auth.gamification.rank_position}</span>
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex flex-wrap gap-3 flex-1 w-full justify-start md:justify-end pb-1">

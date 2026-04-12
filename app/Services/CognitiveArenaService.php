@@ -19,31 +19,39 @@ class CognitiveArenaService
     /**
      * Generate a new scenario based on user's current cognitive level
      */
-    public function generateScenario(UserCognitiveStat $stats)
+    public function generateScenario(UserCognitiveStat $stats, ?string $topic = null, ?string $difficulty = null)
     {
         $level = $this->calculateOverallLevel($stats);
         
+        $topicInstruction = $topic ? "The topic MUST be exactly focused on: {$topic}." : "Select one type randomly from: Logical Fallacy Detection, Ethical Dilemma, Career Decision, Bias Awareness, Argument Analysis.";
+        
+        $difficultyInstruction = $difficulty ? "The difficulty level MUST be set to: {$difficulty}." : "Difficulty should be proportional to their level.";
+
         $prompt = "You are the Game Master of the Cognitive Arena.
-Generate a 3-5 minute interactive simulation scenario to test critical thinking, decision-making, or ethical reasoning.
+Generate a cohesive simulation scenario and EXACTLY 10 multiple-choice questions to test critical thinking, decision-making, or reasoning.
 The user's current overall cognitive level is {$level} (out of 100).
-Difficulty should be proportional to their level.
-The language should be primarily Indonesian, but you can use English if the context demands it.
+{$difficultyInstruction}
+The language MUST be primarily Indonesian, but you can use English if the context demands it.
+{$topicInstruction}
 
-Scenario Types: Logical Fallacy Detection, Ethical Dilemma, Career Decision, Bias Awareness, Argument Analysis.
-Select one type randomly.
+You must provide EXACTLY 10 questions. Each question must have exactly 3 multiple choice options (A, B, C).
 
-You must provide exactly 3 multiple choice options (A, B, C) for the user to choose from.
 Return ONLY a raw JSON strictly adhering to the following structure, with no markdown code blocks:
 {
-    \"type\": \"string (e.g., ethical_dilemma)\",
+    \"type\": \"string (The topic chosen, e.g., Ethical Dilemma)\",
     \"difficulty_level\": \"string (Beginner/Intermediate/Advanced/Expert)\",
-    \"scenario_text\": \"The full scenario description (100-200 words), ending with a question prompting the user's decision.\",
-    \"options\": {
-        \"A\": \"Option A text\",
-        \"B\": \"Option B text\",
-        \"C\": \"Option C text\"
-    },
-    \"correct_option\": \"A, B, or C (The best or most logical choice)\"
+    \"scenario_text\": \"The general scenario context or theme description (100-200 words).\",
+    \"questions\": [
+        {
+            \"text\": \"Question string here?\",
+            \"options\": {
+                \"A\": \"Option A text\",
+                \"B\": \"Option B text\",
+                \"C\": \"Option C text\"
+            },
+            \"correct_option\": \"A, B, or C\"
+        }
+    ]
 }";
 
         $response = $this->callOpenAI($prompt);
@@ -56,32 +64,29 @@ Return ONLY a raw JSON strictly adhering to the following structure, with no mar
     /**
      * Evaluate the user's answer
      */
-    public function evaluateAnswer(string $scenarioText, array $options, string $correctOption, string $userAnswer, int $timeTaken, UserCognitiveStat $stats)
+    public function evaluateAnswer(string $scenarioText, array $questions, array $userAnswers, int $score, int $timeTaken, UserCognitiveStat $stats)
     {
         $prompt = "You are the Game Master of the Cognitive Arena.
-Read the following scenario, the given options, and the user's chosen answer.
-Scenario:
-{$scenarioText}
-
-Options:
-" . json_encode($options) . "
-
-Correct Option: {$correctOption}
-User's Answer (Chosen Option): {$userAnswer}
+The user just completed a 10-question simulation. 
+Scenario Theme: {$scenarioText}
+Questions & Options: " . json_encode($questions) . "
+User's Choosen Answers: " . json_encode($userAnswers) . "
+User Score: {$score}/100
 Time taken: {$timeTaken} seconds.
 
-Evaluate their choice based on critical thinking, communication, and decision speed. Provide reasoning-based feedback (not just right/wrong).
-Write the feedback in Indonesian.
+Evaluate their performance based on critical thinking, communication, and decision speed as indicated by their score and time taken.
+Write a concluding review highlighting patterns you see in their correct/wrong answers.
+The feedback MUST be in Indonesian.
 Return ONLY a raw JSON strictly adhering to the following structure, with no markdown code blocks:
 {
-    \"feedback_text\": \"Your reasoning-based feedback (100-150 words).\",
+    \"feedback_text\": \"Your reasoning-based feedback (100-200 words).\",
     \"stat_changes\": {
-        \"critical_thinking_level\": <integer from -2 to +5>,
-        \"communication_level\": <integer from -2 to +5>,
-        \"decision_speed\": <integer from -2 to +5>
+        \"critical_thinking_level\": <integer from -2 to +10 based on score>,
+        \"communication_level\": <integer from -2 to +10 based on score>,
+        \"decision_speed\": <integer from -2 to +10 based on time_taken and score>
     },
-    \"xp_earned\": <integer from 10 to 100>,
-    \"reflection_prompt\": \"A short reflection question for their journal (e.g. 'What assumption influenced your choice?')\"
+    \"xp_earned\": <integer based on score, between 50 to 500>,
+    \"reflection_prompt\": \"A short reflection question for their journal related to their quiz performance.\"
 }";
 
         $response = $this->callOpenAI($prompt);

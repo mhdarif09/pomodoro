@@ -36,33 +36,38 @@ class CognitiveArenaController extends Controller
             ]
         );
 
-        $todayMatch = CognitiveArenaMatch::where('user_id', $user->id)
-            ->whereDate('created_at', Carbon::today())
+        $activeMatch = CognitiveArenaMatch::where('user_id', $user->id)
+            ->where('completed', false)
             ->first();
 
         return response()->json([
             'stats' => $stats,
             'is_unlocked' => true,
-            'today_match' => $todayMatch ? $todayMatch->load('simulation') : null
+            'active_match' => $activeMatch ? $activeMatch->load('simulation') : null
         ]);
     }
 
     public function generate(Request $request)
     {
+        $request->validate([
+            'topic' => 'nullable|string|max:255',
+            'difficulty' => 'nullable|string|max:255',
+        ]);
+
         $user = $request->user();
         $stats = $user->cognitiveStat;
 
-        $todayMatch = CognitiveArenaMatch::where('user_id', $user->id)
-            ->whereDate('created_at', Carbon::today())
+        $activeMatch = CognitiveArenaMatch::where('user_id', $user->id)
+            ->where('completed', false)
             ->first();
 
-        if ($todayMatch) {
-            return response()->json(['simulation' => $todayMatch->simulation, 'match_id' => $todayMatch->id]);
+        if ($activeMatch) {
+            return response()->json(['simulation' => $activeMatch->simulation, 'match_id' => $activeMatch->id]);
         }
 
-        $scenarioData = $this->arenaService->generateScenario($stats);
-        if (!$scenarioData) {
-            \Illuminate\Support\Facades\Log::error('Cognitive Arena Generation Failed: AI service returned null.', [
+        $scenarioData = $this->arenaService->generateScenario($stats, $request->topic, $request->difficulty);
+        if (!$scenarioData || !isset($scenarioData['questions'])) {
+            \Illuminate\Support\Facades\Log::error('Cognitive Arena Generation Failed: AI service returned null or bad format.', [
                 'user_id' => $user->id,
             ]);
             return response()->json(['error' => 'Failed to generate scenario.'], 500);
@@ -73,8 +78,7 @@ class CognitiveArenaController extends Controller
             'type' => $scenarioData['type'],
             'difficulty_level' => $scenarioData['difficulty_level'],
             'scenario_text' => $scenarioData['scenario_text'],
-            'options' => $scenarioData['options'] ?? [],
-            'correct_option' => $scenarioData['correct_option'] ?? '',
+            'questions' => $scenarioData['questions'],
         ]);
 
         $match = CognitiveArenaMatch::create([
@@ -88,7 +92,7 @@ class CognitiveArenaController extends Controller
     public function submit(Request $request, $matchId)
     {
         $request->validate([
-            'user_answer' => 'required|string',
+            'user_answers' => 'required|array',
             'time_taken_seconds' => 'required|integer',
         ]);
 
@@ -99,22 +103,41 @@ class CognitiveArenaController extends Controller
             return response()->json(['error' => 'Match already completed.'], 400);
         }
 
+        $simulation = $match->simulation;
+        $questions = $simulation->questions ?? [];
+        $userAnswers = $request->user_answers;
+        
+        // Calculate raw score
+        $score = 0;
+        $correctCount = 0;
+        foreach ($questions as $index => $q) {
+            $expected = $q['correct_option'] ?? '';
+            $actual = $userAnswers[$index] ?? '';
+            if ($expected === $actual) {
+                $correctCount++;
+            }
+        }
+        if (count($questions) > 0) {
+            $score = (int)(($correctCount / count($questions)) * 100);
+        }
+
         $stats = $user->cognitiveStat;
         $evalData = $this->arenaService->evaluateAnswer(
-            $match->simulation->scenario_text,
-            $match->simulation->options ?? [],
-            $match->simulation->correct_option ?? '',
-            $request->user_answer,
+            $simulation->scenario_text ?? '',
+            $questions,
+            $userAnswers,
+            $score,
             $request->time_taken_seconds,
             $stats
         );
 
         if (!$evalData) {
-            return response()->json(['error' => 'Failed to evaluate answer.'], 500);
+            return response()->json(['error' => 'Failed to evaluate answers.'], 500);
         }
 
         $match->update([
-            'user_answer' => $request->user_answer,
+            'user_answers' => $userAnswers,
+            'score' => $score,
             'time_taken_seconds' => $request->time_taken_seconds,
             'ai_feedback_text' => $evalData['feedback_text'],
             'stat_changes' => $evalData['stat_changes'],
