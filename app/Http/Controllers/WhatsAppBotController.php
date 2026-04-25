@@ -30,8 +30,8 @@ class WhatsAppBotController extends Controller
     {
         try {
             set_time_limit(0); 
-            $sender = $request->input('sender');
-            $message = $request->input('message');
+            $sender = $request->input('sender') ?? $request->input('phone') ?? $request->input('number');
+            $message = $request->input('message') ?? $request->input('text') ?? $request->input('body');
             $name = $request->input('name');
 
             Log::info('WhatsApp webhook received', [

@@ -173,9 +173,27 @@ class LlmClient
             return $payload;
         }
 
+        $model = (string) $payload['model'];
+
         // If caller passed the generic/global model, remap it per provider.
-        if ($globalModel !== '' && (string) $payload['model'] === $globalModel && $providerDefault !== '') {
+        if ($globalModel !== '' && $model === $globalModel && $providerDefault !== '') {
             $payload['model'] = $providerDefault;
+            return $payload;
+        }
+
+        // Cross-provider safety remap:
+        // - OpenAI model names may fail on Groq.
+        // - Groq model names may fail on OpenAI.
+        if ($providerDefault !== '') {
+            if ($providerName === 'groq' && preg_match('/^gpt-/i', $model) === 1) {
+                $payload['model'] = $providerDefault;
+                return $payload;
+            }
+
+            if ($providerName === 'openai' && (str_contains($model, 'groq/') || preg_match('/^(llama|mixtral|qwen|gemma)/i', $model) === 1)) {
+                $payload['model'] = $providerDefault;
+                return $payload;
+            }
         }
 
         return $payload;

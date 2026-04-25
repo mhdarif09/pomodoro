@@ -26,8 +26,8 @@ class WhatsAppWebhookController extends Controller
     public function handle(Request $request)
     {
         // Fonnte sends: sender, message, name, etc.
-        $sender = $request->input('sender');
-        $message = $request->input('message');
+        $sender = $request->input('sender') ?? $request->input('phone') ?? $request->input('number');
+        $message = $request->input('message') ?? $request->input('text') ?? $request->input('body');
         
         // Basic validation
         if (!$sender || !$message) {
