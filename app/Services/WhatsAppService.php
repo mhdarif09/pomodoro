@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -31,6 +32,24 @@ class WhatsAppService
             if (str_starts_with($phone, '0')) {
                 $phone = '62' . substr($phone, 1);
             }
+
+            // Deduplicate identical messages sent to same number within 5 minutes.
+            // This prevents spam from repeated webhook deliveries or concurrent requests.
+            $dedupeKey = 'whatsapp_send_dedup:' . $phone . ':' . sha1($message);
+            if (Cache::has($dedupeKey)) {
+                Log::warning('WhatsApp message deduplicated (identical send within 5 min)', [
+                    'phone' => $phone,
+                    'message_preview' => substr($message, 0, 50),
+                ]);
+                return [
+                    'success' => false,
+                    'error' => 'Message already sent recently',
+                    'deduplicated' => true,
+                ];
+            }
+            
+            // Mark as sent for dedup window
+            Cache::put($dedupeKey, true, now()->addMinutes(5));
             
             // Dispatch the job to the queue
             \App\Jobs\SendWhatsAppMessageJob::dispatch($phone, $message);
@@ -87,13 +106,14 @@ class WhatsAppService
         }
 
         // Global anti-spam guard: keep reminders human and non-intrusive.
+        // Extend window to 45 minutes to prevent any spam
         $recentReminder = \App\Models\ReminderLog::where('user_id', $user->id)
             ->where('type', 'like', '%reminder%')
-            ->where('created_at', '>=', now()->subMinutes(20))
+            ->where('created_at', '>=', now()->subMinutes(45))
             ->exists();
 
         if ($recentReminder) {
-            return ['success' => false, 'error' => 'Throttled: reminder was sent recently', 'throttled' => true];
+            return ['success' => false, 'error' => 'Throttled: reminder was sent recently (wait 45 min)', 'throttled' => true];
         }
 
         $todayReminderCount = \App\Models\ReminderLog::where('user_id', $user->id)

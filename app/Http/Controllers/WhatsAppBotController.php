@@ -7,6 +7,7 @@ use App\Services\WhatsAppService;
 use App\Services\WhatsAppBotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppBotController extends Controller
@@ -45,6 +46,23 @@ class WhatsAppBotController extends Controller
                 Log::warning('WhatsApp webhook: missing sender or message');
                 return response()->json(['status' => 'ok']);
             }
+
+            // Deduplicate repeated webhook deliveries from the provider.
+            $messageId = $request->input('message_id') ?? $request->input('id') ?? $request->input('messageId') ?? null;
+            $cacheKey = 'whatsapp_webhook_dedup:' . $this->normalizePhone($sender);
+
+            if ($messageId) {
+                $cacheKey .= ':' . $messageId;
+            } else {
+                $cacheKey .= ':' . sha1($sender . '|' . $message . '|' . ($request->input('timestamp') ?? ''));
+            }
+
+            if (Cache::has($cacheKey)) {
+                Log::info('WhatsApp webhook duplicate ignored', ['sender' => $sender, 'message' => substr($message, 0, 120)]);
+                return response()->json(['status' => 'ok']);
+            }
+
+            Cache::put($cacheKey, true, now()->addMinutes(10));
 
             // Normalize phone number
             $phone = preg_replace('/[^0-9]/', '', $sender);
@@ -119,5 +137,10 @@ class WhatsAppBotController extends Controller
         }
 
         return null;
+    }
+
+    protected function normalizePhone(string $phone): string
+    {
+        return preg_replace('/[^0-9]/', '', $phone);
     }
 }
