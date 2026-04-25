@@ -128,13 +128,18 @@ export default function AIAssistantIndex() {
             setMessages(res.data);
         } catch (error) {
             console.error("Failed to fetch messages", error);
+            if (error?.response?.status === 404) {
+                setActiveSession(null);
+                setMessages([]);
+                fetchSessions();
+            }
         }
     };
 
     const createNewSession = async () => {
         try {
             const res = await axios.post(route('api.ai.store-session'), { title: 'Chat Baru' });
-            setSessions([res.data, ...sessions]);
+            setSessions(prev => [res.data, ...prev]);
             setActiveSession(res.data);
             setMessages([]);
         } catch (error) {
@@ -181,7 +186,7 @@ export default function AIAssistantIndex() {
             try {
                 const res = await axios.post(route('api.ai.store-session'), { title: 'Chat Baru' });
                 sessionObj = res.data;
-                setSessions([sessionObj, ...sessions]);
+                setSessions(prev => [sessionObj, ...prev]);
                 setActiveSession(sessionObj);
             } catch (error) {
                 console.error("Failed to create session", error);
@@ -222,10 +227,28 @@ export default function AIAssistantIndex() {
         // or we can pass it if we want client-side context control.
         // Controller implementation uses DB messages, so we don't need to pass history.
 
-        try {
-            const res = await axios.post(route('api.ai.send-message', sessionObj.id), formData, {
+        const sendToSession = async (targetSessionId) => {
+            return axios.post(route('api.ai.send-message', targetSessionId), formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
+        };
+
+        try {
+            let res;
+            try {
+                res = await sendToSession(sessionObj.id);
+            } catch (err) {
+                // Session could be deleted/stale on server; recreate once then retry.
+                if (err?.response?.status === 404) {
+                    const recreate = await axios.post(route('api.ai.store-session'), { title: 'Chat Baru' });
+                    const freshSession = recreate.data;
+                    setSessions(prev => [freshSession, ...prev.filter(s => s.id !== freshSession.id)]);
+                    setActiveSession(freshSession);
+                    res = await sendToSession(freshSession.id);
+                } else {
+                    throw err;
+                }
+            }
 
             console.log('Backend response:', res.data);
 
@@ -241,7 +264,7 @@ export default function AIAssistantIndex() {
 
                 // Update title if it changed
                 if (res.data.session.title !== sessionObj.title) {
-                    setSessions(sessions.map(s => s.id === sessionObj.id ? res.data.session : s));
+                    setSessions(prev => prev.map(s => s.id === res.data.session.id ? res.data.session : s));
                     setActiveSession(res.data.session);
                 }
             } else {
@@ -253,7 +276,7 @@ export default function AIAssistantIndex() {
             }
         } catch (err) {
             console.error(err);
-            // Revert or show error
+            setMessages(prev => prev.slice(0, -1));
         } finally {
             setIsLoading(false);
         }

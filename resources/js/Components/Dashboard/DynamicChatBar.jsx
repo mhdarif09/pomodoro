@@ -55,15 +55,30 @@ export default function DynamicChatBar({ user }) {
         setInput('');
         setIsLoading(true);
 
+        const payload = {
+            message: input,
+            history: messages,
+            webSearch: false
+        };
+
         try {
-            const res = await axios.post(route('api.ai.send-message', session.id), {
-                message: input,
-                history: messages,
-                webSearch: false
-            });
+            let res;
+            try {
+                res = await axios.post(route('api.ai.send-message', session.id), payload);
+            } catch (err) {
+                if (err?.response?.status === 404) {
+                    const recreate = await axios.post(route('api.ai.store-session'), { title: 'Quick Task Help', type: 'general' });
+                    const freshSession = recreate.data;
+                    setSession(freshSession);
+                    res = await axios.post(route('api.ai.send-message', freshSession.id), payload);
+                } else {
+                    throw err;
+                }
+            }
             setMessages([...messages, userMsg, res.data.message]);
         } catch (err) {
             console.error(err);
+            setMessages(prev => prev.slice(0, -1));
         } finally {
             setIsLoading(false);
         }

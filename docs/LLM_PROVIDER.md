@@ -27,7 +27,7 @@ Single provider Groq:
 ```env
 LLM_PROVIDER=groq
 GROQ_API_KEY=your_groq_key
-GROQ_MODEL=groq/compound
+GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
 Fallback OpenAI -> Groq:
@@ -39,7 +39,7 @@ OPENAI_MODEL=gpt-4o-mini
 
 LLM_SECONDARY_PROVIDER=groq
 GROQ_API_KEY=your_groq_key
-GROQ_MODEL=groq/compound
+GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
 ## List All Models
