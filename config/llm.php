@@ -32,12 +32,6 @@ return [
         ],
     ],
 
-    // Optional override keys/urls (advanced).
-    'overrides' => [
-        'api_key' => env('LLM_API_KEY'),
-        'base_url' => env('LLM_BASE_URL'),
-    ],
-
     'model' => env('LLM_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini')),
     'timeout' => (int) env('LLM_REQUEST_TIMEOUT', env('OPENAI_REQUEST_TIMEOUT', 30)),
 ];

@@ -10,7 +10,6 @@ Project ini bisa pakai API yang OpenAI-compatible, termasuk **Groq**.
   - `LLM_SECONDARY_PROVIDER=groq`
 
 - `OPENAI_API_KEY=...` dan/atau `GROQ_API_KEY=...`
-- `LLM_API_KEY` + `LLM_BASE_URL` (opsional override global; kalau diisi, akan dipakai untuk semua request)
 - `LLM_MODEL=...` (model default yang dipakai di berbagai fitur)
 
 Contoh pakai Groq (single provider):

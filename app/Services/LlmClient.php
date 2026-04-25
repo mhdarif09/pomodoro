@@ -113,13 +113,6 @@ class LlmClient
 
     private function resolveProviderCredentials(string $providerName): array
     {
-        // Global override (advanced)
-        $overrideKey = config('llm.overrides.api_key');
-        $overrideBaseUrl = config('llm.overrides.base_url');
-        if (!empty($overrideKey) && !empty($overrideBaseUrl)) {
-            return [$overrideKey, $overrideBaseUrl];
-        }
-
         $provider = config("llm.providers.{$providerName}");
         if (!$provider) {
             throw new \InvalidArgumentException("Provider '{$providerName}' tidak dikenal. Pakai: openai|groq.");
@@ -162,4 +155,3 @@ class LlmClient
         return true;
     }
 }
-
