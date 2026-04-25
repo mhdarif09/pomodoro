@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\TaskReminderScheduler;
+use App\Services\LlmClient;
 
 class WhatsAppBotService
 {
@@ -332,9 +333,8 @@ FORMAT JAWABAN:
 - Usahakan tidak terlalu panjang lebar (maksimal 2-3 paragraf) KECUALI user benar-benar meminta penjelasan terperinci.
 PROMPT;
 
-            $apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
-            $response = Http::withToken($apiKey)->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-4o-mini',
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $message],
@@ -343,17 +343,10 @@ PROMPT;
                 'max_tokens' => 500,
             ]);
 
-            if ($response->successful()) {
-                $text = $response->json('choices.0.message.content');
-                if ($text) {
-                    return trim($text);
-                }
+            $text = data_get($result, 'data.choices.0.message.content');
+            if ($text) {
+                return trim($text);
             }
-
-            Log::warning('WhatsAppBot: OpenAI API response unsuccessful', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
 
             return $this->fallbackResponse($user, $message);
 

@@ -7,11 +7,12 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\LlmClient;
 
 class ReminderMessageService
 {
     protected $openaiApiKey;
-    protected $apiUrl = 'https://api.openai.com/v1/chat/completions';
+    protected $apiUrl;
 
     // Collection of friendly message templates
     private $morningGreetings = [
@@ -48,7 +49,9 @@ class ReminderMessageService
 
     public function __construct()
     {
-        $this->openaiApiKey = config('services.openai.api_key');
+        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
+        $this->openaiApiKey = null;
+        $this->apiUrl = null;
     }
 
     /**
@@ -137,11 +140,8 @@ class ReminderMessageService
             
             $prompt = $this->buildPersonalizationPrompt($task, $user, $timeContext, $taskHistory);
             
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->openaiApiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(15)->post($this->apiUrl, [
-                'model' => 'gpt-4o-mini',
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [
                     [
                         'role' => 'system',
@@ -156,10 +156,8 @@ class ReminderMessageService
                 'max_tokens' => 200,
             ]);
 
-            if ($response->successful()) {
-                $result = $response->json();
-                return $result['choices'][0]['message']['content'] ?? null;
-            }
+            $content = data_get($result, 'data.choices.0.message.content');
+            if ($content !== null) return $content;
 
             return null;
 

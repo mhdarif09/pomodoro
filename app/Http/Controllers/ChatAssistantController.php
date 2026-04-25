@@ -36,7 +36,7 @@ class ChatAssistantController extends Controller
             'user_id' => auth()->id(),
             'title' => $request->title,
             'type' => 'educational',
-            'model' => 'gpt-4o-mini',
+            'model' => config('llm.model', 'gpt-4o-mini'),
             'last_message_at' => now(),
         ]);
 

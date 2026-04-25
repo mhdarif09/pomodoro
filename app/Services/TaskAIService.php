@@ -6,15 +6,18 @@ use App\Models\Task;
 use App\Support\AIFeature;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\LlmClient;
 
 class TaskAIService
 {
     protected $openaiApiKey;
-    protected $apiUrl = 'https://api.openai.com/v1/chat/completions';
+    protected $apiUrl;
 
     public function __construct()
     {
-        $this->openaiApiKey = config('services.openai.api_key');
+        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
+        $this->openaiApiKey = null;
+        $this->apiUrl = null;
         // In hybrid/none modes, missing key is fine (we should not call external AI).
     }
 
@@ -27,7 +30,7 @@ class TaskAIService
     public function suggestSubtasks(Task $task): array
     {
         // Hybrid default: local-first breakdown unless explicitly set to AI-only.
-        if (!AIFeature::allowsAI('breakdown') || empty($this->openaiApiKey)) {
+        if (!AIFeature::allowsAI('breakdown')) {
             return [
                 'success' => true,
                 'subtasks' => $this->generateHybridBreakdown($task),
@@ -39,11 +42,8 @@ class TaskAIService
         try {
             $prompt = $this->buildSubtaskPrompt($task);
             
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->openaiApiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl, [
-                'model' => 'gpt-4o-mini',
+            $llm = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [
                     [
                         'role' => 'system',
@@ -58,9 +58,8 @@ class TaskAIService
                 'max_tokens' => 800,
             ]);
 
-            if ($response->successful()) {
-                $result = $response->json();
-                $content = $result['choices'][0]['message']['content'] ?? '';
+            $content = data_get($llm, 'data.choices.0.message.content');
+            if ($content !== null) {
                 
                 // Parse the AI response into array of subtasks
                 $subtasks = $this->parseSubtasksFromResponse($content);
@@ -78,7 +77,7 @@ class TaskAIService
             return [
                 'success' => false,
                 'error' => 'Failed to get AI response',
-                'status' => $response->status()
+                'status' => 502
             ];
 
         } catch (\Exception $e) {
@@ -128,11 +127,8 @@ class TaskAIService
             $prompt .= '  "reasoning": "penjelasan singkat"';
             $prompt .= "\n}";
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->openaiApiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(20)->post($this->apiUrl, [
-                'model' => 'gpt-4o-mini',
+            $llm = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [
                     [
                         'role' => 'system',
@@ -147,9 +143,8 @@ class TaskAIService
                 'max_tokens' => 300,
             ]);
 
-            if ($response->successful()) {
-                $result = $response->json();
-                $content = $result['choices'][0]['message']['content'] ?? '';
+            $content = data_get($llm, 'data.choices.0.message.content');
+            if ($content !== null) {
                 
                 // Try to parse JSON from response
                 $analysis = $this->parseJSONFromResponse($content);
@@ -206,11 +201,8 @@ class TaskAIService
         $prompt .= "Format: Berikan setiap subtask dalam baris baru, tanpa nomor atau bullet.";
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->openaiApiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl, [
-                'model' => 'gpt-4o-mini',
+            $llm = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [
                     ['role' => 'system', 'content' => 'Kamu adalah asisten produktivitas yang ahli memecah task kompleks.'],
                     ['role' => 'user', 'content' => $prompt]
@@ -219,9 +211,8 @@ class TaskAIService
                 'max_tokens' => 500,
             ]);
 
-            if ($response->successful()) {
-                $result = $response->json();
-                $content = $result['choices'][0]['message']['content'] ?? '';
+            $content = data_get($llm, 'data.choices.0.message.content');
+            if ($content !== null) {
                 $subtasks = $this->parseSubtasksFromResponse($content);
                 
                 return ['success' => true, 'subtasks' => $subtasks];

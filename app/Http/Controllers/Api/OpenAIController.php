@@ -17,11 +17,11 @@ use Symfony\Component\DomCrawler\Crawler;
 use Exception;
 use Imagick;
 use TesseractOCR;
+use App\Services\LlmClient;
 
 class OpenAIController extends Controller
 {
     protected string $apiBaseUrl;
-    protected PendingRequest $httpClient;
     protected ?string $serperApiKey;
     protected string $mainModel = 'gpt-4o';
     protected string $retrievalModel = 'gpt-4o';
@@ -30,19 +30,9 @@ class OpenAIController extends Controller
 
     public function __construct()
     {
-        $this->apiBaseUrl = "https://api.openai.com/v1/chat/completions";
-        $apiKey = config('services.openai.api_key');
+        // Kept for backward compatibility; actual requests go through LlmClient (supports fallback OpenAI -> Groq).
+        $this->apiBaseUrl = '/chat/completions';
         $this->serperApiKey = env('SERPER_API_KEY');
-
-        if (empty($apiKey)) {
-            Log::critical("FATAL: OPENAI_API_KEY is not configured.");
-            throw new Exception("Konfigurasi kunci API OpenAI tidak ditemukan.");
-        }
-        
-        $this->httpClient = Http::withToken($apiKey)
-                                ->withHeaders(['Content-Type' => 'application/json'])
-                                ->retry(3, 1500)
-                                ->timeout(600);
     }
 
     public function ask(Request $request)
@@ -70,6 +60,21 @@ class OpenAIController extends Controller
         } catch (Exception $e) {
             Log::error('Orchestration Hub Error in ask(): ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             return response()->json(['error' => 'Terjadi kesalahan internal saat memproses permintaan Anda.'], 500);
+        }
+    }
+
+    /**
+     * List available models from the configured OpenAI-compatible provider.
+     */
+    public function models(Request $request)
+    {
+        try {
+            $which = $request->query('provider', 'all'); // all|primary|secondary|openai|groq
+            $result = app(LlmClient::class)->models($which);
+            return response()->json($result);
+        } catch (Exception $e) {
+            Log::error('LLM models() error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'Terjadi kesalahan internal saat mengambil daftar model.'], 500);
         }
     }
     
@@ -237,23 +242,26 @@ PROMPT;
 
         try {
             set_time_limit(0); 
-            $response = $this->httpClient->post($this->apiBaseUrl, [
-                'model' => 'gpt-4o-mini', // Use faster model for editor actions
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'), // Use faster model for editor actions
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => $userMessage]
+                    ['role' => 'user', 'content' => $userMessage],
                 ],
                 'max_tokens' => 1000,
                 'temperature' => 0.7,
             ]);
 
-            $response->throw();
             return response()->json([
-                'result' => $response->json('choices.0.message.content')
+                'result' => data_get($result, 'data.choices.0.message.content')
             ]);
 
-        } catch (RequestException $e) {
-            return $this->handleApiException($e, 'Text Action');
+        } catch (\Throwable $e) {
+            if ($e instanceof RequestException) {
+                return $this->handleApiException($e, 'Text Action');
+            }
+            Log::error('Text Action LLM Error: ' . $e->getMessage());
+            return response()->json(['error' => 'AI provider gagal memproses request.'], 502);
         }
     }
 
@@ -391,12 +399,19 @@ PROMPT;
             $messages[] = ['role' => 'user', 'content' => $query];
         }
         try {
-            $response = $this->httpClient->post($this->apiBaseUrl, [ 'model' => $this->mainModel, 'messages' => $messages, 'max_tokens' => $this->maxOutputTokens, 'temperature' => 0.7, ]);
-            $response->throw();
-            $content = $response->json('choices.0.message.content', 'Tidak ada respons dari AI.');
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => $this->mainModel,
+                'messages' => $messages,
+                'max_tokens' => $this->maxOutputTokens,
+                'temperature' => 0.7,
+            ]);
+            $content = data_get($result, 'data.choices.0.message.content', 'Tidak ada respons dari AI.');
             return response()->json(['response' => $content, 'sources' => []]);
         } catch (RequestException $e) {
             return $this->handleApiException($e, 'Simple Chat');
+        } catch (\Throwable $e) {
+            Log::error('Simple Chat LLM Error: ' . $e->getMessage());
+            return response()->json(['error' => 'AI provider gagal memproses request.'], 502);
         }
     }
 
@@ -421,14 +436,19 @@ PROMPT;
         $messages[] = ['role' => 'user', 'content' => "Berdasarkan KONTEKS berikut:\n\"" . $contextForPrompt . "\"\n\nJawab pertanyaan ini: " . $query];
 
         try {
-            $response = $this->httpClient->post($this->apiBaseUrl, [
-                'model' => $this->mainModel, 'messages' => $messages, 'max_tokens' => $this->maxOutputTokens, 'temperature' => 0.1,
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => $this->mainModel,
+                'messages' => $messages,
+                'max_tokens' => $this->maxOutputTokens,
+                'temperature' => 0.1,
             ]);
-            $response->throw();
-            $content = $response->json('choices.0.message.content', 'AI tidak dapat menghasilkan jawaban.');
+            $content = data_get($result, 'data.choices.0.message.content', 'AI tidak dapat menghasilkan jawaban.');
             return response()->json(['response' => $content, 'sources'  => $sources]);
         } catch (RequestException $e) {
             return $this->handleApiException($e, 'RAG');
+        } catch (\Throwable $e) {
+            Log::error('RAG LLM Error: ' . $e->getMessage());
+            return response()->json(['error' => 'AI provider gagal memproses request.'], 502);
         }
     }
     
@@ -444,11 +464,13 @@ PROMPT;
         $prompt = "Anda adalah AI pemilah informasi super cerdas. Identifikasi semua potongan teks (CHUNK) yang relevan untuk menjawab pertanyaan pengguna. Berikan hanya nomor-nomor CHUNK yang relevan, dipisahkan koma, dari yang paling relevan hingga kurang relevan. Contoh: 5,2,8\n\nPertanyaan Pengguna: \"{$query}\"\n\n--- DAFTAR CHUNK ---\n{$chunkList}";
         
         try {
-            $response = $this->httpClient->post($this->apiBaseUrl, [
-                'model' => $this->retrievalModel, 'messages' => [['role' => 'user', 'content' => $prompt]], 'max_tokens' => 150, 'temperature' => 0.0,
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => $this->retrievalModel,
+                'messages' => [['role' => 'user', 'content' => $prompt]],
+                'max_tokens' => 150,
+                'temperature' => 0.0,
             ]);
-            $response->throw();
-            preg_match_all('/\d+/', $response->json('choices.0.message.content'), $matches);
+            preg_match_all('/\d+/', (string) data_get($result, 'data.choices.0.message.content'), $matches);
             $relevantIndices = array_unique($matches[0] ?? []);
             if (empty($relevantIndices)) {
                 Log::warning("RAG Retrieval: Gagal memilih chunk, fallback ke 3 chunk pertama.", ['query' => $query]);

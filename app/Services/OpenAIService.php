@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use App\Services\LlmClient;
 
 class OpenAIService
 {
@@ -64,8 +65,9 @@ PROMPT;
     
     public function __construct()
     {
-        $this->apiKey = config('services.openai.api_key');
-        $this->apiUrl = 'https://api.openai.com/v1/chat/completions';
+        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
+        $this->apiKey = '';
+        $this->apiUrl = '';
     }
 
     public function getInitialReflectionQuestion(string $userName): string
@@ -285,6 +287,9 @@ PROMPT;
 
         // Add current input
         if ($imageData) {
+            if (config('llm.primary_provider') !== 'openai') {
+                throw new \Exception('Image/Vision messages membutuhkan OpenAI sebagai primary provider.');
+            }
             // GPT-4 Vision Format
             $messages[] = [
                 'role' => 'user', 
@@ -296,33 +301,31 @@ PROMPT;
             $model = 'gpt-4o'; // Use vision model
         } else {
             $messages[] = ['role' => 'user', 'content' => $currentInput];
-            $model = 'gpt-4o-mini'; // Standard efficient model
+            $model = config('llm.model', 'gpt-4o-mini'); // Standard efficient model
         }
 
         return $this->generateRawOpenAIResponse($messages, $model);
     }
 
-    private function generateRawOpenAIResponse(array $messages, string $model = 'gpt-4o-mini'): string
+    private function generateRawOpenAIResponse(array $messages, string $model = ''): string
     {
+        $model = $model ?: config('llm.model', 'gpt-4o-mini');
         $maxRetries = 3;
         $retryCount = 0;
 
         while ($retryCount < $maxRetries) {
             try {
-                $response = Http::withToken($this->apiKey)
-                    ->timeout(60) // Longer timeout for vision/edu
-                    ->post($this->apiUrl, [
-                        'model' => $model,
-                        'messages' => $messages,
-                        'max_tokens' => 1000, // Allow longer explanations
-                        'temperature' => 0.7,
-                    ]);
+                $result = app(LlmClient::class)->chatCompletions([
+                    'model' => $model,
+                    'messages' => $messages,
+                    'max_tokens' => 1000, // Allow longer explanations
+                    'temperature' => 0.7,
+                ]);
 
-                if ($response->successful()) {
-                    return $response->json('choices.0.message.content');
-                }
-                
-                throw new \Exception('API request failed: ' . $response->body());
+                $content = data_get($result, 'data.choices.0.message.content');
+                if ($content !== null) return $content;
+
+                throw new \Exception('API request failed: empty response');
             } catch (\Exception $e) {
                 $retryCount++;
                 if ($retryCount >= $maxRetries) {

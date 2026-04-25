@@ -7,15 +7,18 @@ use App\Models\NotificationLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\LlmClient;
 
 class SmartReminderService
 {
     protected $openaiApiKey;
-    protected $apiUrl = 'https://api.openai.com/v1/chat/completions';
+    protected $apiUrl;
 
     public function __construct()
     {
-        $this->openaiApiKey = config('services.openai.api_key');
+        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
+        $this->openaiApiKey = null;
+        $this->apiUrl = null;
     }
 
     /**
@@ -167,11 +170,8 @@ Kembalikan HANYA teks pesan WhatsApp. Tanpa label penjelasan. Siap kirim.";
 
         // 4. Call OpenAI
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->openaiApiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl, [
-                'model' => 'gpt-4o-mini',
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userPayload]
@@ -179,14 +179,12 @@ Kembalikan HANYA teks pesan WhatsApp. Tanpa label penjelasan. Siap kirim.";
                 'temperature' => 0.8,
             ]);
 
-            if ($response->successful()) {
-                $content = $response->json()['choices'][0]['message']['content'] ?? null;
-                if ($content) {
-                    return trim($content);
-                }
+            $content = data_get($result, 'data.choices.0.message.content');
+            if ($content) {
+                return trim($content);
             }
-            
-            Log::error('OpenAI failed to generate notification', ['status' => $response->status(), 'body' => $response->body()]);
+
+            Log::error('LLM failed to generate notification', ['provider' => data_get($result, 'provider')]);
         } catch (\Exception $e) {
             Log::error('Exception in generateNotificationMessage', ['error' => $e->getMessage()]);
         }

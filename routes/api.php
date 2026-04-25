@@ -103,6 +103,8 @@ Route::middleware(['auth:sanctum'])->prefix('dashboard')->name('api.')->group(fu
 Route::middleware(['auth:sanctum', 'premium', 'throttle:ai'])->prefix('ai')->name('api.ai.')->group(function () {
     // 🧠 Chat Mode (AI umum)
     Route::post('/ask', [OpenAIController::class, 'ask'])->name('ask');
+    // 🧾 List models (OpenAI-compatible providers, incl. Groq)
+    Route::get('/models', [OpenAIController::class, 'models'])->name('models');
     // 📄 Reviewer Mode (analisis PDF jurnal)
     Route::post('/ask-from-paper', [OpenAIController::class, 'askFromPaper'])->name('askFromPaper');
     // ✍️ Writer Mode (penulisan akademik otomatis)

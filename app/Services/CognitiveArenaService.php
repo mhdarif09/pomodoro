@@ -5,15 +5,18 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\UserCognitiveStat;
+use App\Services\LlmClient;
 
 class CognitiveArenaService
 {
     protected string $apiKey;
-    protected string $apiUrl = 'https://api.openai.com/v1/chat/completions';
+    protected string $apiUrl;
 
     public function __construct()
     {
-        $this->apiKey = config('services.openai.api_key', env('OPENAI_API_KEY', ''));
+        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
+        $this->apiKey = '';
+        $this->apiUrl = '';
     }
 
     /**
@@ -104,8 +107,8 @@ Return ONLY a raw JSON strictly adhering to the following structure, with no mar
     private function callOpenAI(string $prompt): ?string
     {
         try {
-            $response = Http::withToken($this->apiKey)->timeout(45)->post($this->apiUrl, [
-                'model' => 'gpt-4o',
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'response_format' => ['type' => 'json_object'],
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are the Game Master of the Cognitive Arena. Always return valid JSON object.'],
@@ -114,17 +117,13 @@ Return ONLY a raw JSON strictly adhering to the following structure, with no mar
                 'temperature' => 0.7,
             ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['choices'][0]['message']['content'])) {
-                    return $data['choices'][0]['message']['content'];
-                }
-            }
-            
-            Log::error('OpenAI API Error in CognitiveArenaService: ' . $response->body());
+            $content = data_get($result, 'data.choices.0.message.content');
+            if ($content !== null) return $content;
+
+            Log::error('LLM API Error in CognitiveArenaService: empty response');
             return null;
         } catch (\Exception $e) {
-            Log::error('OpenAI API Exception in CognitiveArenaService: ' . $e->getMessage());
+            Log::error('LLM API Exception in CognitiveArenaService: ' . $e->getMessage());
             return null;
         }
     }

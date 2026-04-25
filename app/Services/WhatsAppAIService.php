@@ -6,15 +6,18 @@ use App\Models\User;
 use App\Support\AIFeature;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\LlmClient;
 
 class WhatsAppAIService
 {
     protected $openaiApiKey;
-    protected $apiUrl = 'https://api.openai.com/v1/chat/completions';
+    protected $apiUrl;
 
     public function __construct()
     {
-        $this->openaiApiKey = config('services.openai.api_key');
+        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
+        $this->openaiApiKey = null;
+        $this->apiUrl = null;
     }
 
     /**
@@ -34,7 +37,7 @@ class WhatsAppAIService
      */
     public function generateSmartReminder(User $user, $task): string
     {
-        if (!AIFeature::allowsAI('whatsapp_ai_service') || empty($this->openaiApiKey)) {
+        if (!AIFeature::allowsAI('whatsapp_ai_service')) {
             return $this->generateTemplateReminder($user, $task);
         }
 
@@ -48,17 +51,14 @@ Tugas: '{$taskTitle}'. Deadline: {$dueDate}.
 Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bikin user mau bales ('udah brp persen?', 'gas skrg?', dll).";
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->openaiApiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl, [
-                'model' => 'gpt-4o-mini',
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [['role' => 'user', 'content' => $prompt]],
                 'temperature' => 0.9,
                 'max_tokens' => 150,
             ]);
 
-            return $response->json()['choices'][0]['message']['content'] ?? "Halo {$userName}, jangan lupa tugas {$taskTitle} ya!";
+            return data_get($result, 'data.choices.0.message.content') ?? "Halo {$userName}, jangan lupa tugas {$taskTitle} ya!";
         } catch (\Exception $e) {
             return $this->generateTemplateReminder($user, $task);
         }
@@ -120,7 +120,7 @@ Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bik
                 return $this->replyAndLog($user, "Oke, breakdown cepat buat \"{$task->title}\":\n{$lines}\n\nMau gue kecilin lagi jadi 15-menitan?");
             }
 
-            if (AIFeature::allowsAI('ai_chat') && !empty($this->openaiApiKey)) {
+            if (AIFeature::allowsAI('ai_chat')) {
                 return $this->generateAIChatResponse($user, $messageRaw, $tasks);
             }
 
@@ -163,11 +163,8 @@ Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bik
             . "Jika user bilang 'udah'/'belum', follow up dengan empatik dan actionable.";
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->openaiApiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl, [
-                'model' => 'gpt-4o-mini',
+            $result = app(LlmClient::class)->chatCompletions([
+                'model' => config('llm.model', 'gpt-4o-mini'),
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userMessage],
@@ -176,13 +173,8 @@ Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bik
                 'max_tokens' => 300,
             ]);
 
-            if ($response->successful()) {
-                $reply = $response->json('choices.0.message.content') ?? 'Maaf, aku lagi loading nih.';
-                return $this->replyAndLog($user, $reply);
-            }
-
-            Log::error('WhatsAppAI: OpenAI API failed', ['status' => $response->status(), 'body' => $response->body()]);
-            return $this->replyAndLog($user, 'Waduh, otakku lagi error nih. Coba nanti lagi ya.');
+            $reply = data_get($result, 'data.choices.0.message.content') ?? 'Maaf, aku lagi loading nih.';
+            return $this->replyAndLog($user, $reply);
         } catch (\Exception $e) {
             Log::error('WhatsAppAI: AI exception', ['error' => $e->getMessage()]);
             return $this->replyAndLog($user, 'Ada gangguan teknis nih. Maaf ya!');
@@ -298,4 +290,3 @@ Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bik
         return ["Tentukan definisi selesai", "Kerjain bagian paling kecil dulu", "Review + next step"];
     }
 }
-
