@@ -7,7 +7,7 @@ class AIFeature
     /**
      * Modes:
      *  - none   => never call external AI
-     *  - hybrid => local-first, optional AI fallback
+     *  - hybrid => AI first, then local fallback on failure
      *  - ai     => AI-only behavior
      */
     public static function mode(string $feature): string
@@ -23,7 +23,7 @@ class AIFeature
 
     public static function allowsAI(string $feature): bool
     {
-        return self::mode($feature) === 'ai';
+        return self::mode($feature) !== 'none';
     }
 
     public static function prefersHybrid(string $feature): bool

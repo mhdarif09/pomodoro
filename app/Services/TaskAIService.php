@@ -4,21 +4,14 @@ namespace App\Services;
 
 use App\Models\Task;
 use App\Support\AIFeature;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\LlmClient;
 
 class TaskAIService
 {
-    protected $openaiApiKey;
-    protected $apiUrl;
-
     public function __construct()
     {
-        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
-        $this->openaiApiKey = null;
-        $this->apiUrl = null;
-        // In hybrid/none modes, missing key is fine (we should not call external AI).
+        // Requests go via LlmClient (OpenAI -> Groq fallback).
     }
 
     /**
@@ -29,7 +22,7 @@ class TaskAIService
      */
     public function suggestSubtasks(Task $task): array
     {
-        // Hybrid default: local-first breakdown unless explicitly set to AI-only.
+        // Hybrid behavior: AI first, then local fallback.
         if (!AIFeature::allowsAI('breakdown')) {
             return [
                 'success' => true,
@@ -86,6 +79,15 @@ class TaskAIService
                 'error' => $e->getMessage()
             ]);
 
+            if (AIFeature::prefersHybrid('breakdown')) {
+                return [
+                    'success' => true,
+                    'subtasks' => $this->generateHybridBreakdown($task),
+                    'raw_response' => null,
+                    'mode' => 'hybrid_fallback',
+                ];
+            }
+
             return [
                 'success' => false,
                 'error' => $e->getMessage()
@@ -101,7 +103,7 @@ class TaskAIService
      */
     public function analyzeTaskComplexity(Task $task): array
     {
-        if (!AIFeature::allowsAI('breakdown') || empty($this->openaiApiKey)) {
+        if (!AIFeature::allowsAI('breakdown')) {
             $estimated = $task->estimated_minutes ?? $this->estimateMinutesFromText($task->title, $task->description);
             return [
                 'success' => true,
@@ -163,6 +165,19 @@ class TaskAIService
                 'error' => $e->getMessage()
             ]);
 
+            if (AIFeature::prefersHybrid('breakdown')) {
+                $estimated = $task->estimated_minutes ?? $this->estimateMinutesFromText($task->title, $task->description);
+                return [
+                    'success' => true,
+                    'analysis' => [
+                        'complexity_score' => $task->complexity_score ?? $this->estimateComplexityFromText($task->title, $task->description),
+                        'estimated_minutes' => $estimated,
+                        'reasoning' => 'Hybrid fallback estimate (local heuristic)',
+                    ],
+                    'mode' => 'hybrid_fallback',
+                ];
+            }
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -176,7 +191,7 @@ class TaskAIService
      */
     public function generateTaskBreakdown(string $taskTitle, ?string $taskDescription = null): array
     {
-        if (!AIFeature::allowsAI('breakdown') || empty($this->openaiApiKey)) {
+        if (!AIFeature::allowsAI('breakdown')) {
             $task = new Task();
             $task->title = $taskTitle;
             $task->description = $taskDescription;
@@ -222,6 +237,18 @@ class TaskAIService
 
         } catch (\Exception $e) {
             Log::error('TaskAIService: Error generating breakdown', ['error' => $e->getMessage()]);
+
+            if (AIFeature::prefersHybrid('breakdown')) {
+                $task = new Task();
+                $task->title = $taskTitle;
+                $task->description = $taskDescription;
+                return [
+                    'success' => true,
+                    'subtasks' => $this->generateHybridBreakdown($task),
+                    'mode' => 'hybrid_fallback',
+                ];
+            }
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

@@ -48,7 +48,7 @@ class DetermineTaskPriority implements ShouldQueue
 
     private function determinePriorityHybrid(OpenAIService $openAiService): string
     {
-        // Default: hybrid (local-first). Only call OpenAI when explicitly set to 'ai'.
+        // Hybrid/AI modes: try AI first. If feature is disabled (none), use local heuristic.
         if (AIFeature::allowsAI('priority')) {
             return $openAiService->determineTaskPriority(
                 $this->task->title,

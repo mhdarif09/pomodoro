@@ -4,20 +4,14 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Support\AIFeature;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\LlmClient;
 
 class WhatsAppAIService
 {
-    protected $openaiApiKey;
-    protected $apiUrl;
-
     public function __construct()
     {
-        // Requests go via LlmClient (supports fallback OpenAI -> Groq).
-        $this->openaiApiKey = null;
-        $this->apiUrl = null;
+        // Requests go via LlmClient (OpenAI -> Groq fallback).
     }
 
     /**
@@ -77,6 +71,14 @@ Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bik
                 ->take(5)
                 ->get();
 
+            if (AIFeature::allowsAI('ai_chat')) {
+                try {
+                    return $this->generateAIChatResponse($user, $messageRaw, $tasks);
+                } catch (\Exception $e) {
+                    Log::warning('WhatsAppAI: AI-first failed, using hybrid fallback', ['error' => $e->getMessage()]);
+                }
+            }
+
             if ($this->isGreeting($message)) {
                 return $this->replyAndLog($user, $this->randomGreeting($user->name));
             }
@@ -118,10 +120,6 @@ Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bik
                 $steps = $this->simpleBreakdownForText($task->title, $task->description);
                 $lines = collect($steps)->map(fn ($s, $i) => ($i + 1) . ". " . $s)->implode("\n");
                 return $this->replyAndLog($user, "Oke, breakdown cepat buat \"{$task->title}\":\n{$lines}\n\nMau gue kecilin lagi jadi 15-menitan?");
-            }
-
-            if (AIFeature::allowsAI('ai_chat')) {
-                return $this->generateAIChatResponse($user, $messageRaw, $tasks);
             }
 
             return $this->replyAndLog($user, "Mau fokus ke prioritas, breakdown, atau butuh motivasi dulu?");
@@ -176,8 +174,7 @@ Buat variasi yang beda, singkat, dan personal. Akhiri dengan pertanyaan yang bik
             $reply = data_get($result, 'data.choices.0.message.content') ?? 'Maaf, aku lagi loading nih.';
             return $this->replyAndLog($user, $reply);
         } catch (\Exception $e) {
-            Log::error('WhatsAppAI: AI exception', ['error' => $e->getMessage()]);
-            return $this->replyAndLog($user, 'Ada gangguan teknis nih. Maaf ya!');
+            throw $e;
         }
     }
 

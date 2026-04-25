@@ -1,42 +1,54 @@
 # LLM Provider (OpenAI-compatible)
 
-Project ini bisa pakai API yang OpenAI-compatible, termasuk **Groq**.
+Project ini pakai provider OpenAI-compatible, fokus ke OpenAI dan Groq.
 
 ## Konfigurasi (.env)
 
-- **Mode A (single provider)**: `LLM_PROVIDER=openai|groq`
-- **Mode B (fallback)**:
+- Mode A (single provider): `LLM_PROVIDER=openai|groq`
+- Mode B (fallback):
   - `LLM_PRIMARY_PROVIDER=openai`
   - `LLM_SECONDARY_PROVIDER=groq`
+- `OPENAI_API_KEY=...`
+- `OPENAI_MODEL=...` (default model untuk request ke OpenAI)
+- `GROQ_API_KEY=...`
+- `GROQ_MODEL=...` (default model untuk request ke Groq; bisa `llama-*`, `mixtral-*`, `groq/compound`, dll)
+- `LLM_MODEL=...` (opsional alias global; kalau diisi, tetap dipetakan ke default model per provider saat fallback)
 
-- `OPENAI_API_KEY=...` dan/atau `GROQ_API_KEY=...`
-- `LLM_MODEL=...` (model default yang dipakai di berbagai fitur)
+## Behavior Hybrid
 
-Contoh pakai Groq (single provider):
+- Mode `hybrid` berjalan AI-first.
+- Urutan provider: primary dulu (contoh OpenAI), lalu secondary (contoh Groq).
+- Kalau AI tetap gagal, service yang punya heuristic lokal akan fallback ke local heuristic.
+
+## Contoh Konfigurasi
+
+Single provider Groq:
 
 ```env
 LLM_PROVIDER=groq
-GROQ_API_KEY=your_key_here
-LLM_MODEL=llama-3.1-8b-instant
+GROQ_API_KEY=your_groq_key
+GROQ_MODEL=groq/compound
 ```
 
-Contoh fallback (OpenAI dulu baru Groq):
+Fallback OpenAI -> Groq:
 
 ```env
 LLM_PRIMARY_PROVIDER=openai
 OPENAI_API_KEY=your_openai_key
+OPENAI_MODEL=gpt-4o-mini
+
 LLM_SECONDARY_PROVIDER=groq
 GROQ_API_KEY=your_groq_key
-LLM_MODEL=gpt-4o-mini
+GROQ_MODEL=groq/compound
 ```
 
-## List “all models”
+## List All Models
 
 Endpoint:
 
 - `GET /api/ai/models` (butuh `auth:sanctum`, `premium`, dan `throttle:ai`)
 
-Endpoint ini bisa ambil model dari provider tertentu:
+Filter provider:
 
 - `GET /api/ai/models?provider=all` (default)
 - `GET /api/ai/models?provider=primary`

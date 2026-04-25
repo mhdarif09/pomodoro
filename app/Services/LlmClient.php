@@ -59,9 +59,10 @@ class LlmClient
     {
         $primary = $this->providerName('primary');
         $secondary = $this->providerName('secondary');
+        $primaryPayload = $this->normalizePayloadForProvider($primary, $payload);
 
         try {
-            return $this->requestProvider($primary, $path, $payload);
+            return $this->requestProvider($primary, $path, $primaryPayload);
         } catch (\Throwable $e) {
             if (!$secondary) {
                 throw $e;
@@ -77,7 +78,8 @@ class LlmClient
                 'error' => $e->getMessage(),
             ]);
 
-            return $this->requestProvider($secondary, $path, $payload);
+            $secondaryPayload = $this->normalizePayloadForProvider($secondary, $payload);
+            return $this->requestProvider($secondary, $path, $secondaryPayload);
         }
     }
 
@@ -153,5 +155,29 @@ class LlmClient
         }
 
         return true;
+    }
+
+    private function normalizePayloadForProvider(string $providerName, array $payload): array
+    {
+        if ($payload === []) {
+            return $payload;
+        }
+
+        $providerDefault = (string) config("llm.providers.{$providerName}.default_model", '');
+        $globalModel = (string) config('llm.model', '');
+
+        if (!array_key_exists('model', $payload) || empty($payload['model'])) {
+            if ($providerDefault !== '') {
+                $payload['model'] = $providerDefault;
+            }
+            return $payload;
+        }
+
+        // If caller passed the generic/global model, remap it per provider.
+        if ($globalModel !== '' && (string) $payload['model'] === $globalModel && $providerDefault !== '') {
+            $payload['model'] = $providerDefault;
+        }
+
+        return $payload;
     }
 }
