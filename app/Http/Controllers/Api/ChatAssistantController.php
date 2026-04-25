@@ -10,6 +10,7 @@ use App\Http\Requests\SendChatMessageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Throwable;
 
 class ChatAssistantController extends Controller
 {
@@ -61,7 +62,13 @@ class ChatAssistantController extends Controller
             }
 
             // 2. Check Daily Limit
-            $plan = $user->subscription->planDetail;
+            $plan = optional($user->subscription)->planDetail;
+            if (!$plan) {
+                return response()->json([
+                    'error' => 'Data paket langganan tidak ditemukan. Silakan hubungi admin atau refresh langganan.',
+                    'needs_upgrade' => true,
+                ], 403);
+            }
             $limit = $plan ? $plan->ai_chat_limit : 0;
 
             if ($limit !== -1) { // -1 means unlimited
@@ -130,9 +137,17 @@ class ChatAssistantController extends Controller
             // Get AI Response
             $response = $openAI->ask($proxyRequest);
             $data = $response->getData(true);
+            $status = method_exists($response, 'status') ? $response->status() : 200;
 
-            if (isset($data['error'])) {
-                 throw new Exception($data['error']);
+            if ($status >= 400 || isset($data['error'])) {
+                $errorMessage = $data['error'] ?? 'Gagal mendapatkan respon AI.';
+                Log::error('ChatAssistant upstream AI error', [
+                    'status' => $status,
+                    'session_id' => $session->id,
+                    'user_id' => $user->id,
+                    'error' => $errorMessage,
+                ]);
+                return response()->json(['error' => $errorMessage], $status >= 400 ? $status : 502);
             }
 
             $aiContent = $data['response'];
@@ -157,8 +172,12 @@ class ChatAssistantController extends Controller
                 'session' => $session->fresh()->load('messages') // Reload messages to include the user's image msg
             ]);
 
-        } catch (Exception $e) {
-            Log::error('ChatAssistant Error: ' . $e->getMessage());
+        } catch (Throwable $e) {
+            Log::error('ChatAssistant Error: ' . $e->getMessage(), [
+                'session_id' => $session->id,
+                'user_id' => $user->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['error' => 'Gagal mendapatkan respon AI.'], 500);
         }
     }
