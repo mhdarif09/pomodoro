@@ -36,12 +36,26 @@ class TaskReminderScheduler
         ])->save();
     }
 
-    public function applyManualReminder(Task $task, Carbon $reminderAt): void
+    public function applyManualReminder(Task $task, Carbon $reminderAt, ?User $user = null): void
     {
+        if ($user) {
+            $timezone = $this->resolveTimezone($user->timezone ?? 'WIB');
+            $reminderAt = $reminderAt->copy()->setTimezone($timezone);
+        }
+
         $task->forceFill([
-            'reminder_at' => $reminderAt,
+            'reminder_at' => $reminderAt->setTimezone(config('app.timezone', 'UTC')),
             'reminder_sent' => false,
             'reminder_strategy' => 'custom_manual',
+        ])->save();
+    }
+
+    public function clearManualReminder(Task $task): void
+    {
+        $task->forceFill([
+            'reminder_at' => null,
+            'reminder_sent' => false,
+            'reminder_strategy' => null,
         ])->save();
     }
 
@@ -54,7 +68,7 @@ class TaskReminderScheduler
         return '09:00';
     }
 
-    private function resolveTimezone(string $timezone): string
+    public function resolveTimezone(string $timezone): string
     {
         return match ($timezone) {
             'WITA' => 'Asia/Makassar',
@@ -63,4 +77,3 @@ class TaskReminderScheduler
         };
     }
 }
-

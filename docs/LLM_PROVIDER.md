@@ -24,7 +24,7 @@ Project ini pakai provider OpenAI-compatible, fokus ke OpenAI dan Groq.
 
 Single provider Groq:
 
-```env
+2```env
 LLM_PROVIDER=groq
 GROQ_API_KEY=your_groq_key
 GROQ_MODEL=llama-3.3-70b-versatile

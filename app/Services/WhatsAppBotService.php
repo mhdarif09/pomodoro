@@ -49,11 +49,13 @@ class WhatsAppBotService
         return match ($command) {
             '/help', '/bantuan' => $this->cmdHelp(),
             '/list', '/tugas' => $this->cmdList($user),
+            '/listdone', '/selesai-list' => $this->cmdListDone($user),
             '/tambah', '/add' => $this->cmdAdd($user, $args),
             '/selesai', '/done' => $this->cmdDone($user, $args),
+            '/undone', '/bataldone' => $this->cmdUndone($user, $args),
             '/hapus', '/delete' => $this->cmdDelete($user, $args),
             '/detail' => $this->cmdDetail($user, $args),
-            '/reminder' => $this->cmdReminder($user, $args),
+            '/reminder', '/ingatkan' => $this->cmdReminder($user, $args),
             default => "❓ Command tidak dikenal.\n\nKetik /help untuk melihat daftar command.",
         };
     }
@@ -71,9 +73,14 @@ class WhatsAppBotService
             . "   Contoh: /tambah Belajar Kalkulus - 2026-02-15\n\n"
             . "📄 */list* atau */tugas*\n"
             . "   Lihat semua pending tasks\n\n"
+            . "✅ */listdone*\n"
+            . "   Lihat task yang sudah selesai\n\n"
             . "✅ */selesai [nomor]*\n"
             . "   Tandai task selesai\n"
             . "   Contoh: /selesai 1\n\n"
+            . "↩️ */undone [nomor]*\n"
+            . "   Kembalikan task selesai jadi belum selesai\n"
+            . "   Contoh: /undone 1\n\n"
             . "🗑️ */hapus [nomor]*\n"
             . "   Hapus task\n"
             . "   Contoh: /hapus 2\n\n"
@@ -81,7 +88,9 @@ class WhatsAppBotService
             . "   Lihat detail + subtask\n\n"
             . "⏰ */reminder [nomor] [waktu]*\n"
             . "   Set reminder custom\n"
-            . "   Contoh: /reminder 1 2026-02-11 08:00\n\n"
+            . "   Contoh: /reminder 1 2026-02-11 08:00\n"
+            . "   Matikan: /reminder 1 off\n"
+            . "   Lihat reminder aktif: /reminder list\n\n"
             . "💬 Atau kirim pesan biasa (natural language) dan AI kami akan membantu!\n"
             . "   Contoh: \"besok deadline apa ya?\"";
     }
@@ -108,6 +117,30 @@ class WhatsAppBotService
         }
 
         $msg .= "Gunakan /selesai [nomor] untuk menandai selesai.";
+        return $msg;
+    }
+
+    protected function cmdListDone(User $user): string
+    {
+        $tasks = $user->tasks()
+            ->where('is_completed', true)
+            ->orderBy('updated_at', 'desc')
+            ->take(20)
+            ->get();
+
+        if ($tasks->isEmpty()) {
+            return "📭 Belum ada task yang selesai.\n\nKerjakan satu task dulu, lalu tandai dengan /selesai [nomor].";
+        }
+
+        $msg = "✅ *Task Selesai Kamu* ({$tasks->count()})\n\n";
+        foreach ($tasks->values() as $i => $task) {
+            $num = $i + 1;
+            $doneAt = $task->updated_at ? Carbon::parse($task->updated_at)->format('d M Y H:i') : '-';
+            $msg .= "{$num}. ~~{$task->title}~~\n";
+            $msg .= "   🕒 Selesai: {$doneAt}\n\n";
+        }
+
+        $msg .= "Gunakan /undone [nomor] kalau mau dibalikin jadi belum selesai.";
         return $msg;
     }
 
@@ -185,6 +218,28 @@ class WhatsAppBotService
             . "Keren! Satu langkah lebih dekat ke tujuanmu! 🚀";
     }
 
+    protected function cmdUndone(User $user, string $args): string
+    {
+        $num = (int) trim($args);
+        if ($num < 1) {
+            return "⚠️ Format: /undone [nomor]\nContoh: /undone 1\n\nGunakan /listdone untuk melihat daftar task selesai.";
+        }
+
+        $task = $this->getCompletedTaskByNumber($user, $num);
+        if (!$task) {
+            return "⚠️ Task selesai #{$num} tidak ditemukan. Gunakan /listdone untuk melihat daftar task selesai.";
+        }
+
+        $task->update([
+            'is_completed' => false,
+            'status' => 'todo',
+        ]);
+
+        return "↩️ *Task dikembalikan ke To Do!*\n\n"
+            . "📋 {$task->title}\n\n"
+            . "Siap dikerjakan lagi. Ketik /list untuk lihat urutannya.";
+    }
+
     protected function cmdDelete(User $user, string $args): string
     {
         $num = (int) trim($args);
@@ -251,12 +306,16 @@ class WhatsAppBotService
 
     protected function cmdReminder(User $user, string $args): string
     {
+        if (in_array(strtolower(trim($args)), ['list', 'daftar'], true)) {
+            return $this->cmdReminderList($user);
+        }
+
         $parts = preg_split('/\s+/', trim($args), 2);
         $num = (int) ($parts[0] ?? 0);
         $timeStr = $parts[1] ?? '';
 
         if ($num < 1 || empty($timeStr)) {
-            return "⚠️ Format: /reminder [nomor] [waktu]\nContoh: /reminder 1 2026-02-11 08:00";
+            return "⚠️ Format: /reminder [nomor] [waktu]\nContoh: /reminder 1 2026-02-11 08:00\nAtau: /reminder 1 off";
         }
 
         $task = $this->getTaskByNumber($user, $num);
@@ -264,8 +323,14 @@ class WhatsAppBotService
             return "⚠️ Task #{$num} tidak ditemukan.";
         }
 
+        if (in_array(strtolower(trim($timeStr)), ['off', 'hapus', 'delete', 'clear'], true)) {
+            $this->taskReminderScheduler->clearManualReminder($task);
+            return "🔕 Reminder untuk task *{$task->title}* dimatikan.";
+        }
+
+        $timezone = $this->taskReminderScheduler->resolveTimezone($user->timezone ?? 'WIB');
         try {
-            $reminderAt = Carbon::parse($timeStr);
+            $reminderAt = Carbon::parse($timeStr, $timezone);
         } catch (\Exception $e) {
             return "⚠️ Format waktu tidak valid.\nGunakan: YYYY-MM-DD HH:MM\nContoh: 2026-02-11 08:00";
         }
@@ -274,12 +339,46 @@ class WhatsAppBotService
             return "⚠️ Waktu reminder harus di masa depan.";
         }
 
-        $this->taskReminderScheduler->applyManualReminder($task, $reminderAt);
+        $this->taskReminderScheduler->applyManualReminder($task, $reminderAt, $user);
 
         return "⏰ *Reminder di-set!*\n\n"
             . "📋 {$task->title}\n"
             . "🔔 Kamu akan diingatkan pada: " . $reminderAt->format('d M Y H:i') . "\n\n"
             . "Kami akan kirim notif WhatsApp tepat waktu! 🚀";
+    }
+
+    protected function cmdReminderList(User $user): string
+    {
+        $pending = $user->tasks()
+            ->where('is_completed', false)
+            ->orderBy('due_date', 'asc')
+            ->get();
+
+        $pendingIndex = [];
+        foreach ($pending->values() as $i => $task) {
+            $pendingIndex[$task->id] = $i + 1;
+        }
+
+        $tasks = $user->tasks()
+            ->where('is_completed', false)
+            ->whereNotNull('reminder_at')
+            ->orderBy('reminder_at', 'asc')
+            ->get();
+
+        if ($tasks->isEmpty()) {
+            return "🔕 Belum ada reminder aktif.\n\nGunakan /reminder [nomor] [waktu] untuk set reminder.";
+        }
+
+        $msg = "⏰ *Reminder Aktif* ({$tasks->count()})\n\n";
+        foreach ($tasks->values() as $task) {
+            $num = $pendingIndex[$task->id] ?? '-';
+            $when = Carbon::parse($task->reminder_at)->format('d M Y H:i');
+            $msg .= "{$num}. {$task->title}\n";
+            $msg .= "   🔔 {$when}\n\n";
+        }
+
+        $msg .= "Gunakan nomor yang sama seperti /list.\nMatikan reminder: /reminder [nomor] off";
+        return $msg;
     }
 
     // =========================================================================
@@ -451,6 +550,16 @@ PROMPT;
         $tasks = $user->tasks()
             ->where('is_completed', false)
             ->orderBy('due_date', 'asc')
+            ->get();
+
+        return $tasks->values()->get($number - 1);
+    }
+
+    protected function getCompletedTaskByNumber(User $user, int $number): ?Task
+    {
+        $tasks = $user->tasks()
+            ->where('is_completed', true)
+            ->orderBy('updated_at', 'desc')
             ->get();
 
         return $tasks->values()->get($number - 1);

@@ -60,7 +60,8 @@ class KanbanController extends Controller
         ]);
 
         if (!empty($validated['reminder_at'])) {
-            $reminderScheduler->applyManualReminder($task, Carbon::parse($validated['reminder_at']));
+            $timezone = $reminderScheduler->resolveTimezone($request->user()->timezone ?? 'WIB');
+            $reminderScheduler->applyManualReminder($task, Carbon::parse($validated['reminder_at'], $timezone), $request->user());
         } else {
             $reminderScheduler->applyDefaultReminder($task, $request->user());
         }
@@ -117,7 +118,10 @@ class KanbanController extends Controller
         });
 
         if (!empty($validated['reminder_at'])) {
-            $reminderScheduler->applyManualReminder($task, Carbon::parse($validated['reminder_at']));
+            $timezone = $reminderScheduler->resolveTimezone($request->user()->timezone ?? 'WIB');
+            $reminderScheduler->applyManualReminder($task, Carbon::parse($validated['reminder_at'], $timezone), $request->user());
+        } elseif (array_key_exists('reminder_at', $validated) && empty($validated['reminder_at'])) {
+            $reminderScheduler->clearManualReminder($task);
         } elseif ($dueDateChanged && $task->reminder_strategy === 'custom_default') {
             // Keep old tasks legacy flow untouched; only reschedule tasks that already use new default strategy.
             $reminderScheduler->applyDefaultReminder($task, $request->user());

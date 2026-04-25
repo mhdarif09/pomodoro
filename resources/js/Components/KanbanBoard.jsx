@@ -14,6 +14,7 @@ function DroppableColumn({ id, children, color, title, count, onAddTask, isSubmi
         description: '',
         start_date: new Date().toISOString().split('T')[0],
         due_date: '',
+        reminder_at: '',
         status: id
     });
 
@@ -28,6 +29,7 @@ function DroppableColumn({ id, children, color, title, count, onAddTask, isSubmi
                 description: '',
                 start_date: new Date().toISOString().split('T')[0],
                 due_date: '',
+                reminder_at: '',
                 status: id
             });
             setIsAdding(false);
@@ -41,6 +43,7 @@ function DroppableColumn({ id, children, color, title, count, onAddTask, isSubmi
             description: '',
             start_date: new Date().toISOString().split('T')[0],
             due_date: '',
+            reminder_at: '',
             status: id
         });
         setIsAdding(false);
@@ -126,6 +129,16 @@ function DroppableColumn({ id, children, color, title, count, onAddTask, isSubmi
                                     disabled={isSubmitting}
                                     value={taskData.due_date}
                                     onChange={(e) => setTaskData({ ...taskData, due_date: e.target.value })}
+                                    className={inputStyle}
+                                />
+                            </div>
+                            <div className="col-span-2">
+                                <label className={labelStyle}>Reminder WhatsApp (Optional)</label>
+                                <input
+                                    type="datetime-local"
+                                    disabled={isSubmitting}
+                                    value={taskData.reminder_at || ''}
+                                    onChange={(e) => setTaskData({ ...taskData, reminder_at: e.target.value })}
                                     className={inputStyle}
                                 />
                             </div>

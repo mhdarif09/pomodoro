@@ -5,6 +5,12 @@ import NotionEditor from './NotionEditor';
 
 export default function TaskForm({ existingTask, onCancel }) {
     const isEditing = !!existingTask;
+    const formatReminderForInput = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+    };
 
     const { data, setData, post, processing, errors } = useForm({
         _method: isEditing ? 'PUT' : 'POST',
@@ -12,6 +18,7 @@ export default function TaskForm({ existingTask, onCancel }) {
         description: existingTask?.description || '',
         start_date: existingTask?.start_date || new Date().toISOString().split('T')[0],
         due_date: existingTask?.due_date || '',
+        reminder_at: formatReminderForInput(existingTask?.reminder_at),
         document: null,
         notes: existingTask?.notes || '',
         tags: existingTask?.tags?.map(t => t.id) || [],
@@ -102,6 +109,19 @@ export default function TaskForm({ existingTask, onCancel }) {
                         <input type="date" id="due_date" value={data.due_date} onChange={e => setData('due_date', e.target.value)} className={inputStyle} />
                         {errors.due_date && <p className="text-rose-500 text-xs mt-1">{errors.due_date}</p>}
                     </div>
+                </div>
+
+                <div>
+                    <label htmlFor="reminder_at" className={labelStyle}>Reminder WhatsApp (Opsional)</label>
+                    <input
+                        type="datetime-local"
+                        id="reminder_at"
+                        value={data.reminder_at}
+                        onChange={e => setData('reminder_at', e.target.value)}
+                        className={inputStyle}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Kosongkan untuk pakai reminder default profil.</p>
+                    {errors.reminder_at && <p className="text-rose-500 text-xs mt-1">{errors.reminder_at}</p>}
                 </div>
 
                 <div>
