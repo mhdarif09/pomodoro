@@ -631,11 +631,11 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
 
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                             {columns.map(col => {
                                 const colTasks = getColumnTasks(col.status);
                                 return (
-                                    <div key={col.id} className="flex flex-col gap-4">
+                                    <div key={col.id} className="flex flex-col gap-4 min-h-[200px] lg:min-h-[400px]">
                                         <div className="flex items-center gap-3 px-4 py-2">
                                             <div className={`w-3 h-3 rounded-full ${col.id === 'doing-col' ? 'bg-emerald-500 animate-pulse' : col.color}`} />
                                             <h3 className="text-[13px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{col.title}</h3>
@@ -646,7 +646,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                         </div>
 
                                         <DroppableContainer id={col.id} items={colTasks.map(t => t.id)}>
-                                            <div className="space-y-4 min-h-[100px] sm:overflow-y-auto sm:max-h-[calc(100vh-300px)]">
+                                            <div className="space-y-3 flex-1 min-h-[150px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
                                                 {colTasks.map(task => (
                                                     <SortableTaskItem
                                                         key={task.id} task={task}
@@ -660,7 +660,7 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                                     />
                                                 ))}
                                                 {addingToColumn === col.status && (
-                                                    <div className="apple-glass p-5 rounded-[2rem] border-emerald-500/30">
+                                                    <div className="apple-glass p-4 rounded-[2rem] border-emerald-500/30">
                                                         <form onSubmit={(e) => {
                                                             e.preventDefault(); const title = e.target.title.value;
                                                             if (!title.trim()) return;
@@ -675,6 +675,16 @@ export default function TaskFocusPanel({ tasks, focusTasks = [], activeFilter, o
                                                                 <button type="submit" className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-lg">Add</button>
                                                             </div>
                                                         </form>
+                                                    </div>
+                                                )}
+                                                {colTasks.length === 0 && addingToColumn !== col.status && (
+                                                    <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+                                                        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+                                                            <ListBulletIcon className="w-6 h-6" />
+                                                        </div>
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-center">
+                                                            {col.id === 'todo-col' ? 'Belum ada tugas' : col.id === 'doing-col' ? 'Sedang dikerjakan' : 'Selesai'}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>

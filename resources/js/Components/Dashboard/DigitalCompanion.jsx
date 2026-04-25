@@ -101,12 +101,12 @@ export default function DigitalCompanion({ todayTaskStats = { completed: 0, tota
                         initial={{ opacity: 0, y: 10, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 5, scale: 0.9 }}
-                        className={`absolute hidden md:block w-48 -top-20 -right-4 p-3 rounded-2xl text-xs font-bold shadow-lg border backdrop-blur-sm z-30 ${getColors()}`}
+                        className={`absolute hidden md:block w-52 top-full mt-3 left-1/2 -translate-x-1/2 lg:left-auto lg:right-0 lg:translate-x-0 p-3 rounded-2xl text-xs font-bold shadow-lg border backdrop-blur-sm z-30 ${getColors()}`}
                         style={{ pointerEvents: 'none' }}
                     >
                         {message}
                         {/* Chat bubble tail */}
-                        <div className={`absolute -bottom-2 right-8 w-4 h-4 rotate-45 border-b border-r ${getColors().split(' ').find(c => c.startsWith('border-'))} ${getColors().split(' ').find(c => c.startsWith('bg-'))}`} />
+                        <div className={`absolute -top-2 left-1/2 -translate-x-1/2 lg:left-auto lg:right-8 lg:translate-x-0 w-4 h-4 rotate-45 border-t border-l ${getColors().split(' ').find(c => c.startsWith('border-'))} ${getColors().split(' ').find(c => c.startsWith('bg-'))}`} />
                     </motion.div>
                 )}
             </AnimatePresence>

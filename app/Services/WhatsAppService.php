@@ -76,10 +76,33 @@ class WhatsAppService
     /**
      * Send a reminder message with rate limiting.
      */
-    public function sendReminder(\App\Models\User $user, string $message, $taskId = null): array
+    public function sendReminder(\App\Models\User $user, string $message, $taskId = null, string $type = 'reminder'): array
     {
         if (!$user->phone) {
             return ['success' => false, 'error' => 'User has no phone number'];
+        }
+
+        if (isset($user->default_reminder_enabled) && !$user->default_reminder_enabled) {
+            return ['success' => false, 'error' => 'WhatsApp reminder disabled by user', 'disabled' => true];
+        }
+
+        // Global anti-spam guard: keep reminders human and non-intrusive.
+        $recentReminder = \App\Models\ReminderLog::where('user_id', $user->id)
+            ->where('type', 'like', '%reminder%')
+            ->where('created_at', '>=', now()->subMinutes(20))
+            ->exists();
+
+        if ($recentReminder) {
+            return ['success' => false, 'error' => 'Throttled: reminder was sent recently', 'throttled' => true];
+        }
+
+        $todayReminderCount = \App\Models\ReminderLog::where('user_id', $user->id)
+            ->where('type', 'like', '%reminder%')
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+
+        if ($todayReminderCount >= 6) {
+            return ['success' => false, 'error' => 'Daily reminder cap reached (6/day)', 'limit_reached' => true];
         }
 
         // 1. Check Monthly Limit per Task (Max 20)
@@ -118,10 +141,12 @@ class WhatsAppService
                 'task_id' => $taskId,
                 'message' => $message,
                 'sender' => 'assistant',
-                'type' => 'reminder',
+                'type' => $type,
                 'status' => 'sent',
                 'sent_at' => now(),
             ]);
+
+            $user->incrementWhatsAppReminderCount();
         }
 
         return $result;

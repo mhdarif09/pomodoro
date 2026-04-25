@@ -81,6 +81,7 @@ class SmartReminderService
         // Integration with WhatsApp sender (Fonnte)
         // Ensure user has phone
         if (!$user->phone) return false;
+        if (isset($user->default_reminder_enabled) && !$user->default_reminder_enabled) return false;
         
         $result = app(WhatsAppService::class)->sendMessage($user->phone, $message);
         return $result['success'] ?? false;

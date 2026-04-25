@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Task;
+use App\Support\AIFeature;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -14,9 +15,7 @@ class TaskAIService
     public function __construct()
     {
         $this->openaiApiKey = config('services.openai.api_key');
-        if (empty($this->openaiApiKey)) {
-            Log::critical("TaskAIService: OPENAI_API_KEY is missing in config!");
-        }
+        // In hybrid/none modes, missing key is fine (we should not call external AI).
     }
 
     /**
@@ -27,6 +26,16 @@ class TaskAIService
      */
     public function suggestSubtasks(Task $task): array
     {
+        // Hybrid default: local-first breakdown unless explicitly set to AI-only.
+        if (!AIFeature::allowsAI('breakdown') || empty($this->openaiApiKey)) {
+            return [
+                'success' => true,
+                'subtasks' => $this->generateHybridBreakdown($task),
+                'raw_response' => null,
+                'mode' => 'hybrid',
+            ];
+        }
+
         try {
             $prompt = $this->buildSubtaskPrompt($task);
             
@@ -93,6 +102,19 @@ class TaskAIService
      */
     public function analyzeTaskComplexity(Task $task): array
     {
+        if (!AIFeature::allowsAI('breakdown') || empty($this->openaiApiKey)) {
+            $estimated = $task->estimated_minutes ?? $this->estimateMinutesFromText($task->title, $task->description);
+            return [
+                'success' => true,
+                'analysis' => [
+                    'complexity_score' => $task->complexity_score ?? $this->estimateComplexityFromText($task->title, $task->description),
+                    'estimated_minutes' => $estimated,
+                    'reasoning' => 'Hybrid estimate (local heuristic)',
+                ],
+                'mode' => 'hybrid',
+            ];
+        }
+
         try {
             $prompt = "Analisis kompleksitas task berikut dan berikan estimasi waktu dalam menit:\n\n";
             $prompt .= "Judul: {$task->title}\n";
@@ -159,6 +181,18 @@ class TaskAIService
      */
     public function generateTaskBreakdown(string $taskTitle, ?string $taskDescription = null): array
     {
+        if (!AIFeature::allowsAI('breakdown') || empty($this->openaiApiKey)) {
+            $task = new Task();
+            $task->title = $taskTitle;
+            $task->description = $taskDescription;
+
+            return [
+                'success' => true,
+                'subtasks' => $this->generateHybridBreakdown($task),
+                'mode' => 'hybrid',
+            ];
+        }
+
         $prompt = "Pecah task berikut menjadi langkah-langkah yang jelas dan actionable:\n\n";
         $prompt .= "Task: {$taskTitle}\n";
         if ($taskDescription) {
@@ -292,5 +326,99 @@ class TaskAIService
         } catch (\Exception $e) {
             Log::warning('TaskAIService: Failed to save suggestion history', ['error' => $e->getMessage()]);
         }
+    }
+
+    private function generateHybridBreakdown(Task $task): array
+    {
+        $title = trim((string) $task->title);
+        $desc = trim((string) ($task->description ?? ''));
+
+        $subtasks = [];
+
+        if ($desc !== '') {
+            $lines = preg_split('/\r\n|\r|\n/', $desc);
+            foreach ($lines as $line) {
+                $line = trim((string) $line);
+                $line = trim((string) preg_replace('/^[-*•\d\.\)\s]+/', '', $line));
+                if (strlen($line) >= 6 && strlen($line) <= 160) {
+                    $subtasks[] = $line;
+                }
+            }
+        }
+
+        if (count($subtasks) < 3 && $title !== '') {
+            $split = preg_split('/\s+(dan|&|\+|lalu|terus)\s+/i', $title);
+            if (is_array($split) && count($split) >= 2) {
+                foreach ($split as $part) {
+                    $part = trim((string) $part);
+                    if (strlen($part) >= 6) {
+                        $subtasks[] = $part;
+                    }
+                }
+            }
+        }
+
+        $text = strtolower($title . ' ' . $desc);
+        if (count($subtasks) < 3) {
+            if (preg_match('/(belajar|study|latihan|kursus|materi|baca)/', $text)) {
+                $subtasks = array_merge($subtasks, [
+                    "Tentukan topik & target belajar (30 menit)",
+                    "Baca/lihat materi inti dan catat poin penting",
+                    "Kerjakan 5–10 latihan soal / praktik singkat",
+                    "Rangkum 5 bullet + next step besok",
+                ]);
+            } elseif (preg_match('/(tulis|write|artikel|laporan|proposal|script)/', $text)) {
+                $subtasks = array_merge($subtasks, [
+                    "Bikin outline 5–7 poin (10 menit)",
+                    "Tulis draft kasar tanpa edit (25–45 menit)",
+                    "Edit: rapihin struktur + perjelas 3 bagian",
+                    "Final check + kirim/publish",
+                ]);
+            } elseif (preg_match('/(meeting|rapat|call|zoom|sync)/', $text)) {
+                $subtasks = array_merge($subtasks, [
+                    "Tulis agenda + 3 hasil yang diinginkan",
+                    "Kumpulin data/notes yang dibutuhkan",
+                    "Jalanin meeting + capture action items",
+                    "Kirim recap + assign next steps",
+                ]);
+            } else {
+                $subtasks = array_merge($subtasks, [
+                    "Tentukan hasil akhir yang jelas (definition of done)",
+                    "Siapkan bahan/akses yang dibutuhkan",
+                    "Kerjakan bagian paling kecil dulu (15–30 menit)",
+                    "Review hasil + tentukan langkah berikutnya",
+                ]);
+            }
+        }
+
+        $subtasks = array_values(array_unique(array_filter(array_map(fn ($s) => trim((string) $s), $subtasks))));
+        return array_slice($subtasks, 0, 7);
+    }
+
+    private function estimateMinutesFromText(?string $title, ?string $description): int
+    {
+        $text = strtolower(trim((string) $title . ' ' . (string) $description));
+        if ($text === '') return 25;
+
+        if (preg_match('/\b(5|10|15|20|25|30|45|60|90|120)\s*(menit|min)\b/', $text, $m)) {
+            return (int) $m[1];
+        }
+
+        if (preg_match('/(meeting|rapat|call|zoom)/', $text)) return 45;
+        if (preg_match('/(tulis|laporan|proposal|artikel)/', $text)) return 60;
+        if (preg_match('/(belajar|study|latihan|materi)/', $text)) return 45;
+        return 30;
+    }
+
+    private function estimateComplexityFromText(?string $title, ?string $description): int
+    {
+        $text = strtolower(trim((string) $title . ' ' . (string) $description));
+        if ($text === '') return 3;
+
+        $score = 3;
+        if (preg_match('/(bug|critical|migrasi|refactor|arsitektur|proposal|pajak)/', $text)) $score += 3;
+        if (preg_match('/(meeting|presentasi|client|customer)/', $text)) $score += 2;
+        if (strlen($text) > 250) $score += 1;
+        return max(1, min(10, $score));
     }
 }

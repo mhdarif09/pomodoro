@@ -11,6 +11,7 @@ import { usePomodoroTimer } from '@/Contexts/PomodoroContext';
 import TaskFocusPanel from '@/Components/Dashboard/TaskFocusPanel';
 import ContinueWorkBanner from '@/Components/Dashboard/ContinueWorkBanner';
 import TaskRecoveryModal from '@/Components/Dashboard/TaskRecoveryModal';
+import UpgradeModal from '@/Components/UpgradeModal';
 // PomodoroIsland is mounted globally in AuthenticatedLayout — do not import here
 import ProductivityPulse from '@/Components/Dashboard/ProductivityPulse';
 import DashboardNotes from '@/Components/Dashboard/DashboardNotes';
@@ -198,9 +199,9 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                     className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8"
                 >
                     <div className="flex-1 flex flex-col md:flex-row gap-8 items-start md:items-end">
-                        <div className="relative group shrink-0 flex gap-6 items-center">
+                        <div className="relative group shrink-0 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
                             <DigitalCompanion todayTaskStats={todayTaskStats} dailyStats={dailyStats} auth={auth} />
-                            <div>
+                            <div className="pt-1 sm:pt-0">
                                 <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                                 <h1 className="text-4xl sm:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
                                     Halo, <br />
@@ -596,7 +597,9 @@ export default function Dashboard(props) {
 
             // Check WhatsApp Flow
             const hasPhone = auth.user.phone;
-            const whatsappSeen = localStorage.getItem('whatsapp_warning_seen') === 'true';
+            const whatsappSeen =
+                sessionStorage.getItem('whatsapp_warning_seen') === 'true' ||
+                localStorage.getItem('whatsapp_warning_seen') === 'true';
             const isWhatsAppDone = hasPhone || whatsappSeen;
 
             if (flash?.show_upgrade_modal && isTutorialDone && isWhatsAppDone) {

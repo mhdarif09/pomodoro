@@ -35,6 +35,9 @@ class User extends Authenticatable
         'daily_task_limit',
         'anti_overplanning_enabled',
         'last_recovery_date',
+        'default_reminder_enabled',
+        'default_reminder_time',
+        'default_reminder_days_before',
 
     ];
 
@@ -57,6 +60,8 @@ class User extends Authenticatable
         'onboarding_complete' => 'boolean',
         'last_recovery_date' => 'datetime',
         'whatsapp_reminders_reset_at' => 'datetime',
+        'default_reminder_enabled' => 'boolean',
+        'default_reminder_days_before' => 'integer',
     ];
 
     // Relasi ke Subscription (ambil yang terbaru)

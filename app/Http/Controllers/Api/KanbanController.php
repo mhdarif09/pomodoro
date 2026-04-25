@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Jobs\DetermineTaskPriority;
 use Illuminate\Support\Facades\DB;
 use App\Services\TaskAIService;
+use App\Services\TaskReminderScheduler;
 use Carbon\Carbon;
 use App\Helpers\SecurityHelper;
 use App\Http\Requests\StoreTaskRequest;
@@ -37,6 +38,7 @@ class KanbanController extends Controller
     public function store(StoreTaskRequest $request)
     {
         $validated = $request->validated();
+        $reminderScheduler = app(TaskReminderScheduler::class);
         
         $estimatedMinutes = $request->input('estimated_minutes', 25);
 
@@ -57,6 +59,12 @@ class KanbanController extends Controller
             'notes' => SecurityHelper::sanitizeHtml($validated['notes'] ?? null),
         ]);
 
+        if (!empty($validated['reminder_at'])) {
+            $reminderScheduler->applyManualReminder($task, Carbon::parse($validated['reminder_at']));
+        } else {
+            $reminderScheduler->applyDefaultReminder($task, $request->user());
+        }
+
         // Sync tags
         if (!empty($validated['tags'])) {
             $task->tags()->sync($validated['tags']);
@@ -72,15 +80,6 @@ class KanbanController extends Controller
 
         DetermineTaskPriority::dispatch($task);
 
-        $user = $request->user();
-        $userTimezone = $this->getTimezoneString($user->timezone ?? 'WIB');
-        $tomorrow = now($userTimezone)->addDay()->toDateString();
-        
-        if ($task->due_date && $task->due_date->toDateString() == $tomorrow && $user->phone) {
-            \App\Jobs\SendTaskDeadlineReminders::dispatch($task, 'instant');
-        }
-
-
         return response()->json([
             'message' => 'Tugas berhasil ditambahkan!',
             'task' => $task->load(['subtasks', 'tags'])
@@ -92,8 +91,10 @@ class KanbanController extends Controller
         $this->authorize('update', $task);
         
         $validated = $request->validated();
+        $reminderScheduler = app(TaskReminderScheduler::class);
 
         $estimatedMinutes = $request->input('estimated_minutes', $task->estimated_minutes);
+        $dueDateChanged = array_key_exists('due_date', $validated) && (string) $task->due_date !== (string) ($validated['due_date'] ?? null);
 
         DB::transaction(function () use ($request, $validated, $task, $estimatedMinutes) {
             if ($request->hasFile('document')) {
@@ -114,6 +115,13 @@ class KanbanController extends Controller
                 $task->tags()->sync($validated['tags']);
             }
         });
+
+        if (!empty($validated['reminder_at'])) {
+            $reminderScheduler->applyManualReminder($task, Carbon::parse($validated['reminder_at']));
+        } elseif ($dueDateChanged && $task->reminder_strategy === 'custom_default') {
+            // Keep old tasks legacy flow untouched; only reschedule tasks that already use new default strategy.
+            $reminderScheduler->applyDefaultReminder($task, $request->user());
+        }
 
         if ($task->wasChanged(['title', 'description', 'due_date'])) {
             DetermineTaskPriority::dispatch($task);
@@ -256,17 +264,6 @@ class KanbanController extends Controller
         return response()->json(['message' => 'Suggestion dismissed']);
     }
 
-    private function getTimezoneString($timezone)
-    {
-        $timezones = [
-            'WIB' => 'Asia/Jakarta',
-            'WITA' => 'Asia/Makassar',
-            'WIT' => 'Asia/Jayapura',
-        ];
-
-        return $timezones[$timezone] ?? 'Asia/Jakarta';
-    }
-
     public function suggestBreakdown(Task $task, TaskAIService $taskAIService)
     {
         set_time_limit(0);
@@ -274,6 +271,19 @@ class KanbanController extends Controller
             $this->authorize('update', $task);
 
             $user = $task->user;
+
+            // Hybrid breakdown (local-first) should not consume AI quota.
+            $preview = $taskAIService->suggestSubtasks($task);
+            if (($preview['mode'] ?? null) === 'hybrid') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Hybrid breakdown (no AI)',
+                    'subtasks' => $preview['subtasks'] ?? [],
+                    'count' => count($preview['subtasks'] ?? []),
+                    'mode' => 'hybrid',
+                    'usage' => null,
+                ]);
+            }
             
             // Get user's plan limit (default 20 for free users)
             $maxSubtasks = 20; // Default for non-premium
@@ -298,8 +308,8 @@ class KanbanController extends Controller
                 ], 403);
             }
 
-            // Call AI service
-            $result = $taskAIService->suggestSubtasks($task);
+            // Call AI service (AI-only mode)
+            $result = $preview;
 
             if ($result['success']) {
                 // Increment usage counter manually to avoid Eloquent method conflicts

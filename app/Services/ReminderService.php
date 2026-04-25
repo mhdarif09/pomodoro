@@ -275,8 +275,10 @@ class ReminderService
 
     private function sendAndLog(User $user, string $message): void
     {
-        $this->whatsAppService->sendMessage($user->phone, $message);
-        $user->incrementWhatsAppReminderCount();
-        Log::info("Reminder sent to {$user->id} ({$user->name}): " . mb_substr($message, 0, 80) . '...');
+        $result = $this->whatsAppService->sendReminder($user, $message, null, 'contextual_reminder');
+
+        if (!empty($result['success'])) {
+            Log::info("Reminder sent to {$user->id} ({$user->name}): " . mb_substr($message, 0, 80) . '...');
+        }
     }
 }

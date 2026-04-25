@@ -29,7 +29,9 @@ class SendReminders extends Command
     {
         $this->info("Starting Reminder Agent...");
         
-        $users = User::whereNotNull('phone')->get();
+        $users = User::whereNotNull('phone')
+            ->where('default_reminder_enabled', true)
+            ->get();
         $count = 0;
 
         foreach ($users as $user) {

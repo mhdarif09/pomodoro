@@ -7,14 +7,17 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\TaskReminderScheduler;
 
 class WhatsAppBotService
 {
     protected WhatsAppService $whatsAppService;
+    protected TaskReminderScheduler $taskReminderScheduler;
 
-    public function __construct(WhatsAppService $whatsAppService)
+    public function __construct(WhatsAppService $whatsAppService, TaskReminderScheduler $taskReminderScheduler)
     {
         $this->whatsAppService = $whatsAppService;
+        $this->taskReminderScheduler = $taskReminderScheduler;
     }
 
     /**
@@ -143,6 +146,10 @@ class WhatsAppBotService
 
         $task = $user->tasks()->create($taskData);
 
+        if ($task->due_date) {
+            $this->taskReminderScheduler->applyDefaultReminder($task, $user);
+        }
+
         $response = "✅ *Task berhasil dibuat!*\n\n"
             . "📋 {$task->title}\n"
             . "🎯 Priority: {$task->priority}\n";
@@ -266,10 +273,7 @@ class WhatsAppBotService
             return "⚠️ Waktu reminder harus di masa depan.";
         }
 
-        $task->update([
-            'reminder_at' => $reminderAt,
-            'reminder_sent' => false,
-        ]);
+        $this->taskReminderScheduler->applyManualReminder($task, $reminderAt);
 
         return "⏰ *Reminder di-set!*\n\n"
             . "📋 {$task->title}\n"

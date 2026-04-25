@@ -11,13 +11,18 @@ import {
 import clsx from 'clsx';
 
 export default function UpdateProfileInformation({ mustVerifyEmail, status, className = '' }) {
-    const user = usePage().props.auth.user;
+    const { props } = usePage();
+    const user = props.auth.user;
+    const flashSuccess = props.flash?.success;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: user.name,
         email: user.email,
         phone: user.phone || '',
         timezone: user.timezone || 'WIB',
+        default_reminder_enabled: user.default_reminder_enabled ?? true,
+        default_reminder_time: user.default_reminder_time || '09:00',
+        default_reminder_days_before: user.default_reminder_days_before ?? 1,
     });
 
     const submit = (e) => {
@@ -52,6 +57,12 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
     return (
         <section className={className}>
             <form onSubmit={submit} className="space-y-8">
+                {flashSuccess && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+                        {flashSuccess}
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputGroup
                         label="Nama Lengkap"
@@ -115,6 +126,58 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         </select>
                     </InputGroup>
 
+                    <InputGroup
+                        label="Jam Reminder Default"
+                        icon={ClockIcon}
+                        error={errors.default_reminder_time}
+                        description="Dipakai untuk task baru yang punya deadline."
+                    >
+                        <input
+                            type="time"
+                            value={data.default_reminder_time}
+                            onChange={(e) => setData('default_reminder_time', e.target.value)}
+                            className={inputClasses}
+                            required
+                        />
+                    </InputGroup>
+
+                    <InputGroup
+                        label="Hari Sebelum Deadline"
+                        icon={ClockIcon}
+                        error={errors.default_reminder_days_before}
+                        description="0 = di hari deadline, 1 = H-1, dst."
+                    >
+                        <select
+                            value={data.default_reminder_days_before}
+                            onChange={(e) => setData('default_reminder_days_before', parseInt(e.target.value, 10))}
+                            className={clsx(inputClasses, "appearance-none")}
+                        >
+                            <option value={0}>H-0 (hari deadline)</option>
+                            <option value={1}>H-1</option>
+                            <option value={2}>H-2</option>
+                            <option value={3}>H-3</option>
+                            <option value={7}>H-7</option>
+                        </select>
+                    </InputGroup>
+
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 dark:bg-black/20 p-4 border border-slate-100 dark:border-white/5">
+                    <label className="flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            checked={data.default_reminder_enabled}
+                            onChange={(e) => setData('default_reminder_enabled', e.target.checked)}
+                            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            Aktifkan reminder default untuk task baru
+                            <span className="block text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                                Task lama tetap pakai pola reminder sebelumnya, task baru akan mengikuti pengaturan ini.
+                            </span>
+                        </span>
+                    </label>
+                    <InputError message={errors.default_reminder_enabled} className="mt-2" />
                 </div>
 
                 <div className="flex items-center gap-6 pt-4">

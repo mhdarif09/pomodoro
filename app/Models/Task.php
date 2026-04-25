@@ -28,6 +28,7 @@ class Task extends Model
         'auto_rescheduled_count',
         'reminder_at',
         'reminder_sent',
+        'reminder_strategy',
         'created_via',
         'guild_id',
         'is_archived',
@@ -36,6 +37,7 @@ class Task extends Model
         'deadline_reminder_1day_sent',
         'deadline_reminder_3hour_sent',
         'deadline_reminder_30min_sent',
+        'overdue_reminder_sent_at',
         'is_daily_focus',
         'priority_score',
         'xp_reward',
@@ -56,10 +58,12 @@ class Task extends Model
         'ai_suggested_subtasks' => 'array',
         'reminder_at' => 'datetime',
         'reminder_sent' => 'boolean',
+        'reminder_strategy' => 'string',
         'last_touched_at' => 'datetime',
         'deadline_reminder_1day_sent' => 'boolean',
         'deadline_reminder_3hour_sent' => 'boolean',
         'deadline_reminder_30min_sent' => 'boolean',
+        'overdue_reminder_sent_at' => 'datetime',
         'is_daily_focus' => 'boolean',
         'priority_score' => 'integer',
     ];
@@ -159,6 +163,7 @@ class Task extends Model
             'deadline_reminder_1day_sent' => false,
             'deadline_reminder_3hour_sent' => false,
             'deadline_reminder_30min_sent' => false,
+            'overdue_reminder_sent_at' => null,
         ]);
     }
 }

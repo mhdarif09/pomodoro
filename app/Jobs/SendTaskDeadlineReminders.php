@@ -32,6 +32,9 @@ class SendTaskDeadlineReminders implements ShouldQueue
         // Send 30-minute reminders
         $this->sendThirtyMinuteReminders($whatsAppService);
 
+        // Send overdue reminders (NEW: untuk tasks yang sudah lewat deadline)
+        $this->sendOverdueReminders($whatsAppService);
+
         Log::info('✅ Multi-stage deadline reminder job completed');
     }
 
@@ -46,7 +49,12 @@ class SendTaskDeadlineReminders implements ShouldQueue
             ->where('status', '!=', 'done')
             ->where('is_completed', false)
             ->whereDate('due_date', $tomorrow)
+            ->whereNull('reminder_at')
             ->where('deadline_reminder_1day_sent', false)
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('phone')
+                  ->where('default_reminder_enabled', true);
+            })
             ->get();
 
         Log::info('H-1 Reminders:', ['count' => $tasks->count()]);
@@ -54,13 +62,11 @@ class SendTaskDeadlineReminders implements ShouldQueue
         foreach ($tasks as $task) {
             if (!$task->user || !$task->user->phone) continue;
             
-            if ($task->user->canSendWhatsAppReminder()) {
-                $message = $this->getOneDayMessage($task);
-                $whatsAppService->sendMessage($task->user->phone, $message);
-                
+            $message = $this->getOneDayMessage($task);
+            $result = $whatsAppService->sendReminder($task->user, $message, $task->id, 'deadline_reminder_h1');
+
+            if (!empty($result['success'])) {
                 $task->update(['deadline_reminder_1day_sent' => true]);
-                $task->user->incrementWhatsAppReminderCount();
-                
                 Log::info("H-1 reminder sent: Task #{$task->id} to user #{$task->user->id}");
             }
         }
@@ -76,11 +82,16 @@ class SendTaskDeadlineReminders implements ShouldQueue
         $tasks = Task::with('user')
             ->where('status', '!=', 'done')
             ->where('is_completed', false)
+            ->whereNull('reminder_at')
             ->whereBetween('due_date', [
                 $threeHoursLater->copy()->subMinutes(30),
                 $threeHoursLater->copy()->addMinutes(30)
             ])
             ->where('deadline_reminder_3hour_sent', false)
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('phone')
+                  ->where('default_reminder_enabled', true);
+            })
             ->get();
 
         Log::info('3-Hour Reminders:', ['count' => $tasks->count()]);
@@ -88,13 +99,11 @@ class SendTaskDeadlineReminders implements ShouldQueue
         foreach ($tasks as $task) {
             if (!$task->user || !$task->user->phone) continue;
             
-            if ($task->user->canSendWhatsAppReminder()) {
-                $message = $this->getThreeHourMessage($task);
-                $whatsAppService->sendMessage($task->user->phone, $message);
-                
+            $message = $this->getThreeHourMessage($task);
+            $result = $whatsAppService->sendReminder($task->user, $message, $task->id, 'deadline_reminder_h3');
+
+            if (!empty($result['success'])) {
                 $task->update(['deadline_reminder_3hour_sent' => true]);
-                $task->user->incrementWhatsAppReminderCount();
-                
                 Log::info("3h reminder sent: Task #{$task->id} to user #{$task->user->id}");
             }
         }
@@ -110,11 +119,16 @@ class SendTaskDeadlineReminders implements ShouldQueue
         $tasks = Task::with('user')
             ->where('status', '!=', 'done')
             ->where('is_completed', false)
+            ->whereNull('reminder_at')
             ->whereBetween('due_date', [
                 $thirtyMinutesLater->copy()->subMinutes(5),
                 $thirtyMinutesLater->copy()->addMinutes(5)
             ])
             ->where('deadline_reminder_30min_sent', false)
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('phone')
+                  ->where('default_reminder_enabled', true);
+            })
             ->get();
 
         Log::info('30-Min Reminders:', ['count' => $tasks->count()]);
@@ -122,16 +136,77 @@ class SendTaskDeadlineReminders implements ShouldQueue
         foreach ($tasks as $task) {
             if (!$task->user || !$task->user->phone) continue;
             
-            if ($task->user->canSendWhatsAppReminder()) {
-                $message = $this->getThirtyMinuteMessage($task);
-                $whatsAppService->sendMessage($task->user->phone, $message);
-                
+            $message = $this->getThirtyMinuteMessage($task);
+            $result = $whatsAppService->sendReminder($task->user, $message, $task->id, 'deadline_reminder_h30m');
+
+            if (!empty($result['success'])) {
                 $task->update(['deadline_reminder_30min_sent' => true]);
-                $task->user->incrementWhatsAppReminderCount();
-                
                 Log::info("30m reminder sent: Task #{$task->id} to user #{$task->user->id}");
             }
         }
+    }
+
+    /**
+     * Send reminders for tasks that are OVERDUE (deadline has passed)
+     * NO SPAM! Only sends reminder once per task, or max once per 24 hours
+     */
+    private function sendOverdueReminders(WhatsAppService $whatsAppService): void
+    {
+        $now = Carbon::now();
+        $twentyFourHoursAgo = $now->copy()->subHours(24);
+        
+        // Get tasks where:
+        // 1. Deadline has passed (due_date < now)
+        // 2. Task is not completed
+        // 3. Either:
+        //    a) Never sent overdue reminder yet (overdue_reminder_sent_at is NULL), OR
+        //    b) Last overdue reminder was sent MORE than 24 hours ago (for persistent reminders)
+        // 4. User has WhatsApp enabled
+        $tasks = Task::with('user')
+            ->where('status', '!=', 'done')
+            ->where('is_completed', false)
+            ->whereNull('reminder_at')
+            ->where('due_date', '<', $now)
+            ->where(function ($query) use ($twentyFourHoursAgo) {
+                $query->whereNull('overdue_reminder_sent_at') // Never sent yet
+                      ->orWhere('overdue_reminder_sent_at', '<', $twentyFourHoursAgo); // Sent but > 24h ago
+            })
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('phone')
+                  ->where('default_reminder_enabled', true);
+            })
+            ->get();
+
+        Log::info('Overdue Reminders:', ['count' => $tasks->count()]);
+
+        foreach ($tasks as $task) {
+            if (!$task->user || !$task->user->phone) continue;
+            
+            $message = $this->getOverdueMessage($task);
+            $result = $whatsAppService->sendReminder($task->user, $message, $task->id, 'deadline_reminder_overdue');
+
+            if (!empty($result['success'])) {
+                // Update timestamp instead of boolean flag
+                $task->update(['overdue_reminder_sent_at' => $now]);
+                Log::info("Overdue reminder sent: Task #{$task->id} to user #{$task->user->id}");
+            }
+        }
+    }
+
+    /**
+     * Generate overdue reminder message
+     */
+    private function getOverdueMessage(Task $task): string
+    {
+        $hoursOverdue = $task->due_date->diffInHours(now());
+        
+        $messages = [
+            "⚠️ URGENT! Task '{$task->title}' sudah {$hoursOverdue} jam OVERDUE! Ini serius nih, butuh diselesaikan ASAP! 🔥",
+            "🚨 Reminder URGENT: '{$task->title}' sudah lewat deadline {$hoursOverdue} jam yang lalu. Ini prioritas pertama sekarang! ⚡",
+            "⏰ OVERDUE ALERT! '{$task->title}' belum diselesaikan padahal sudah {$hoursOverdue} jam melewati deadline. Mulai sekarang juga! 💪",
+        ];
+        
+        return $messages[array_rand($messages)];
     }
 
     /**

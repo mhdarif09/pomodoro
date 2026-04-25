@@ -26,6 +26,7 @@ class UpdateTaskRequest extends FormRequest
             'description' => 'nullable|string|max:2000',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
+            'reminder_at' => 'nullable|date',
             'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,csv,txt|max:10240',
             'status' => 'nullable|in:todo,in_progress,done',
             'priority' => 'nullable|string',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -78,15 +79,33 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $user->fill($request->validated());
+        $reminderSettingsChanged = $user->isDirty([
+            'default_reminder_enabled',
+            'default_reminder_time',
+            'default_reminder_days_before',
+        ]);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
-        return Redirect::route('profile.edit');
+        if ($reminderSettingsChanged && !$user->default_reminder_enabled) {
+            // Stop all queued custom reminders to avoid backlog/spam when user disables WA reminders.
+            Task::where('user_id', $user->id)
+                ->whereNotNull('reminder_at')
+                ->where('reminder_sent', false)
+                ->update(['reminder_sent' => true]);
+        }
+
+        $successMessage = $reminderSettingsChanged
+            ? 'Pengaturan reminder WhatsApp berhasil diperbarui.'
+            : 'Profil berhasil diperbarui.';
+
+        return Redirect::route('profile.edit')->with('success', $successMessage);
     }
 
     /**
