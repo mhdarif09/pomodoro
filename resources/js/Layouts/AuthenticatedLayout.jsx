@@ -112,6 +112,7 @@ export default function Authenticated({ children, header }) {
             icon: <BriefcaseIcon className="h-5 w-5" />,
             items: [
                 { routeName: 'learning.index', label: t('nav_learning'), icon: <BookOpenIcon className="h-4 w-4" /> },
+                { routeName: 'paper-explorer', label: 'Paper Explorer', icon: <MagnifyingGlassIcon className="h-4 w-4" /> },
                 { routeName: 'reports.index', label: t('nav_reports'), icon: <ChartBarIcon className="h-4 w-4" /> },
                 { routeName: 'docs.index', label: t('nav_docs'), icon: <DocumentTextIcon className="h-4 w-4" /> },
             ]
@@ -502,7 +503,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
             </motion.aside>
 
             {/* Mobile & Main Content */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative">
+            <div className={`flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative ${isCollapsed ? 'lg:pl-20 sm:pl-20' : 'lg:pl-60 sm:pl-20'}`}>
 
 
                 <main className="flex-1 overflow-y-auto scrollbar-hide p-0 sm:p-4 pb-20 sm:pb-4">
@@ -545,6 +546,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                         { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard'), id: 'mobile-dashboard-nav' },
                                         { href: route('tasks.index'), icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('tasks.index'), id: 'mobile-tasks-nav' },
                                         { href: route('journal.index'), icon: <BookOpenIcon className="h-[22px] w-[22px]" />, label: 'Journal', active: route().current('journal.index'), id: 'mobile-journal-nav' },
+                                        { href: route('paper-explorer'), icon: <MagnifyingGlassIcon className="h-[22px] w-[22px]" />, label: 'Paper', active: route().current('paper-explorer'), id: 'mobile-paper-nav' },
                                         { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.index') || route().current('guilds.*'), id: 'mobile-guilds-nav' },
                                         { href: route('profile.show'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.show'), id: 'mobile-profile-nav' },
                                     ].map((item, i) => (

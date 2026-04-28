@@ -97,6 +97,11 @@ Route::middleware(['auth:sanctum'])->prefix('dashboard')->name('api.')->group(fu
     Route::get('/gamification/streak-summary', [\App\Http\Controllers\Api\StreakShareController::class, 'summary'])->name('gamification.streak-summary');
 });
 
+// Paper Explorer API
+Route::middleware(['auth:sanctum'])->group(function() {
+    Route::post('/paper-explorer/search', [\App\Http\Controllers\PaperExplorerController::class, 'search'])->name('paper-explorer.search');
+});
+
 // ==========================
 // AI ASSISTANT ROUTES (PREMIUM)
 // ==========================

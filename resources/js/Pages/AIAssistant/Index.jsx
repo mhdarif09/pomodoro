@@ -276,7 +276,14 @@ export default function AIAssistantIndex() {
             }
         } catch (err) {
             console.error(err);
-            setMessages(prev => prev.slice(0, -1));
+            // Don't remove user message on error - keep it for better UX
+            // setMessages(prev => prev.slice(0, -1));
+            // Instead, add error message
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: 'Maaf, terjadi kesalahan saat memproses pesan Anda. Silakan coba lagi.',
+                metadata: null
+            }]);
         } finally {
             setIsLoading(false);
         }
@@ -379,9 +386,12 @@ export default function AIAssistantIndex() {
                                 {isLoading && (
                                     <div className="flex justify-start mb-10">
                                         <div className="apple-glass rounded-[2rem] px-6 py-5 border-white/10 flex items-center gap-3">
-                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
-                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75" />
-                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150" />
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-75" />
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-150" />
+                                            </div>
+                                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">GrowthBot sedang berpikir...</span>
                                         </div>
                                     </div>
                                 )}

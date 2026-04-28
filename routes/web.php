@@ -48,6 +48,8 @@ Route::get('/learn', function () {
     return Inertia::render('Learn');
 })->name('learn');
 
+Route::get('/paper-explorer', [\App\Http\Controllers\PaperExplorerController::class, 'index'])->name('paper-explorer');
+
 Route::get('/products/{slug}', function ($slug) {
     // Rich Data for Modern Product Pages
     $products = [

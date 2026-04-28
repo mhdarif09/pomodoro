@@ -91,7 +91,7 @@ export default function DigitalCompanion({ todayTaskStats = { completed: 0, tota
 
     return (
         <div 
-            className="relative flex items-center shrink-0 z-20 group"
+            className="relative flex items-center shrink-0 z-20 group hidden sm:flex"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >

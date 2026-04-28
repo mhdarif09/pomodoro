@@ -196,14 +196,14 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8"
+                    className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-16 sm:pb-8"
                 >
-                    <div className="flex-1 flex flex-col md:flex-row gap-8 items-start md:items-end">
+                        <div className="flex-1 flex flex-col md:flex-row gap-4 sm:gap-8 items-start md:items-end">
                         <div className="relative group shrink-0 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
                             <DigitalCompanion todayTaskStats={todayTaskStats} dailyStats={dailyStats} auth={auth} />
                             <div className="pt-1 sm:pt-0">
                                 <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                                <h1 className="text-4xl sm:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
+                                <h1 className="text-3xl sm:text-4xl lg:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
                                     Halo, <br />
                                     <span className="bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">
                                         {auth?.user?.name?.split(' ')[0] || 'Teman'}
