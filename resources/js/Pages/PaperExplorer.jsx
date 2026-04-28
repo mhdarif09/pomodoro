@@ -184,8 +184,12 @@ export default function PaperExplorer() {
         setTimeout(() => handleSearch(), 0);
     };
 
+    const selectedNodeClass = (isMobile
+        ? 'fixed bottom-0 left-0 right-0 h-[60vh] rounded-t-[20px] border-t border-[#1e1e2e]'
+        : 'w-80 border-l border-[#1e1e2e]') + ' bg-[#111118] p-6 overflow-y-auto transition-all duration-300 ease-out';
+
     return (
-        <>
+        <div>
             <Head title="Paper Explorer" />
             <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <div className="apple-glass rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl bg-[#0d0d14]">
@@ -211,129 +215,119 @@ export default function PaperExplorer() {
                         )}
                     </div>
 
-                    {/* Main Content */}
                     <div className="flex min-h-[60vh]">
-                        {/* Graph Canvas */}
-                        <div ref={containerRef} className={`flex-1 relative ${isMobile ? 'w-full' : ''} p-6`}>
+                        <div ref={containerRef} className={`flex-1 relative p-6 ${isMobile ? 'w-full' : ''}`}>
                             <svg
                                 ref={svgRef}
                                 className="w-full h-[60vh] md:h-[70vh]"
                                 style={{ background: 'transparent' }}
                             />
 
-                        {/* Loading Overlay */}
-                        {loading && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <div className="text-center">
-                                    <ArrowPathIcon className="w-8 h-8 animate-spin text-[#00d4ff] mx-auto mb-4" />
-                                    <p className="text-[#00d4ff]">Analyzing paper connections...</p>
-                                    {/* Skeleton nodes */}
-                                    <div className="mt-4 flex justify-center gap-2">
-                                        {Array.from({ length: 8 }).map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="w-4 h-4 bg-gray-600 rounded-full animate-pulse"
-                                                style={{
-                                                    animationDelay: `${i * 0.1}s`,
-                                                    position: 'absolute',
-                                                    left: `${20 + Math.random() * 60}%`,
-                                                    top: `${20 + Math.random() * 60}%`
-                                                }}
-                                            />
-                                        ))}
+                            {loading && (
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                    <div className="text-center">
+                                        <ArrowPathIcon className="w-8 h-8 animate-spin text-[#00d4ff] mx-auto mb-4" />
+                                        <p className="text-[#00d4ff]">Analyzing paper connections...</p>
+                                        <div className="mt-4 flex justify-center gap-2 relative" style={{height: 80}}>
+                                            {Array.from({ length: 8 }).map((_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="w-4 h-4 bg-gray-600 rounded-full animate-pulse"
+                                                    style={{
+                                                        animationDelay: `${i * 0.1}s`,
+                                                        position: 'absolute',
+                                                        left: `${20 + Math.random() * 60}%`,
+                                                        top: `${20 + Math.random() * 60}%`
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Error */}
-                        {error && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <div className="text-center">
-                                    <p className="text-red-400 mb-4">{error}</p>
-                                    <button
-                                        onClick={handleSearch}
-                                        className="px-4 py-2 bg-[#00d4ff] text-black rounded-lg hover:bg-[#00d4ff]/80 transition-colors"
-                                    >
-                                        Retry
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Detail Sidebar / Bottom Sheet */}
-                        {selectedNode && (
-                        <div className={`${
-                            isMobile
-                                ? 'fixed bottom-0 left-0 right-0 h-[60vh] rounded-t-[20px] border-t border-[#1e1e2e]'
-                                : 'w-80 border-l border-[#1e1e2e]'
-                        } bg-[#111118] p-6 overflow-y-auto transition-all duration-300 ease-out`}>
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="px-3 py-1 rounded-full text-xs font-bold"
-                                      style={{ backgroundColor: scaleOrdinal(schemeTableau10)(selectedNode.field), color: 'black' }}>
-                                    {selectedNode.field}
-                                </span>
-                                {!isMobile && (
-                                    <button
-                                        onClick={() => setSelectedNode(null)}
-                                        className="p-1 hover:bg-white/10 rounded"
-                                    >
-                                        <XMarkIcon className="w-5 h-5" />
-                                    </button>
-                                )}
-                            </div>
-
-                            <h2 className="text-xl font-bold font-heading mb-2">{selectedNode.title}</h2>
-                            <p className="text-[#00d4ff] text-sm mb-4">{selectedNode.year}</p>
-                            <p className="text-gray-300 text-sm mb-6 leading-relaxed">{selectedNode.abstract}</p>
-
-                            {selectedNode.id !== '0' && (
-                                <div className="mb-6">
-                                    <h3 className="text-[#00d4ff] font-bold mb-2">Why connected:</h3>
-                                    <p className="text-gray-300 text-sm">
-                                        {graphData.links.find(l =>
-                                            (l.source.id === '0' && l.target.id === selectedNode.id) ||
-                                            (l.target.id === '0' && l.source.id === selectedNode.id)
-                                        )?.reason || 'Related research area'}
-                                    </p>
                                 </div>
                             )}
 
+                            {error && (
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                    <div className="text-center">
+                                        <p className="text-red-400 mb-4">{error}</p>
+                                        <button
+                                            onClick={handleSearch}
+                                            className="px-4 py-2 bg-[#00d4ff] text-black rounded-lg hover:bg-[#00d4ff]/80 transition-colors"
+                                        >
+                                            Retry
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {selectedNode && (
+                            <div className={selectedNodeClass}>
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="px-3 py-1 rounded-full text-xs font-bold"
+                                          style={{ backgroundColor: scaleOrdinal(schemeTableau10)(selectedNode.field), color: 'black' }}>
+                                        {selectedNode.field}
+                                    </span>
+                                    {!isMobile && (
+                                        <button
+                                            onClick={() => setSelectedNode(null)}
+                                            className="p-1 hover:bg-white/10 rounded"
+                                        >
+                                            <XMarkIcon className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <h2 className="text-xl font-bold font-heading mb-2">{selectedNode.title}</h2>
+                                <p className="text-[#00d4ff] text-sm mb-4">{selectedNode.year}</p>
+                                <p className="text-gray-300 text-sm mb-6 leading-relaxed">{selectedNode.abstract}</p>
+
+                                {selectedNode.id !== '0' && (
+                                    <div className="mb-6">
+                                        <h3 className="text-[#00d4ff] font-bold mb-2">Why connected:</h3>
+                                        <p className="text-gray-300 text-sm">
+                                            {graphData?.links?.find(l =>
+                                                (l.source.id === '0' && l.target.id === selectedNode.id) ||
+                                                (l.target.id === '0' && l.source.id === selectedNode.id)
+                                            )?.reason || 'Related research area'}
+                                        </p>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => handleExploreNode(selectedNode.title)}
+                                    className="w-full py-3 bg-[#00d4ff] text-black font-bold rounded-lg hover:bg-[#00d4ff]/80 transition-colors"
+                                >
+                                    Explore this paper
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="h-20 border-t border-[#1e1e2e] bg-[#0d0d14] p-4">
+                        <div className="max-w-2xl mx-auto flex gap-4">
+                            <div className="flex-1 relative">
+                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                    placeholder="Enter paper title..."
+                                    className="w-full pl-10 pr-4 py-3 bg-[#111118] border border-[#1e1e2e] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#00d4ff]"
+                                />
+                            </div>
                             <button
-                                onClick={() => handleExploreNode(selectedNode.title)}
-                                className="w-full py-3 bg-[#00d4ff] text-black font-bold rounded-lg hover:bg-[#00d4ff]/80 transition-colors"
+                                onClick={handleSearch}
+                                disabled={loading || !title.trim()}
+                                className="px-6 py-3 bg-[#00d4ff] text-black font-bold rounded-lg hover:bg-[#00d4ff]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                Explore this paper
+                                Explore
                             </button>
                         </div>
-                    )}
-                </div>
-
-                {/* Bottom Bar */}
-                <div className="h-20 border-t border-[#1e1e2e] bg-[#0d0d14] p-4">
-                    <div className="max-w-2xl mx-auto flex gap-4">
-                        <div className="flex-1 relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <input
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                placeholder="Enter paper title..."
-                                className="w-full pl-10 pr-4 py-3 bg-[#111118] border border-[#1e1e2e] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#00d4ff]"
-                            />
-                        </div>
-                        <button
-                            onClick={handleSearch}
-                            disabled={loading || !title.trim()}
-                            className="px-6 py-3 bg-[#00d4ff] text-black font-bold rounded-lg hover:bg-[#00d4ff]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Explore
-                        </button>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
