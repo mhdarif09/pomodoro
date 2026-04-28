@@ -140,6 +140,7 @@ Rules:
             })->values()->all();
 
             $nodes = $this->enrichNodesWithSerper($nodes);
+            $nodes = $this->filterNodesByQueryRelevance($title, $nodes);
 
             $links = collect($parsed['links'] ?? [])->map(function ($l) {
                 return [
@@ -149,6 +150,26 @@ Rules:
                     'reason' => (string) ($l['reason'] ?? 'Related research area'),
                 ];
             })->filter(fn($l) => $l['source'] !== '' && $l['target'] !== '')->values();
+
+            $allowedIds = collect($nodes)->pluck('id')->all();
+            $links = $links->filter(function ($link) use ($allowedIds) {
+                return in_array($link['source'], $allowedIds, true) && in_array($link['target'], $allowedIds, true);
+            })->values();
+
+            // Reconnect orphan nodes to root so all shown nodes remain contextually tied to the searched title.
+            $connectedIds = $links->flatMap(fn($l) => [$l['source'], $l['target']])->unique()->values()->all();
+            foreach ($allowedIds as $id) {
+                if ($id === '0' || in_array($id, $connectedIds, true)) {
+                    continue;
+                }
+
+                $links->push([
+                    'source' => '0',
+                    'target' => $id,
+                    'strength' => 0.45,
+                    'reason' => 'Connected to the searched paper by title/topic overlap.',
+                ]);
+            }
 
             return response()->json([
                 'nodes' => $nodes,
@@ -420,5 +441,82 @@ Rules:
                 'links' => [],
             ];
         }
+    }
+
+    private function filterNodesByQueryRelevance(string $query, array $nodes): array
+    {
+        if (empty($nodes)) {
+            return $nodes;
+        }
+
+        $queryTokens = $this->extractMeaningfulTokens($query);
+        if (empty($queryTokens)) {
+            return $nodes;
+        }
+
+        $kept = [];
+        foreach ($nodes as $node) {
+            if (($node['id'] ?? null) === '0') {
+                $kept[] = $node;
+                continue;
+            }
+
+            $title = (string) ($node['title'] ?? '');
+            $abstract = (string) ($node['abstract'] ?? '');
+            $field = (string) ($node['field'] ?? '');
+            $haystackTokens = $this->extractMeaningfulTokens($title.' '.$abstract.' '.$field);
+
+            $overlapCount = count(array_intersect($queryTokens, $haystackTokens));
+            $minOverlap = count($queryTokens) >= 4 ? 2 : 1;
+
+            if ($overlapCount >= $minOverlap) {
+                $kept[] = $node;
+            }
+        }
+
+        // Keep a stable, useful graph: root + at least up to 8 most relevant nodes.
+        if (count($kept) <= 1) {
+            return array_slice($nodes, 0, min(9, count($nodes)));
+        }
+
+        $root = array_values(array_filter($kept, fn($n) => ($n['id'] ?? null) === '0'));
+        $others = array_values(array_filter($kept, fn($n) => ($n['id'] ?? null) !== '0'));
+
+        usort($others, function ($a, $b) use ($queryTokens) {
+            $scoreA = $this->scoreNodeRelevance($queryTokens, $a);
+            $scoreB = $this->scoreNodeRelevance($queryTokens, $b);
+            return $scoreB <=> $scoreA;
+        });
+
+        return array_merge($root, array_slice($others, 0, 8));
+    }
+
+    private function scoreNodeRelevance(array $queryTokens, array $node): float
+    {
+        $title = (string) ($node['title'] ?? '');
+        $abstract = (string) ($node['abstract'] ?? '');
+        $field = (string) ($node['field'] ?? '');
+        $haystackTokens = $this->extractMeaningfulTokens($title.' '.$abstract.' '.$field);
+        $overlapCount = count(array_intersect($queryTokens, $haystackTokens));
+
+        return ($overlapCount * 10) + ((float) ($node['relevance'] ?? 0.5) * 3);
+    }
+
+    private function extractMeaningfulTokens(string $text): array
+    {
+        $text = strtolower($text);
+        $tokens = preg_split('/[^a-z0-9]+/i', $text) ?: [];
+
+        $stopwords = [
+            'the', 'and', 'for', 'with', 'from', 'that', 'this', 'into', 'using', 'based',
+            'paper', 'study', 'approach', 'method', 'analysis', 'towards', 'via', 'new',
+            'on', 'in', 'of', 'to', 'a', 'an', 'is', 'are', 'be', 'by',
+        ];
+
+        $filtered = array_values(array_filter($tokens, function ($t) use ($stopwords) {
+            return $t !== '' && strlen($t) >= 3 && !in_array($t, $stopwords, true);
+        }));
+
+        return array_values(array_unique($filtered));
     }
 }
