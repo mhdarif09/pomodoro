@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import axios from 'axios';
 import {
     forceSimulation,
@@ -101,8 +102,9 @@ export default function PaperExplorer() {
                 setSelectedNode(d);
                 // Highlight connected edges
                 link.attr('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.1);
-            })
-            .transition()
+            });
+
+        node.transition()
             .duration(600)
             .style('opacity', 1);
 
@@ -189,9 +191,9 @@ export default function PaperExplorer() {
         : 'w-80 border-l border-[#1e1e2e]') + ' bg-[#111118] p-6 overflow-y-auto transition-all duration-300 ease-out';
 
     return (
-        <div>
+        <AuthenticatedLayout header={<h2 className="font-extrabold text-2xl text-slate-900 dark:text-white tracking-tight">Paper Explorer</h2>}>
             <Head title="Paper Explorer" />
-            <div className="py-3 sm:py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" style={{ paddingBottom: 'calc(var(--mobile-bottom-nav-height) + 1rem)' }}>
+            <div className="py-3 sm:py-5 px-2 sm:px-4 lg:px-5 max-w-[1680px] mx-auto" style={{ paddingBottom: 'calc(var(--mobile-bottom-nav-height) + 1rem)' }}>
                 <div className="apple-glass rounded-2xl border-white/10 overflow-hidden shadow-xl bg-[#0d0d14]">
                     <div className="flex items-center justify-between p-6 border-b border-slate-800">
                         <div className="flex items-center gap-4">
@@ -328,6 +330,6 @@ export default function PaperExplorer() {
                     </div>
                 </div>
             </div>
-        </div>
+        </AuthenticatedLayout>
     );
 }
