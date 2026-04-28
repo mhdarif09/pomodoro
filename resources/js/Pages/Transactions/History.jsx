@@ -66,7 +66,7 @@ export default function History({ auth, subscriptions }) {
         <AuthenticatedLayout user={auth.user}>
             <Head title="Riwayat Transaksi" />
 
-            <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+            <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h1 className="text-4xl font-[900] text-slate-900 dark:text-white tracking-tight leading-none">Riwayat Transaksi</h1>

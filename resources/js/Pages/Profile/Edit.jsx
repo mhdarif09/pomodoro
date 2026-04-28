@@ -26,8 +26,8 @@ export default function Edit({ auth, mustVerifyEmail, status, settings }) {
         >
             <Head title="Pengaturan - Sarang Tumbuh" />
 
-            <div className="py-10 bg-[#F2F2F7] dark:bg-black min-h-[calc(100vh-64px)] overflow-x-hidden">
-                <div className="max-w-3xl mx-auto px-6 space-y-12">
+            <div className="py-4 bg-[#F2F2F7] dark:bg-black min-h-[calc(100vh-64px)] overflow-x-hidden">
+                <div className="max-w-3xl mx-auto px-6 space-y-6">
 
                     {/* Profile Section */}
                     <motion.div

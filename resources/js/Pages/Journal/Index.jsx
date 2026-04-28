@@ -37,7 +37,7 @@ export default function JournalIndex({ auth, reflections, todayReflection, prefi
         >
             <Head title="Jurnal Harian" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-5">
 
                 {/* Hero Section */}
                 <motion.div

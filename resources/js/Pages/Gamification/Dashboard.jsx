@@ -35,7 +35,7 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
         <AuthenticatedLayout header={<h2 className="font-[1000] text-2xl text-slate-900 dark:text-white tracking-tight">Pusat Gamifikasi</h2>}>
             <Head title="Gamification" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-5">
 
                 {/* 1. HERO ROW: Profile & Briefing */}
                 <div className="grid grid-cols-12 gap-6">

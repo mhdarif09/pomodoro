@@ -142,8 +142,8 @@ export default function CognitiveArena({ auth, initialStats, isUnlocked, active_
         >
             <Head title="Cognitive Arena" />
 
-            <div className="py-8">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div className="py-4">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-5">
 
                     <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 opacity-10 pointer-events-none">

@@ -106,7 +106,7 @@ export default function Index({ auth }) {
         <AuthenticatedLayout header={<h2 className="font-black text-2xl text-slate-900 dark:text-white tracking-tight">Analisis Produktivitas</h2>}>
             <Head title="Productivity" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-5">
 
                 {/* 1. HERO ROW: Core Performance */}
                 <div className="grid grid-cols-12 gap-6">

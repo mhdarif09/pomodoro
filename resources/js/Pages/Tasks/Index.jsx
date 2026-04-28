@@ -199,13 +199,13 @@ export default function MyTasks(props) {
         >
             <Head title="My Tasks" />
 
-            <div className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+            <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
                 {/* 1. MINIMALIST HEADER */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8 }}
-                    className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-slate-100 dark:border-slate-800 pb-10"
+                    className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5"
                 >
                     <div>
                         <h1 className="text-5xl sm:text-7xl font-[1000] text-slate-900 dark:text-white tracking-[ -0.05em] leading-[0.9]">
@@ -292,7 +292,7 @@ export default function MyTasks(props) {
                 </div>
 
                 {/* 3. TASK REPOSITORY (Filters & List) */}
-                <div className="space-y-8">
+                <div className="space-y-4">
                     {/* Visual Tabs */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

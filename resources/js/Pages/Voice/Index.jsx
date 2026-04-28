@@ -121,7 +121,7 @@ export default function VoiceIndex({ auth }) {
             {/* Elemen audio yang tidak terlihat untuk memutar suara AI */}
             <audio ref={audioPlayerRef} style={{ display: 'none' }} />
 
-            <div className="py-12">
+            <div className="py-4">
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 md:p-10 flex flex-col items-center justify-center text-center">
