@@ -37,6 +37,8 @@ class PaperExplorerController extends Controller
 
         $title = $request->input('title');
         $apiKey = env('GROQ_API_KEY');
+        $serperApiKey = env('SERPER_API_KEY');
+        $scholarCandidates = $this->fetchScholarCandidates($title, 18);
 
         if (!$apiKey) {
             Log::warning('PaperExplorer: GROQ_API_KEY is missing.');
@@ -67,12 +69,19 @@ Structure:
 }
 Rules:
 - id "0" = the input paper (root node, relevance=1.0)
-- Generate 10-14 related nodes
+- Generate 10-16 related nodes
 - relevance: 0.0-1.0, strength: 0.0-1.0
 - field: short domain label (NLP, CV, RL, etc.)
 - paper_url should be a real landing page URL if known
 - pdf_url should be direct PDF URL if known; otherwise null
-- authors max 5 names';
+- authors max 5 names
+- Prioritize factual correctness over creativity
+- If candidate list is provided by user, prioritize those papers';
+
+        $userPrompt = 'Find connected papers for: '.$title;
+        if (!empty($scholarCandidates)) {
+            $userPrompt .= "\n\nCandidate papers (prefer selecting from this list because links are verified):\n".json_encode($scholarCandidates, JSON_UNESCAPED_SLASHES);
+        }
 
         try {
             $response = Http::withHeaders([
@@ -83,7 +92,7 @@ Rules:
                 'max_tokens' => 2500,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => 'Find connected papers for: '.$title],
+                    ['role' => 'user', 'content' => $userPrompt],
                 ],
             ]);
 
@@ -94,7 +103,7 @@ Rules:
                     'title' => $title,
                 ]);
 
-                $fallback = $this->buildFallbackGraph($title);
+                $fallback = $this->buildFallbackGraph($title, $scholarCandidates);
                 if ($fallback) {
                     return response()->json($fallback);
                 }
@@ -116,7 +125,7 @@ Rules:
                     'title' => $title,
                 ]);
 
-                $fallback = $this->buildFallbackGraph($title);
+                $fallback = $this->buildFallbackGraph($title, $scholarCandidates);
                 if ($fallback) {
                     return response()->json($fallback);
                 }
@@ -140,6 +149,9 @@ Rules:
             })->values()->all();
 
             $nodes = $this->enrichNodesWithSerper($nodes);
+            if (!empty($scholarCandidates)) {
+                $nodes = $this->hydrateNodesFromCandidates($nodes, $scholarCandidates);
+            }
             $nodes = $this->filterNodesByQueryRelevance($title, $nodes);
 
             $links = collect($parsed['links'] ?? [])->map(function ($l) {
@@ -182,6 +194,11 @@ Rules:
                 'line' => $e->getLine(),
                 'title' => $title,
             ]);
+            $fallback = $this->buildFallbackGraph($title, $scholarCandidates);
+            if ($fallback) {
+                return response()->json($fallback);
+            }
+
             return response()->json(['error' => 'Paper explorer service unavailable. Please try again.'], 500);
         }
     }
@@ -346,7 +363,7 @@ Rules:
         return false;
     }
 
-    private function buildFallbackGraph(string $title): ?array
+    private function buildFallbackGraph(string $title, array $prefetchedCandidates = []): ?array
     {
         $serperApiKey = env('SERPER_API_KEY');
         $rootNode = [
@@ -361,6 +378,10 @@ Rules:
             'paper_url' => null,
             'pdf_url' => null,
         ];
+
+        if (!empty($prefetchedCandidates)) {
+            return $this->buildGraphFromCandidates($title, $prefetchedCandidates);
+        }
 
         if (empty($serperApiKey)) {
             return [
@@ -391,45 +412,8 @@ Rules:
                 ];
             }
 
-            $organic = collect((array) $response->json('organic', []))->take(8)->values();
-            $nodes = [$rootNode];
-            $links = [];
-
-            foreach ($organic as $index => $item) {
-                $id = (string) ($index + 1);
-                $nodeTitle = (string) ($item['title'] ?? '');
-                if ($nodeTitle === '') {
-                    continue;
-                }
-
-                $paperUrl = $this->sanitizeExternalUrl($item['link'] ?? ($item['publicationInfo']['link'] ?? null));
-                $pdfUrl = $this->sanitizePdfUrl($item['link'] ?? ($item['publicationInfo']['link'] ?? null));
-
-                $nodes[] = [
-                    'id' => $id,
-                    'title' => $nodeTitle,
-                    'year' => null,
-                    'field' => 'Research',
-                    'relevance' => max(0.45, 0.95 - ($index * 0.07)),
-                    'abstract' => (string) ($item['snippet'] ?? 'Related research result.'),
-                    'authors' => [],
-                    'venue' => '',
-                    'paper_url' => $paperUrl,
-                    'pdf_url' => $pdfUrl,
-                ];
-
-                $links[] = [
-                    'source' => '0',
-                    'target' => $id,
-                    'strength' => max(0.35, 0.85 - ($index * 0.06)),
-                    'reason' => 'Retrieved from search fallback due to provider unavailability.',
-                ];
-            }
-
-            return [
-                'nodes' => $nodes,
-                'links' => $links,
-            ];
+            $candidates = $this->normalizeScholarOrganic((array) $response->json('organic', []), 10);
+            return $this->buildGraphFromCandidates($title, $candidates);
         } catch (\Throwable $e) {
             Log::warning('PaperExplorer fallback: Serper exception.', [
                 'message' => $e->getMessage(),
@@ -441,6 +425,140 @@ Rules:
                 'links' => [],
             ];
         }
+    }
+
+    private function fetchScholarCandidates(string $query, int $limit = 18): array
+    {
+        $apiKey = env('SERPER_API_KEY');
+        if (empty($apiKey)) {
+            return [];
+        }
+
+        try {
+            $response = Http::timeout(20)->withHeaders([
+                'X-API-KEY' => $apiKey,
+                'Content-Type' => 'application/json',
+            ])->post('https://google.serper.dev/scholar', [
+                'q' => "\"{$query}\"",
+                'num' => max(10, min(20, $limit)),
+                'gl' => 'us',
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('PaperExplorer: prefetch scholar candidates failed', [
+                    'status' => $response->status(),
+                    'query' => $query,
+                ]);
+                return [];
+            }
+
+            return $this->normalizeScholarOrganic((array) $response->json('organic', []), $limit);
+        } catch (\Throwable $e) {
+            Log::warning('PaperExplorer: prefetch scholar candidates exception', [
+                'message' => $e->getMessage(),
+                'query' => $query,
+            ]);
+            return [];
+        }
+    }
+
+    private function normalizeScholarOrganic(array $organic, int $limit): array
+    {
+        return collect($organic)
+            ->map(function ($item) {
+                $title = trim((string) ($item['title'] ?? ''));
+                $paperUrl = $this->sanitizeExternalUrl($item['link'] ?? ($item['publicationInfo']['link'] ?? null));
+                $snippet = trim((string) ($item['snippet'] ?? ''));
+                $year = null;
+                if (preg_match('/\b(19|20)\d{2}\b/', $snippet, $m)) {
+                    $year = (int) $m[0];
+                }
+
+                return [
+                    'title' => $title,
+                    'paper_url' => $paperUrl,
+                    'pdf_url' => $this->sanitizePdfUrl($paperUrl),
+                    'abstract' => $snippet,
+                    'year' => $year,
+                ];
+            })
+            ->filter(fn($x) => $x['title'] !== '' && !empty($x['paper_url']))
+            ->unique(fn($x) => strtolower($x['title']))
+            ->take($limit)
+            ->values()
+            ->all();
+    }
+
+    private function hydrateNodesFromCandidates(array $nodes, array $candidates): array
+    {
+        if (empty($nodes) || empty($candidates)) {
+            return $nodes;
+        }
+
+        $indexed = collect($candidates)->keyBy(fn($c) => strtolower((string) $c['title']));
+
+        return array_map(function ($node) use ($indexed) {
+            if (($node['id'] ?? '') === '0') {
+                return $node;
+            }
+
+            $key = strtolower((string) ($node['title'] ?? ''));
+            $candidate = $indexed->get($key);
+            if (!$candidate) {
+                return $node;
+            }
+
+            $node['paper_url'] = $candidate['paper_url'] ?? $node['paper_url'];
+            $node['pdf_url'] = $candidate['pdf_url'] ?? $node['pdf_url'];
+            $node['year'] = $node['year'] ?: ($candidate['year'] ?? null);
+            if (empty($node['abstract']) && !empty($candidate['abstract'])) {
+                $node['abstract'] = $candidate['abstract'];
+            }
+
+            return $node;
+        }, $nodes);
+    }
+
+    private function buildGraphFromCandidates(string $title, array $candidates): array
+    {
+        $nodes = [[
+            'id' => '0',
+            'title' => $title,
+            'year' => null,
+            'field' => 'General',
+            'relevance' => 1,
+            'abstract' => 'Primary query node.',
+            'authors' => [],
+            'venue' => '',
+            'paper_url' => null,
+            'pdf_url' => null,
+        ]];
+
+        $links = [];
+        foreach (array_values(array_slice($candidates, 0, 10)) as $index => $candidate) {
+            $id = (string) ($index + 1);
+            $nodes[] = [
+                'id' => $id,
+                'title' => (string) $candidate['title'],
+                'year' => $candidate['year'] ?? null,
+                'field' => 'Research',
+                'relevance' => max(0.45, 0.95 - ($index * 0.06)),
+                'abstract' => (string) ($candidate['abstract'] ?? 'Related research result.'),
+                'authors' => [],
+                'venue' => '',
+                'paper_url' => $candidate['paper_url'] ?? null,
+                'pdf_url' => $candidate['pdf_url'] ?? null,
+            ];
+
+            $links[] = [
+                'source' => '0',
+                'target' => $id,
+                'strength' => max(0.35, 0.85 - ($index * 0.05)),
+                'reason' => 'Selected from validated scholar search results related to the query.',
+            ];
+        }
+
+        return ['nodes' => $nodes, 'links' => $links];
     }
 
     private function filterNodesByQueryRelevance(string $query, array $nodes): array
