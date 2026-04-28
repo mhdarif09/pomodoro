@@ -48,7 +48,6 @@ Route::get('/learn', function () {
     return Inertia::render('Learn');
 })->name('learn');
 
-Route::get('/paper-explorer', [\App\Http\Controllers\PaperExplorerController::class, 'index'])->name('paper-explorer');
 
 Route::get('/products/{slug}', function ($slug) {
     // Rich Data for Modern Product Pages
@@ -276,6 +275,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/dismiss-upgrade-modal', [DashboardController::class, 'dismissUpgradeModal'])->name('dashboard.dismiss-upgrade-modal');
     Route::get('/my-tasks', [\App\Http\Controllers\TaskPageController::class, 'index'])->name('tasks.index');
+    Route::get('/paper-explorer', [\App\Http\Controllers\PaperExplorerController::class, 'index'])->name('paper-explorer');
     Route::get('/upgrade', [\App\Http\Controllers\UpgradePageController::class, 'index'])->name('upgrade.index');
     Route::post('/upgrade/redeem-xp', [\App\Http\Controllers\UpgradePageController::class, 'redeemXP'])->name('upgrade.redeem-xp');
     

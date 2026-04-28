@@ -18,13 +18,19 @@ import {
     ArrowPathIcon,
     XMarkIcon,
     ChevronRightIcon,
-    CpuChipIcon
+    CpuChipIcon,
+    EyeIcon,
+    ArrowDownTrayIcon,
+    LinkIcon,
+    DocumentTextIcon,
+    UserGroupIcon
 } from '@heroicons/react/24/outline';
 
 export default function PaperExplorer() {
     const [title, setTitle] = useState('');
     const [graphData, setGraphData] = useState(null);
     const [selectedNode, setSelectedNode] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [history, setHistory] = useState([]);
@@ -146,8 +152,9 @@ export default function PaperExplorer() {
         };
     }, [graphData]);
 
-    const handleSearch = async () => {
-        if (!title.trim()) return;
+    const runSearch = async (query, shouldPushHistory = true) => {
+        const safeQuery = query?.trim();
+        if (!safeQuery) return;
 
         setLoading(true);
         setError(null);
@@ -155,7 +162,7 @@ export default function PaperExplorer() {
 
         try {
             const response = await axios.post('/api/paper-explorer/search', {
-                title: title.trim()
+                title: safeQuery
             }, {
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -163,7 +170,9 @@ export default function PaperExplorer() {
             });
 
             setGraphData(response.data);
-            setHistory(prev => [...prev, title.trim()]);
+            if (shouldPushHistory) {
+                setHistory(prev => prev[prev.length - 1] === safeQuery ? prev : [...prev, safeQuery]);
+            }
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to fetch papers');
         } finally {
@@ -171,34 +180,34 @@ export default function PaperExplorer() {
         }
     };
 
+    const handleSearch = async () => runSearch(title, true);
+
     const handleBreadcrumbClick = (index) => {
         const newTitle = history[index];
         setTitle(newTitle);
         setHistory(prev => prev.slice(0, index + 1));
-        // Re-search with this title
-        setTimeout(() => handleSearch(), 0);
+        runSearch(newTitle, false);
     };
 
     const handleExploreNode = (nodeTitle) => {
         setTitle(nodeTitle);
-        setHistory(prev => [...prev, nodeTitle]);
         setSelectedNode(null);
-        setTimeout(() => handleSearch(), 0);
+        runSearch(nodeTitle, true);
     };
 
     const selectedNodeClass = (isMobile
-        ? 'fixed bottom-0 left-0 right-0 h-[60vh] rounded-t-[20px] border-t border-[#1e1e2e]'
-        : 'w-80 border-l border-[#1e1e2e]') + ' bg-[#111118] p-6 overflow-y-auto transition-all duration-300 ease-out';
+        ? 'fixed bottom-0 left-0 right-0 h-[60vh] rounded-t-[20px] border-t border-slate-200 dark:border-slate-700'
+        : 'w-[360px] border-l border-slate-200 dark:border-slate-700') + ' bg-white dark:bg-slate-900 p-6 overflow-y-auto transition-all duration-300 ease-out';
 
     return (
         <AuthenticatedLayout header={<h2 className="font-extrabold text-2xl text-slate-900 dark:text-white tracking-tight">Paper Explorer</h2>}>
             <Head title="Paper Explorer" />
             <div className="py-3 sm:py-5 px-2 sm:px-4 lg:px-5 max-w-[1680px] mx-auto" style={{ paddingBottom: 'calc(var(--mobile-bottom-nav-height) + 1rem)' }}>
-                <div className="apple-glass rounded-2xl border-white/10 overflow-hidden shadow-xl bg-[#0d0d14]">
-                    <div className="flex items-center justify-between p-6 border-b border-slate-800">
+                <div className="apple-glass rounded-2xl border-white/10 overflow-hidden shadow-xl bg-white dark:bg-slate-900">
+                    <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
                         <div className="flex items-center gap-4">
-                            <CpuChipIcon className="w-8 h-8 text-[#00d4ff]" />
-                            <h1 className="text-2xl font-bold font-heading">PaperGraph</h1>
+                            <CpuChipIcon className="w-8 h-8 text-emerald-500" />
+                            <h1 className="text-xl sm:text-2xl font-bold">PaperGraph</h1>
                         </div>
                         {history.length > 0 && (
                             <nav className="flex items-center gap-2 text-sm">
@@ -206,18 +215,18 @@ export default function PaperExplorer() {
                                     <React.Fragment key={index}>
                                         <button
                                             onClick={() => handleBreadcrumbClick(index)}
-                                            className="hover:text-[#00d4ff] transition-colors truncate max-w-32 text-sm text-slate-300"
+                                            className="hover:text-emerald-500 transition-colors truncate max-w-32 text-sm text-slate-500 dark:text-slate-300"
                                         >
                                             {item}
                                         </button>
-                                        {index < history.length - 1 && <ChevronRightIcon className="w-4 h-4 text-[#666]" />}
+                                        {index < history.length - 1 && <ChevronRightIcon className="w-4 h-4 text-slate-400" />}
                                     </React.Fragment>
                                 ))}
                             </nav>
                         )}
                     </div>
 
-                    <div className="flex min-h-[60vh] gap-6">
+                    <div className="flex min-h-[60vh] gap-0">
                         <div ref={containerRef} className={`flex-1 relative p-6 ${isMobile ? 'w-full' : ''}`} style={{minHeight: isMobile ? '40vh' : '60vh'}}>
                             <svg
                                 ref={svgRef}
@@ -229,7 +238,7 @@ export default function PaperExplorer() {
                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                     <div className="text-center">
                                         <ArrowPathIcon className="w-8 h-8 animate-spin text-[#00d4ff] mx-auto mb-4" />
-                                        <p className="text-[#00d4ff]">Analyzing paper connections...</p>
+                                        <p className="text-emerald-500 font-semibold">Analyzing paper connections...</p>
                                         <div className="mt-4 flex justify-center gap-2 relative" style={{height: 80}}>
                                             {Array.from({ length: 8 }).map((_, i) => (
                                                 <div
@@ -254,7 +263,7 @@ export default function PaperExplorer() {
                                         <p className="text-red-400 mb-4">{error}</p>
                                         <button
                                             onClick={handleSearch}
-                                            className="px-4 py-2 bg-[#00d4ff] text-black rounded-lg hover:bg-[#00d4ff]/80 transition-colors"
+                                            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
                                         >
                                             Retry
                                         </button>
@@ -266,8 +275,8 @@ export default function PaperExplorer() {
                         {selectedNode && (
                             <div className={selectedNodeClass} style={isMobile ? { bottom: 'var(--mobile-bottom-nav-height)', height: 'calc(60vh - var(--mobile-bottom-nav-height))' } : {}}>
                                 <div className="flex items-center justify-between mb-4">
-                                    <span className="px-3 py-1 rounded-full text-xs font-bold"
-                                          style={{ backgroundColor: scaleOrdinal(schemeTableau10)(selectedNode.field), color: 'black' }}>
+                                    <span className="px-3 py-1 rounded-full text-xs font-bold text-white"
+                                          style={{ backgroundColor: scaleOrdinal(schemeTableau10)(selectedNode.field) }}>
                                         {selectedNode.field}
                                     </span>
                                     {!isMobile && (
@@ -280,14 +289,26 @@ export default function PaperExplorer() {
                                     )}
                                 </div>
 
-                                <h2 className="text-xl font-bold font-heading mb-2">{selectedNode.title}</h2>
-                                <p className="text-[#00d4ff] text-sm mb-4">{selectedNode.year}</p>
-                                <p className="text-gray-300 text-sm mb-6 leading-relaxed">{selectedNode.abstract}</p>
+                                <h2 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">{selectedNode.title}</h2>
+                                <p className="text-emerald-500 text-sm mb-2">{selectedNode.year || '-'}</p>
+                                {selectedNode.venue && (
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{selectedNode.venue}</p>
+                                )}
+                                {selectedNode.authors?.length > 0 && (
+                                    <div className="flex items-start gap-2 mb-4">
+                                        <UserGroupIcon className="w-4 h-4 mt-0.5 text-slate-400" />
+                                        <p className="text-sm text-slate-600 dark:text-slate-300">{selectedNode.authors.join(', ')}</p>
+                                    </div>
+                                )}
+                                <div className="flex items-start gap-2 mb-6">
+                                    <DocumentTextIcon className="w-4 h-4 mt-0.5 text-slate-400" />
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{selectedNode.abstract || 'No abstract available.'}</p>
+                                </div>
 
                                 {selectedNode.id !== '0' && (
                                     <div className="mb-6">
-                                        <h3 className="text-[#00d4ff] font-bold mb-2">Why connected:</h3>
-                                        <p className="text-gray-300 text-sm">
+                                        <h3 className="text-emerald-500 font-bold mb-2">Why connected:</h3>
+                                        <p className="text-slate-600 dark:text-slate-300 text-sm">
                                             {graphData?.links?.find(l =>
                                                 (l.source.id === '0' && l.target.id === selectedNode.id) ||
                                                 (l.target.id === '0' && l.source.id === selectedNode.id)
@@ -296,33 +317,67 @@ export default function PaperExplorer() {
                                     </div>
                                 )}
 
-                                <button
-                                    onClick={() => handleExploreNode(selectedNode.title)}
-                                    className="w-full py-3 bg-[#00d4ff] text-black font-bold rounded-lg hover:bg-[#00d4ff]/80 transition-colors"
-                                >
-                                    Explore this paper
-                                </button>
+                                <div className="grid grid-cols-1 gap-2">
+                                    <button
+                                        onClick={() => handleExploreNode(selectedNode.title)}
+                                        className="w-full py-3 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition-colors"
+                                    >
+                                        Explore this paper
+                                    </button>
+                                    {selectedNode.paper_url && (
+                                        <a
+                                            href={selectedNode.paper_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <LinkIcon className="w-4 h-4" />
+                                            Open Source
+                                        </a>
+                                    )}
+                                    {selectedNode.pdf_url && (
+                                        <>
+                                            <button
+                                                onClick={() => setPreviewUrl(selectedNode.pdf_url)}
+                                                className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <EyeIcon className="w-4 h-4" />
+                                                Preview PDF
+                                            </button>
+                                            <a
+                                                href={selectedNode.pdf_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download
+                                                className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <ArrowDownTrayIcon className="w-4 h-4" />
+                                                Download PDF
+                                            </a>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="h-20 border-t border-[#1e1e2e] bg-[#0d0d14] p-4">
+                    <div className="h-20 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
                         <div className="max-w-2xl mx-auto flex gap-4">
                             <div className="flex-1 relative">
-                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                     placeholder="Enter paper title..."
-                                    className="w-full pl-10 pr-4 py-3 bg-[#111118] border border-[#1e1e2e] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#00d4ff]"
+                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
                                 />
                             </div>
                             <button
                                 onClick={handleSearch}
                                 disabled={loading || !title.trim()}
-                                className="px-6 py-3 bg-[#00d4ff] text-black font-bold rounded-lg hover:bg-[#00d4ff]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 Explore
                             </button>
@@ -330,6 +385,23 @@ export default function PaperExplorer() {
                     </div>
                 </div>
             </div>
+
+            {previewUrl && (
+                <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-6xl h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="h-12 px-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">PDF Preview</span>
+                            <button
+                                onClick={() => setPreviewUrl(null)}
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                                <XMarkIcon className="w-5 h-5 text-slate-500" />
+                            </button>
+                        </div>
+                        <iframe src={previewUrl} title="Paper preview" className="w-full h-[calc(85vh-3rem)]" />
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }
