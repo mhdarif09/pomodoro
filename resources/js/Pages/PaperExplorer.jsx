@@ -337,6 +337,15 @@ export default function PaperExplorer() {
                                     )}
                                     {selectedNode.pdf_url && (
                                         <>
+                                            <a
+                                                href={selectedNode.pdf_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <LinkIcon className="w-4 h-4" />
+                                                Open PDF
+                                            </a>
                                             <button
                                                 onClick={() => setPreviewUrl(selectedNode.pdf_url)}
                                                 className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
