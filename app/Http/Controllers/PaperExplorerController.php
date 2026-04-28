@@ -93,6 +93,12 @@ Rules:
                     'body' => $response->body(),
                     'title' => $title,
                 ]);
+
+                $fallback = $this->buildFallbackGraph($title);
+                if ($fallback) {
+                    return response()->json($fallback);
+                }
+
                 return response()->json(['error' => 'Failed to fetch from Groq API'], 502);
             }
 
@@ -109,6 +115,12 @@ Rules:
                     'raw_content_sample' => mb_substr((string) $content, 0, 500),
                     'title' => $title,
                 ]);
+
+                $fallback = $this->buildFallbackGraph($title);
+                if ($fallback) {
+                    return response()->json($fallback);
+                }
+
                 return response()->json(['error' => 'Invalid response format from AI provider'], 502);
             }
 
@@ -196,7 +208,7 @@ Rules:
             $paperResponse = Http::timeout(15)->withHeaders([
                 'X-API-KEY' => $apiKey,
                 'Content-Type' => 'application/json',
-            ])->post('https://google.serper.dev/search', [
+            ])->post('https://google.serper.dev/scholar', [
                 'q' => $paperQuery,
                 'num' => 8,
                 'gl' => 'us',
@@ -205,7 +217,7 @@ Rules:
             if ($paperResponse->successful()) {
                 $organic = (array) $paperResponse->json('organic', []);
                 foreach ($organic as $item) {
-                    $candidate = $this->sanitizeExternalUrl($item['link'] ?? null);
+                    $candidate = $this->sanitizeExternalUrl($item['link'] ?? ($item['publicationInfo']['link'] ?? null));
                     if (!$candidate) {
                         continue;
                     }
@@ -225,7 +237,7 @@ Rules:
             $pdfResponse = Http::timeout(15)->withHeaders([
                 'X-API-KEY' => $apiKey,
                 'Content-Type' => 'application/json',
-            ])->post('https://google.serper.dev/search', [
+            ])->post('https://google.serper.dev/scholar', [
                 'q' => $pdfQuery,
                 'num' => 8,
                 'gl' => 'us',
@@ -234,7 +246,7 @@ Rules:
             if ($pdfResponse->successful()) {
                 $organic = (array) $pdfResponse->json('organic', []);
                 foreach ($organic as $item) {
-                    $candidate = $this->sanitizePdfUrl($item['link'] ?? null);
+                    $candidate = $this->sanitizePdfUrl($item['link'] ?? ($item['publicationInfo']['link'] ?? null));
                     if (!$candidate) {
                         continue;
                     }
@@ -311,5 +323,102 @@ Rules:
             }
         }
         return false;
+    }
+
+    private function buildFallbackGraph(string $title): ?array
+    {
+        $serperApiKey = env('SERPER_API_KEY');
+        $rootNode = [
+            'id' => '0',
+            'title' => $title,
+            'year' => null,
+            'field' => 'General',
+            'relevance' => 1,
+            'abstract' => 'Primary query node.',
+            'authors' => [],
+            'venue' => '',
+            'paper_url' => null,
+            'pdf_url' => null,
+        ];
+
+        if (empty($serperApiKey)) {
+            return [
+                'nodes' => [$rootNode],
+                'links' => [],
+            ];
+        }
+
+        try {
+            $response = Http::timeout(15)->withHeaders([
+                'X-API-KEY' => $serperApiKey,
+                'Content-Type' => 'application/json',
+            ])->post('https://google.serper.dev/scholar', [
+                'q' => "\"{$title}\" related paper",
+                'num' => 10,
+                'gl' => 'us',
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('PaperExplorer fallback: Serper search failed.', [
+                    'status' => $response->status(),
+                    'title' => $title,
+                ]);
+
+                return [
+                    'nodes' => [$rootNode],
+                    'links' => [],
+                ];
+            }
+
+            $organic = collect((array) $response->json('organic', []))->take(8)->values();
+            $nodes = [$rootNode];
+            $links = [];
+
+            foreach ($organic as $index => $item) {
+                $id = (string) ($index + 1);
+                $nodeTitle = (string) ($item['title'] ?? '');
+                if ($nodeTitle === '') {
+                    continue;
+                }
+
+                $paperUrl = $this->sanitizeExternalUrl($item['link'] ?? ($item['publicationInfo']['link'] ?? null));
+                $pdfUrl = $this->sanitizePdfUrl($item['link'] ?? ($item['publicationInfo']['link'] ?? null));
+
+                $nodes[] = [
+                    'id' => $id,
+                    'title' => $nodeTitle,
+                    'year' => null,
+                    'field' => 'Research',
+                    'relevance' => max(0.45, 0.95 - ($index * 0.07)),
+                    'abstract' => (string) ($item['snippet'] ?? 'Related research result.'),
+                    'authors' => [],
+                    'venue' => '',
+                    'paper_url' => $paperUrl,
+                    'pdf_url' => $pdfUrl,
+                ];
+
+                $links[] = [
+                    'source' => '0',
+                    'target' => $id,
+                    'strength' => max(0.35, 0.85 - ($index * 0.06)),
+                    'reason' => 'Retrieved from search fallback due to provider unavailability.',
+                ];
+            }
+
+            return [
+                'nodes' => $nodes,
+                'links' => $links,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('PaperExplorer fallback: Serper exception.', [
+                'message' => $e->getMessage(),
+                'title' => $title,
+            ]);
+
+            return [
+                'nodes' => [$rootNode],
+                'links' => [],
+            ];
+        }
     }
 }
