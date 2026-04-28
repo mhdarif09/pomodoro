@@ -507,11 +507,11 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
             </motion.aside>
 
             {/* Mobile & Main Content */}
-            <div className={`flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative ${isCollapsed ? 'lg:pl-20' : 'lg:pl-60'}`}>
+            <div className="flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative min-w-0">
 
 
-                <main className="flex-1 overflow-y-auto scrollbar-hide p-2 sm:p-3" style={{ paddingTop: pomodoro.activeTask ? '5rem' : '0', paddingBottom: 'calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom))' }}>
-                    <div className="w-full max-w-[1600px] mx-auto relative">
+                <main className="flex-1 overflow-y-auto scrollbar-hide p-2 sm:p-4 lg:p-5" style={{ paddingTop: pomodoro.activeTask ? '5rem' : '0', paddingBottom: 'calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom))' }}>
+                    <div className="w-full max-w-[1680px] mx-auto relative">
                         {children}
                     </div>
                 </main>

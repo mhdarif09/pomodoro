@@ -46,7 +46,7 @@ export default function History({ auth, subscriptions }) {
 
     // Tampilan jika tidak ada data
     const EmptyState = () => (
-        <div className="text-center py-24 apple-glass rounded-[3rem] border-white/5 shadow-2xl relative overflow-hidden group">
+        <div className="text-center py-16 sm:py-20 apple-glass rounded-[1.75rem] border-white/5 shadow-2xl relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -66,7 +66,7 @@ export default function History({ auth, subscriptions }) {
         <AuthenticatedLayout user={auth.user}>
             <Head title="Riwayat Transaksi" />
 
-            <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+            <div className="py-3 sm:py-5 px-2 sm:px-4 lg:px-5 max-w-[1680px] mx-auto space-y-5">
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h1 className="text-4xl font-[900] text-slate-900 dark:text-white tracking-tight leading-none">Riwayat Transaksi</h1>
@@ -116,7 +116,7 @@ export default function History({ auth, subscriptions }) {
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="hidden md:block overflow-hidden apple-glass rounded-[3rem] shadow-2xl border-white/5"
+                            className="hidden md:block overflow-hidden apple-glass rounded-[1.75rem] shadow-2xl border-white/5"
                         >
                             <table className="min-w-full">
                                 <thead>

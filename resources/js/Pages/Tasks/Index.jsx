@@ -199,7 +199,7 @@ export default function MyTasks(props) {
         >
             <Head title="My Tasks" />
 
-            <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+            <div className="py-3 sm:py-5 px-2 sm:px-4 lg:px-5 max-w-[1680px] mx-auto space-y-5">
                 {/* 1. MINIMALIST HEADER */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -208,7 +208,7 @@ export default function MyTasks(props) {
                     className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5"
                 >
                     <div>
-                        <h1 className="text-5xl sm:text-7xl font-[1000] text-slate-900 dark:text-white tracking-[ -0.05em] leading-[0.9]">
+                        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-[1000] text-slate-900 dark:text-white tracking-tight leading-[0.92]">
                             My Tasks <span className="text-emerald-500">.</span>
                         </h1>
                         <p className="text-xl text-slate-400 dark:text-slate-500 mt-4 font-bold tracking-tight">
@@ -219,7 +219,7 @@ export default function MyTasks(props) {
                     <div className="flex shrink-0">
                         <button
                             onClick={() => setIsQuickAddOpen(true)}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-2xl shadow-emerald-500/20 px-10 py-5 rounded-[2rem] font-[1000] text-lg transition-all active:scale-95 flex items-center gap-3"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-2xl shadow-emerald-500/20 px-7 sm:px-9 py-4 rounded-[1.5rem] font-[1000] text-base sm:text-lg transition-all active:scale-95 flex items-center gap-3"
                         >
                             <PlusIcon className="w-6 h-6 stroke-[3]" />
                             Create Task
@@ -231,7 +231,7 @@ export default function MyTasks(props) {
                 <WeeklyJourney compact />
 
                 {/* 2. PERSISTENCE BANNERS (Resume & Momentum) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
                     {/* Resume Widget */}
                     <AnimatePresence>
                         {resumeTask && (
@@ -240,7 +240,7 @@ export default function MyTasks(props) {
                                 animate={{ opacity: 1, x: 0 }}
                                 className="col-span-1 md:col-span-2"
                             >
-                                <div className="bg-slate-900 dark:bg-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group h-full">
+                                <div className="bg-slate-900 dark:bg-white p-5 sm:p-6 rounded-[1.75rem] shadow-2xl relative overflow-hidden group h-full">
                                     <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/30 transition-all duration-1000" />
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 mb-4 text-emerald-400 dark:text-emerald-600 font-black uppercase tracking-widest text-[10px]">
@@ -268,7 +268,7 @@ export default function MyTasks(props) {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="col-span-1 border-2 border-slate-100 dark:border-slate-800 p-8 rounded-[2.5rem] relative overflow-hidden flex flex-col justify-between"
+                        className="col-span-1 border-2 border-slate-100 dark:border-slate-800 p-5 sm:p-6 rounded-[1.75rem] relative overflow-hidden flex flex-col justify-between"
                     >
                         <div>
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Daily Velocity</span>
@@ -303,7 +303,7 @@ export default function MyTasks(props) {
                             <button
                                 key={key}
                                 onClick={() => handleFilterChange(key)}
-                                className={`flex items-center gap-2 px-8 py-4 rounded-[2rem] text-sm font-black transition-all border-2
+                                className={`flex items-center gap-2 px-5 sm:px-7 py-3 rounded-[1.25rem] text-sm font-black transition-all border-2
                                     ${activeFilter === key
                                         ? `${colorClass} text-white border-transparent shadow-xl`
                                         : 'bg-white dark:bg-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white border-slate-100 dark:border-slate-800'
@@ -316,7 +316,7 @@ export default function MyTasks(props) {
                     </motion.div>
 
                     {/* Task Display */}
-                    <div className="apple-glass rounded-[3rem] p-6 shadow-2xl border-white/5">
+                    <div className="apple-glass rounded-[1.75rem] p-4 sm:p-5 shadow-xl border-white/5">
                         <TaskFocusPanel
                             tasks={localTasks}
                             focusTasks={focusTasks}
