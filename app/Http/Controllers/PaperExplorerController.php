@@ -271,7 +271,7 @@ Rules:
                 ]);
             }
 
-            // Query 2: direct PDF
+            // Query 2: direct PDF from scholar
             $pdfResponse = Http::timeout(15)->withHeaders([
                 'X-API-KEY' => $apiKey,
                 'Content-Type' => 'application/json',
@@ -296,6 +296,30 @@ Rules:
                     'status' => $pdfResponse->status(),
                     'title' => $title,
                 ]);
+            }
+
+            // Query 3 fallback: general web search for actual downloadable PDF links
+            if (!$pdfUrl) {
+                $pdfWebResponse = Http::timeout(15)->withHeaders([
+                    'X-API-KEY' => $apiKey,
+                    'Content-Type' => 'application/json',
+                ])->post('https://google.serper.dev/search', [
+                    'q' => $pdfQuery,
+                    'num' => 10,
+                    'gl' => 'us',
+                ]);
+
+                if ($pdfWebResponse->successful()) {
+                    $organic = (array) $pdfWebResponse->json('organic', []);
+                    foreach ($organic as $item) {
+                        $candidate = $this->sanitizePdfUrl($item['link'] ?? null);
+                        if (!$candidate) {
+                            continue;
+                        }
+                        $pdfUrl = $candidate;
+                        break;
+                    }
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('PaperExplorer: Serper enrichment skipped due to exception.', [
@@ -345,7 +369,14 @@ Rules:
         }
 
         $lower = strtolower($clean);
-        if (str_contains($lower, '.pdf') || str_contains($lower, 'download') || str_contains($lower, '/pdf/')) {
+        if (
+            str_contains($lower, '.pdf') ||
+            str_contains($lower, 'download') ||
+            str_contains($lower, '/pdf/') ||
+            str_contains($lower, 'pdf?') ||
+            str_contains($lower, 'format=pdf') ||
+            str_contains($lower, 'view=pdf')
+        ) {
             return $clean;
         }
 
@@ -452,7 +483,8 @@ Rules:
                 return [];
             }
 
-            return $this->normalizeScholarOrganic((array) $response->json('organic', []), $limit);
+            $candidates = $this->normalizeScholarOrganic((array) $response->json('organic', []), $limit);
+            return $this->attachDirectPdfLinks($candidates, $apiKey);
         } catch (\Throwable $e) {
             Log::warning('PaperExplorer: prefetch scholar candidates exception', [
                 'message' => $e->getMessage(),
@@ -460,6 +492,50 @@ Rules:
             ]);
             return [];
         }
+    }
+
+    private function attachDirectPdfLinks(array $candidates, string $apiKey): array
+    {
+        if (empty($candidates)) {
+            return $candidates;
+        }
+
+        return array_map(function ($candidate) use ($apiKey) {
+            if (!empty($candidate['pdf_url'])) {
+                return $candidate;
+            }
+
+            $title = trim((string) ($candidate['title'] ?? ''));
+            if ($title === '') {
+                return $candidate;
+            }
+
+            try {
+                $response = Http::timeout(12)->withHeaders([
+                    'X-API-KEY' => $apiKey,
+                    'Content-Type' => 'application/json',
+                ])->post('https://google.serper.dev/search', [
+                    'q' => "\"{$title}\" filetype:pdf",
+                    'num' => 5,
+                    'gl' => 'us',
+                ]);
+
+                if ($response->successful()) {
+                    $organic = (array) $response->json('organic', []);
+                    foreach ($organic as $item) {
+                        $pdf = $this->sanitizePdfUrl($item['link'] ?? null);
+                        if ($pdf) {
+                            $candidate['pdf_url'] = $pdf;
+                            break;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Soft fail: keep candidate without pdf_url.
+            }
+
+            return $candidate;
+        }, $candidates);
     }
 
     private function normalizeScholarOrganic(array $organic, int $limit): array
