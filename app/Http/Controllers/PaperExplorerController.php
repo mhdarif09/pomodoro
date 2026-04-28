@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PaperExplorerController extends Controller
@@ -38,6 +39,7 @@ class PaperExplorerController extends Controller
         $apiKey = env('GROQ_API_KEY');
 
         if (!$apiKey) {
+            Log::warning('PaperExplorer: GROQ_API_KEY is missing.');
             return response()->json(['error' => 'GROQ API key not configured'], 500);
         }
 
@@ -86,7 +88,12 @@ Rules:
             ]);
 
             if ($response->failed()) {
-                return response()->json(['error' => 'Failed to fetch from Groq API'], 500);
+                Log::error('PaperExplorer: Groq request failed.', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'title' => $title,
+                ]);
+                return response()->json(['error' => 'Failed to fetch from Groq API'], 502);
             }
 
             $data = $response->json();
@@ -97,7 +104,12 @@ Rules:
             $parsed = json_decode($content, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return response()->json(['error' => 'Invalid JSON response from API'], 500);
+                Log::error('PaperExplorer: Invalid JSON from Groq.', [
+                    'json_error' => json_last_error_msg(),
+                    'raw_content_sample' => mb_substr((string) $content, 0, 500),
+                    'title' => $title,
+                ]);
+                return response()->json(['error' => 'Invalid response format from AI provider'], 502);
             }
 
             $nodes = collect($parsed['nodes'] ?? [])->map(function ($n, $index) {
@@ -130,8 +142,14 @@ Rules:
                 'nodes' => $nodes,
                 'links' => $links,
             ]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal server error'], 500);
+        } catch (\Throwable $e) {
+            Log::error('PaperExplorer: Unhandled search exception.', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'title' => $title,
+            ]);
+            return response()->json(['error' => 'Paper explorer service unavailable. Please try again.'], 500);
         }
     }
 
@@ -173,50 +191,71 @@ Rules:
         $paperUrl = null;
         $pdfUrl = null;
 
-        // Query 1: landing page / source page
-        $paperResponse = Http::timeout(15)->withHeaders([
-            'X-API-KEY' => $apiKey,
-            'Content-Type' => 'application/json',
-        ])->post('https://google.serper.dev/search', [
-            'q' => $paperQuery,
-            'num' => 8,
-            'gl' => 'us',
-        ]);
+        try {
+            // Query 1: landing page / source page
+            $paperResponse = Http::timeout(15)->withHeaders([
+                'X-API-KEY' => $apiKey,
+                'Content-Type' => 'application/json',
+            ])->post('https://google.serper.dev/search', [
+                'q' => $paperQuery,
+                'num' => 8,
+                'gl' => 'us',
+            ]);
 
-        if ($paperResponse->successful()) {
-            $organic = (array) $paperResponse->json('organic', []);
-            foreach ($organic as $item) {
-                $candidate = $this->sanitizeExternalUrl($item['link'] ?? null);
-                if (!$candidate) {
-                    continue;
+            if ($paperResponse->successful()) {
+                $organic = (array) $paperResponse->json('organic', []);
+                foreach ($organic as $item) {
+                    $candidate = $this->sanitizeExternalUrl($item['link'] ?? null);
+                    if (!$candidate) {
+                        continue;
+                    }
+                    $paperUrl = $candidate;
+                    if ($this->isTrustedAcademicHost($candidate)) {
+                        break;
+                    }
                 }
-                $paperUrl = $candidate;
-                if ($this->isTrustedAcademicHost($candidate)) {
+            } else {
+                Log::warning('PaperExplorer: Serper paper query failed.', [
+                    'status' => $paperResponse->status(),
+                    'title' => $title,
+                ]);
+            }
+
+            // Query 2: direct PDF
+            $pdfResponse = Http::timeout(15)->withHeaders([
+                'X-API-KEY' => $apiKey,
+                'Content-Type' => 'application/json',
+            ])->post('https://google.serper.dev/search', [
+                'q' => $pdfQuery,
+                'num' => 8,
+                'gl' => 'us',
+            ]);
+
+            if ($pdfResponse->successful()) {
+                $organic = (array) $pdfResponse->json('organic', []);
+                foreach ($organic as $item) {
+                    $candidate = $this->sanitizePdfUrl($item['link'] ?? null);
+                    if (!$candidate) {
+                        continue;
+                    }
+                    $pdfUrl = $candidate;
                     break;
                 }
+            } else {
+                Log::warning('PaperExplorer: Serper PDF query failed.', [
+                    'status' => $pdfResponse->status(),
+                    'title' => $title,
+                ]);
             }
-        }
-
-        // Query 2: direct PDF
-        $pdfResponse = Http::timeout(15)->withHeaders([
-            'X-API-KEY' => $apiKey,
-            'Content-Type' => 'application/json',
-        ])->post('https://google.serper.dev/search', [
-            'q' => $pdfQuery,
-            'num' => 8,
-            'gl' => 'us',
-        ]);
-
-        if ($pdfResponse->successful()) {
-            $organic = (array) $pdfResponse->json('organic', []);
-            foreach ($organic as $item) {
-                $candidate = $this->sanitizePdfUrl($item['link'] ?? null);
-                if (!$candidate) {
-                    continue;
-                }
-                $pdfUrl = $candidate;
-                break;
-            }
+        } catch (\Throwable $e) {
+            Log::warning('PaperExplorer: Serper enrichment skipped due to exception.', [
+                'message' => $e->getMessage(),
+                'title' => $title,
+            ]);
+            return [
+                'paper_url' => $paperUrl,
+                'pdf_url' => $pdfUrl,
+            ];
         }
 
         // ArXiv fallback: convert /abs/ to /pdf/ if needed
