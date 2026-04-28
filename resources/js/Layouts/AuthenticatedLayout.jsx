@@ -310,6 +310,10 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                 <SparklesIcon className="h-4 w-4 text-amber-500" />
                                 {!isCollapsed && <span>Learning Hub</span>}
                             </Link>
+                            <Link id="paper-explorer-nav" href={route('paper-explorer')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('paper-explorer') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                                <MagnifyingGlassIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                {!isCollapsed && <span>Paper</span>}
+                            </Link>
                             {user.active_plan?.has_ai_genius_access && (
                                 <Link id="ai-genius-nav" href={route('ai-assistant.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('ai-assistant.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
                                     <SparklesIcon className="h-4 w-4 text-amber-500" />

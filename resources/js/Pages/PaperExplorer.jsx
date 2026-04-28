@@ -192,7 +192,7 @@ export default function PaperExplorer() {
         <div>
             <Head title="Paper Explorer" />
             <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                <div className="apple-glass rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl bg-[#0d0d14]">
+                <div className="apple-glass rounded-2xl border-white/10 overflow-hidden shadow-xl bg-[#0d0d14]">
                     <div className="flex items-center justify-between p-6 border-b border-slate-800">
                         <div className="flex items-center gap-4">
                             <CpuChipIcon className="w-8 h-8 text-[#00d4ff]" />
@@ -215,8 +215,8 @@ export default function PaperExplorer() {
                         )}
                     </div>
 
-                    <div className="flex min-h-[60vh]">
-                        <div ref={containerRef} className={`flex-1 relative p-6 ${isMobile ? 'w-full' : ''}`}>
+                    <div className="flex min-h-[60vh] gap-6">
+                        <div ref={containerRef} className={`flex-1 relative p-6 ${isMobile ? 'w-full' : ''}`} style={{minHeight: isMobile ? '40vh' : '60vh'}}>
                             <svg
                                 ref={svgRef}
                                 className="w-full h-[60vh] md:h-[70vh]"
