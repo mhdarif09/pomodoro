@@ -191,7 +191,7 @@ export default function PaperExplorer() {
     return (
         <div>
             <Head title="Paper Explorer" />
-            <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" style={{ paddingBottom: 'calc(var(--mobile-bottom-nav-height) + 1rem)' }}>
                 <div className="apple-glass rounded-2xl border-white/10 overflow-hidden shadow-xl bg-[#0d0d14]">
                     <div className="flex items-center justify-between p-6 border-b border-slate-800">
                         <div className="flex items-center gap-4">
@@ -262,7 +262,7 @@ export default function PaperExplorer() {
                         </div>
 
                         {selectedNode && (
-                            <div className={selectedNodeClass}>
+                            <div className={selectedNodeClass} style={isMobile ? { bottom: 'var(--mobile-bottom-nav-height)', height: 'calc(60vh - var(--mobile-bottom-nav-height))' } : {}}>
                                 <div className="flex items-center justify-between mb-4">
                                     <span className="px-3 py-1 rounded-full text-xs font-bold"
                                           style={{ backgroundColor: scaleOrdinal(schemeTableau10)(selectedNode.field), color: 'black' }}>

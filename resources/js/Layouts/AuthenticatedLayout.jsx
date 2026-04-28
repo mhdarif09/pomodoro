@@ -145,7 +145,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
     const pomodoro = usePomodoroTimer();
 
     return (
-        <div className="flex h-screen bg-[#F5F5F7] dark:bg-[#000000] overflow-hidden text-slate-900 dark:text-white font-sans selection:bg-emerald-500 selection:text-white">
+        <div className="flex h-screen bg-[#F5F5F7] dark:bg-[#000000] overflow-hidden text-slate-900 dark:text-white font-sans selection:bg-emerald-500 selection:text-white" style={{ ['--mobile-bottom-nav-height']: '72px' }}>
             <InAppNotificationPopup />
             <WhatsAppWarningModal />
             <TutorialGuide setSidebarOpen={setSidebarOpen} />
@@ -507,10 +507,10 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
             </motion.aside>
 
             {/* Mobile & Main Content */}
-            <div className={`flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative ${isCollapsed ? 'lg:pl-20 sm:pl-20' : 'lg:pl-60 sm:pl-20'}`}>
+            <div className={`flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative ${isCollapsed ? 'lg:pl-20' : 'lg:pl-60'}`}>
 
 
-                <main className="flex-1 overflow-y-auto scrollbar-hide p-0 sm:p-4 pb-20 sm:pb-4">
+                <main className="flex-1 overflow-y-auto scrollbar-hide p-4 sm:p-6" style={{ paddingBottom: 'calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom))' }}>
                     <div className="w-full max-w-[1600px] mx-auto relative">
                         {children}
                     </div>
