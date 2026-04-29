@@ -297,6 +297,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('subscribe.direct-checkout');
     Route::get('/subscription/payment-success', [SubscriptionController::class, 'paymentSuccessRedirect'])->name('subscription.payment.success');
     Route::get('/subscription/payment-cancel', [SubscriptionController::class, 'paymentCancel'])->name('subscription.payment.cancel');
+    Route::get('/subscription/paypal/success', [SubscriptionController::class, 'paypalSuccess'])->name('subscription.paypal.success');
+    Route::get('/subscription/paypal/cancel', [SubscriptionController::class, 'paypalCancel'])->name('subscription.paypal.cancel');
     Route::post('/subscription/dismiss-modal', [SubscriptionController::class, 'dismissModal'])->name('subscription.dismiss-modal');
 
 

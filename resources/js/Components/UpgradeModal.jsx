@@ -76,36 +76,55 @@ const UpgradeModal = ({ isOpen, onClose, plans, midtransClientKey: propClientKey
     const handleUpgrade = async () => {
         setIsUpgrading(true);
         try {
+            const locale = typeof navigator !== 'undefined' ? navigator.language || '' : '';
+            const localeCountry = locale.includes('-') ? locale.split('-')[1] : '';
+            const countryCode = (localeCountry || '').toUpperCase();
+
             const response = await axios.post(route('subscription.upgrade'), {
                 plan_id: selectedPlan.id,
-                promo_code: discountInfo?.promo_code
+                promo_code: discountInfo?.promo_code,
+                country_code: countryCode
             });
 
-            if (response.data.success && response.data.snap_token) {
-                if (window.snap) {
-                    window.snap.pay(response.data.snap_token, {
-                        onSuccess: () => {
-                            onClose();
-                            router.visit(route('dashboard'), { data: { success: 'Upgrade berhasil!' } });
-                        },
-                        onPending: () => { setIsUpgrading(false); onClose(); },
-                        onError: () => { setIsUpgrading(false); alert('Pembayaran gagal.'); },
-                        onClose: () => setIsUpgrading(false)
-                    });
-                } else {
+            if (response.data.success && response.data.payment_gateway === 'midtrans' && response.data.snap_token) {
+                if (!window.snap) {
                     alert('Sistem pembayaran (Midtrans) belum siap. Silakan refresh halaman.');
                     setIsUpgrading(false);
+                    return;
                 }
-            } else {
-                alert(response.data.message || 'Gagal memulai transaksi.');
-                setIsUpgrading(false);
+
+                window.snap.pay(response.data.snap_token, {
+                    onSuccess: () => {
+                        onClose();
+                        router.visit(route('dashboard'), { data: { success: 'Upgrade berhasil!' } });
+                    },
+                    onPending: () => { setIsUpgrading(false); onClose(); },
+                    onError: () => { setIsUpgrading(false); alert('Pembayaran gagal.'); },
+                    onClose: () => setIsUpgrading(false)
+                });
+                return;
             }
+
+            if (response.data.success && response.data.payment_gateway === 'paypal' && response.data.paypal_approval_url) {
+                window.location.href = response.data.paypal_approval_url;
+                return;
+            }
+
+            alert(response.data.message || 'Gagal memulai transaksi.');
+            setIsUpgrading(false);
         } catch (error) {
             console.error('Upgrade error:', error);
             const message = error.response?.data?.message || 'Gagal memulai transaksi upgrade.';
             alert(message);
             setIsUpgrading(false);
         }
+    };
+
+    const paymentHint = () => {
+        const locale = typeof navigator !== 'undefined' ? navigator.language || '' : '';
+        const country = locale.includes('-') ? locale.split('-')[1].toUpperCase() : '';
+        if (country === 'ID') return 'MIDTRANS SECURE CHECKOUT • NO AUTO-RENEW';
+        return 'PAYPAL SECURE CHECKOUT • NO AUTO-RENEW';
     };
 
     if (!selectedPlan) return null;
@@ -287,7 +306,7 @@ const UpgradeModal = ({ isOpen, onClose, plans, midtransClientKey: propClientKey
                                 </button>
 
                                 <p className="text-[10px] text-slate-400 text-center font-bold uppercase tracking-widest pointer-events-none">
-                                    MIDTRANS SECURE CHECKOUT • NO AUTO-RENEW
+                                    {paymentHint()}
                                 </p>
                             </div>
                         </div>

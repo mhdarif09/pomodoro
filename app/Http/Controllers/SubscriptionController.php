@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\User;
 use App\Models\Promo;
 use App\Services\MidtransService;
+use App\Services\PayPalService;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -618,11 +619,12 @@ class SubscriptionController extends Controller
     /**
      * Handle upgrade for existing premium users
      */
-    public function upgradePlan(Request $request, MidtransService $midtrans)
+    public function upgradePlan(Request $request, MidtransService $midtrans, PayPalService $payPal)
     {
         $request->validate([
             'plan_id' => 'required|exists:plans,id',
             'promo_code' => 'nullable|string',
+            'country_code' => 'nullable|string|size:2',
         ]);
 
         $user = auth()->user();
@@ -643,6 +645,9 @@ class SubscriptionController extends Controller
 
         $finalPrice = $price - $discountAmount;
 
+        $countryCode = $this->resolveCountryCode($request, $user);
+        $gateway = $countryCode === 'ID' ? 'midtrans' : 'paypal';
+
         // Create new subscription for upgrade
         $subscription = Subscription::create([
             'user_id' => $user->id,
@@ -653,14 +658,32 @@ class SubscriptionController extends Controller
             'promo_code' => $promoCode,
             'discount_amount' => $discountAmount,
             'final_price' => $finalPrice,
+            'payment_gateway' => $gateway,
         ]);
 
         try {
-            $snap = $midtrans->createTransaction($subscription);
-            
+            if ($gateway === 'midtrans') {
+                $snap = $midtrans->createTransaction($subscription);
+
+                return response()->json([
+                    'success' => true,
+                    'payment_gateway' => 'midtrans',
+                    'snap_token' => $snap->token,
+                    'subscription_id' => $subscription->id,
+                ]);
+            }
+
+            $paypalOrder = $payPal->createOrder($subscription, $user);
+            $subscription->update([
+                'status' => 'pending',
+                'payment_type' => 'paypal',
+                'paypal_order_id' => $paypalOrder['order_id'],
+            ]);
+
             return response()->json([
                 'success' => true,
-                'snap_token' => $snap->token,
+                'payment_gateway' => 'paypal',
+                'paypal_approval_url' => $paypalOrder['approve_url'],
                 'subscription_id' => $subscription->id,
             ]);
         } catch (\Exception $e) {
@@ -670,5 +693,82 @@ class SubscriptionController extends Controller
                 'message' => 'Gagal membuat transaksi: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function paypalSuccess(Request $request, PayPalService $payPal)
+    {
+        $orderId = $request->query('token');
+        $userId = auth()->id();
+
+        if (!$orderId || !$userId) {
+            return Redirect::route('subscribe.index')->with('error', 'Order PayPal tidak valid.');
+        }
+
+        $subscription = Subscription::where('user_id', $userId)
+            ->where('paypal_order_id', $orderId)
+            ->latest()
+            ->first();
+
+        if (!$subscription) {
+            return Redirect::route('subscribe.index')->with('error', 'Transaksi PayPal tidak ditemukan.');
+        }
+
+        try {
+            $capture = $payPal->captureOrder($orderId);
+            $captureId = $capture['purchase_units'][0]['payments']['captures'][0]['id'] ?? null;
+            $captureStatus = $capture['purchase_units'][0]['payments']['captures'][0]['status'] ?? null;
+
+            if ($captureStatus === 'COMPLETED') {
+                $subscription->update([
+                    'paypal_capture_id' => $captureId,
+                    'status' => 'paid',
+                    'payment_type' => 'paypal',
+                    'paid_at' => now(),
+                    'expired_at' => $this->calculateExpiryDate($subscription->duration),
+                ]);
+
+                $user = User::find($subscription->user_id);
+                if ($user) {
+                    $user->update(['is_premium' => true]);
+                }
+
+                return Redirect::route('dashboard')->with('success', 'Pembayaran PayPal berhasil. Premium aktif.');
+            }
+
+            $subscription->update(['status' => 'failed']);
+            return Redirect::route('subscribe.index')->with('error', 'Pembayaran PayPal belum berhasil.');
+        } catch (\Exception $e) {
+            Log::error('PayPal capture error', ['error' => $e->getMessage(), 'order_id' => $orderId]);
+            return Redirect::route('subscribe.index')->with('error', 'Gagal verifikasi pembayaran PayPal.');
+        }
+    }
+
+    public function paypalCancel(Request $request)
+    {
+        $orderId = $request->query('token');
+        $userId = auth()->id();
+
+        if ($orderId && $userId) {
+            Subscription::where('user_id', $userId)
+                ->where('paypal_order_id', $orderId)
+                ->whereIn('status', ['unpaid', 'pending'])
+                ->update(['status' => 'failed']);
+        }
+
+        return Redirect::route('subscribe.index')->with('info', 'Pembayaran PayPal dibatalkan.');
+    }
+
+    private function resolveCountryCode(Request $request, User $user): string
+    {
+        $requestCountryCode = strtoupper((string) $request->input('country_code', ''));
+        if (preg_match('/^[A-Z]{2}$/', $requestCountryCode)) {
+            return $requestCountryCode;
+        }
+
+        if (in_array($user->timezone, ['WIB', 'WITA', 'WIT'], true)) {
+            return 'ID';
+        }
+
+        return 'INTL';
     }
 }

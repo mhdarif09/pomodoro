@@ -18,8 +18,11 @@ class Subscription extends Model
         'expired_at',
         'paid_at',
         'payment_type',
+        'payment_gateway',
         'midtrans_order_id', 
         'midtrans_transaction_id',
+        'paypal_order_id',
+        'paypal_capture_id',
         'snap_token'
     ];
 
