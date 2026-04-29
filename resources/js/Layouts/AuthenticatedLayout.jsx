@@ -589,7 +589,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                 <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden">
                     <div className="mx-3 mb-3">
                         <div className="bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl rounded-[22px] border border-emerald-100/50 dark:border-emerald-900/30 shadow-xl shadow-emerald-900/5 dark:shadow-black/30 px-2 py-2">
-                            {workspaceMode === 'personal' ? (
+                            {workspaceMode === 'personal' ? (<>
                                 <div className="flex items-center justify-around gap-0.5">
                                     {[
                                         { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard'), id: 'mobile-dashboard-nav' },
@@ -634,7 +634,8 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                         Log out
                                     </Link>
                                 </div>
-                            ) : (
+                            </>) : (
+                                <>
                                 <div className="flex items-center justify-around gap-0.5">
                                     {[
                                         { href: currentGuild ? route('guilds.show', currentGuild.id) : route('guilds.index'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.show'), id: 'mobile-guild-home-nav' },
@@ -679,6 +680,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                         Log out
                                     </Link>
                                 </div>
+                                </>
                             )}
                         </div>
                     </div>
