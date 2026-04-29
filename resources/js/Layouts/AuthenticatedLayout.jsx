@@ -8,7 +8,8 @@ import {
     SparklesIcon, LockClosedIcon, ChartBarIcon, TrophyIcon,
     ArrowRightOnRectangleIcon, LanguageIcon, QuestionMarkCircleIcon, TicketIcon,
     ShieldCheckIcon, BriefcaseIcon, UserGroupIcon, ChevronDownIcon,
-    PlusIcon, CheckIcon, PlusCircleIcon, MagnifyingGlassIcon, TrashIcon, Cog6ToothIcon, FireIcon
+    PlusIcon, CheckIcon, PlusCircleIcon, MagnifyingGlassIcon, TrashIcon, Cog6ToothIcon, FireIcon,
+    StarIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import ApplicationLogo from '@/Components/ApplicationLogo';
@@ -281,13 +282,23 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                     </Menu>
                 </div>
 
-                {/* Quick Actions (Search, New Page) */}
+                {/* Quick Actions (Search, New Page, Upgrade) */}
                 <div className="px-2 pb-2 space-y-0.5">
                     <button onClick={() => setShowShortcuts(true)} className="w-full flex items-center gap-2 px-2 py-1 text-sm text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors group">
                         <MagnifyingGlassIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
                         {!isCollapsed && <span className="font-medium text-slate-600 dark:text-slate-400">Search</span>}
                         {!isCollapsed && <span className="ml-auto text-[10px] border border-slate-200 dark:border-slate-700 rounded px-1.5 text-slate-400 bg-slate-50 dark:bg-slate-800">Ctrl K</span>}
                     </button>
+                    {!user.active_plan?.is_premium && (
+                        <button
+                            onClick={() => setShowUpgradeModal(true)}
+                            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-md transition-colors group"
+                        >
+                            <StarIcon className="h-4 w-4 text-amber-500 group-hover:text-amber-600 dark:group-hover:text-amber-400" />
+                            {!isCollapsed && <span className="font-semibold">Upgrade to Premium</span>}
+                            {!isCollapsed && <span className="ml-auto text-[10px] bg-gradient-to-r from-amber-500 to-orange-500 text-white px-1.5 py-0.5 rounded-full font-medium">NEW</span>}
+                        </button>
+                    )}
                     {!isCollapsed && (
                         <div className="flex items-center gap-2 px-2 py-1 text-sm text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors cursor-pointer group">
                             <PlusCircleIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
