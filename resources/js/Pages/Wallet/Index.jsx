@@ -8,11 +8,11 @@ export default function WalletIndex({ auth }) {
     return (
         <AuthenticatedLayout header={<h2 className="font-extrabold text-2xl text-slate-900 dark:text-white">Dompet Saya</h2>}>
             <Head title="Wallet" />
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div className="py-3 sm:py-5 px-2 sm:px-4 lg:px-5 max-w-[1680px] mx-auto space-y-5">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-[2.5rem] p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden"
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-[1.75rem] p-5 sm:p-8 lg:p-10 text-white shadow-2xl relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-12 opacity-10">
                         <WalletIcon className="w-64 h-64 rotate-12" />
@@ -33,12 +33,12 @@ export default function WalletIndex({ auth }) {
                     </div>
                 </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                    <div className="bg-white dark:bg-slate-800 rounded-[1.5rem] p-5 sm:p-6 border border-slate-100 dark:border-slate-700">
                         <h4 className="font-bold text-lg mb-4 text-slate-900 dark:text-white">Riwayat Transaksi</h4>
                         <div className="text-slate-400 text-center py-12">Belum ada transaksi.</div>
                     </div>
-                    <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700">
+                    <div className="bg-white dark:bg-slate-800 rounded-[1.5rem] p-5 sm:p-6 border border-slate-100 dark:border-slate-700">
                         <h4 className="font-bold text-lg mb-4 text-slate-900 dark:text-white">Metode Pembayaran</h4>
                         <div className="text-slate-400 text-center py-12">Belum ada metode tersimpan.</div>
                     </div>

@@ -77,8 +77,8 @@ export default function GuildIndex({ auth, guilds, userGuild, filters }) {
         <AuthenticatedLayout>
             <Head title="Guilds" />
 
-            <div className="py-8">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+            <div className="py-4">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-5">
 
                     {/* Hero Section */}
                     <div className="relative overflow-hidden rounded-[2.5rem] bg-emerald-900 text-white shadow-2xl">

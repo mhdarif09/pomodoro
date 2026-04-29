@@ -276,7 +276,14 @@ export default function AIAssistantIndex() {
             }
         } catch (err) {
             console.error(err);
-            setMessages(prev => prev.slice(0, -1));
+            // Don't remove user message on error - keep it for better UX
+            // setMessages(prev => prev.slice(0, -1));
+            // Instead, add error message
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: 'Maaf, terjadi kesalahan saat memproses pesan Anda. Silakan coba lagi.',
+                metadata: null
+            }]);
         } finally {
             setIsLoading(false);
         }
@@ -286,7 +293,7 @@ export default function AIAssistantIndex() {
         <AuthenticatedLayout>
             <Head title="AI Assistant" />
 
-            <div className="relative flex h-[calc(100vh-160px)] apple-glass rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl">
+            <div className="relative flex h-[calc(100vh-140px)] sm:h-[calc(100vh-150px)] apple-glass rounded-[1.75rem] border-white/10 overflow-hidden shadow-2xl">
                 {/* Sidebar History */}
                 <div className="hidden lg:flex flex-col w-72 border-r border-slate-200/30 dark:border-slate-800/50 bg-white/40 dark:bg-black/20">
                     <div className="p-6">
@@ -339,7 +346,7 @@ export default function AIAssistantIndex() {
                 {/* Main Chat Area */}
                 <div className="flex-1 flex flex-col min-w-0 relative">
                     {/* Header */}
-                    <div className="h-20 border-b border-slate-200/30 dark:border-slate-800/50 flex items-center justify-between px-8 backdrop-blur-3xl z-10 sticky top-0">
+                    <div className="h-20 border-b border-slate-200/30 dark:border-slate-800/50 flex items-center justify-between px-4 sm:px-6 lg:px-8 backdrop-blur-3xl z-10 sticky top-0">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                                 <CpuChipIcon className="w-6 h-6 text-white" />
@@ -356,7 +363,7 @@ export default function AIAssistantIndex() {
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto px-8 py-12 scroll-smooth">
+                    <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 scroll-smooth">
                         {messages.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
                                 <motion.div
@@ -379,9 +386,12 @@ export default function AIAssistantIndex() {
                                 {isLoading && (
                                     <div className="flex justify-start mb-10">
                                         <div className="apple-glass rounded-[2rem] px-6 py-5 border-white/10 flex items-center gap-3">
-                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
-                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75" />
-                                            <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150" />
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-75" />
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-150" />
+                                            </div>
+                                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">GrowthBot sedang berpikir...</span>
                                         </div>
                                     </div>
                                 )}
@@ -391,7 +401,7 @@ export default function AIAssistantIndex() {
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-8 backdrop-blur-3xl">
+                    <div className="p-4 sm:p-6 lg:p-8 backdrop-blur-3xl">
                         <div className="max-w-4xl mx-auto relative group">
                             {/* Image Preview */}
                             <AnimatePresence>
@@ -455,7 +465,7 @@ export default function AIAssistantIndex() {
                                     onChange={(e) => setInput(e.target.value)}
                                     disabled={isLoading}
                                     placeholder="Ketik soal atau upload foto..."
-                                    className="w-full pl-16 pr-16 py-6 rounded-[2.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all disabled:opacity-50"
+                                    className="w-full pl-16 pr-16 py-4 sm:py-5 rounded-[1.5rem] apple-glass bg-white dark:bg-black/20 border-white/20 text-[15px] font-medium shadow-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all disabled:opacity-50"
                                 />
                                 <button
                                     type="submit"

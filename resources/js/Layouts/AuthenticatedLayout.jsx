@@ -112,6 +112,7 @@ export default function Authenticated({ children, header }) {
             icon: <BriefcaseIcon className="h-5 w-5" />,
             items: [
                 { routeName: 'learning.index', label: t('nav_learning'), icon: <BookOpenIcon className="h-4 w-4" /> },
+                { routeName: 'paper-explorer', label: 'Paper Explorer', icon: <MagnifyingGlassIcon className="h-4 w-4" /> },
                 { routeName: 'reports.index', label: t('nav_reports'), icon: <ChartBarIcon className="h-4 w-4" /> },
                 { routeName: 'docs.index', label: t('nav_docs'), icon: <DocumentTextIcon className="h-4 w-4" /> },
             ]
@@ -144,7 +145,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
     const pomodoro = usePomodoroTimer();
 
     return (
-        <div className="flex h-screen bg-[#F5F5F7] dark:bg-[#000000] overflow-hidden text-slate-900 dark:text-white font-sans selection:bg-emerald-500 selection:text-white">
+        <div className="flex h-screen bg-[#F5F5F7] dark:bg-[#000000] overflow-hidden text-slate-900 dark:text-white font-sans selection:bg-emerald-500 selection:text-white" style={{ ['--mobile-bottom-nav-height']: '72px' }}>
             <InAppNotificationPopup />
             <WhatsAppWarningModal />
             <TutorialGuide setSidebarOpen={setSidebarOpen} />
@@ -308,6 +309,10 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                             <Link id="learning-nav" href={route('learning.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('learning.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
                                 <SparklesIcon className="h-4 w-4 text-amber-500" />
                                 {!isCollapsed && <span>Learning Hub</span>}
+                            </Link>
+                            <Link id="paper-explorer-nav" href={route('paper-explorer')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('paper-explorer') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                                <MagnifyingGlassIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                                {!isCollapsed && <span>Paper</span>}
                             </Link>
                             {user.active_plan?.has_ai_genius_access && (
                                 <Link id="ai-genius-nav" href={route('ai-assistant.index')} className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${route().current('ai-assistant.index') ? 'bg-black/5 dark:bg-white/10 text-slate-900 dark:text-white font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5'}`}>
@@ -502,11 +507,11 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
             </motion.aside>
 
             {/* Mobile & Main Content */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative">
+            <div className="flex-1 flex flex-col h-full overflow-hidden overflow-x-hidden relative min-w-0">
 
 
-                <main className="flex-1 overflow-y-auto scrollbar-hide p-0 sm:p-4 pb-20 sm:pb-4">
-                    <div className="w-full max-w-[1600px] mx-auto relative">
+                <main className="flex-1 overflow-y-auto scrollbar-hide p-2 sm:p-4 lg:p-5" style={{ paddingTop: pomodoro.activeTask ? '5rem' : '0', paddingBottom: 'calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom))' }}>
+                    <div className="w-full max-w-[1680px] mx-auto relative">
                         {children}
                     </div>
                 </main>
@@ -545,6 +550,7 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                         { href: route('dashboard'), icon: <HomeIcon className="h-[22px] w-[22px]" />, label: 'Home', active: route().current('dashboard'), id: 'mobile-dashboard-nav' },
                                         { href: route('tasks.index'), icon: <DocumentTextIcon className="h-[22px] w-[22px]" />, label: 'Tasks', active: route().current('tasks.index'), id: 'mobile-tasks-nav' },
                                         { href: route('journal.index'), icon: <BookOpenIcon className="h-[22px] w-[22px]" />, label: 'Journal', active: route().current('journal.index'), id: 'mobile-journal-nav' },
+                                        { href: route('paper-explorer'), icon: <MagnifyingGlassIcon className="h-[22px] w-[22px]" />, label: 'Paper', active: route().current('paper-explorer'), id: 'mobile-paper-nav' },
                                         { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.index') || route().current('guilds.*'), id: 'mobile-guilds-nav' },
                                         { href: route('profile.show'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.show'), id: 'mobile-profile-nav' },
                                     ].map((item, i) => (

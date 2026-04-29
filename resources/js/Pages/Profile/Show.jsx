@@ -41,8 +41,8 @@ export default function ProfileShow({ auth, stats, achievements, heatmapData }) 
         >
             <Head title={`Profile - ${stats.name}`} />
 
-            <div className="py-8 bg-[#F5F5F7] dark:bg-black min-h-screen">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <div className="py-4 bg-[#F5F5F7] dark:bg-black min-h-screen">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
 
                     {/* Header Info */}
                     <div className="bg-white dark:bg-[#1C1C1E] rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 dark:border-white/5 flex flex-col md:flex-row items-center gap-8">

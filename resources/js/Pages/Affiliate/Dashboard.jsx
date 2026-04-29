@@ -24,7 +24,7 @@ export default function AffiliateDashboard({ auth, code, stats }) {
     return (
         <AuthenticatedLayout header={<h2 className="font-extrabold text-2xl text-slate-900 dark:text-white">Affiliate Program</h2>}>
             <Head title="Affiliate" />
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-5">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

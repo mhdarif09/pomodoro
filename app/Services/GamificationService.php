@@ -58,6 +58,9 @@ class GamificationService
 
             $user->save();
 
+            // Update gamification stats
+            $user->gamificationStats()->increment('total_xp', $amount);
+
             // Record guild contribution (NEW)
             app(\App\Services\GuildService::class)->recordMemberContribution($user, $amount);
 
@@ -148,6 +151,12 @@ class GamificationService
             }
 
             $user->save();
+
+            // Update gamification stats
+            $user->gamificationStats()->update([
+                'streak' => $user->current_streak,
+                'highest_streak' => $user->longest_streak,
+            ]);
 
             return [
                 'streak_updated' => true,

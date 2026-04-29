@@ -188,22 +188,22 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
     ];
 
     return (
-        <div className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-            <div className="grid grid-cols-12 gap-6 items-start">
+        <div className="py-3 sm:py-5 px-2 sm:px-4 lg:px-5 max-w-[1680px] mx-auto space-y-5">
+            <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-5 items-start">
 
                 {/* 1. HERO AREA: Welcome & Header (col-12) */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8"
+                    className="col-span-12 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-3 sm:gap-4 border-b border-slate-100 dark:border-slate-800 pb-4"
                 >
-                    <div className="flex-1 flex flex-col md:flex-row gap-8 items-start md:items-end">
-                        <div className="relative group shrink-0 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
+                        <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-5 items-start md:items-end">
+                        <div className="relative group shrink-0 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
                             <DigitalCompanion todayTaskStats={todayTaskStats} dailyStats={dailyStats} auth={auth} />
                             <div className="pt-1 sm:pt-0">
                                 <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                                <h1 className="text-4xl sm:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.9] relative z-10 mb-3">
+                                <h1 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-[1000] text-slate-900 dark:text-white tracking-tighter leading-[0.95] relative z-10 mb-3">
                                     Halo, <br />
                                     <span className="bg-gradient-to-r from-emerald-500 to-emerald-400 bg-clip-text text-transparent">
                                         {auth?.user?.name?.split(' ')[0] || 'Teman'}
@@ -222,9 +222,9 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-3 flex-1 w-full justify-start md:justify-end pb-1">
+                        <div className="flex flex-wrap gap-2 flex-1 w-full justify-start md:justify-end pb-1">
                             {auth?.gamification && (
-                                <div className="flex bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow items-center gap-4 min-w-[130px]">
+                                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow items-center gap-4 min-w-[110px] sm:min-w-[130px]">
                                     <div className={`p-2.5 rounded-xl ${auth.gamification.streak > 0 ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
                                         <FireIcon className="w-5 h-5" />
                                     </div>
@@ -309,7 +309,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                 )}
 
                 {/* 2. SMART FOCUS + KANBAN (col-12 on mobile, col-8 on desktop) */}
-                <div className="col-span-12 lg:col-span-8 space-y-6">
+                <div className="col-span-12 lg:col-span-9 xl:col-span-8 space-y-4">
 
                     {/* Continue Work Banner — desktop */}
                     {continueWorkTask && (
@@ -326,7 +326,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="apple-glass rounded-[2.5rem] p-6 shadow-2xl border-white/10 dark:bg-white/5"
+                        className="apple-glass rounded-[2rem] p-4 sm:p-5 lg:p-6 shadow-xl border-white/10 dark:bg-white/5"
                     >
                         <TaskFocusPanel
                             tasks={allTasks}
@@ -365,7 +365,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="apple-glass rounded-[2rem] p-4 shadow-xl mb-10"
+                            className="apple-glass rounded-[1.75rem] p-3 sm:p-4 shadow-xl mb-8"
                         >
                             <TaskFocusPanel
                                 tasks={allTasks}
@@ -382,7 +382,7 @@ const MainDashboard = ({ auth, allTasks, taskStats, todayTaskStats, dailyStats, 
                 </div>
 
                 {/* 3. PERFORMANCE SIDEBAR — desktop only (col-4) */}
-                <div className="hidden lg:flex col-span-4 flex-col space-y-5">
+                <div className="hidden lg:flex col-span-3 xl:col-span-4 flex-col space-y-4 min-w-0">
                     {/* Weekly Journey full */}
                     <WeeklyJourney compact />
 

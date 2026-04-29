@@ -19,7 +19,7 @@ const BentoTile = ({ children, className = "", delay = 0, useGlass = true }) => 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay }}
-        className={`${useGlass ? 'apple-glass' : ''} rounded-[2.5rem] p-6 shadow-xl border border-white/10 ${className}`}
+        className={`${useGlass ? 'apple-glass' : ''} rounded-[1.75rem] p-4 sm:p-5 lg:p-6 shadow-xl border border-white/10 ${className}`}
     >
         {children}
     </motion.div>
@@ -35,10 +35,10 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
         <AuthenticatedLayout header={<h2 className="font-[1000] text-2xl text-slate-900 dark:text-white tracking-tight">Pusat Gamifikasi</h2>}>
             <Head title="Gamification" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div className="py-3 sm:py-5 px-2 sm:px-4 lg:px-5 max-w-[1680px] mx-auto space-y-5">
 
                 {/* 1. HERO ROW: Profile & Briefing */}
-                <div className="grid grid-cols-12 gap-6">
+                <div className="grid grid-cols-12 gap-4 sm:gap-5">
                     {/* Level & Rank Tile */}
                     <BentoTile
                         useGlass={false}
@@ -126,7 +126,7 @@ export default function GamificationDashboard({ auth, challenges = [], achieveme
                 <WeeklyJourney auth={auth} />
 
                 {/* 2. MAIN ROW: Challenges & Leaderboard */}
-                <div className="grid grid-cols-12 gap-6">
+                <div className="grid grid-cols-12 gap-4 sm:gap-5">
                     {/* Active Challenges Tile */}
                     <BentoTile className="col-span-12 lg:col-span-8 group">
                         <div className="flex items-center justify-between mb-8 border-b border-slate-100 dark:border-slate-800 pb-4">
