@@ -492,7 +492,28 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                 </nav>
 
                 {/* Footer User Profile & Actions */}
-                <div className="p-2 border-t border-slate-200/50 dark:border-slate-700/50 mt-auto">
+                <div className="p-2 border-t border-slate-200/50 dark:border-slate-700/50 mt-auto space-y-1">
+                    {/* Upgrade Button - Desktop */}
+                    {!user.active_plan?.is_premium && (
+                        <button
+                            onClick={() => setShowUpgradeModal(true)}
+                            className="w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-amber-50 dark:hover:bg-amber-500/10 cursor-pointer transition-colors group text-amber-600 dark:text-amber-400"
+                        >
+                            <div className="h-5 w-5 flex items-center justify-center rounded bg-gradient-to-br from-amber-500 to-orange-500 text-white">
+                                <StarIcon className="h-3 w-3" />
+                            </div>
+                            {!isCollapsed && (
+                                <>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold truncate">Upgrade to Premium</p>
+                                    </div>
+                                    <span className="text-[9px] bg-gradient-to-r from-amber-500 to-orange-500 text-white px-1.5 py-0.5 rounded-full font-medium">NEW</span>
+                                </>
+                            )}
+                        </button>
+                    )}
+                    
+                    {/* User Profile */}
                     {!isCollapsed ? (
                         <Link href={route('profile.edit')} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors">
                             <UserAvatar user={user} className="h-5 w-5 text-[9px]" />
@@ -506,6 +527,19 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                             <UserAvatar user={user} />
                         </div>
                     )}
+
+                    {/* Logout Button - Desktop */}
+                    <Link
+                        href={route('logout')}
+                        method="post"
+                        as="button"
+                        className={`w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer transition-colors text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 ${isCollapsed ? 'justify-center' : ''}`}
+                    >
+                        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                        {!isCollapsed && (
+                            <p className="text-xs font-medium">Log Out</p>
+                        )}
+                    </Link>
                 </div>
 
                 {/* Collapse Button */}
@@ -579,6 +613,30 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                             <span className={`text-[10px] mt-0.5 font-semibold tracking-tight transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.label}</span>
                                         </Link>
                                     ))}
+                                    {/* Mobile Upgrade Button */}
+                                    {!user.active_plan?.is_premium && (
+                                        <button
+                                            onClick={() => setShowUpgradeModal(true)}
+                                            className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-amber-500 px-3 py-1.5 rounded-2xl"
+                                        >
+                                            <div className="relative transition-transform duration-300 scale-110 -translate-y-0.5">
+                                                <StarIcon className="h-[22px] w-[22px]" />
+                                            </div>
+                                            <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-amber-500">Upgrade</span>
+                                        </button>
+                                    )}
+                                    {/* Mobile Logout Button */}
+                                    <Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                        className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-slate-400 dark:text-slate-500 px-3 py-1.5 rounded-2xl"
+                                    >
+                                        <div className="relative transition-transform duration-300">
+                                            <ArrowRightOnRectangleIcon className="h-[22px] w-[22px]" />
+                                        </div>
+                                        <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-slate-400 dark:text-slate-500">Logout</span>
+                                    </Link>
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-around gap-0.5">
@@ -603,6 +661,30 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                             <span className={`text-[10px] mt-0.5 font-semibold tracking-tight transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.label}</span>
                                         </Link>
                                     ))}
+                                    {/* Mobile Upgrade Button - Guild Mode */}
+                                    {!user.active_plan?.is_premium && (
+                                        <button
+                                            onClick={() => setShowUpgradeModal(true)}
+                                            className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-amber-500 px-3 py-1.5 rounded-2xl"
+                                        >
+                                            <div className="relative transition-transform duration-300 scale-110 -translate-y-0.5">
+                                                <StarIcon className="h-[22px] w-[22px]" />
+                                            </div>
+                                            <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-amber-500">Upgrade</span>
+                                        </button>
+                                    )}
+                                    {/* Mobile Logout Button - Guild Mode */}
+                                    <Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                        className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-slate-400 dark:text-slate-500 px-3 py-1.5 rounded-2xl"
+                                    >
+                                        <div className="relative transition-transform duration-300">
+                                            <ArrowRightOnRectangleIcon className="h-[22px] w-[22px]" />
+                                        </div>
+                                        <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-slate-400 dark:text-slate-500">Logout</span>
+                                    </Link>
                                 </div>
                             )}
                         </div>
