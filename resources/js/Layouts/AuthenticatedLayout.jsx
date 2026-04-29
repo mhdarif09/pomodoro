@@ -597,7 +597,6 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                         { href: route('journal.index'), icon: <BookOpenIcon className="h-[22px] w-[22px]" />, label: 'Journal', active: route().current('journal.index'), id: 'mobile-journal-nav' },
                                         { href: route('paper-explorer'), icon: <MagnifyingGlassIcon className="h-[22px] w-[22px]" />, label: 'Paper', active: route().current('paper-explorer'), id: 'mobile-paper-nav' },
                                         { href: route('guilds.index'), icon: <ShieldCheckIcon className="h-[22px] w-[22px]" />, label: 'Guild', active: route().current('guilds.index') || route().current('guilds.*'), id: 'mobile-guilds-nav' },
-                                        { href: route('profile.show'), icon: <UserIcon className="h-[22px] w-[22px]" />, label: 'Profile', active: route().current('profile.show'), id: 'mobile-profile-nav' },
                                     ].map((item, i) => (
                                         <Link key={i} href={item.href} id={item.id}
                                             className={`relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 ${item.active
@@ -613,29 +612,26 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                             <span className={`text-[10px] mt-0.5 font-semibold tracking-tight transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.label}</span>
                                         </Link>
                                     ))}
-                                    {/* Mobile Upgrade Button */}
+                                </div>
+                                {/* Compact action row below main icons to avoid crowding */}
+                                <div className="mt-2 flex items-center justify-center gap-3 px-2">
                                     {!user.active_plan?.is_premium && (
                                         <button
                                             onClick={() => setShowUpgradeModal(true)}
-                                            className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-amber-500 px-3 py-1.5 rounded-2xl"
+                                            className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 text-xs font-semibold shadow-sm"
                                         >
-                                            <div className="relative transition-transform duration-300 scale-110 -translate-y-0.5">
-                                                <StarIcon className="h-[22px] w-[22px]" />
-                                            </div>
-                                            <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-amber-500">Upgrade</span>
+                                            <StarIcon className="h-4 w-4" />
+                                            Upgrade
                                         </button>
                                     )}
-                                    {/* Mobile Logout Button */}
                                     <Link
                                         href={route('logout')}
                                         method="post"
                                         as="button"
-                                        className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-slate-400 dark:text-slate-500 px-3 py-1.5 rounded-2xl"
+                                        className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium shadow-sm"
                                     >
-                                        <div className="relative transition-transform duration-300">
-                                            <ArrowRightOnRectangleIcon className="h-[22px] w-[22px]" />
-                                        </div>
-                                        <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-slate-400 dark:text-slate-500">Logout</span>
+                                        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                                        Log out
                                     </Link>
                                 </div>
                             ) : (
@@ -661,29 +657,26 @@ function AuthenticatedLayoutInner({ children, auth, isCollapsed, toggleSidebar, 
                                             <span className={`text-[10px] mt-0.5 font-semibold tracking-tight transition-colors ${item.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.label}</span>
                                         </Link>
                                     ))}
-                                    {/* Mobile Upgrade Button - Guild Mode */}
+                                </div>
+                                {/* Compact action row below main icons to avoid crowding (guild mode) */}
+                                <div className="mt-2 flex items-center justify-center gap-3 px-2">
                                     {!user.active_plan?.is_premium && (
                                         <button
                                             onClick={() => setShowUpgradeModal(true)}
-                                            className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-amber-500 px-3 py-1.5 rounded-2xl"
+                                            className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 text-xs font-semibold shadow-sm"
                                         >
-                                            <div className="relative transition-transform duration-300 scale-110 -translate-y-0.5">
-                                                <StarIcon className="h-[22px] w-[22px]" />
-                                            </div>
-                                            <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-amber-500">Upgrade</span>
+                                            <StarIcon className="h-4 w-4" />
+                                            Upgrade
                                         </button>
                                     )}
-                                    {/* Mobile Logout Button - Guild Mode */}
                                     <Link
                                         href={route('logout')}
                                         method="post"
                                         as="button"
-                                        className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out active:scale-90 text-slate-400 dark:text-slate-500 px-3 py-1.5 rounded-2xl"
+                                        className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium shadow-sm"
                                     >
-                                        <div className="relative transition-transform duration-300">
-                                            <ArrowRightOnRectangleIcon className="h-[22px] w-[22px]" />
-                                        </div>
-                                        <span className="text-[10px] mt-0.5 font-semibold tracking-tight text-slate-400 dark:text-slate-500">Logout</span>
+                                        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                                        Log out
                                     </Link>
                                 </div>
                             )}
